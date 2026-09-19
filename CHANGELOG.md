@@ -6,6 +6,30 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.5.0...v0.6.0) (2026-09-19)
+
+
+### Features
+
+* **actions:** add revit_create_floor action tool ([a63c580](https://github.com/vibe-bimer/revit-model-mcp/commit/a63c580cab5829ca424c48276cc192ca3f10b0e8))
+* **actions:** add set_phase and merge_phases tools ([afd83c0](https://github.com/vibe-bimer/revit-model-mcp/commit/afd83c0526072f6314a1b18a9efd6a636286d915))
+* **channel:** correlate responses by job id and publish atomically ([#61](https://github.com/vibe-bimer/revit-model-mcp/issues/61)) ([5a65afc](https://github.com/vibe-bimer/revit-model-mcp/commit/5a65afc47789f07c2df495e2779e69dafd2e58b0))
+
+
+### Bug Fixes
+
+* **addin:** target write actions at the addressed document, not the active one ([#60](https://github.com/vibe-bimer/revit-model-mcp/issues/60)) ([d558ee9](https://github.com/vibe-bimer/revit-model-mcp/commit/d558ee955e29f60a194d7280df88791c2fc9c1d9))
+* resolve manual-test read and HTTP installation failures ([#45](https://github.com/vibe-bimer/revit-model-mcp/issues/45)) ([61bd2ba](https://github.com/vibe-bimer/revit-model-mcp/commit/61bd2ba13c1c668b0a3d5e53f06ee6a8011f4292))
+
+
+### Documentation
+
+* add Revit API corpus workflow and project analysis ([e0b821a](https://github.com/vibe-bimer/revit-model-mcp/commit/e0b821a535d301be30430c57ad6aeaf1caf77dd0))
+* correct Linux build flag and record deploy learnings ([e0848f8](https://github.com/vibe-bimer/revit-model-mcp/commit/e0848f88e7344c8fd669d0c171650d50a8feb4b9))
+* document Linux dotnet format workaround ([679b4fc](https://github.com/vibe-bimer/revit-model-mcp/commit/679b4fcff154b3b6af02bf63f7e55a80c9b1f0c6))
+* enumerate action tools and link the tool-addition guide ([f437d63](https://github.com/vibe-bimer/revit-model-mcp/commit/f437d639963c4fb8cd2b25519ad794a8ac11136d))
+* record add-in signing and automated restart procedure ([e4139f3](https://github.com/vibe-bimer/revit-model-mcp/commit/e4139f30a51248b9d524bd220f8b9395dd71a754))
+
 ## [0.5.0](https://github.com/sharafutdinovdi/revit-model-mcp/compare/v0.4.0...v0.5.0) (2026-09-14)
 
 
