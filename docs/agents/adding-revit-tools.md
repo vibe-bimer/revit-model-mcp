@@ -158,6 +158,32 @@ Design notes:
   new tool with `dry_run=true` first, then a real run plus verification and
   cleanup.
 
+## Known Revit API limits
+
+Do not re-investigate these; they are settled.
+
+- **Phase creation and renaming are impossible through the API.** There is no
+  `NewPhase`, no `Phase.Create`, and `PhaseArray.Append/Insert` on
+  `Document.Phases` does not persist. Renaming fails on every path:
+  `BuiltInParameter.PHASE_NAME` is read-only and `Element.Name` throws
+  "This element does not support assignment of a user-specified name"
+  (reproduced live on Revit 2026; the same errors are reported in the
+  [2025 Autodesk forum thread](https://forums.autodesk.com/t5/revit-api-forum/is-it-possible-to-control-phases-using-the-revit-api/td-p/13631528)
+  and the [2021 one](https://forums.autodesk.com/t5/revit-api-forum/how-to-create-project-phase-programly/td-p/9722434)).
+  Phases must be created and named in the phases dialog (Manage > Phases);
+  standardise the phase set in the project template instead.
+- **Merging phases is possible** and is what `revit_merge_phases` does:
+  reassign every element whose `CreatedPhaseId` or `DemolishedPhaseId` points
+  at the source phase, then delete the emptied phase. This matches the
+  method Autodesk support described in the
+  [merge phases thread](https://forums.autodesk.com/t5/revit-api-forum/merge-phases/td-p/5594567).
+- **Driving the phases dialog by keystrokes is possible but fragile**: a
+  posted `ID_SETTINGS_PHASES` command plus simulated keys can create and
+  rename phases, as demonstrated in the
+  [Dynamo forum](https://forum.dynamobim.com/t/creating-phases-renaming-phases/114509).
+  It needs a visible screen to calibrate tab sequences, leaves Revit blocked
+  if a sequence goes wrong, and must never be used unattended.
+
 ## Version caveats
 
 The corpus covers Revit 2026 only. A corpus hit does not prove availability
