@@ -122,6 +122,9 @@ public sealed class DocumentInfoData
     [DataMember(Name = "isWorkshared")]
     public bool IsWorkshared { get; set; }
 
+    [DataMember(Name = "isModified")]
+    public bool IsModified { get; set; }
+
     [DataMember(Name = "levels")]
     public List<DocumentLevelInfo> Levels { get; set; } = new();
 

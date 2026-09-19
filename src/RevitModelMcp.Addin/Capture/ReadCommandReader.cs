@@ -92,6 +92,7 @@ internal static class ReadCommandReader
                 : Path.GetFileName(document.PathName),
             RevitVersion = application.Application.VersionNumber,
             IsWorkshared = document.IsWorkshared,
+            IsModified = document.IsModified,
             Levels = levels,
             AreaSchemes = schemes,
             Worksets = worksets,
