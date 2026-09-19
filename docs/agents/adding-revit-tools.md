@@ -142,8 +142,10 @@ Design notes:
   always-appearing code-signing window]
   (https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-code-signing-window-always-appears-when-launching-Revit.html).
 - Restart Revit remotely without killing it first: ask `CloseMainWindow()`,
-  fall back to `Stop-Process` only when the session is known-clean, then
-  relaunch through the interactive scheduled task `RevitMcpLaunch`
+  fall back to `Stop-Process` only after confirming the model has no unsaved
+  changes. `revit_document_info` reports `isModified`; a forced stop discards
+  unsaved edits, which already cost a session's manual phase work once.
+  Relaunch through the interactive scheduled task `RevitMcpLaunch`
   (`schtasks /Run /TN RevitMcpLaunch`) so the GUI lands in the console
   session. Delete stale `instance_<pid>.json` heartbeats from
   `%LOCALAPPDATA%\RevitModelMcp` after a forced stop, or actions report
