@@ -116,7 +116,8 @@ See the [full tool reference](https://sharafutdinovdi.github.io/revit-model-mcp/
 <a id="actions-opt-in"></a>
 
 Actions are opt-in: both `REVIT_MCP_ALLOW_WRITE=1` in the server and the workstation `allow-write` file are required.
-Model mutations support `dry_run` previews and return `verification`; `revit_batch` groups actions into one undo entry.
+The action set covers selection and navigation (`select`, `show`, `isolate`), model mutations (`move`, `place_family`, `create_wall`, `create_floor`, `set_parameter`, `delete`) and multi-step orchestration (`revit_batch`, up to 50 steps with one undo entry).
+Model mutations support `dry_run` previews and return `verification`; `revit_batch` rolls back on its first failed step.
 See [actions](https://sharafutdinovdi.github.io/revit-model-mcp/actions/) for gates, exceptions and verification failures.
 
 ## Remote workstations
@@ -148,6 +149,8 @@ See [validation evidence](https://sharafutdinovdi.github.io/revit-model-mcp/vali
 ## Contributing and support
 
 [Documentation](https://sharafutdinovdi.github.io/revit-model-mcp/) covers setup, tools and transport.
+
+Adding a new read or action tool? Follow the checklists in [docs/agents/adding-revit-tools.md](docs/agents/adding-revit-tools.md), which also covers the optional local Revit API corpus lookup, the build/deploy chain and live smoke testing.
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md), ask questions in [Discussions](https://github.com/sharafutdinovdi/revit-model-mcp/discussions), or report bugs and request features through the [issue forms](https://github.com/sharafutdinovdi/revit-model-mcp/issues/new/choose).
 CI runs the C# and Python test suites and builds the supported Revit configurations.
