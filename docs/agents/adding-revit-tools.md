@@ -123,7 +123,31 @@ Design notes:
   `RevitModelMcp.deps.json` and `RevitModelMcp.runtimeconfig.json` over SSH to
   `%APPDATA%\Autodesk\Revit\Addins\2026\RevitModelMcp\`. Back up that folder
   first; the loaded DLL is locked while Revit runs, so deploy only with Revit
-  closed. Never kill Revit remotely — coordinate the restart with the user.
+  closed.
+- Sign the deployed DLLs after every deploy. Revit prompts for unsigned
+  add-ins on every launch, and each rebuild changes the file hash, so
+  "Always Load" never persists. The workstation keeps a self-signed
+  code-signing certificate (`CN=RevitModelMcp Dev`, trusted in
+  LocalMachine TrustedPublisher and Root). Run the helper over SSH with Revit
+  closed:
+
+  ```sh
+  ssh revit-host 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Administrator\sign-addin.ps1'
+  ```
+
+  One-time certificate setup (already done on the workstation):
+  `New-SelfSignedCertificate -Subject "CN=RevitModelMcp Dev" -Type
+  CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My`, then add it to
+  LocalMachine TrustedPublisher and Root. See the [Autodesk guidance on the
+  always-appearing code-signing window]
+  (https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-code-signing-window-always-appears-when-launching-Revit.html).
+- Restart Revit remotely without killing it first: ask `CloseMainWindow()`,
+  fall back to `Stop-Process` only when the session is known-clean, then
+  relaunch through the interactive scheduled task `RevitMcpLaunch`
+  (`schtasks /Run /TN RevitMcpLaunch`) so the GUI lands in the console
+  session. Delete stale `instance_<pid>.json` heartbeats from
+  `%LOCALAPPDATA%\RevitModelMcp` after a forced stop, or actions report
+  "exactly one instance" violations.
 - New tools reach MCP clients only when the Python server runs from this
   clone (`uv run --directory server revit-model-mcp`), not from the published
   `uvx revit-model-mcp` package. Point the connector at the clone while
