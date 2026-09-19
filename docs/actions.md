@@ -30,13 +30,15 @@ Jobs without `targetDocument` retain the active-document behavior.
 | `revit_place_family` | `family`, `type_name`, `x_mm`, `y_mm`, `level`, `rotation_deg=0` | Place a loaded family at model XY in mm on a named level; rotate about Z in degrees. |
 | `revit_create_wall` | `start_mm`, `end_mm`, `level`, `wall_type`, `height_mm=3000` | Create a straight wall; endpoints are `[x,y]` in model mm. |
 | `revit_create_floor` | `points_mm`, `level`, `floor_type` | Create a floor from a closed boundary; `points_mm` are `[x,y]` polygon vertices in model mm, at least 3, closed automatically; null `floor_type` chooses the first floor type. |
+| `revit_set_phase` | `element_ids`, `created_phase`, `demolished_phase` | Assign project phases by exact name; each phase argument is a name, `""` to clear that assignment, or null to leave it unchanged; at least one non-null. The Revit API cannot create or rename phases — add new phases in the UI first. |
+| `revit_merge_phases` | `source_phase`, `target_phase` | Move every creation and demolition reference off the source phase into the target, then delete the empty source phase; a refused deletion is reported with `sourceDeleted:false` and `phaseDeleteError`. Not batchable. |
 | `revit_set_parameter` | `element_id`, `parameter`, `value` | Set a string value by parameter name; lengths use mm, areas m2, other doubles internal units. |
 | `revit_delete` | `element_ids` | Delete nonempty IDs and their dependents. |
 | `revit_batch` | `steps`, `dry_run=false` | Execute 1–50 actions with a single undo entry named `revit_batch`. |
 
 `type_name`, `wall_type` and `floor_type` are required arguments that accept `null`.
 
-`revit_move`, `revit_place_family`, `revit_create_wall`, `revit_create_floor`, `revit_set_parameter` and `revit_delete` accept a final `dry_run=false` argument.
+`revit_move`, `revit_place_family`, `revit_create_wall`, `revit_create_floor`, `revit_set_phase`, `revit_merge_phases`, `revit_set_parameter` and `revit_delete` accept a final `dry_run=false` argument.
 A dry run executes the mutation, reads its prospective result, and rolls back the transaction.
 A successful dry run includes `data.dryRun:true`, `data.rolledBack:true` and the same `verification` shape as a real write.
 An action that throws returns an error without a verification block; a missing family also returns `closestFamilies` on the single-action tool.

@@ -230,6 +230,10 @@ internal static class ActionCommandExecutor
                 return ActionMutations.CreateWall(document, action);
             case "create-floor":
                 return ActionMutations.CreateFloor(document, action);
+            case "set-phase":
+                return ActionMutations.SetPhase(document, action, ids);
+            case "merge-phases":
+                return ActionMutations.MergePhases(document, action);
             case "set-parameter":
                 return ActionMutations.SetParameter(document, action);
             default:

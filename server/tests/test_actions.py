@@ -24,6 +24,8 @@ ACTION_TOOLS = {
     "revit_place_family",
     "revit_create_wall",
     "revit_create_floor",
+    "revit_set_phase",
+    "revit_merge_phases",
     "revit_set_parameter",
     "revit_delete",
     "revit_batch",
@@ -117,6 +119,16 @@ def action_server():
             },
         ),
         (
+            "revit_set_phase",
+            {"element_ids": [1, 2], "created_phase": "新构造", "demolished_phase": None},
+            {"elementIds": [1, 2], "createdPhase": "新构造", "demolishedPhase": None},
+        ),
+        (
+            "revit_merge_phases",
+            {"source_phase": "临时", "target_phase": "新构造"},
+            {"sourcePhase": "临时", "targetPhase": "新构造"},
+        ),
+        (
             "revit_set_parameter",
             {"element_id": 1, "parameter": "Comments", "value": ""},
             {"elementId": 1, "parameter": "Comments", "value": ""},
@@ -200,6 +212,22 @@ def test_action_arguments_reach_channel_in_millimeters(
                 "level": "Level 1",
                 "floor_type": None,
             },
+        ),
+        (
+            "revit_set_phase",
+            {"element_ids": [1], "created_phase": None, "demolished_phase": None},
+        ),
+        (
+            "revit_set_phase",
+            {"element_ids": [1], "created_phase": " ", "demolished_phase": None},
+        ),
+        (
+            "revit_set_phase",
+            {"element_ids": [], "created_phase": "新构造", "demolished_phase": None},
+        ),
+        (
+            "revit_merge_phases",
+            {"source_phase": "新构造", "target_phase": "新构造"},
         ),
         (
             "revit_place_family",

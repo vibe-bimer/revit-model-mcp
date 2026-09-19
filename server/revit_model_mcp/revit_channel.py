@@ -26,6 +26,8 @@ ACTION_COMMANDS = frozenset(
         "place-family",
         "create-wall",
         "create-floor",
+        "set-phase",
+        "merge-phases",
         "set-parameter",
         "delete",
         "batch",

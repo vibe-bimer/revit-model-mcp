@@ -5,7 +5,7 @@ namespace RevitModelMcp.Core.Control;
 public static class ActionJobParser
 {
     public static bool IsAction(string command) => command is
-        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-parameter" or "delete" or "batch";
+        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "batch";
 
     public static ControlJobParseResult Parse(string command, ControlJobContract job)
     {
@@ -32,6 +32,10 @@ public static class ActionJobParser
                 HeightMm = job.HeightMm ?? 3000,
                 PointsMm = job.PointsMm ?? [],
                 FloorType = job.FloorType,
+                CreatedPhase = job.CreatedPhase,
+                DemolishedPhase = job.DemolishedPhase,
+                SourcePhase = job.SourcePhase,
+                TargetPhase = job.TargetPhase,
                 ElementId = job.ActionElementId ?? 0,
                 Parameter = job.Parameter,
                 Value = job.Value
@@ -42,14 +46,14 @@ public static class ActionJobParser
                 foreach (var step in job.Steps!)
                 {
                     var stepCommand = step?.Command ?? string.Empty;
-                    Require(IsAction(stepCommand) && stepCommand is not ("show" or "batch"),
-                        "Batch steps must be move, place-family, create-wall, create-floor, set-parameter, delete, select or isolate.");
+                    Require(IsAction(stepCommand) && stepCommand is not ("show" or "batch" or "merge-phases"),
+                        "Batch steps must be move, place-family, create-wall, create-floor, set-phase, set-parameter, delete, select or isolate.");
                     var parsed = Parse(stepCommand, step!);
                     Require(parsed.Error is null, $"Step {action.Steps.Count}: {parsed.Error}");
                     action.Steps.Add(parsed);
                 }
             }
-            if (command is "select" or "show" or "isolate" or "move" or "delete")
+            if (command is "select" or "show" or "isolate" or "move" or "delete" or "set-phase")
             {
                 Require(job.ElementIds is not null, "elementIds is required.");
                 Require(action.ElementIds.All(elementId => elementId > 0), "Element IDs must be positive.");
@@ -99,6 +103,21 @@ public static class ActionJobParser
                     Require(!action.PointsMm[index].SequenceEqual(action.PointsMm[(index + 1) % action.PointsMm.Count]),
                         "Floor boundary points must not repeat consecutively.");
                 Require(action.FloorType is null || !string.IsNullOrWhiteSpace(action.FloorType), "floorType must not be blank.");
+            }
+            if (command == "set-phase")
+            {
+                Require(action.CreatedPhase is not null || action.DemolishedPhase is not null,
+                    "createdPhase or demolishedPhase is required.");
+                foreach (var (label, value) in new[] { ("createdPhase", action.CreatedPhase), ("demolishedPhase", action.DemolishedPhase) })
+                    Require(value is null || value.Length == 0 || value.Trim().Length > 0,
+                        $"{label} must be a phase name, an empty string to clear, or null.");
+            }
+            if (command == "merge-phases")
+            {
+                Require(!string.IsNullOrWhiteSpace(action.SourcePhase), "sourcePhase is required.");
+                Require(!string.IsNullOrWhiteSpace(action.TargetPhase), "targetPhase is required.");
+                Require(!string.Equals(action.SourcePhase!.Trim(), action.TargetPhase!.Trim(), StringComparison.OrdinalIgnoreCase),
+                    "sourcePhase and targetPhase must differ.");
             }
             if (command == "set-parameter")
             {
@@ -177,6 +196,10 @@ public sealed class ActionJobContract
     public double HeightMm { get; set; }
     public List<List<double>> PointsMm { get; set; } = [];
     public string? FloorType { get; set; }
+    public string? CreatedPhase { get; set; }
+    public string? DemolishedPhase { get; set; }
+    public string? SourcePhase { get; set; }
+    public string? TargetPhase { get; set; }
     public long ElementId { get; set; }
     public string? Parameter { get; set; }
     public string? Value { get; set; }
@@ -202,6 +225,10 @@ public sealed partial class ControlJobContract
     [DataMember(Name = "heightMm")] public double? HeightMm { get; set; }
     [DataMember(Name = "pointsMm")] public List<List<double>>? PointsMm { get; set; }
     [DataMember(Name = "floorType")] public string? FloorType { get; set; }
+    [DataMember(Name = "createdPhase")] public string? CreatedPhase { get; set; }
+    [DataMember(Name = "demolishedPhase")] public string? DemolishedPhase { get; set; }
+    [DataMember(Name = "sourcePhase")] public string? SourcePhase { get; set; }
+    [DataMember(Name = "targetPhase")] public string? TargetPhase { get; set; }
     [DataMember(Name = "elementId")] public long? ActionElementId { get; set; }
     [DataMember(Name = "parameter")] public string? Parameter { get; set; }
     [DataMember(Name = "value")] public string? Value { get; set; }
@@ -219,6 +246,8 @@ public sealed class ActionResultData
     [DataMember(Name = "failedStep")] public int? FailedStep { get; set; }
 
     [DataMember(Name = "count", EmitDefaultValue = false)] public int? Count { get; set; }
+    [DataMember(Name = "sourceDeleted", EmitDefaultValue = false)] public bool? SourceDeleted { get; set; }
+    [DataMember(Name = "phaseDeleteError", EmitDefaultValue = false)] public string? PhaseDeleteError { get; set; }
     [DataMember(Name = "id", EmitDefaultValue = false)] public long? Id { get; set; }
     [DataMember(Name = "category", EmitDefaultValue = false)] public string? Category { get; set; }
     [DataMember(Name = "level", EmitDefaultValue = false)] public string? Level { get; set; }

@@ -59,6 +59,11 @@ _BATCH_FIELDS = {
         "level": (Name, ...),
         "floor_type": (Name | None, ...),
     },
+    "set_phase": {
+        "element_ids": (NonEmptyIds, ...),
+        "created_phase": (str | None, ...),
+        "demolished_phase": (str | None, ...),
+    },
     "set_parameter": {
         "element_id": (ElementId, ...),
         "parameter": (Name, ...),
@@ -66,7 +71,15 @@ _BATCH_FIELDS = {
     },
     "delete": {"element_ids": (NonEmptyIds, ...)},
 }
-for _action in ("move", "place_family", "create_wall", "create_floor", "set_parameter", "delete"):
+for _action in (
+    "move",
+    "place_family",
+    "create_wall",
+    "create_floor",
+    "set_phase",
+    "set_parameter",
+    "delete",
+):
     _BATCH_FIELDS[_action]["dry_run"] = (bool, False)
 _BATCH_MODELS = {
     action: create_model(action, __config__=ConfigDict(extra="forbid"), **fields)
@@ -81,6 +94,7 @@ class BatchStep(BaseModel):
         "place_family",
         "create_wall",
         "create_floor",
+        "set_phase",
         "set_parameter",
         "delete",
         "select",
@@ -101,6 +115,12 @@ class BatchStep(BaseModel):
                 points[index] == points[(index + 1) % len(points)] for index in range(len(points))
             ):
                 raise ValueError("Floor boundary points must not repeat consecutively.")
+        if (
+            self.action == "set_phase"
+            and self.args["created_phase"] is None
+            and self.args["demolished_phase"] is None
+        ):
+            raise ValueError("At least one of created_phase or demolished_phase is required.")
         return self
 
     def payload(self) -> dict:
@@ -168,6 +188,8 @@ def register_actions(mcp, execute, host_provider) -> None:
             "revit_place_family": "Place Family",
             "revit_create_wall": "Create Wall",
             "revit_create_floor": "Create Floor",
+            "revit_set_phase": "Set Element Phases",
+            "revit_merge_phases": "Merge Phases",
             "revit_set_parameter": "Set Parameter",
             "revit_delete": "Delete Elements",
             "revit_batch": "Run Action Batch",
@@ -180,7 +202,13 @@ def register_actions(mcp, execute, host_provider) -> None:
                 destructiveHint=function.__name__
                 not in {"revit_select", "revit_show", "revit_isolate"},
                 idempotentHint=function.__name__
-                in {"revit_select", "revit_show", "revit_isolate", "revit_set_parameter"},
+                in {
+                    "revit_select",
+                    "revit_show",
+                    "revit_isolate",
+                    "revit_set_parameter",
+                    "revit_set_phase",
+                },
             ),
         )(function)
 
@@ -319,6 +347,68 @@ def register_actions(mcp, execute, host_provider) -> None:
             pointsMm=points_mm,
             level=level,
             floorType=floor_type,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @action
+    async def revit_set_phase(
+        element_ids: NonEmptyIds,
+        created_phase: str | None,
+        demolished_phase: str | None,
+        dry_run: bool = False,
+        document: Document = None,
+    ) -> dict[str, Any]:
+        """Assign the created or demolished project phase of elements by exact phase name.
+
+        Each phase argument is a phase name from revit_list_catalog(section="phases"),
+        an empty string to clear that assignment, or null to leave it unchanged;
+        at least one argument must be non-null. Creation APIs cannot add phases;
+        create new phases in the Revit UI first. Example: demolished_phase="现有"
+        marks elements demolished in that phase, demolished_phase="" clears it.
+        dry_run executes and rolls back, returning the same verification block without changing the model.
+        Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected.
+        """
+        if created_phase is None and demolished_phase is None:
+            raise ToolError("At least one of created_phase or demolished_phase is required.")
+        for label, value in (
+            ("created_phase", created_phase),
+            ("demolished_phase", demolished_phase),
+        ):
+            if value is not None and value != "" and not value.strip():
+                raise ToolError(f"{label} must be a phase name, an empty string to clear, or null.")
+        return await send(
+            "set-phase",
+            elementIds=element_ids,
+            createdPhase=created_phase,
+            demolishedPhase=demolished_phase,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @action
+    async def revit_merge_phases(
+        source_phase: Name,
+        target_phase: Name,
+        dry_run: bool = False,
+        document: Document = None,
+    ) -> dict[str, Any]:
+        """Merge one project phase into another by moving every element reference.
+
+        Elements created in the source phase are reassigned to the target phase,
+        demolitions recorded in the source phase move to the target, then the empty
+        source phase is deleted. Revit may refuse the deletion when views or other
+        objects still reference it; the response then reports reassigned counts with
+        sourceDeleted:false. Phases themselves are never created or renamed here.
+        dry_run executes and rolls back, returning the same verification block without changing the model.
+        Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected.
+        """
+        if source_phase == target_phase:
+            raise ToolError("source_phase and target_phase must differ.")
+        return await send(
+            "merge-phases",
+            sourcePhase=source_phase,
+            targetPhase=target_phase,
             dryRun=dry_run,
             document=document,
         )

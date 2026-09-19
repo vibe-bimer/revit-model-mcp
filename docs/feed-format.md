@@ -214,7 +214,7 @@ See [response models](../src/RevitModelMcp.Core/Models/ReadCommandModels.cs) and
 
 ## Action writes and batches
 
-The file channel and HTTP accept `dryRun` on `move`, `place-family`, `create-wall`, `create-floor`, `set-parameter`, `delete` and `batch`.
+The file channel and HTTP accept `dryRun` on `move`, `place-family`, `create-wall`, `create-floor`, `set-phase`, `merge-phases`, `set-parameter`, `delete` and `batch`.
 Successful mutations always return `data.dryRun`.
 Successful dry runs return `data.rolledBack:true`; their prospective facts are read before rollback.
 An action that throws returns an error without a verification block.
@@ -230,6 +230,8 @@ Parameter values are invariant strings with lengths in mm, areas in m2 and other
 | `move` | `{"before":{"elements":[{"id":1,"category":"Walls","boundingBoxMinMm":[0,0,0],"boundingBoxMaxMm":[100,100,3000]}]},"after":{"elements":[{"id":1,"category":"Walls","boundingBoxMinMm":[10,0,0],"boundingBoxMaxMm":[110,100,3000]}]},"changed":[1]}` |
 | `set-parameter` | `{"before":{"id":1,"parameter":"Comments","value":"","storageType":"String","owner":"instance"},"after":{"id":1,"parameter":"Comments","value":"Reviewed","storageType":"String","owner":"instance"},"changed":[1]}` |
 | `place-family`, `create-wall`, `create-floor` | `{"after":{"id":2,"category":"Walls","family":"Basic Wall","type":"Generic","level":"01","boundingBoxMinMm":[0,0,0],"boundingBoxMaxMm":[1000,200,3000]}}`; dry runs add `"wouldCreate":true` inside `verification`. |
+| `set-phase` | `{"before":{"elements":[{"id":3,"category":"Walls","createdPhase":"新构造","demolishedPhase":""}]},"after":{"elements":[{"id":3,"category":"Walls","createdPhase":"现有","demolishedPhase":"拆除"}]},"changed":[3]}`; empty strings mean no assignment. |
+| `merge-phases` | `{"before":{"sourcePhase":"临时","targetPhase":"新构造"},"after":{"reassignedCreated":12,"reassignedDemolished":3,"sourceRemaining":0}}`; `data.sourceDeleted` and `data.phaseDeleteError` report the deletion attempt. |
 | `delete` | `{"before":{"requested":[1],"dependents":[2]},"after":{"stillPresent":[]},"changed":[1,2]}` |
 
 `changed` contains IDs whose rounded bounds or parameter values differ, or all IDs returned by `Document.Delete`.
@@ -248,7 +250,7 @@ A batch job contains a nonempty `steps` array of at most 50 command objects:
 
 Steps use each command's normal channel fields.
 All steps are validated at parse time before execution; an invalid later step rejects the entire batch without executing any step and without `failedStep`.
-Allowed commands are `move`, `place-family`, `create-wall`, `create-floor`, `set-parameter`, `delete`, `select` and `isolate`.
+Allowed commands are `move`, `place-family`, `create-wall`, `create-floor`, `set-phase`, `set-parameter`, `delete`, `select` and `isolate`.
 Each model step uses its own transaction; the group is assimilated into the single undo entry `revit_batch`.
 A batch dry run retains each step's changes for subsequent steps and rolls back the group at the end.
 An individual channel step with `dryRun:true` (MCP `dry_run:true`) in a real batch is accepted and previews only that step.

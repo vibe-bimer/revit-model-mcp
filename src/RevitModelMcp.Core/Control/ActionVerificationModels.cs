@@ -30,6 +30,13 @@ public sealed class ActionFacts
     [DataMember(Name = "requested", EmitDefaultValue = false)] public List<long>? Requested { get; set; }
     [DataMember(Name = "dependents", EmitDefaultValue = false)] public List<long>? Dependents { get; set; }
     [DataMember(Name = "stillPresent", EmitDefaultValue = false)] public List<long>? StillPresent { get; set; }
+    [DataMember(Name = "createdPhase", EmitDefaultValue = false)] public string? CreatedPhase { get; set; }
+    [DataMember(Name = "demolishedPhase", EmitDefaultValue = false)] public string? DemolishedPhase { get; set; }
+    [DataMember(Name = "sourcePhase", EmitDefaultValue = false)] public string? SourcePhase { get; set; }
+    [DataMember(Name = "targetPhase", EmitDefaultValue = false)] public string? TargetPhase { get; set; }
+    [DataMember(Name = "reassignedCreated", EmitDefaultValue = false)] public int? ReassignedCreated { get; set; }
+    [DataMember(Name = "reassignedDemolished", EmitDefaultValue = false)] public int? ReassignedDemolished { get; set; }
+    [DataMember(Name = "sourceRemaining", EmitDefaultValue = false)] public int? SourceRemaining { get; set; }
 }
 
 [DataContract]

@@ -116,7 +116,7 @@ See the [full tool reference](https://sharafutdinovdi.github.io/revit-model-mcp/
 <a id="actions-opt-in"></a>
 
 Actions are opt-in: both `REVIT_MCP_ALLOW_WRITE=1` in the server and the workstation `allow-write` file are required.
-The action set covers selection and navigation (`select`, `show`, `isolate`), model mutations (`move`, `place_family`, `create_wall`, `create_floor`, `set_parameter`, `delete`) and multi-step orchestration (`revit_batch`, up to 50 steps with one undo entry).
+The action set covers selection and navigation (`select`, `show`, `isolate`), model mutations (`move`, `place_family`, `create_wall`, `create_floor`, `set_phase`, `set_parameter`, `delete`), phase management (`merge_phases`) and multi-step orchestration (`revit_batch`, up to 50 steps with one undo entry).
 Model mutations support `dry_run` previews and return `verification`; `revit_batch` rolls back on its first failed step.
 See [actions](https://sharafutdinovdi.github.io/revit-model-mcp/actions/) for gates, exceptions and verification failures.
 

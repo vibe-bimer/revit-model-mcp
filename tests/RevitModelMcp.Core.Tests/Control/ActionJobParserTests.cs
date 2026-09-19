@@ -69,9 +69,29 @@ public sealed class ActionJobParserTests
     }
 
     [Test]
+    public async Task Parse_SetPhase_PreservesPhaseAssignments()
+    {
+        var result = ControlJobParser.Parse("""{"command":"set-phase","elementIds":[3,7],"createdPhase":null,"demolishedPhase":"现有"}""");
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.ElementIds).IsEquivalentTo(new long[] { 3, 7 });
+        await Assert.That(result.Action.CreatedPhase).IsNull();
+        await Assert.That(result.Action.DemolishedPhase).IsEqualTo("现有");
+    }
+
+    [Test]
+    public async Task Parse_MergePhases_PreservesSourceAndTarget()
+    {
+        var result = ControlJobParser.Parse("""{"command":"merge-phases","sourcePhase":"临时","targetPhase":"新构造"}""");
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.SourcePhase).IsEqualTo("临时");
+        await Assert.That(result.Action.TargetPhase).IsEqualTo("新构造");
+    }
+
+    [Test]
     [Arguments("""{"command":"select","elementIds":[]}""")]
     [Arguments("""{"command":"isolate","elementIds":[],"reset":true}""")]
     [Arguments("""{"command":"set-parameter","elementId":1,"parameter":"Comments","value":""}""")]
+    [Arguments("""{"command":"set-phase","elementIds":[1],"createdPhase":"","demolishedPhase":""}""")]
     public async Task Parse_EmptyValuesAllowedForClearing(string json)
     {
         await Assert.That(ControlJobParser.Parse(json).Kind).IsEqualTo(ControlJobKind.Action);
@@ -98,6 +118,11 @@ public sealed class ActionJobParserTests
     [Arguments("""{"command":"create-floor","pointsMm":[[0,0],[3000,0],[3000,2000]],"level":"01","floorType":" "}""")]
     [Arguments("""{"command":"set-parameter","elementId":1,"parameter":"Comments"}""")]
     [Arguments("""{"command":"set-parameter","elementId":0,"parameter":"Comments","value":"x"}""")]
+    [Arguments("""{"command":"set-phase","elementIds":[1],"createdPhase":null,"demolishedPhase":null}""")]
+    [Arguments("""{"command":"set-phase","elementIds":[1],"createdPhase":" ","demolishedPhase":null}""")]
+    [Arguments("""{"command":"set-phase","createdPhase":"新构造","demolishedPhase":null}""")]
+    [Arguments("""{"command":"merge-phases","sourcePhase":"临时"}""")]
+    [Arguments("""{"command":"merge-phases","sourcePhase":"新构造","targetPhase":"新构造"}""")]
     public async Task Parse_InvalidActionsAreRejected(string json)
     {
         var result = ControlJobParser.Parse(json);

@@ -11,6 +11,7 @@ internal static class ActionVerifier
         ActionJobContract action, List<ElementId> ids) => command switch
         {
             "move" => new ActionFacts { Elements = ids.Select(id => Bounds(RequiredElement(targetDocument, RevitValueReader.GetId(id)))).ToList() },
+            "set-phase" => new ActionFacts { Elements = ids.Select(id => PhaseFacts(targetDocument, RevitValueReader.GetId(id))).ToList() },
             "set-parameter" => ParameterFacts(targetDocument, action),
             "delete" => new ActionFacts { Requested = ids.Select(RevitValueReader.GetId).ToList() },
             _ => null
@@ -27,6 +28,14 @@ internal static class ActionVerifier
                 verification.Changed = verification.Before!.Elements!.Zip(after, (before, current) =>
                     SameBounds(before.BoundingBoxMinMm, current.BoundingBoxMinMm) &&
                     SameBounds(before.BoundingBoxMaxMm, current.BoundingBoxMaxMm) ? (long?)null : current.Id)
+                    .Where(id => id.HasValue).Select(id => id!.Value).ToList();
+                break;
+            case "set-phase":
+                var afterPhases = action.ElementIds.Select(id => PhaseFacts(targetDocument, id)).ToList();
+                verification.After = new ActionFacts { Elements = afterPhases };
+                verification.Changed = verification.Before!.Elements!.Zip(afterPhases,
+                    (before, current) => before.CreatedPhase == current.CreatedPhase
+                                         && before.DemolishedPhase == current.DemolishedPhase ? (long?)null : current.Id)
                     .Where(id => id.HasValue).Select(id => id!.Value).ToList();
                 break;
             case "set-parameter":
@@ -57,6 +66,18 @@ internal static class ActionVerifier
     private static Element RequiredElement(Document targetDocument, long id) =>
         ActionCommandExecutor.CreateId(id).ToElement(targetDocument)
         ?? throw new InvalidOperationException($"Verification could not find element {id}.");
+
+    private static ActionFacts PhaseFacts(Document targetDocument, long id)
+    {
+        var element = RequiredElement(targetDocument, id);
+        return new ActionFacts
+        {
+            Id = RevitValueReader.GetId(element.Id),
+            Category = element.Category?.Name ?? string.Empty,
+            CreatedPhase = ActionMutations.PhaseName(targetDocument, element.CreatedPhaseId),
+            DemolishedPhase = ActionMutations.PhaseName(targetDocument, element.DemolishedPhaseId),
+        };
+    }
 
     private static ActionFacts ParameterFacts(Document targetDocument, ActionJobContract action)
     {
