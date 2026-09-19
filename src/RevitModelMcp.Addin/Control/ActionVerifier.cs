@@ -35,6 +35,7 @@ internal static class ActionVerifier
                 break;
             case "place-family":
             case "create-wall":
+            case "create-floor":
                 var element = RequiredElement(targetDocument, result.Id!.Value);
                 var facts = Bounds(element);
                 var type = element.GetTypeId().ToElement<ElementType>(targetDocument);

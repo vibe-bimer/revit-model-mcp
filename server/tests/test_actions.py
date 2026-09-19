@@ -23,6 +23,7 @@ ACTION_TOOLS = {
     "revit_move",
     "revit_place_family",
     "revit_create_wall",
+    "revit_create_floor",
     "revit_set_parameter",
     "revit_delete",
     "revit_batch",
@@ -103,6 +104,19 @@ def action_server():
             },
         ),
         (
+            "revit_create_floor",
+            {
+                "points_mm": [[0, 0], [3000, 0], [3000, 2000]],
+                "level": "Level 1",
+                "floor_type": None,
+            },
+            {
+                "pointsMm": [[0.0, 0.0], [3000.0, 0.0], [3000.0, 2000.0]],
+                "level": "Level 1",
+                "floorType": None,
+            },
+        ),
+        (
             "revit_set_parameter",
             {"element_id": 1, "parameter": "Comments", "value": ""},
             {"elementId": 1, "parameter": "Comments", "value": ""},
@@ -165,6 +179,26 @@ def test_action_arguments_reach_channel_in_millimeters(
                 "level": "Level 1",
                 "wall_type": None,
                 "height_mm": -1,
+            },
+        ),
+        (
+            "revit_create_floor",
+            {"points_mm": [[0, 0], [3000, 0]], "level": "Level 1", "floor_type": None},
+        ),
+        (
+            "revit_create_floor",
+            {
+                "points_mm": [[0, 0], [0, 0], [3000, 0], [3000, 2000]],
+                "level": "Level 1",
+                "floor_type": None,
+            },
+        ),
+        (
+            "revit_create_floor",
+            {
+                "points_mm": [[0, 0, 300], [3000, 0], [3000, 2000]],
+                "level": "Level 1",
+                "floor_type": None,
             },
         ),
         (

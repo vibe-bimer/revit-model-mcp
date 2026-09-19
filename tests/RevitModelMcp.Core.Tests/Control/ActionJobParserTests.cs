@@ -44,6 +44,18 @@ public sealed class ActionJobParserTests
     }
 
     [Test]
+    public async Task Parse_CreateFloor_PreservesBoundaryAndDefaults()
+    {
+        var result = ControlJobParser.Parse("""{"command":"create-floor","pointsMm":[[0,0],[3000,0],[3000,2000]],"level":"01"}""");
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.PointsMm.Count).IsEqualTo(3);
+        await Assert.That(result.Action.PointsMm[0]).IsEquivalentTo(new double[] { 0, 0 });
+        await Assert.That(result.Action.PointsMm[2]).IsEquivalentTo(new double[] { 3000, 2000 });
+        await Assert.That(result.Action.FloorType).IsNull();
+        await Assert.That(result.Action.Level).IsEqualTo("01");
+    }
+
+    [Test]
     public async Task Parse_PlaceFamily_PreservesTypeLevelAndRotation()
     {
         var result = ControlJobParser.Parse("""{"command":"place-family","family":"Desk","typeName":"1200","xMm":100,"yMm":200,"level":"01","rotationDeg":90}""");
@@ -79,6 +91,11 @@ public sealed class ActionJobParserTests
     [Arguments("""{"command":"create-wall","startMm":[0],"endMm":[1,2],"level":"01"}""")]
     [Arguments("""{"command":"create-wall","startMm":[0,0],"endMm":[0,0],"level":"01"}""")]
     [Arguments("""{"command":"create-wall","startMm":[0,0],"endMm":[1,2],"level":"01","heightMm":0}""")]
+    [Arguments("""{"command":"create-floor","pointsMm":[[0,0],[3000,0]],"level":"01"}""")]
+    [Arguments("""{"command":"create-floor","pointsMm":[[0,0],[3000,0],[3000,2000]]}""")]
+    [Arguments("""{"command":"create-floor","pointsMm":[[0,0],[0,0],[3000,0],[3000,2000]],"level":"01"}""")]
+    [Arguments("""{"command":"create-floor","pointsMm":[[0],[3000,0],[3000,2000]],"level":"01"}""")]
+    [Arguments("""{"command":"create-floor","pointsMm":[[0,0],[3000,0],[3000,2000]],"level":"01","floorType":" "}""")]
     [Arguments("""{"command":"set-parameter","elementId":1,"parameter":"Comments"}""")]
     [Arguments("""{"command":"set-parameter","elementId":0,"parameter":"Comments","value":"x"}""")]
     public async Task Parse_InvalidActionsAreRejected(string json)

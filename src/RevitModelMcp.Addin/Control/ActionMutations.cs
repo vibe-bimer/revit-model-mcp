@@ -57,6 +57,26 @@ internal static class ActionMutations
         return new ActionResultData { Id = RevitValueReader.GetId(wall.Id), LengthMm = line.Length.ToMillimeters() };
     }
 
+    internal static ActionResultData CreateFloor(Document document, ActionJobContract action)
+    {
+        var level = FindLevel(document, action.Level!);
+        using var types = document.CollectElements().OfClass<FloorType>();
+        if (action.FloorType is not null)
+            types.WhereParameter(BuiltInParameter.SYMBOL_NAME_PARAM).Equals(action.FloorType);
+        var floorType = types.Cast<FloorType>().FirstOrDefault()
+                        ?? throw new ArgumentException($"Floor type '{action.FloorType ?? "floor"}' was not found.");
+        var elevation = level.ProjectElevation;
+        var points = action.PointsMm
+            .Select(point => new XYZ(Millimeters(point[0]), Millimeters(point[1]), elevation))
+            .ToList();
+        IList<Curve> boundary = points
+            .Select((point, index) => (Curve)Line.CreateBound(point, points[(index + 1) % points.Count]))
+            .ToList();
+        var loop = CurveLoop.Create(boundary);
+        var floor = Floor.Create(document, [loop], floorType.Id, level.Id);
+        return new ActionResultData { Id = RevitValueReader.GetId(floor.Id), Category = floor.Category?.Name, Level = level.Name };
+    }
+
     internal static ActionResultData SetParameter(Document document, ActionJobContract action)
     {
         var element = CreateId(action.ElementId).ToElement(document)

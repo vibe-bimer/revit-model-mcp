@@ -54,6 +54,11 @@ _BATCH_FIELDS = {
         "wall_type": (Name | None, ...),
         "height_mm": (PositiveLength, 3000),
     },
+    "create_floor": {
+        "points_mm": (Annotated[list[Point], Field(min_length=3)], ...),
+        "level": (Name, ...),
+        "floor_type": (Name | None, ...),
+    },
     "set_parameter": {
         "element_id": (ElementId, ...),
         "parameter": (Name, ...),
@@ -61,7 +66,7 @@ _BATCH_FIELDS = {
     },
     "delete": {"element_ids": (NonEmptyIds, ...)},
 }
-for _action in ("move", "place_family", "create_wall", "set_parameter", "delete"):
+for _action in ("move", "place_family", "create_wall", "create_floor", "set_parameter", "delete"):
     _BATCH_FIELDS[_action]["dry_run"] = (bool, False)
 _BATCH_MODELS = {
     action: create_model(action, __config__=ConfigDict(extra="forbid"), **fields)
@@ -72,7 +77,14 @@ _BATCH_MODELS = {
 class BatchStep(BaseModel):
     model_config = ConfigDict(extra="forbid")
     action: Literal[
-        "move", "place_family", "create_wall", "set_parameter", "delete", "select", "isolate"
+        "move",
+        "place_family",
+        "create_wall",
+        "create_floor",
+        "set_parameter",
+        "delete",
+        "select",
+        "isolate",
     ]
     args: dict
 
@@ -83,6 +95,12 @@ class BatchStep(BaseModel):
             raise ValueError("element_ids must not be empty unless reset is true.")
         if self.action == "create_wall" and self.args["start_mm"] == self.args["end_mm"]:
             raise ValueError("Wall endpoints must differ.")
+        if self.action == "create_floor":
+            points = self.args["points_mm"]
+            if any(
+                points[index] == points[(index + 1) % len(points)] for index in range(len(points))
+            ):
+                raise ValueError("Floor boundary points must not repeat consecutively.")
         return self
 
     def payload(self) -> dict:
@@ -149,6 +167,7 @@ def register_actions(mcp, execute, host_provider) -> None:
             "revit_move": "Move Elements",
             "revit_place_family": "Place Family",
             "revit_create_wall": "Create Wall",
+            "revit_create_floor": "Create Floor",
             "revit_set_parameter": "Set Parameter",
             "revit_delete": "Delete Elements",
             "revit_batch": "Run Action Batch",
@@ -272,6 +291,34 @@ def register_actions(mcp, execute, host_provider) -> None:
             level=level,
             wallType=wall_type,
             heightMm=height_mm,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @action
+    async def revit_create_floor(
+        points_mm: Annotated[list[Point], Field(min_length=3)],
+        level: Name,
+        floor_type: Name | None,
+        dry_run: bool = False,
+        document: Document = None,
+    ) -> dict[str, Any]:
+        """Create a floor from a closed boundary for layout on a named level.
+        points_mm are model XY polygon vertices in millimetres (at least 3; the
+        boundary closes automatically); null floor_type chooses the first floor type.
+        dry_run executes and rolls back, returning the same verification block without changing the model.
+        Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected.
+        """
+        if any(
+            points_mm[index] == points_mm[(index + 1) % len(points_mm)]
+            for index in range(len(points_mm))
+        ):
+            raise ToolError("Floor boundary points must not repeat consecutively.")
+        return await send(
+            "create-floor",
+            pointsMm=points_mm,
+            level=level,
+            floorType=floor_type,
             dryRun=dry_run,
             document=document,
         )

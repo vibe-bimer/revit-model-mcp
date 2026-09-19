@@ -228,6 +228,8 @@ internal static class ActionCommandExecutor
                 return ActionMutations.PlaceFamily(document, action);
             case "create-wall":
                 return ActionMutations.CreateWall(document, action);
+            case "create-floor":
+                return ActionMutations.CreateFloor(document, action);
             case "set-parameter":
                 return ActionMutations.SetParameter(document, action);
             default:

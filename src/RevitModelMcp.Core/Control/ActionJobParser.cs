@@ -5,7 +5,7 @@ namespace RevitModelMcp.Core.Control;
 public static class ActionJobParser
 {
     public static bool IsAction(string command) => command is
-        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "set-parameter" or "delete" or "batch";
+        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-parameter" or "delete" or "batch";
 
     public static ControlJobParseResult Parse(string command, ControlJobContract job)
     {
@@ -30,6 +30,8 @@ public static class ActionJobParser
                 EndMm = job.EndMm ?? [],
                 WallType = job.WallType,
                 HeightMm = job.HeightMm ?? 3000,
+                PointsMm = job.PointsMm ?? [],
+                FloorType = job.FloorType,
                 ElementId = job.ActionElementId ?? 0,
                 Parameter = job.Parameter,
                 Value = job.Value
@@ -41,7 +43,7 @@ public static class ActionJobParser
                 {
                     var stepCommand = step?.Command ?? string.Empty;
                     Require(IsAction(stepCommand) && stepCommand is not ("show" or "batch"),
-                        "Batch steps must be move, place-family, create-wall, set-parameter, delete, select or isolate.");
+                        "Batch steps must be move, place-family, create-wall, create-floor, set-parameter, delete, select or isolate.");
                     var parsed = Parse(stepCommand, step!);
                     Require(parsed.Error is null, $"Step {action.Steps.Count}: {parsed.Error}");
                     action.Steps.Add(parsed);
@@ -78,7 +80,7 @@ public static class ActionJobParser
                 Require(Finite(action.XMm, action.YMm, action.RotationDeg), "Placement coordinates and rotation must be finite.");
                 Require(action.TypeName is null || !string.IsNullOrWhiteSpace(action.TypeName), "typeName must not be blank.");
             }
-            if (command is "place-family" or "create-wall")
+            if (command is "place-family" or "create-wall" or "create-floor")
                 Require(!string.IsNullOrWhiteSpace(action.Level), "level is required.");
             if (command == "create-wall")
             {
@@ -87,6 +89,16 @@ public static class ActionJobParser
                 Require(!action.StartMm.SequenceEqual(action.EndMm), "Wall endpoints must differ.");
                 Require(Finite(action.HeightMm) && action.HeightMm > 0, "heightMm must be finite and positive.");
                 Require(action.WallType is null || !string.IsNullOrWhiteSpace(action.WallType), "wallType must not be blank.");
+            }
+            if (command == "create-floor")
+            {
+                Require(action.PointsMm.Count >= 3, "pointsMm must contain at least three boundary points.");
+                Require(action.PointsMm.All(point => point.Count == 2), "Each floor boundary point must contain two coordinates.");
+                Require(Finite(action.PointsMm.SelectMany(point => point).ToArray()), "Floor boundary coordinates must be finite millimetres.");
+                for (var index = 0; index < action.PointsMm.Count; index++)
+                    Require(!action.PointsMm[index].SequenceEqual(action.PointsMm[(index + 1) % action.PointsMm.Count]),
+                        "Floor boundary points must not repeat consecutively.");
+                Require(action.FloorType is null || !string.IsNullOrWhiteSpace(action.FloorType), "floorType must not be blank.");
             }
             if (command == "set-parameter")
             {
@@ -163,6 +175,8 @@ public sealed class ActionJobContract
     public List<double> EndMm { get; set; } = [];
     public string? WallType { get; set; }
     public double HeightMm { get; set; }
+    public List<List<double>> PointsMm { get; set; } = [];
+    public string? FloorType { get; set; }
     public long ElementId { get; set; }
     public string? Parameter { get; set; }
     public string? Value { get; set; }
@@ -186,6 +200,8 @@ public sealed partial class ControlJobContract
     [DataMember(Name = "endMm")] public List<double>? EndMm { get; set; }
     [DataMember(Name = "wallType")] public string? WallType { get; set; }
     [DataMember(Name = "heightMm")] public double? HeightMm { get; set; }
+    [DataMember(Name = "pointsMm")] public List<List<double>>? PointsMm { get; set; }
+    [DataMember(Name = "floorType")] public string? FloorType { get; set; }
     [DataMember(Name = "elementId")] public long? ActionElementId { get; set; }
     [DataMember(Name = "parameter")] public string? Parameter { get; set; }
     [DataMember(Name = "value")] public string? Value { get; set; }
