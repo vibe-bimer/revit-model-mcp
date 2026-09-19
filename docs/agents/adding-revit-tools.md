@@ -109,8 +109,13 @@ Design notes:
   Windows PR CI remains the oracle for full builds.
 - Run `dotnet test --project tests/RevitModelMcp.Core.Tests/RevitModelMcp.Core.Tests.csproj`
   and `cd server && uv run --with pytest pytest -q`.
-- `dotnet format` (pre-commit) only runs on Windows; on Linux report it and
-  rely on PR CI, per AGENTS.md.
+- `dotnet format --verify-no-changes` also runs on Linux when the
+  environment sets `EnableWindowsTargeting=true` (with
+  `Configuration=Debug.R26` and `DeployAddin=false`, per AGENTS.md):
+  `env 'EnableWindowsTargeting=true' Configuration=Debug.R26
+  DeployAddin=false dotnet format RevitModelMcp.sln --verify-no-changes
+  --verbosity minimal`. Expect workspace-load warnings; exit code 0 passes.
+  Windows PR CI remains the oracle for the full build matrix and packaging.
 - Deploy to the workstation: ILRepack only runs on Windows builds, so a Linux
   build produces separate assemblies. Copy `RevitModelMcp.dll`,
   `RevitModelMcp.Core.dll`, `JetBrains.Annotations.dll`,
