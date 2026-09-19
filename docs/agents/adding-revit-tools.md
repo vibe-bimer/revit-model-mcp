@@ -103,15 +103,29 @@ Design notes:
 ## Build and deploy
 
 - Compile check on Linux works with
-  `dotnet build src/RevitModelMcp.Addin -c Release.R26 -p:DeployAddin=false -p:UseWPF=false`.
+  `dotnet build src/RevitModelMcp.Addin -c Release.R26 -p:DeployAddin=false -p:EnableWindowsTargeting=true`.
+  (`UseWPF=false` is not enough for `net8.0-windows` targets: the
+  WindowsDesktop reference pack resolves through `EnableWindowsTargeting`.)
   Windows PR CI remains the oracle for full builds.
 - Run `dotnet test --project tests/RevitModelMcp.Core.Tests/RevitModelMcp.Core.Tests.csproj`
   and `cd server && uv run --with pytest pytest -q`.
-- Deploy to the workstation: copy the built assembly and the `.addin`
-  manifest to `%APPDATA%\Autodesk\Revit\Addins\2026` over SSH, then
-  coordinate a Revit restart with the user. Never kill Revit remotely.
+- `dotnet format` (pre-commit) only runs on Windows; on Linux report it and
+  rely on PR CI, per AGENTS.md.
+- Deploy to the workstation: ILRepack only runs on Windows builds, so a Linux
+  build produces separate assemblies. Copy `RevitModelMcp.dll`,
+  `RevitModelMcp.Core.dll`, `JetBrains.Annotations.dll`,
+  `Nice3point.Revit.Extensions.dll`, `Nice3point.Revit.Toolkit.dll`,
+  `RevitModelMcp.deps.json` and `RevitModelMcp.runtimeconfig.json` over SSH to
+  `%APPDATA%\Autodesk\Revit\Addins\2026\RevitModelMcp\`. Back up that folder
+  first; the loaded DLL is locked while Revit runs, so deploy only with Revit
+  closed. Never kill Revit remotely — coordinate the restart with the user.
+- New tools reach MCP clients only when the Python server runs from this
+  clone (`uv run --directory server revit-model-mcp`), not from the published
+  `uvx revit-model-mcp` package. Point the connector at the clone while
+  developing.
 - Live smoke test through the `revit` MCP connector: `revit_ping`, then the
-  new tool with `dry_run=true` first.
+  new tool with `dry_run=true` first, then a real run plus verification and
+  cleanup.
 
 ## Version caveats
 
