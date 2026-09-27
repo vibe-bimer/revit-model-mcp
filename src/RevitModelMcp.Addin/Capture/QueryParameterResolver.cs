@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Query;
 
 namespace RevitModelMcp.Capture;
@@ -17,7 +18,7 @@ internal sealed class QueryParameterDescriptor
     public string Name { get; set; } = string.Empty;
     public ElementId Id { get; set; } = ElementId.InvalidElementId;
     public QueryParameterKind Kind { get; set; }
-    public ForgeTypeId? DataType { get; set; }
+    public ParameterDataType DataType { get; set; }
 }
 
 internal static class QueryParameterResolver
@@ -67,7 +68,7 @@ internal static class QueryParameterResolver
                 continue;
             }
 
-            result[definition.Name] = Create(definition.Name, parameterElement.Id, definition.GetDataType());
+            result[definition.Name] = Create(definition.Name, parameterElement.Id, ParameterDataType.From(definition));
         }
     }
 
@@ -169,20 +170,18 @@ internal static class QueryParameterResolver
                     StorageType.ElementId => QueryParameterKind.ElementId,
                     _ => QueryParameterKind.Unknown
                 },
-                DataType = parameter.Definition?.GetDataType()
+                DataType = ParameterDataType.From(parameter.Definition)
             };
         }
     }
 
-    private static QueryParameterDescriptor Create(string name, ElementId id, ForgeTypeId dataType)
+    private static QueryParameterDescriptor Create(string name, ElementId id, ParameterDataType dataType)
     {
-        var typeId = dataType.TypeId ?? string.Empty;
-        var kind = UnitUtils.IsMeasurableSpec(dataType)
+        var kind = dataType.IsMeasurable
             ? QueryParameterKind.Double
-            : typeId.Contains("spec:string", StringComparison.OrdinalIgnoreCase)
+            : dataType.IsText
                 ? QueryParameterKind.String
-                : typeId.Contains("yesno", StringComparison.OrdinalIgnoreCase) ||
-                  typeId.Contains("int", StringComparison.OrdinalIgnoreCase)
+                : dataType.IsInteger
                     ? QueryParameterKind.Integer
                     : QueryParameterKind.ElementId;
         return new QueryParameterDescriptor { Name = name, Id = id, Kind = kind, DataType = dataType };

@@ -2,6 +2,7 @@ using System.Globalization;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Nice3point.Revit.Extensions;
+using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Models;
 using RevitModelMcp.Core.Units;
 
@@ -271,18 +272,18 @@ internal sealed class ViewElementReader
         if (parameter.StorageType == StorageType.Double)
         {
             var value = parameter.AsDouble();
-            var dataType = parameter.Definition.GetDataType();
-            if (dataType == SpecTypeId.Length)
+            var dataType = ParameterDataType.From(parameter.Definition);
+            if (dataType.IsLength)
             {
                 return $"{UnitConverter.FeetToMillimeters(value).ToString("0.###", CultureInfo.InvariantCulture)} mm";
             }
 
-            if (dataType == SpecTypeId.Area)
+            if (dataType.IsArea)
             {
                 return $"{UnitConverter.SquareFeetToSquareMeters(value).ToString("0.######", CultureInfo.InvariantCulture)} m²";
             }
 
-            if (dataType == SpecTypeId.Volume)
+            if (dataType.IsVolume)
             {
                 return $"{UnitConverter.CubicFeetToCubicMeters(value).ToString("0.######", CultureInfo.InvariantCulture)} m³";
             }
@@ -349,18 +350,18 @@ internal sealed class ViewElementReader
         }
 
         var value = parameter.AsDouble();
-        var dataType = parameter.Definition?.GetDataType();
-        if (dataType == SpecTypeId.Length)
+        var dataType = ParameterDataType.From(parameter.Definition);
+        if (dataType.IsLength)
         {
             detail.MetricValue = UnitConverter.FeetToMillimeters(value);
             detail.MetricUnit = "mm";
         }
-        else if (dataType == SpecTypeId.Area)
+        else if (dataType.IsArea)
         {
             detail.MetricValue = UnitConverter.SquareFeetToSquareMeters(value);
             detail.MetricUnit = "m2";
         }
-        else if (dataType == SpecTypeId.Volume)
+        else if (dataType.IsVolume)
         {
             detail.MetricValue = UnitConverter.CubicFeetToCubicMeters(value);
             detail.MetricUnit = "m3";

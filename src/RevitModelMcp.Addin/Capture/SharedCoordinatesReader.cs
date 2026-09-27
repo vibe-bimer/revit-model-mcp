@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Control;
 using RevitModelMcp.Core.Models;
 
@@ -10,8 +11,8 @@ internal static class SharedCoordinatesReader
     {
         const int listLimit = 100;
         var location = document.ActiveProjectLocation;
-        var basePoint = BasePoint.GetProjectBasePoint(document);
-        var surveyPoint = BasePoint.GetSurveyPoint(document);
+        var basePoint = BasePoints.GetProjectBasePoint(document);
+        var surveyPoint = BasePoints.GetSurveyPoint(document);
         var locations = document.ProjectLocations.Cast<ProjectLocation>().Select(site => site.Name)
             .OrderBy(name => name, StringComparer.Ordinal).ToList();
         using var links = new FilteredElementCollector(document).OfClass(typeof(RevitLinkInstance));
@@ -57,8 +58,14 @@ internal static class SharedCoordinatesReader
 
     private static bool? ReadClipped(BasePoint point)
     {
+#if REVIT2022_OR_GREATER
         try { return point.Clipped; }
         catch (Exception) { return null; }
+#else
+        // Revit 2020 has no BasePoint.Clipped. Only the survey point can be clipped, and the
+        // project base point read here is never shared, so Revit reports it unclipped.
+        return false;
+#endif
     }
 
     private static CoordinateOffset Offset(XYZ point) => new()
@@ -69,7 +76,7 @@ internal static class SharedCoordinatesReader
     };
 
     private static double Millimeters(double value) =>
-        Math.Round(UnitUtils.ConvertFromInternalUnits(value, UnitTypeId.Millimeters), 1);
+        Math.Round(RevitUnits.InternalUnitsToMillimeters(value), 1);
 
     private static double Degrees(double value) => Math.Round(value * 180 / Math.PI, 1);
 }

@@ -1,6 +1,7 @@
 using System.IO;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
+using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Control;
 using RevitModelMcp.Core.Models;
 
@@ -65,13 +66,12 @@ internal static class ModelHealthReader
             result.Counts[metric.Key] = Try<int?>(result, "counts." + metric.Key, () => metric.Value());
         result.TopWarnings = Try(result, "topWarnings", () => ModelWarningReader.Read(document, null, false)
             .Groups.Take(10).Select(group => new HealthWarning { Text = group.Text, Count = group.Count }).ToList())!;
-        foreach (var unit in new Dictionary<string, ForgeTypeId>
+        foreach (var unit in new Dictionary<string, Func<string>>
         {
-            ["length"] = SpecTypeId.Length,
-            ["area"] = SpecTypeId.Area,
-            ["volume"] = SpecTypeId.Volume
-        }) result.Units[unit.Key] = Try(result, "units." + unit.Key,
-            () => document.GetUnits().GetFormatOptions(unit.Value).GetUnitTypeId().TypeId);
+            ["length"] = () => RevitUnits.LengthUnitId(document),
+            ["area"] = () => RevitUnits.AreaUnitId(document),
+            ["volume"] = () => RevitUnits.VolumeUnitId(document)
+        }) result.Units[unit.Key] = Try(result, "units." + unit.Key, unit.Value);
         return result;
     }
 

@@ -3,6 +3,7 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Structure;
 using Nice3point.Revit.Extensions;
 using RevitModelMcp.Capture;
+using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Control;
 
 namespace RevitModelMcp.Control;
@@ -73,7 +74,18 @@ internal static class ActionMutations
             .Select((point, index) => (Curve)Line.CreateBound(point, points[(index + 1) % points.Count]))
             .ToList();
         var loop = CurveLoop.Create(boundary);
+#if REVIT2022_OR_GREATER
         var floor = Floor.Create(document, [loop], floorType.Id, level.Id);
+#else
+        // Revit 2020 has no Floor.Create; document.Create.NewFloor takes a CurveArray and elements.
+        var profile = new CurveArray();
+        foreach (var curve in boundary)
+        {
+            profile.Append(curve);
+        }
+
+        var floor = document.Create.NewFloor(profile, floorType, level, false);
+#endif
         return new ActionResultData { Id = RevitValueReader.GetId(floor.Id), Category = floor.Category?.Name, Level = level.Name };
     }
 
@@ -148,12 +160,39 @@ internal static class ActionMutations
         }
         else
         {
-            if (phaseId != ElementId.InvalidElementId && !element.IsDemolishedPhaseOrderValid(phaseId))
+            if (phaseId != ElementId.InvalidElementId && !IsDemolishedPhaseOrderValid(document, element, phaseId))
                 throw new ArgumentException(
                     $"The demolition phase is out of order for element {RevitValueReader.GetId(element.Id)}; demolition must follow the creation phase.");
             element.DemolishedPhaseId = phaseId;
         }
     }
+
+    /// <summary>
+    /// Revit 2020 has no <c>Element.IsDemolishedPhaseOrderValid</c>;
+    /// the demolition phase must not precede the creation phase.
+    /// </summary>
+    private static bool IsDemolishedPhaseOrderValid(Document document, Element element, ElementId demolishedPhaseId)
+    {
+#if REVIT2022_OR_GREATER
+        return element.IsDemolishedPhaseOrderValid(demolishedPhaseId);
+#else
+        return PhaseIndex(document, element.CreatedPhaseId) <= PhaseIndex(document, demolishedPhaseId);
+#endif
+    }
+
+#if !REVIT2022_OR_GREATER
+    private static int PhaseIndex(Document document, ElementId phaseId)
+    {
+        var index = 0;
+        foreach (Phase phase in document.Phases)
+        {
+            if (phase.Id == phaseId) return index;
+            index++;
+        }
+
+        return -1;
+    }
+#endif
 
     private static List<ElementId> ReassignPhaseReferences(
         Document document, ElementId sourceId, ElementId targetId, ElementOnPhaseStatus status, bool created)
@@ -207,7 +246,7 @@ internal static class ActionMutations
         {
             StorageType.String => parameter.Set(value),
             StorageType.Integer => parameter.Set(int.Parse(value, NumberStyles.Integer, CultureInfo.InvariantCulture)),
-            StorageType.Double => parameter.Set(ParameterDouble(parameter, value)),
+            StorageType.Double => parameter.Set(ParameterDouble(document, parameter, value)),
             _ => throw new ArgumentException("Only String, Integer and Double parameters are supported; ElementId parameters cannot be set.")
         };
         if (!changed)
@@ -220,14 +259,11 @@ internal static class ActionMutations
         };
     }
 
-    private static double ParameterDouble(Parameter parameter, string text)
+    private static double ParameterDouble(Document document, Parameter parameter, string text)
     {
         var value = double.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture);
         if (double.IsNaN(value) || double.IsInfinity(value)) throw new ArgumentException("Parameter value must be finite.");
-        var spec = parameter.Definition.GetDataType();
-        if (spec == SpecTypeId.Length) return Millimeters(value);
-        if (spec == SpecTypeId.Area) return UnitUtils.ConvertToInternalUnits(value, UnitTypeId.SquareMeters);
-        return value;
+        return ParameterDataType.From(parameter.Definition).ToInternalUnits(document, value);
     }
 
     internal static string ParameterValue(Parameter parameter)
@@ -236,10 +272,7 @@ internal static class ActionMutations
         if (parameter.StorageType == StorageType.String) return parameter.AsString() ?? string.Empty;
         if (parameter.StorageType == StorageType.Integer) return parameter.AsInteger().ToString(CultureInfo.InvariantCulture);
         if (parameter.StorageType != StorageType.Double) throw new ArgumentException("Unsupported parameter storage type.");
-        var spec = parameter.Definition.GetDataType();
-        var value = parameter.AsDouble();
-        if (spec == SpecTypeId.Length) value = value.ToMillimeters();
-        else if (spec == SpecTypeId.Area) value = UnitUtils.ConvertFromInternalUnits(value, UnitTypeId.SquareMeters);
+        var value = ParameterDataType.From(parameter.Definition).FromInternalUnits(parameter.AsDouble());
         return value.ToString("R", CultureInfo.InvariantCulture);
     }
 
@@ -252,7 +285,7 @@ internal static class ActionMutations
     }
 
     private static ElementId CreateId(long value) => ActionCommandExecutor.CreateId(value);
-    private static double Millimeters(double value) => UnitUtils.ConvertToInternalUnits(value, UnitTypeId.Millimeters);
+    private static double Millimeters(double value) => RevitUnits.MillimetersToInternalUnits(value);
 
     internal sealed class FamilyNotLoadedException(string name, List<string> closestFamilies)
         : ArgumentException($"Family '{name}' is not loaded. Closest loaded families: {string.Join(", ", closestFamilies)}")

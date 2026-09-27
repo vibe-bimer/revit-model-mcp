@@ -129,18 +129,7 @@ internal static class QueryFilterBuilder
         ParameterFilterSpec filter)
     {
         var displayValue = ParseDouble(filter.Value!, descriptor.Name);
-        var internalValue = displayValue;
-        if (descriptor.DataType is not null && UnitUtils.IsMeasurableSpec(descriptor.DataType))
-        {
-            var unit = descriptor.DataType == SpecTypeId.Length
-                ? UnitTypeId.Millimeters
-                : descriptor.DataType == SpecTypeId.Area
-                    ? UnitTypeId.SquareMeters
-                    : descriptor.DataType == SpecTypeId.Volume
-                        ? UnitTypeId.CubicMeters
-                        : document.GetUnits().GetFormatOptions(descriptor.DataType).GetUnitTypeId();
-            internalValue = UnitUtils.ConvertToInternalUnits(displayValue, unit);
-        }
+        var internalValue = descriptor.DataType.ToInternalUnits(document, displayValue);
 
         const double epsilon = 1e-9;
         return filter.Operator switch

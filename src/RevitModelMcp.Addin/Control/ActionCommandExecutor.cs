@@ -5,6 +5,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using Nice3point.Revit.Extensions;
 using RevitModelMcp.Capture;
+using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Control;
 using RevitModelMcp.Core.Models;
 using RevitModelMcp.Output;
@@ -165,15 +166,30 @@ internal static class ActionCommandExecutor
             ReadCommandReader.ReadResponder(application), correlationId).Write(response);
     }
 
+    /// <summary>
+    /// Reports whether a view contains any of the given elements.
+    /// Revit 2020 has no <c>ElementIdSetFilter</c>, so it scans the view instead.
+    /// </summary>
+    private static bool ViewShowsAnyElement(Document document, ElementId viewId, ICollection<ElementId> ids)
+    {
+#if REVIT2022_OR_GREATER
+        using var idFilter = new ElementIdSetFilter(ids);
+        using var visible = document.CollectElements(viewId).WherePasses(idFilter);
+        return visible.Any();
+#else
+        var wanted = new HashSet<ElementId>(ids);
+        using var visible = document.CollectElements(viewId);
+        return visible.Any(element => wanted.Contains(element.Id));
+#endif
+    }
+
     private static bool OpenViewForElements(UIDocument uiDocument, List<ElementId> ids)
     {
         var document = uiDocument.Document;
-        using var idFilter = new ElementIdSetFilter(ids);
         foreach (var uiView in uiDocument.GetOpenUIViews())
         {
             if (!FilteredElementCollector.IsViewValidForElementIteration(document, uiView.ViewId)) continue;
-            using var visible = document.CollectElements(uiView.ViewId).WherePasses(idFilter);
-            if (visible.Any()) return false;
+            if (ViewShowsAnyElement(document, uiView.ViewId, ids)) return false;
         }
 
         View? target = null;
@@ -258,7 +274,7 @@ internal static class ActionCommandExecutor
 #endif
     }
 
-    private static double Millimeters(double value) => UnitUtils.ConvertToInternalUnits(value, UnitTypeId.Millimeters);
+    private static double Millimeters(double value) => RevitUnits.MillimetersToInternalUnits(value);
 
     internal sealed class ActionFailures : IFailuresPreprocessor
     {

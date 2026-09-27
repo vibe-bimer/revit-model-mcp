@@ -41,9 +41,8 @@ internal sealed class ViewDumpSession : IControlSession
         var originalView = _document.ActiveView ?? throw new InvalidOperationException("No active Revit view.");
         _originalViewId = originalView.Id;
         _requestedViews = requestedViews;
-        _initialOpenViewIds = _uiDocument.GetOpenUIViews()
-            .Select(view => RevitValueReader.GetId(view.ViewId))
-            .ToHashSet();
+        _initialOpenViewIds = new HashSet<long>(_uiDocument.GetOpenUIViews()
+            .Select(view => RevitValueReader.GetId(view.ViewId)));
         _warningElementIds = ReadCommandReader.ReadWarningElementIds(_document);
         _output = ViewDumpOutput.Create(startedAt.LocalDateTime);
         _report = new ViewDumpReport

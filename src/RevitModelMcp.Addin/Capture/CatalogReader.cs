@@ -1,4 +1,5 @@
 using Autodesk.Revit.DB;
+using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Models;
 
 namespace RevitModelMcp.Capture;
@@ -175,7 +176,7 @@ internal static class CatalogReader
         {
             var definition = iterator.Key;
             var accumulator = Get(parameters, definition.Name);
-            accumulator.ValueTypes.Add(definition.GetDataType().TypeId);
+            accumulator.ValueTypes.Add(ParameterDataType.From(definition).Id ?? string.Empty);
             if (iterator.Current is ElementBinding binding)
             {
                 foreach (Category category in binding.Categories)

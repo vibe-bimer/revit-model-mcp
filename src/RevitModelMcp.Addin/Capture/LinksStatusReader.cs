@@ -65,7 +65,16 @@ internal static class LinksStatusReader
                 item.Name = type.Name;
                 item.Instances = images[type.Id].Count();
                 item.Path = type.Path;
+#if REVIT2022_OR_GREATER
                 item.Status = type.Status.ToString();
+#else
+                // Revit 2020 has no ImageType.Status; read the linked file reference instead and
+                // report imported images the way ImageTypeStatus.Imported is reported.
+                item.Status = type.IsExternalFileReference()
+                    ? Status(ExternalFileUtils.GetExternalFileReference(document, type.Id)
+                        .GetLinkedFileStatus().ToString())
+                    : type.IsLoadedFromFile() ? "Loaded" : "Other";
+#endif
             }
             catch (Exception exception) { item.Status = "Other"; item.Error = exception.Message; }
             result.Summary.Images++;

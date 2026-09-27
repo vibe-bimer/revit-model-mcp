@@ -28,8 +28,8 @@ internal static class ViewImageExporter
         }
 
         var prefix = Path.GetFileNameWithoutExtension(targetPath);
-        var existingFiles = Directory.GetFiles(directory, $"{prefix}*.png")
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var existingFiles = new HashSet<string>(Directory.GetFiles(directory, $"{prefix}*.png"),
+            StringComparer.OrdinalIgnoreCase);
         using var options = CreateOptions(view, targetPath, pixelSize, zoomToFit);
         document.ExportImage(options);
 

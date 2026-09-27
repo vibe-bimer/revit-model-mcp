@@ -202,11 +202,10 @@ internal static class ReadCommandReader
 
     public static ViewWarningsData ReadViewWarnings(Document document, View view)
     {
-        var viewIds = new FilteredElementCollector(document, view.Id)
+        var viewIds = new HashSet<long>(new FilteredElementCollector(document, view.Id)
             .WhereElementIsNotElementType()
             .ToElementIds()
-            .Select(RevitValueReader.GetId)
-            .ToHashSet();
+            .Select(RevitValueReader.GetId));
         var warnings = document.GetWarnings()
             .Select(warning =>
             {
@@ -267,10 +266,9 @@ internal static class ReadCommandReader
 
     public static HashSet<long> ReadWarningElementIds(Document document)
     {
-        return document.GetWarnings()
+        return new HashSet<long>(document.GetWarnings()
             .SelectMany(warning => warning.GetFailingElements().Concat(warning.GetAdditionalElements()))
-            .Select(RevitValueReader.GetId)
-            .ToHashSet();
+            .Select(RevitValueReader.GetId));
     }
 
     private static void Increment(Dictionary<long, int> counts, ElementId? id)

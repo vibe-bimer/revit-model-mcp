@@ -1,6 +1,7 @@
 using Autodesk.Revit.DB;
 using Nice3point.Revit.Extensions;
 using RevitModelMcp.Capture;
+using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Control;
 
 namespace RevitModelMcp.Control;
@@ -108,7 +109,7 @@ internal static class ActionVerifier
 
     private static List<double> Millimeters(XYZ point) =>
         new[] { point.X, point.Y, point.Z }
-            .Select(value => Math.Round(UnitUtils.ConvertFromInternalUnits(value, UnitTypeId.Millimeters), 1)).ToList();
+            .Select(value => Math.Round(RevitUnits.InternalUnitsToMillimeters(value), 1)).ToList();
 
     private static bool SameBounds(List<double>? before, List<double>? after) =>
         before is null ? after is null : after is not null && before.SequenceEqual(after);

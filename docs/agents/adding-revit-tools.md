@@ -158,6 +158,19 @@ Design notes:
   new tool with `dry_run=true` first, then a real run plus verification and
   cleanup.
 
+### Revit 2020 builds
+
+`Debug.R20` and `Release.R20` build the add-in against Revit 2020. Two constraints apply:
+
+- The `Nice3point.Revit.Api.RevitAPI` 2020 package matches an updated Revit 2020, while a workstation
+  may still run the original 2020 release, which is missing around ninety of those members. Keep the
+  version-specific code in `src/RevitModelMcp.Addin/Compatibility/` and check any new Revit 2020 call
+  against the `RevitAPI.xml` beside the installed `RevitAPI.dll` before relying on it. The
+  `BasePoint.GetProjectBasePoint` and `BasePoint.GetSurveyPoint` accessors are one such case.
+- Revit stops on the publisher dialog for an unsigned add-in. Sign the deployed `RevitModelMcp.dll`
+  with the `RevitModelMcp Dev` certificate after every deploy, the way `sign-addin.ps1` does for the
+  other installed years.
+
 ## Known Revit API limits
 
 Do not re-investigate these; they are settled.

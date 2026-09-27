@@ -246,7 +246,7 @@ internal sealed class ViewElementsSession : IControlSession
         IReadOnlyList<string> requestedNames,
         out List<string> unknownNames)
     {
-        var requested = requestedNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var requested = new HashSet<string>(requestedNames, StringComparer.OrdinalIgnoreCase);
         var matchedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var ids = new List<ElementId>();
         foreach (Category category in document.Settings.Categories)
