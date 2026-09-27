@@ -7,7 +7,7 @@ Action tools have no `document` or timeout arguments.
 They use the default timeouts and require exactly one instance returned by the transport.
 HTTP addresses one endpoint; the file transports discover workstation instances.
 All IDs are unitless Revit element IDs.
-Revit 2022–2023 accept IDs up to 2,147,483,647 only; larger IDs fail on those years.
+Revit 2020–2023 accept IDs up to 2,147,483,647 only; larger IDs fail on those years.
 
 Action jobs with `targetDocument` resolve that reference when the add-in executes the job.
 The reference must match exactly one open document by a case-insensitive substring of its title or file name.

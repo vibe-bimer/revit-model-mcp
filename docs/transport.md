@@ -322,7 +322,7 @@ See [how it works](how-it-works.md), [architecture](architecture.md) and the [fe
 
 ## Installation from a clone
 
-The add-in requires Windows and Revit 2022-2027.
+The add-in requires Windows and Revit 2020-2027.
 Build with the .NET SDK selected by [`global.json`](../global.json).
 The server requires Python 3.11 or later, [uv](https://docs.astral.sh/uv/getting-started/installation/) and an MCP client.
 Clone on each machine that will build or run a component:
@@ -340,7 +340,7 @@ On Windows, close Revit and build and install for Revit 2026:
 .\install.ps1 -Year 2026 -Source Build
 ```
 
-Or install the latest GitHub release for every detected Revit year (2022-2027):
+Or install the latest GitHub release for every detected Revit year (2020-2027):
 
 ```powershell
 .\install.ps1 -Source Release
@@ -349,7 +349,7 @@ Or install the latest GitHub release for every detected Revit year (2022-2027):
 The inline build, copy and manifest-patching commands live in [`install.ps1`](../install.ps1).
 Installation uses `RevitModelMcp\` and `RevitModelMcp.addin` under `%APPDATA%\Autodesk\Revit\Addins\<year>`.
 Use `-Year 2024,2026` to select years and `-Version 0.2.0` to pin a release.
-`-Source Release` requires a release with an asset for each requested year: v0.1.0 ships R22–R26; v0.2.0 adds R27.
+`-Source Release` requires a release with an asset for each requested year: v0.1.0 ships R22–R26 and v0.2.0 adds R27, so Revit 2020 needs a release cut after R20 was added to the release workflow, or `-Source Build`.
 Add `-SignThumbprint <thumbprint>` to sign installed DLLs with a local code-signing certificate on workstations where Revit shows the unsigned add-in dialog on every rebuild.
 Add `-RegisterClaude` to register the local server with Claude Code; both `claude` and `uv` must be on PATH.
 Use `-Uninstall -Year 2026` to remove that year's add-in; local settings remain intact.

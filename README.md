@@ -12,7 +12,7 @@ For people reviewing or automating Revit models with an AI client: read a live R
 [![Latest release](https://img.shields.io/github/v/release/sharafutdinovdi/revit-model-mcp?style=flat-square)](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest)
 [![PyPI](https://img.shields.io/pypi/v/revit-model-mcp?style=flat-square)](https://pypi.org/project/revit-model-mcp/)
 [![Downloads](https://img.shields.io/github/downloads/sharafutdinovdi/revit-model-mcp/total?style=flat-square)](https://github.com/sharafutdinovdi/revit-model-mcp/releases)
-![Revit 2022-2027](https://img.shields.io/badge/Revit-2022--2027-005FB8?style=flat-square)
+![Revit 2020-2027](https://img.shields.io/badge/Revit-2020--2027-005FB8?style=flat-square)
 ![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square)
 [![MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
@@ -137,6 +137,7 @@ See [security details](https://sharafutdinovdi.github.io/revit-model-mcp/securit
 
 | Revit year | Add-in target framework | Validation status |
 | --- | --- | --- |
+| 2020 | .NET Framework 4.7 | Builds and live reads/actions |
 | 2022 | .NET Framework 4.8 | Build evidence |
 | 2023 | .NET Framework 4.8 | Build evidence |
 | 2024 | .NET Framework 4.8 | Builds and install script |
