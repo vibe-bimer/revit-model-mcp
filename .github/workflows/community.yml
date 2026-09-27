@@ -50,7 +50,7 @@ jobs:
             const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
               ...repo, run_id: run.id, per_page: 100
             });
-            const years = [2022, 2026];
+            const years = [2020, 2022, 2026];
             const links = years.map(year => {
               const artifact = artifacts.find(item =>
                 item.name === `revit-model-mcp-addin-R${String(year).slice(2)}` && !item.expired);
@@ -58,7 +58,7 @@ jobs:
               return `- [Revit ${year}](${context.serverUrl}/${repo.owner}/${repo.repo}/actions/runs/${run.id}/artifacts/${artifact.id})`;
             });
             const marker = '<!-- addin-build-artifacts -->';
-            const body = [marker, 'Add-in builds passed for Revit 2022 and 2026.', '',
+            const body = [marker, 'Add-in builds passed for Revit 2020, 2022 and 2026.', '',
               ...links, '', `Commit: \`${run.head_sha}\`. Sign in to GitHub to download; artifacts expire after 90 days.`].join('\n');
             for (const candidate of pulls) {
               const { data: pr } = await github.rest.pulls.get({...repo, pull_number: candidate.number});

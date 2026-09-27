@@ -71,6 +71,8 @@ jobs:
           global-json-file: global.json
       - name: Build Revit 2026
         run: dotnet build src/RevitModelMcp.Addin -c Release.R26 -p:DeployAddin=false
+      - name: Build Revit 2020
+        run: dotnet build src/RevitModelMcp.Addin -c Release.R20 -p:DeployAddin=false
       - name: Build Revit 2022
         run: dotnet build src/RevitModelMcp.Addin -c Release.R22 -p:DeployAddin=false
       - name: Build Revit 2027
@@ -106,8 +108,8 @@ jobs:
             $files = @(Get-ChildItem $target -Recurse -File)
             if ($files | Where-Object Name -Like 'RevitAPI*.dll') { throw 'Revit API binaries must not be distributed' }
             $manifests = @($files | Where-Object Name -EQ 'RevitModelMcp.addin')
-            if ($manifests.Count -ne 3) { throw 'Unexpected Revit year count in MSI' }
-            foreach ($year in '22', '26', '27') {
+            if ($manifests.Count -ne 7) { throw 'Unexpected Revit year count in MSI' }
+            foreach ($year in '20', '22', '26', '27') {
               $manifest = @($manifests | Where-Object { $_.Directory.Name -eq "20$year" })
               if ($manifest.Count -ne 1) { throw "Missing or duplicate R$year manifest in MSI" }
               if (!(Test-Path "$($manifest[0].DirectoryName)/RevitModelMcp/RevitModelMcp.dll")) { throw "Missing R$year assembly in MSI" }
@@ -119,7 +121,7 @@ jobs:
         shell: pwsh
         run: |
           $msi = (Get-ChildItem output/*-SingleUser.msi).FullName
-          $roots = @("$env:APPDATA/Autodesk/Revit/Addins/2022", "$env:APPDATA/Autodesk/Revit/Addins/2026", "$env:APPDATA/Autodesk/Revit/Addins/2027")
+          $roots = @("$env:APPDATA/Autodesk/Revit/Addins/2020", "$env:APPDATA/Autodesk/Revit/Addins/2022", "$env:APPDATA/Autodesk/Revit/Addins/2026", "$env:APPDATA/Autodesk/Revit/Addins/2027")
           $log = "$env:RUNNER_TEMP/mcp-single-install.log"
           try {
             $process = Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart /l*v `"$log`"" -Wait -PassThru
@@ -146,7 +148,7 @@ jobs:
         shell: pwsh
         run: |
           $msi = (Get-ChildItem output/*-MultiUser.msi).FullName
-          $roots = @("$env:ProgramData/Autodesk/Revit/Addins/2022", "$env:ProgramData/Autodesk/Revit/Addins/2026", "$env:ProgramFiles/Autodesk/Revit/Addins/2027")
+          $roots = @("$env:ProgramData/Autodesk/Revit/Addins/2020", "$env:ProgramData/Autodesk/Revit/Addins/2022", "$env:ProgramData/Autodesk/Revit/Addins/2026", "$env:ProgramFiles/Autodesk/Revit/Addins/2027")
           $log = "$env:RUNNER_TEMP/mcp-multi-install.log"
           try {
             $process = Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart /l*v `"$log`"" -Wait -PassThru
@@ -196,7 +198,7 @@ jobs:
       - name: Stage add-in artifacts
         shell: pwsh
         run: |
-          foreach ($year in '22', '26', '27') {
+          foreach ($year in '20', '22', '26', '27') {
             $stage = "artifacts/addin-R$year"
             New-Item -ItemType Directory -Force "$stage/RevitModelMcp" | Out-Null
             Copy-Item "src/RevitModelMcp.Addin/bin/Release.R$year/*" "$stage/RevitModelMcp" -Recurse
@@ -204,6 +206,12 @@ jobs:
             if (!(Test-Path "$stage/RevitModelMcp/RevitModelMcp.dll")) { throw "Missing R$year add-in" }
             if (Get-ChildItem $stage -Recurse -Filter 'RevitAPI*.dll') { throw 'Revit API binaries must not be distributed' }
           }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: revit-model-mcp-addin-R20
+          retention-days: 90
+          path: artifacts/addin-R20/
+          if-no-files-found: error
       - uses: actions/upload-artifact@v7
         with:
           name: revit-model-mcp-addin-R22

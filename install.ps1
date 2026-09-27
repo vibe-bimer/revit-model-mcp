@@ -1,5 +1,5 @@
 <#
-Installs or removes Revit Model MCP for selected or detected Revit 2022-2027 years.
+Installs or removes Revit Model MCP for selected or detected Revit 2020-2027 years.
 Release installs check available assets and report missing Revit year packages.
 Keep this script ASCII-only for BOM-less Windows PowerShell 5.1 compatibility.
 Examples (run on Windows from a repository checkout):
@@ -30,7 +30,7 @@ $headers = @{ 'User-Agent' = 'revit-model-mcp-install' }
 if ($env:GITHUB_TOKEN) { $headers.Authorization = "Bearer $env:GITHUB_TOKEN" }
 
 function Get-InstalledRevitYears {
-    foreach ($candidate in 2022..2027) {
+    foreach ($candidate in 2020..2027) {
         if (Test-Path "C:\Program Files\Autodesk\Revit $candidate\Revit.exe" -PathType Leaf) {
             [string]$candidate
         }
@@ -114,7 +114,7 @@ function Uninstall-Year([string] $SelectedYear) {
 function Update-HttpUrlAcl {
     $prefix = 'http://127.0.0.1:53110/'
     if ($Uninstall) {
-        foreach ($candidate in 2022..2027) {
+        foreach ($candidate in 2020..2027) {
             if (Test-Path (Join-Path $env:APPDATA "Autodesk\Revit\Addins\$candidate\RevitModelMcp.addin")) {
                 return
             }
@@ -167,9 +167,9 @@ try {
     if (!$env:APPDATA -or !$env:TEMP) { throw 'APPDATA and TEMP must be set.' }
     if (!$Year) { $Year = @(Get-InstalledRevitYears) }
     $Year = @($Year | Select-Object -Unique)
-    if (!$Year.Count) { throw 'No Revit 2022-2027 installation detected. Specify -Year explicitly.' }
+    if (!$Year.Count) { throw 'No Revit 2020-2027 installation detected. Specify -Year explicitly.' }
     foreach ($selected in $Year) {
-        if ($selected -notmatch '^202[2-7]$') { throw "Unsupported Revit year: $selected. Use 2022-2027." }
+        if ($selected -notmatch '^202[0-7]$') { throw "Unsupported Revit year: $selected. Use 2020-2027." }
     }
     $running = @(Get-Process -Name Revit -ErrorAction SilentlyContinue)
     if ($running.Count -and !$Force) {

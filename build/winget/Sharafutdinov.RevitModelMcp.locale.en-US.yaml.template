@@ -11,7 +11,7 @@ License: MIT
 LicenseUrl: https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/LICENSE
 ShortDescription: MCP access to live Autodesk Revit models, read-only by default with opt-in actions.
 Description: |-
-  Windows add-in for Autodesk Revit 2022-2027.
+  Windows add-in for Autodesk Revit 2020-2027.
   Requires a supported Revit installation and the revit-model-mcp Python server.
   The Python server is installed separately through uvx.
 Tags:

@@ -40,6 +40,9 @@ jobs:
       - name: Build Revit 2026
         if: matrix.language == 'csharp'
         run: dotnet build src/RevitModelMcp.Addin -c Release.R26 -p:DeployAddin=false
+      - name: Build Revit 2020
+        if: matrix.language == 'csharp'
+        run: dotnet build src/RevitModelMcp.Addin -c Release.R20 -p:DeployAddin=false
       - name: Build Revit 2022
         if: matrix.language == 'csharp'
         run: dotnet build src/RevitModelMcp.Addin -c Release.R22 -p:DeployAddin=false

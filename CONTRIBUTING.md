@@ -70,7 +70,7 @@ Review hook edits and stage them before committing again.
 Run from a fresh clone's repository root on Windows with the .NET SDK selected by `global.json`:
 
 ```powershell
-foreach ($year in '22', '23', '24', '25', '26', '27') {
+foreach ($year in '20', '22', '23', '24', '25', '26', '27') {
     dotnet build src/RevitModelMcp.Addin -c "Release.R$year" -p:DeployAddin=false
     if ($LASTEXITCODE -ne 0) { throw "R$year build failed" }
 }
@@ -83,7 +83,7 @@ dotnet format RevitModelMcp.sln --verify-no-changes --verbosity minimal
 `DeployAddin=false` prevents deployment to the local Revit installation.
 Core tests need no running Revit instance.
 The test runner is Microsoft.Testing.Platform; use `--project` as shown.
-Release builds cover `Release.R22` through `Release.R27`.
+Release builds cover `Release.R20` and `Release.R22` through `Release.R27`.
 Run `dotnet format RevitModelMcp.sln` with the same environment variables to apply formatting.
 
 Run Python tests and package builds on Windows, macOS or Linux with Python 3.11+ and uv:
