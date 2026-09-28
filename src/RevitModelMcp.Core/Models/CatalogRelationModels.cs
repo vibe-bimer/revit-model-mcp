@@ -16,6 +16,9 @@ public sealed class ResponderInfo
 
     [DataMember(Name = "revitVersion")]
     public string RevitVersion { get; set; } = string.Empty;
+
+    [DataMember(Name = "pluginVersion")]
+    public string PluginVersion { get; set; } = string.Empty;
 }
 
 [DataContract]

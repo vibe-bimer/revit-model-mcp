@@ -103,6 +103,7 @@ internal sealed class HttpChannel : IDisposable
                 {
                     ["ok"] = true,
                     ["revitVersion"] = _version,
+                    ["pluginVersion"] = RevitModelMcp.PluginVersion.Value,
                     ["documentName"] = _documentName,
                     ["processId"] = _processId,
                     ["readOnly"] = !ActionCommandExecutor.ActionsEnabled

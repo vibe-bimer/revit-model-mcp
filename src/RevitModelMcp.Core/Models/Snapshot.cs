@@ -87,6 +87,9 @@ public sealed class InstanceStatus
 
     [DataMember(Name = "updatedUtc", Order = 5)]
     public string UpdatedUtc { get; set; } = string.Empty;
+
+    [DataMember(Name = "pluginVersion", Order = 6)]
+    public string PluginVersion { get; set; } = string.Empty;
 }
 
 [DataContract]

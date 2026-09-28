@@ -121,6 +121,8 @@ internal sealed class InstanceHeartbeat : IDisposable
 {
     private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan StaleAge = TimeSpan.FromMinutes(1);
+    private const int PublishAttempts = 5;
+    private const int PublishRetryDelayMilliseconds = 120;
     private static readonly UTF8Encoding Utf8WithoutBom = new(false);
     private readonly object _sync = new();
     private readonly string _directory;
@@ -186,26 +188,70 @@ internal sealed class InstanceHeartbeat : IDisposable
             {
                 ProcessId = _processId,
                 RevitVersion = _revitVersion,
+                PluginVersion = RevitModelMcp.PluginVersion.Value,
                 DocumentTitle = _documentTitle,
                 DocumentPath = _documentPath,
                 UpdatedUtc = DateTime.UtcNow.ToString("O")
             };
-            File.WriteAllText(_temporaryPath, InstanceStatusJsonSerializer.Serialize(status), Utf8WithoutBom);
-            if (File.Exists(_path))
-            {
-                File.Replace(_temporaryPath, _path, null);
-            }
-            else
-            {
-                File.Move(_temporaryPath, _path);
-            }
-
+            Publish(InstanceStatusJsonSerializer.Serialize(status));
             DeleteStaleFiles();
         }
         catch (Exception exception)
         {
             // Heartbeat failures must not interrupt add-in loading or operations.
             PluginLog.Error($"Instance heartbeat write failed. Path='{_path}'.", exception);
+        }
+    }
+
+    /// <summary>
+    /// Publishes a heartbeat payload. Readers such as the MCP server, an indexer or a backup agent
+    /// can hold the status file open, and <see cref="File.Replace"/> then fails because it has to
+    /// delete the target. Retry, then write in place: a heartbeat that keeps moving matters more
+    /// than an atomic swap, because a stalled file makes the server see a dead instance.
+    /// </summary>
+    private void Publish(string json)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                File.WriteAllText(_temporaryPath, json, Utf8WithoutBom);
+                if (File.Exists(_path))
+                {
+                    File.Replace(_temporaryPath, _path, null);
+                }
+                else
+                {
+                    File.Move(_temporaryPath, _path);
+                }
+
+                return;
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                if (attempt >= PublishAttempts)
+                {
+                    File.WriteAllText(_path, json, Utf8WithoutBom);
+                    TryDeleteTemporaryFile();
+                    PluginLog.Warn(
+                        $"Instance heartbeat for '{_path}' fell back to an in-place write after {attempt} attempts. Last error: {exception.Message}");
+                    return;
+                }
+
+                System.Threading.Thread.Sleep(PublishRetryDelayMilliseconds);
+            }
+        }
+    }
+
+    private void TryDeleteTemporaryFile()
+    {
+        try
+        {
+            File.Delete(_temporaryPath);
+        }
+        catch (Exception)
+        {
+            // The temporary file is reused on the next write, so a failed delete is harmless.
         }
     }
 

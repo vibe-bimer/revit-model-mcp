@@ -19,7 +19,8 @@ internal static class ReadCommandReader
             DocumentName = document?.Title ?? string.Empty,
             DocumentPath = document?.PathName ?? string.Empty,
             ProcessId = Process.GetCurrentProcess().Id,
-            RevitVersion = application.Application?.VersionNumber ?? string.Empty
+            RevitVersion = application.Application?.VersionNumber ?? string.Empty,
+            PluginVersion = RevitModelMcp.PluginVersion.Value
         };
     }
 
