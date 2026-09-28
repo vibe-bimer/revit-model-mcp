@@ -286,18 +286,32 @@ internal static class ActionMutations
     {
         var ineligible = new List<IneligibleElement>();
         var eligible = new List<ElementId>();
+        var systemMembers = SystemMemberIds(document);
         foreach (var id in ids)
         {
-            var reason = IneligibilityReason(document, id);
+            var (kind, reason) = IneligibilityReason(document, id, systemMembers);
             if (reason is null)
             {
                 eligible.Add(id);
             }
             else
             {
-                ineligible.Add(new IneligibleElement { Id = RevitValueReader.GetId(id), Reason = reason });
+                ineligible.Add(new IneligibleElement { Id = RevitValueReader.GetId(id), Kind = kind, Reason = reason });
             }
         }
+
+        // A whole-model rehearsal has to stay readable: group the refusals by reason and keep samples.
+        var summary = ineligible
+            .GroupBy(entry => entry.Kind ?? "other", StringComparer.Ordinal)
+            .Select(group => new IneligibleKindCount { Kind = group.Key, Count = group.Count() })
+            .OrderByDescending(entry => entry.Count)
+            .ThenBy(entry => entry.Kind, StringComparer.Ordinal)
+            .ToList();
+        var samples = ineligible
+            .GroupBy(entry => entry.Kind ?? "other", StringComparer.Ordinal)
+            .SelectMany(group => group.Take(3))
+            .OrderBy(entry => entry.Id)
+            .ToList();
 
         if (eligible.Count == 0)
         {
@@ -344,7 +358,9 @@ internal static class ActionMutations
         {
             Count = mapping.Count,
             IdMapping = mapping,
-            Ineligible = ineligible.Count > 0 ? ineligible : null,
+            Ineligible = samples.Count > 0 ? samples : null,
+            IneligibleCount = ineligible.Count > 0 ? ineligible.Count : null,
+            IneligibleKinds = summary.Count > 0 ? summary : null,
             Verification = new ActionVerification
             {
                 Changed = mapping.Select(pair => pair.New).ToList()
@@ -352,38 +368,70 @@ internal static class ActionMutations
         };
     }
 
-    private static string? IneligibilityReason(Document document, ElementId id)
+    /// <summary>
+    /// Every element that belongs to an MEP system. Copying one leaves the copy outside the network and
+    /// makes Revit re-heal the run around the deleted original, which changes the pipe and duct count.
+    /// </summary>
+    private static HashSet<long> SystemMemberIds(Document document)
+    {
+        var members = new HashSet<long>();
+        foreach (var element in new FilteredElementCollector(document).OfClass(typeof(MEPSystem)))
+        {
+            if (element is not MEPSystem system)
+            {
+                continue;
+            }
+
+            // Revit 2020 exposes MEPSystem.Elements as the non-generic ElementSet.
+            foreach (ElementId member in system.Elements)
+            {
+                members.Add(RevitValueReader.GetId(member));
+            }
+        }
+
+        return members;
+    }
+
+    private static (string Kind, string? Reason) IneligibilityReason(
+        Document document,
+        ElementId id,
+        ISet<long> systemMembers)
     {
         var element = document.GetElement(id);
         if (element is null)
         {
-            return "The element does not exist in this document.";
+            return ("missing", "The element does not exist in this document.");
         }
 
         if (element is ElementType)
         {
-            return "Element types are not reset; select instances.";
+            return ("type", "Element types are not reset; select instances.");
         }
 
         if (element.GroupId != ElementId.InvalidElementId)
         {
-            return "The element belongs to a group; ungroup it before resetting.";
+            return ("group", "The element belongs to a group; ungroup it before resetting.");
         }
 
         if (element is DatumPlane)
         {
-            return "Datum elements such as grids, levels and reference planes are excluded.";
+            return ("datum", "Datum elements such as grids, levels and reference planes are excluded.");
         }
 
         var host = (element as FamilyInstance)?.Host ?? (element as Opening)?.Host;
         if (host is not null)
         {
-            return $"The element is hosted by '{host.Category?.Name ?? "another element"}'; copies are not rehosted.";
+            return ("hosted", $"The element is hosted by '{host.Category?.Name ?? "another element"}'; copies are not rehosted.");
         }
 
         if (element is MEPCurve)
         {
-            return "MEP curves belong to a system, and copying them breaks the system membership.";
+            return ("mep-curve", "MEP curves belong to a system, and copying them breaks the system membership.");
+        }
+
+        if (systemMembers.Contains(RevitValueReader.GetId(id)))
+        {
+            return ("mep-system", "The element is an MEP system member; the copy would not rejoin the network, and Revit re-heals the run around the deleted original.");
         }
 
         // GetDependentElements reports the element itself among the parent/child relationships, so
@@ -396,15 +444,15 @@ internal static class ActionMutations
         {
             var sample = string.Join(", ", dependents.Take(3).Select(dependent =>
                 $"{RevitValueReader.GetId(dependent)} ({document.GetElement(dependent)?.Category?.Name ?? "unknown"})"));
-            return $"{dependents.Count} dependent element(s) would be deleted with it: {sample}.";
+            return ("dependents", $"{dependents.Count} dependent element(s) would be deleted with it: {sample}.");
         }
 
         if (!ElementTransformUtils.CanMirrorElement(document, id))
         {
-            return "Revit reports that this element cannot be copied by this route.";
+            return ("cannot-copy", "Revit reports that this element cannot be copied by this route.");
         }
 
-        return null;
+        return (string.Empty, null);
     }
 
     private static string Describe(IReadOnlyList<IneligibleElement> ineligible) =>

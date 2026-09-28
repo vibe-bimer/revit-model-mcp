@@ -452,7 +452,7 @@ def register_actions(mcp, execute, host_provider) -> None:
         """Replace elements with copies so Revit assigns new element IDs; the API cannot assign one itself.
 
         Returns data with count, idMapping (old to new) and ineligible elements with a reason each.
-        An element is refused when deleting it would delete dependents too, when it is hosted (copies are not rehosted), when it belongs to a group or an MEP system, or when Revit reports it cannot be copied.
+        An element is refused when deleting it would delete dependents too, when it is hosted (copies are not rehosted), when it belongs to a group, when it is an MEP curve or MEP system member (the copy does not rejoin the network and Revit re-heals the run), or when Revit reports it cannot be copied.
         dry_run executes and rolls back, returning the same verification block without changing the model; run it first, because the exchange cannot be undone.
         A real run refuses the whole selection while any element is ineligible, so dependent elements cannot be destroyed by accident.
         This never changes an element's ID in place and never writes the old ID into a parameter.

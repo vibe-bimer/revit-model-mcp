@@ -245,7 +245,18 @@ public sealed class ElementIdPair
 public sealed class IneligibleElement
 {
     [DataMember(Name = "id")] public long Id { get; set; }
+
+    /// <summary>Stable reason key, so a large selection can be summarised without reading every entry.</summary>
+    [DataMember(Name = "kind", EmitDefaultValue = false)] public string? Kind { get; set; }
+
     [DataMember(Name = "reason")] public string Reason { get; set; } = string.Empty;
+}
+
+[DataContract]
+public sealed class IneligibleKindCount
+{
+    [DataMember(Name = "kind")] public string Kind { get; set; } = string.Empty;
+    [DataMember(Name = "count")] public int Count { get; set; }
 }
 
 [DataContract]
@@ -264,6 +275,12 @@ public sealed class ActionResultData
 
     /// <summary>Elements the reset refused, with the reason, so nothing fails silently.</summary>
     [DataMember(Name = "ineligible", EmitDefaultValue = false)] public List<IneligibleElement>? Ineligible { get; set; }
+
+    /// <summary>Total refused, which the sampled list above does not have to carry.</summary>
+    [DataMember(Name = "ineligibleCount", EmitDefaultValue = false)] public int? IneligibleCount { get; set; }
+
+    /// <summary>Refusals grouped by reason key, so a whole model can be judged from one response.</summary>
+    [DataMember(Name = "ineligibleKinds", EmitDefaultValue = false)] public List<IneligibleKindCount>? IneligibleKinds { get; set; }
 
     [DataMember(Name = "count", EmitDefaultValue = false)] public int? Count { get; set; }
     [DataMember(Name = "sourceDeleted", EmitDefaultValue = false)] public bool? SourceDeleted { get; set; }
