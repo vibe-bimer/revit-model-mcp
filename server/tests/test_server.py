@@ -28,6 +28,7 @@ EXPECTED_TOOLS = {
     "revit_list_views",
     "revit_view_summary",
     "revit_export_view",
+    "revit_export_element_ids",
     "revit_view_elements",
     "revit_element_details",
     "revit_view_warnings",
@@ -87,6 +88,13 @@ EXPECTED_PARAMETERS = {
     ],
     "revit_view_summary": ["view", "timeout_seconds", "pickup_timeout_seconds", "document"],
     "revit_export_view": ["view", "pixel_size", "save_to", "document"],
+    "revit_export_element_ids": [
+        "fields",
+        "save_to",
+        "timeout_seconds",
+        "pickup_timeout_seconds",
+        "document",
+    ],
     "revit_view_elements": [
         "view",
         "categories",

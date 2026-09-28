@@ -31,6 +31,29 @@ public sealed class ControlJobParserTests
     }
 
     [Test]
+    public async Task Parse_ExportElementIds_CarriesFieldsAndSaveTo()
+    {
+        var result = ControlJobParser.Parse(
+            """{"command":"export-element-ids","fields":["category","id"],"saveTo":"C:\\Exports\\ids.xlsx"}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.ExportElementIds);
+        await Assert.That(result.Fields.Count).IsEqualTo(2);
+        await Assert.That(result.Fields[0]).IsEqualTo("category");
+        await Assert.That(result.Fields[1]).IsEqualTo("id");
+        await Assert.That(result.SaveTo).IsEqualTo(@"C:\Exports\ids.xlsx");
+    }
+
+    [Test]
+    public async Task Parse_ExportElementIds_WithoutOptions_FallsBackToDefaults()
+    {
+        var result = ControlJobParser.Parse("""{"command":"export-element-ids"}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.ExportElementIds);
+        await Assert.That(result.Fields.Count).IsEqualTo(0);
+        await Assert.That(result.SaveTo).IsNull();
+    }
+
+    [Test]
     public async Task Parse_LegacyJob_HasNoCorrelationId()
     {
         await Assert.That(ControlJobParser.Parse("""{"command":"ping"}""").CorrelationId).IsNull();

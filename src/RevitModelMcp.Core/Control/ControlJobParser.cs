@@ -21,6 +21,7 @@ public enum ControlJobKind
     ElementDetails,
     ViewWarnings,
     ExportView,
+    ExportElementIds,
     QueryElements,
     AggregateElements,
     ListCatalog,
@@ -53,6 +54,7 @@ public sealed class ControlJobParseResult
     public long? ElementId { get; internal set; }
     public ElementFilterSpec Filters { get; internal set; } = new();
     public IReadOnlyList<string> Fields { get; internal set; } = Array.Empty<string>();
+    public string? SaveTo { get; internal set; }
     public QuerySortSpec Sort { get; internal set; } = new();
     public IReadOnlyList<string> GroupBy { get; internal set; } = Array.Empty<string>();
     public string? NumericField { get; internal set; }
@@ -95,6 +97,20 @@ public sealed class ControlJobParseResult
     {
         var result = Create(kind, command);
         result.View = view;
+        return result;
+    }
+
+    private static ControlJobParseResult ExportElementIds(
+        string command,
+        string? saveTo,
+        IReadOnlyList<string>? fields)
+    {
+        var result = Create(ControlJobKind.ExportElementIds, command);
+        result.SaveTo = Normalize(saveTo);
+        // An empty list keeps the reader's default columns.
+        result.Fields = fields is null
+            ? Array.Empty<string>()
+            : fields.Where(field => !string.IsNullOrWhiteSpace(field)).Select(field => field.Trim()).ToList();
         return result;
     }
 
@@ -168,6 +184,7 @@ public sealed class ControlJobParseResult
             "element-details" => ParseElementDetails(command, job.Id),
             "view-warnings" => RequireView(ControlJobKind.ViewWarnings, command, view),
             "export-view" => ParseExportView(command, view, job.PixelSize, job.ZoomToFit),
+            "export-element-ids" => ExportElementIds(command, job.SaveTo, job.Fields),
             "query-elements" => UniversalJobParser.ParseQuery(job),
             "aggregate-elements" => UniversalJobParser.ParseAggregate(job),
             "list-catalog" => UniversalJobParser.ParseCatalog(job),
@@ -399,6 +416,8 @@ public sealed partial class ControlJobContract
     public int? PixelSize { get; set; }
     [DataMember(Name = "zoomToFit")]
     public bool? ZoomToFit { get; set; }
+    [DataMember(Name = "saveTo")]
+    public string? SaveTo { get; set; }
     [DataMember(Name = "targetDocument")]
     public string? TargetDocument { get; set; }
     [DataMember(Name = "targetProcessId")]

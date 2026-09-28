@@ -108,7 +108,7 @@ The picture below is the PNG saved by `revit_export_view` during an earlier sess
 | --- | --- |
 | Document and catalog | `revit_ping`, `revit_document_info`, `revit_list_catalog`, `revit_list_instances` |
 | Elements and parameters | `revit_query_elements`, `revit_aggregate_elements`, `revit_element_details`, `revit_list_relations`, `revit_list_warnings` |
-| Views and export | `revit_list_views`, `revit_view_summary`, `revit_view_elements`, `revit_view_warnings`, `revit_export_view` |
+| Views and export | `revit_list_views`, `revit_view_summary`, `revit_view_elements`, `revit_view_warnings`, `revit_export_view`, `revit_export_element_ids` |
 | Coordinator checks | `revit_model_health`, `revit_links_status`, `revit_shared_coordinates`, `revit_parameter_fill_check` |
 
 See the [full tool reference](https://sharafutdinovdi.github.io/revit-model-mcp/tools/) for arguments, units and limits.

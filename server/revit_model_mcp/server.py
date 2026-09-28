@@ -150,6 +150,13 @@ PixelSize = Annotated[
         description="PNG size in pixels along the fitted image dimension, an integer from 1 to 4000. Default 1600 fits the view at that size while preserving its aspect ratio.",
     ),
 ]
+ExportPath = Annotated[
+    str | None,
+    Field(
+        validation_alias=AliasChoices("save_to", "saveTo"),
+        description="Absolute .xlsx path on the Revit workstation, not the MCP client; an existing file causes an error. Default null writes 构件ID清单_<model>_<timestamp>.xlsx under Documents\\RevitModelMcp\\Exports on the workstation.",
+    ),
+]
 SaveTo = Annotated[
     str | None,
     Field(
@@ -254,6 +261,7 @@ def addressed_tool(function):
         "revit_list_views": "List Views",
         "revit_view_summary": "View Summary",
         "revit_export_view": "Export View to PNG",
+        "revit_export_element_ids": "Export Element Ids",
         "revit_view_elements": "View Elements",
         "revit_element_details": "Element Details",
         "revit_view_warnings": "View Warnings",
@@ -607,6 +615,31 @@ async def revit_export_view(
         ReadJob.export_view(view, pixel_size, save_to),
         DEFAULT_TIMEOUT_SECONDS,
         DEFAULT_PICKUP_TIMEOUT_SECONDS,
+        document,
+    )
+
+
+@addressed_tool
+async def revit_export_element_ids(
+    fields: list[str] | None = None,
+    save_to: ExportPath = None,
+    timeout_seconds: TimeoutSeconds = DEFAULT_TIMEOUT_SECONDS,
+    pickup_timeout_seconds: PickupTimeoutSeconds = DEFAULT_PICKUP_TIMEOUT_SECONDS,
+    document: Document = None,
+) -> dict[str, Any]:
+    """Write the identifier register of the drawn components to an xlsx file on the Revit workstation.
+
+    Returns data with path, fileName, sheetName, columns, rowCount, totalCandidates, truncated, sizeBytes and categoryCounts.
+    Rows are ordered by category, then family, then type; the default columns are 类别, 族, 类型, 标高, 构件ID, 名称 and 工作集, and fields replaces them with built-in fields or parameter names.
+    The 构件ID column holds the Revit element ID, which the API cannot assign: this tool lists identifiers and never changes them.
+    Level stays empty for components without a level, which is most MEP pipe and duct runs.
+    Default null writes Documents\\RevitModelMcp\\Exports\\构件ID清单_<model>_<timestamp>.xlsx on the workstation; an existing save_to file raises an error, and more than 50,000 rows sets truncated=true.
+    The export writes one file outside the model and never writes to the model; a missing document, read failure or timeout raises an error.
+    """
+    return await _execute(
+        ReadJob.export_element_ids(fields, save_to),
+        timeout_seconds,
+        pickup_timeout_seconds,
         document,
     )
 

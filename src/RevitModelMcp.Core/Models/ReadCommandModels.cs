@@ -110,6 +110,58 @@ public static class ReadCommandResponseFactory
     }
 }
 
+/// <summary>
+/// Result of writing the element identifier list to a workbook on the Revit workstation.
+/// </summary>
+[DataContract]
+public sealed class ElementIdExportData
+{
+    [DataMember(Name = "path")]
+    public string Path { get; set; } = string.Empty;
+
+    [DataMember(Name = "fileName")]
+    public string FileName { get; set; } = string.Empty;
+
+    [DataMember(Name = "sheetName")]
+    public string SheetName { get; set; } = string.Empty;
+
+    [DataMember(Name = "columns")]
+    public List<string> Columns { get; set; } = new();
+
+    [DataMember(Name = "rowCount")]
+    public int RowCount { get; set; }
+
+    [DataMember(Name = "totalCandidates")]
+    public int TotalCandidates { get; set; }
+
+    [DataMember(Name = "truncated")]
+    public bool Truncated { get; set; }
+
+    [DataMember(Name = "sizeBytes")]
+    public long SizeBytes { get; set; }
+
+    [DataMember(Name = "categoryCounts")]
+    public List<ElementCategoryCount> CategoryCounts { get; set; } = new();
+
+    /// <summary>Categorized elements the scope rule left out, so the rule stays auditable.</summary>
+    [DataMember(Name = "skippedCategories")]
+    public List<ElementCategoryCount> SkippedCategories { get; set; } = new();
+}
+
+[DataContract]
+public sealed class ElementCategoryCount
+{
+    [DataMember(Name = "category")]
+    public string Category { get; set; } = string.Empty;
+
+    /// <summary>BuiltInCategory name, which stays readable regardless of the Revit UI language.</summary>
+    [DataMember(Name = "builtInCategory", EmitDefaultValue = false)]
+    public string? BuiltInCategory { get; set; }
+
+    [DataMember(Name = "count")]
+    public int Count { get; set; }
+}
+
 [DataContract]
 public sealed class DocumentInfoData
 {

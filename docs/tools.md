@@ -2,6 +2,8 @@
 
 All tools support local, SSH and HTTP transports.
 `revit_export_view` downloads PNG through `/views/{name}/image` in HTTP mode.
+`revit_export_element_ids` writes its workbook on the Revit workstation, so `save_to` is a workstation path and HTTP clients read the returned `path` instead of downloading the file.
+The identifier column holds the Revit element ID, which the API cannot assign: the tool lists identifiers and never changes them.
 `revit_list_instances` reports the connected Revit process in HTTP mode.
 
 Every read tool except `revit_export_view` and `revit_list_instances` accepts `timeout_seconds=120`, `pickup_timeout_seconds=300` and `document=null`.
@@ -19,6 +21,7 @@ The query filters shared by aggregation and queries are `categories`, `family`, 
 | `revit_list_views` | `view_type=null`, `name_contains=null` | Find views in the active document. |
 | `revit_view_summary` | `view` | Read view metadata and category counts. |
 | `revit_export_view` | `view`, `pixel_size=1600`, `save_to=null`, `document=null`; no timeout arguments | Download a PNG; `pixel_size` is 1-4000 pixels on the fitted image dimension. |
+| `revit_export_element_ids` | `fields=null`, `save_to=null`, `timeout_seconds=120`, `pickup_timeout_seconds=300`, `document=null` | Write the identifier register of the drawn components to an xlsx workbook on the Revit workstation, ordered by category, family and type. |
 | `revit_view_elements` | `view`, `categories=null`, `offset=0`, `limit=100` | Read a page of elements in a view. |
 | `revit_element_details` | `element_id` | Read instance/type parameters and geometry by unitless Revit ID. |
 | `revit_view_warnings` | `view` | Read warnings involving elements in a view. |

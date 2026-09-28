@@ -111,6 +111,9 @@ internal static class ReadCommandExecutor
                 case ControlJobKind.ExportView:
                     ExecuteExportView(output, document, job, stopwatch, startedAt.LocalDateTime);
                     break;
+                case ControlJobKind.ExportElementIds:
+                    WriteSuccess(output, job.Command, ElementIdExportReader.Read(document, job), stopwatch);
+                    break;
                 case ControlJobKind.QueryElements:
                     WriteSuccess(output, job.Command, ElementQueryReader.ReadQuery(document, job), stopwatch);
                     break;

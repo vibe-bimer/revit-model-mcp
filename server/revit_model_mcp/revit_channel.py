@@ -110,6 +110,19 @@ class ReadJob:
         return cls("export-view", payload, save_to)
 
     @classmethod
+    def export_element_ids(
+        cls, fields: list[str] | None = None, save_to: str | None = None
+    ) -> ReadJob:
+        payload: dict[str, Any] = {"command": "export-element-ids"}
+        requested = [field for field in (_optional_text(field) for field in fields or []) if field]
+        if requested:
+            payload["fields"] = requested
+        if normalized := _optional_text(save_to):
+            # The workbook is written on the Revit workstation, so this path travels in the job.
+            payload["saveTo"] = normalized
+        return cls("export-element-ids", payload)
+
+    @classmethod
     def view_elements(
         cls,
         view: str,

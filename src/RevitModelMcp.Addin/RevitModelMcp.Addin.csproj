@@ -30,4 +30,9 @@
     <ProjectReference Include="..\RevitModelMcp.Core\RevitModelMcp.Core.csproj"/>
   </ItemGroup>
 
+  <!-- ZipArchive, used to write the xlsx package, lives outside the default reference set on .NET Framework. -->
+  <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
+    <Reference Include="System.IO.Compression"/>
+  </ItemGroup>
+
 </Project>
