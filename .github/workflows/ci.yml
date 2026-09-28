@@ -108,7 +108,7 @@ jobs:
             $files = @(Get-ChildItem $target -Recurse -File)
             if ($files | Where-Object Name -Like 'RevitAPI*.dll') { throw 'Revit API binaries must not be distributed' }
             $manifests = @($files | Where-Object Name -EQ 'RevitModelMcp.addin')
-            if ($manifests.Count -ne 7) { throw 'Unexpected Revit year count in MSI' }
+            if ($manifests.Count -ne 4) { throw 'Unexpected Revit year count in MSI' }
             foreach ($year in '20', '22', '26', '27') {
               $manifest = @($manifests | Where-Object { $_.Directory.Name -eq "20$year" })
               if ($manifest.Count -ne 1) { throw "Missing or duplicate R$year manifest in MSI" }
