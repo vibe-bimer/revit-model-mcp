@@ -6,6 +6,18 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.6.0...v0.7.0) (2026-09-28)
+
+
+### Features
+
+* **channel:** report the add-in build version ([155a7e9](https://github.com/vibe-bimer/revit-model-mcp/commit/155a7e9ef514afd10cb9d2b6481091565cd13e84))
+
+
+### Bug Fixes
+
+* **server:** surface the add-in build and stop blocking heartbeat writes ([5c9f4c1](https://github.com/vibe-bimer/revit-model-mcp/commit/5c9f4c13fee05fa77ccc678eb06f96f863e37aea))
+
 ## [0.6.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.5.0...v0.6.0) (2026-09-28)
 
 
