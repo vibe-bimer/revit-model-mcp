@@ -382,14 +382,36 @@ internal static class ActionMutations
                 continue;
             }
 
-            // Revit 2020 exposes MEPSystem.Elements as the non-generic ElementSet.
-            foreach (ElementId member in system.Elements)
+            // MEPSystem.Elements is an ElementSet of terminal elements; it excludes base equipment.
+            foreach (Element member in system.Elements)
             {
-                members.Add(RevitValueReader.GetId(member));
+                members.Add(RevitValueReader.GetId(member.Id));
             }
         }
 
         return members;
+    }
+
+    /// <summary>Whether any MEP connector of the element is joined to something else.</summary>
+    private static bool IsConnectedToNetwork(Element element)
+    {
+        var manager = (element as FamilyInstance)?.MEPModel?.ConnectorManager
+            ?? (element as MEPCurve)?.ConnectorManager;
+        if (manager is null)
+        {
+            return false;
+        }
+
+        // ConnectorSet is non-generic as well; its items are connectors.
+        foreach (Connector connector in manager.Connectors)
+        {
+            if (connector.IsConnected)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static (string Kind, string? Reason) IneligibilityReason(
@@ -432,6 +454,11 @@ internal static class ActionMutations
         if (systemMembers.Contains(RevitValueReader.GetId(id)))
         {
             return ("mep-system", "The element is an MEP system member; the copy would not rejoin the network, and Revit re-heals the run around the deleted original.");
+        }
+
+        if (IsConnectedToNetwork(element))
+        {
+            return ("mep-connected", "The element has connected MEP connectors, so a copy would start detached from the network.");
         }
 
         // GetDependentElements reports the element itself among the parent/child relationships, so
