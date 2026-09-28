@@ -301,17 +301,8 @@ internal static class ActionMutations
         }
 
         // A whole-model rehearsal has to stay readable: group the refusals by reason and keep samples.
-        var summary = ineligible
-            .GroupBy(entry => entry.Kind ?? "other", StringComparer.Ordinal)
-            .Select(group => new IneligibleKindCount { Kind = group.Key, Count = group.Count() })
-            .OrderByDescending(entry => entry.Count)
-            .ThenBy(entry => entry.Kind, StringComparer.Ordinal)
-            .ToList();
-        var samples = ineligible
-            .GroupBy(entry => entry.Kind ?? "other", StringComparer.Ordinal)
-            .SelectMany(group => group.Take(3))
-            .OrderBy(entry => entry.Id)
-            .ToList();
+        var summary = Summarize(ineligible);
+        var samples = Sample(ineligible);
 
         if (eligible.Count == 0)
         {
@@ -325,34 +316,63 @@ internal static class ActionMutations
                 $"Refusing to reset {eligible.Count} of {ids.Count} elements while others are ineligible. {Describe(ineligible)}");
         }
 
-        // One element at a time keeps the old to new pairing exact, and lets each exchange be checked
-        // before the next one starts; Revit does not document the order of a bulk copy result.
+        // One element at a time keeps the old to new pairing exact, and each exchange runs in its own
+        // sub-transaction so a copy Revit refuses names the element instead of aborting the whole call.
         var mapping = new List<ElementIdPair>();
+        var failures = new List<IneligibleElement>();
         foreach (var id in eligible)
         {
             var oldId = RevitValueReader.GetId(id);
-            var expectedCategory = document.GetElement(id)?.Category?.Name ?? string.Empty;
-            var created = ElementTransformUtils.CopyElements(document, new List<ElementId> { id }, XYZ.Zero).ToList();
-            if (created.Count != 1)
+            using var exchange = new SubTransaction(document);
+            exchange.Start();
+            try
             {
-                throw new InvalidOperationException($"Revit created {created.Count} copies for element {oldId}; expected exactly one.");
-            }
+                var expectedCategory = document.GetElement(id)?.Category?.Name ?? string.Empty;
+                var created = ElementTransformUtils.CopyElements(document, new List<ElementId> { id }, XYZ.Zero).ToList();
+                if (created.Count != 1)
+                {
+                    throw new InvalidOperationException($"Revit created {created.Count} copies for element {oldId}; expected exactly one.");
+                }
 
-            var newId = RevitValueReader.GetId(created[0]);
-            var copiedCategory = document.GetElement(created[0])?.Category?.Name ?? string.Empty;
-            if (!string.Equals(copiedCategory, expectedCategory, StringComparison.Ordinal))
+                var newId = RevitValueReader.GetId(created[0]);
+                var copiedCategory = document.GetElement(created[0])?.Category?.Name ?? string.Empty;
+                if (!string.Equals(copiedCategory, expectedCategory, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException($"The copy of element {oldId} landed in category '{copiedCategory}' instead of '{expectedCategory}'.");
+                }
+
+                document.Delete(new List<ElementId> { id });
+                if (document.GetElement(created[0]) is null)
+                {
+                    throw new InvalidOperationException($"Copy {newId} did not survive deleting element {oldId}; the element was not replaced.");
+                }
+
+                exchange.Commit();
+                mapping.Add(new ElementIdPair { Old = oldId, New = newId });
+            }
+            catch (Exception exception)
             {
-                throw new InvalidOperationException($"The copy of element {oldId} landed in category '{copiedCategory}' instead of '{expectedCategory}'.");
+                exchange.RollBack();
+                failures.Add(new IneligibleElement
+                {
+                    Id = oldId,
+                    Kind = "copy-failed",
+                    Reason = $"Revit could not replace this element: {exception.Message.Trim()}"
+                });
             }
-
-            document.Delete(new List<ElementId> { id });
-            if (document.GetElement(created[0]) is null)
-            {
-                throw new InvalidOperationException($"Copy {newId} did not survive deleting element {oldId}; the element was not replaced.");
-            }
-
-            mapping.Add(new ElementIdPair { Old = oldId, New = newId });
         }
+
+        // A real run stays all or nothing: the executor rolls the whole action back when this throws,
+        // because a selection that is half replaced is harder to reason about than a refusal.
+        if (action.DryRun != true && failures.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Refusing to keep a partial reset: {failures.Count} of {eligible.Count} elements could not be replaced. {Describe(failures)}");
+        }
+
+        ineligible.AddRange(failures);
+        summary = Summarize(ineligible);
+        samples = Sample(ineligible);
 
         return new ActionResultData
         {
@@ -481,6 +501,21 @@ internal static class ActionMutations
 
         return (string.Empty, null);
     }
+
+    private static List<IneligibleKindCount> Summarize(IReadOnlyList<IneligibleElement> ineligible) =>
+        ineligible
+            .GroupBy(entry => entry.Kind ?? "other", StringComparer.Ordinal)
+            .Select(group => new IneligibleKindCount { Kind = group.Key, Count = group.Count() })
+            .OrderByDescending(entry => entry.Count)
+            .ThenBy(entry => entry.Kind, StringComparer.Ordinal)
+            .ToList();
+
+    private static List<IneligibleElement> Sample(IReadOnlyList<IneligibleElement> ineligible) =>
+        ineligible
+            .GroupBy(entry => entry.Kind ?? "other", StringComparer.Ordinal)
+            .SelectMany(group => group.Take(3))
+            .OrderBy(entry => entry.Id)
+            .ToList();
 
     private static string Describe(IReadOnlyList<IneligibleElement> ineligible) =>
         string.Join("; ", ineligible.Take(5).Select(entry => $"{entry.Id}: {entry.Reason}"));
