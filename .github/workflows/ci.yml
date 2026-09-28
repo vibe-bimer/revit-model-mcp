@@ -54,7 +54,7 @@ jobs:
             };
             assert.deepEqual(config.env, expected);
           }
-          console.log('PASS: 18 documented tools, default settings, all boolean combinations and host/token forwarding');
+          console.log('PASS: 19 documented tools, default settings, all boolean combinations and host/token forwarding');
           JAVASCRIPT
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:

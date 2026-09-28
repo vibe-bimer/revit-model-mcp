@@ -72,6 +72,10 @@
       "description": "Download a PNG; pixel_size is 1-4000 pixels on the fitted image dimension."
     },
     {
+      "name": "revit_export_element_ids",
+      "description": "Write the identifier register of the drawn components to an xlsx workbook on the Revit workstation."
+    },
+    {
       "name": "revit_view_elements",
       "description": "Read a page of elements in a view."
     },
