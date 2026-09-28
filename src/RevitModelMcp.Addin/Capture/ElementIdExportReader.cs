@@ -80,7 +80,19 @@ internal static class ElementIdExportReader
         BuiltInCategory.OST_SunPath2,
         BuiltInCategory.OST_AnalysisDisplayStyle,
         BuiltInCategory.OST_TopographyContours,
-        BuiltInCategory.OST_SecondaryTopographyContours
+        BuiltInCategory.OST_SecondaryTopographyContours,
+
+        // Sketch and helper lines: they carry a model category but draw no component.
+        BuiltInCategory.OST_SketchLines,
+        BuiltInCategory.OST_StairsSketchBoundaryLines,
+        BuiltInCategory.OST_StairsSketchRiserLines,
+        BuiltInCategory.OST_StairsSketchPathLines,
+        BuiltInCategory.OST_StairsSketchRunLines,
+        BuiltInCategory.OST_StairsSketchLandingCenterLines,
+        BuiltInCategory.OST_StairsPaths,
+        BuiltInCategory.OST_StairsPathsAboveCut,
+        BuiltInCategory.OST_RailingRailPathLines,
+        BuiltInCategory.OST_RailingRailPathExtensionLines
     };
 
     internal static ElementIdExportData Read(Document document, ControlJobParseResult job)
@@ -162,7 +174,7 @@ internal static class ElementIdExportReader
     {
         // Datums and model text are never drawn components: the reference plane category has no
         // BuiltInCategory member of its own, and model text shares the generic model category.
-        if (element is Level or Grid or ReferencePlane or ModelText || element.ViewSpecific)
+        if (element is Level or Grid or ReferencePlane or ModelText or Sketch || element.ViewSpecific)
         {
             return false;
         }
