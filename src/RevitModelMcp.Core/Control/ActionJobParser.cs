@@ -1,4 +1,5 @@
 using System.Runtime.Serialization;
+using RevitModelMcp.Core.Models;
 
 namespace RevitModelMcp.Core.Control;
 
@@ -281,6 +282,14 @@ public sealed class ActionResultData
 
     /// <summary>Refusals grouped by reason key, so a whole model can be judged from one response.</summary>
     [DataMember(Name = "ineligibleKinds", EmitDefaultValue = false)] public List<IneligibleKindCount>? IneligibleKinds { get; set; }
+
+    /// <summary>Geometry joins seen before the reset, and how many of them were put back.</summary>
+    [DataMember(Name = "joinsFound", EmitDefaultValue = false)] public int? JoinsFound { get; set; }
+
+    [DataMember(Name = "joinsRestored", EmitDefaultValue = false)] public int? JoinsRestored { get; set; }
+
+    /// <summary>Categories of the dependent elements a reset would delete, aggregated over the selection.</summary>
+    [DataMember(Name = "dependentCategories", EmitDefaultValue = false)] public List<ElementCategoryCount>? DependentCategories { get; set; }
 
     [DataMember(Name = "count", EmitDefaultValue = false)] public int? Count { get; set; }
     [DataMember(Name = "sourceDeleted", EmitDefaultValue = false)] public bool? SourceDeleted { get; set; }

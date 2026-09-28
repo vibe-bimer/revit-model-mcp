@@ -5,6 +5,7 @@ using Nice3point.Revit.Extensions;
 using RevitModelMcp.Capture;
 using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Control;
+using RevitModelMcp.Core.Models;
 
 namespace RevitModelMcp.Control;
 
@@ -287,9 +288,10 @@ internal static class ActionMutations
         var ineligible = new List<IneligibleElement>();
         var eligible = new List<ElementId>();
         var systemMembers = SystemMemberIds(document);
+        var dependentCategories = new Dictionary<string, int>(StringComparer.Ordinal);
         foreach (var id in ids)
         {
-            var (kind, reason) = IneligibilityReason(document, id, systemMembers);
+            var (kind, reason) = IneligibilityReason(document, id, systemMembers, dependentCategories);
             if (reason is null)
             {
                 eligible.Add(id);
@@ -320,6 +322,8 @@ internal static class ActionMutations
         // sub-transaction so a copy Revit refuses names the element instead of aborting the whole call.
         var mapping = new List<ElementIdPair>();
         var failures = new List<IneligibleElement>();
+        var joinsFound = 0;
+        var joinsRestored = 0;
         foreach (var id in eligible)
         {
             var oldId = RevitValueReader.GetId(id);
@@ -328,7 +332,19 @@ internal static class ActionMutations
             try
             {
                 var expectedCategory = document.GetElement(id)?.Category?.Name ?? string.Empty;
-                var created = ElementTransformUtils.CopyElements(document, new List<ElementId> { id }, XYZ.Zero).ToList();
+
+                // Joins are not carried by a copy, so remember them and restore them after the exchange.
+                var joined = new List<ElementId>();
+                if (document.GetElement(id) is { } original)
+                {
+                    joined.AddRange(JoinGeometryUtils.GetJoinedElements(document, original)
+                        .Where(neighbour => RevitValueReader.GetId(neighbour) != oldId));
+                }
+
+                // The document to document overload rehosts hosted elements, which the XYZ overload does not.
+                var created = ElementTransformUtils
+                    .CopyElements(document, new List<ElementId> { id }, document, Transform.Identity, new CopyPasteOptions())
+                    .ToList();
                 if (created.Count != 1)
                 {
                     throw new InvalidOperationException($"Revit created {created.Count} copies for element {oldId}; expected exactly one.");
@@ -345,6 +361,21 @@ internal static class ActionMutations
                 if (document.GetElement(created[0]) is null)
                 {
                     throw new InvalidOperationException($"Copy {newId} did not survive deleting element {oldId}; the element was not replaced.");
+                }
+
+                joinsFound += joined.Count;
+                var copy = document.GetElement(created[0]);
+                foreach (var neighbour in joined)
+                {
+                    var neighbourElement = document.GetElement(neighbour);
+                    if (copy is null || neighbourElement is null ||
+                        JoinGeometryUtils.AreElementsJoined(document, copy, neighbourElement))
+                    {
+                        continue;
+                    }
+
+                    JoinGeometryUtils.JoinGeometry(document, copy, neighbourElement);
+                    joinsRestored++;
                 }
 
                 exchange.Commit();
@@ -381,6 +412,16 @@ internal static class ActionMutations
             Ineligible = samples.Count > 0 ? samples : null,
             IneligibleCount = ineligible.Count > 0 ? ineligible.Count : null,
             IneligibleKinds = summary.Count > 0 ? summary : null,
+            JoinsFound = joinsFound,
+            JoinsRestored = joinsRestored,
+            DependentCategories = dependentCategories.Count > 0
+                ? dependentCategories
+                    .Select(entry => new ElementCategoryCount { Category = entry.Key, Count = entry.Value })
+                    .OrderByDescending(entry => entry.Count)
+                    .ThenBy(entry => entry.Category, StringComparer.Ordinal)
+                    .Take(20)
+                    .ToList()
+                : null,
             Verification = new ActionVerification
             {
                 Changed = mapping.Select(pair => pair.New).ToList()
@@ -437,7 +478,8 @@ internal static class ActionMutations
     private static (string Kind, string? Reason) IneligibilityReason(
         Document document,
         ElementId id,
-        ISet<long> systemMembers)
+        ISet<long> systemMembers,
+        IDictionary<string, int> dependentCategories)
     {
         var element = document.GetElement(id);
         if (element is null)
@@ -460,12 +502,8 @@ internal static class ActionMutations
             return ("datum", "Datum elements such as grids, levels and reference planes are excluded.");
         }
 
-        var host = (element as FamilyInstance)?.Host ?? (element as Opening)?.Host;
-        if (host is not null)
-        {
-            return ("hosted", $"The element is hosted by '{host.Category?.Name ?? "another element"}'; copies are not rehosted.");
-        }
-
+        // Hosted elements are not refused: the document to document copy overload rehosts them, and a
+        // copy that Revit still refuses shows up as copy-failed with the element id.
         if (element is MEPCurve)
         {
             return ("mep-curve", "MEP curves belong to a system, and copying them breaks the system membership.");
@@ -489,9 +527,15 @@ internal static class ActionMutations
             .ToList();
         if (dependents is { Count: > 0 })
         {
-            var sample = string.Join(", ", dependents.Take(3).Select(dependent =>
-                $"{RevitValueReader.GetId(dependent)} ({document.GetElement(dependent)?.Category?.Name ?? "unknown"})"));
-            return ("dependents", $"{dependents.Count} dependent element(s) would be deleted with it: {sample}.");
+            var described = new List<string>();
+            foreach (var dependent in dependents)
+            {
+                var name = document.GetElement(dependent)?.Category?.Name ?? "unknown";
+                dependentCategories[name] = dependentCategories.TryGetValue(name, out var seen) ? seen + 1 : 1;
+                described.Add($"{RevitValueReader.GetId(dependent)} ({name})");
+            }
+
+            return ("dependents", $"{dependents.Count} dependent element(s) would be deleted with it: {string.Join(", ", described.Take(3))}.");
         }
 
         if (!ElementTransformUtils.CanMirrorElement(document, id))
