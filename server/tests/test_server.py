@@ -317,6 +317,70 @@ class ServerTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("instance_*.json", script)
         self.assertNotIn("MainWindowTitle", script)
 
+    async def test_list_instances_reports_the_plugin_build(self) -> None:
+        host = SshPowerShellHost()
+        host._run = AsyncMock(
+            return_value=json.dumps(
+                {
+                    "processes": [],
+                    "files": [
+                        {
+                            "name": "instance_42.json",
+                            "content": json.dumps(
+                                {
+                                    "processId": 42,
+                                    "revitVersion": "2020",
+                                    "pluginVersion": "0.6.0+68febc5dc6c56cd2ed7eb3ecb6905b6adc5cb84e",
+                                    "documentTitle": "MEP",
+                                    "documentPath": r"E:\Models\MEP.rvt",
+                                    "updatedUtc": datetime.now(timezone.utc).isoformat(),
+                                }
+                            ),
+                        }
+                    ],
+                }
+            )
+        )
+
+        result = await host.list_revit_instances()
+
+        self.assertEqual(result[0]["revitVersion"], "2020")
+        self.assertEqual(
+            result[0]["pluginVersion"], "0.6.0+68febc5dc6c56cd2ed7eb3ecb6905b6adc5cb84e"
+        )
+
+    async def test_list_instances_reads_heartbeats_with_delete_sharing(self) -> None:
+        host = SshPowerShellHost()
+        host._run = AsyncMock(
+            return_value=json.dumps(
+                {
+                    "processes": [],
+                    "files": [
+                        {
+                            "name": "instance_42.json",
+                            "content": json.dumps(
+                                {
+                                    "processId": 42,
+                                    "revitVersion": "2020",
+                                    "documentTitle": "MEP",
+                                    "documentPath": r"E:\Models\MEP.rvt",
+                                    "updatedUtc": datetime.now(timezone.utc).isoformat(),
+                                }
+                            ),
+                        }
+                    ],
+                }
+            )
+        )
+
+        result = await host.list_revit_instances()
+
+        # A heartbeat written by an older add-in has no plug-in version but must still be listed.
+        self.assertEqual(result[0]["pluginVersion"], "")
+        script = host._run.await_args.args[0]
+        self.assertIn("Read-TextFile", script)
+        self.assertIn("[IO.FileShare]::Delete", script)
+
     async def test_list_instances_marks_process_when_plugin_does_not_respond(self) -> None:
         host = SshPowerShellHost()
         host._run = AsyncMock(

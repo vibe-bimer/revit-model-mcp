@@ -60,11 +60,11 @@ class SshPowerShellHost:
     async def list_revit_instances(self, document: str | None = None) -> list[dict[str, object]]:
         filter_text = document.strip() if document else ""
         script = (
-            f"$directory = {_ps_directory()}; "
+            _ps_text_reader() + f"$directory = {_ps_directory()}; "
             "$processes = @(Get-Process Revit -ErrorAction SilentlyContinue | ForEach-Object { "
             "[ordered]@{ processId = $_.Id; revitVersion = $_.FileVersionInfo.ProductVersion } }); "
             "$files = @(Get-ChildItem -LiteralPath $directory -Filter 'instance_*.json' -File -ErrorAction SilentlyContinue | "
-            "ForEach-Object { [ordered]@{ name = $_.Name; content = [IO.File]::ReadAllText($_.FullName) } }); "
+            "ForEach-Object { [ordered]@{ name = $_.Name; content = (Read-TextFile $_.FullName) } }); "
             "[ordered]@{ processes = $processes; files = $files } | ConvertTo-Json -Depth 4 -Compress"
         )
         try:
@@ -434,6 +434,10 @@ def _parse_instance_package(
             version = status["revitVersion"]
             title = status["documentTitle"]
             path = status["documentPath"]
+            # Heartbeats written before the add-in reported its build have no plug-in version.
+            plugin_version = status.get("pluginVersion")
+            if not isinstance(plugin_version, str):
+                plugin_version = ""
             if not isinstance(process_id, int) or not all(
                 isinstance(value, str) for value in (version, title, path)
             ):
@@ -444,6 +448,7 @@ def _parse_instance_package(
             {
                 "processId": process_id,
                 "revitVersion": version,
+                "pluginVersion": plugin_version,
                 "documentName": title,
                 "documentTitle": title,
                 "documentPath": path,
@@ -469,6 +474,7 @@ def _parse_instance_package(
             {
                 "processId": process["processId"],
                 "revitVersion": process.get("revitVersion", ""),
+                "pluginVersion": "",
                 "documentName": "",
                 "documentTitle": "",
                 "documentPath": "",
@@ -487,6 +493,20 @@ def _ps_response_reader() -> str:
         "([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete)); "
         "try { $reader = New-Object IO.BinaryReader($stream); "
         "try { return ,$reader.ReadBytes([int]$stream.Length) } finally { $reader.Dispose() } "
+        "} finally { $stream.Dispose() } }; "
+    )
+
+
+def _ps_text_reader() -> str:
+    # The add-in republishes instance heartbeats with File.Replace, which needs readers to permit
+    # deletion of the replaced file. Read heartbeats with delete sharing for the same reason the
+    # response reader above does.
+    return (
+        "function Read-TextFile([string]$path) { "
+        "$stream = [IO.File]::Open($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, "
+        "([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete)); "
+        "try { $reader = New-Object IO.StreamReader($stream); "
+        "try { return $reader.ReadToEnd() } finally { $reader.Dispose() } "
         "} finally { $stream.Dispose() } }; "
     )
 

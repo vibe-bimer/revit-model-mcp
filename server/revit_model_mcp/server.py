@@ -729,7 +729,8 @@ async def revit_list_relations(
 async def revit_list_instances(document: Document = None) -> list[dict[str, object]]:
     """List Revit processes and their active documents.
 
-    Returns a list of documentName, documentPath, revitVersion, processId and pluginResponding records; no matching instances return [].
+    Returns a list of documentName, documentPath, revitVersion, pluginVersion, processId and pluginResponding records; no matching instances return [].
+    pluginVersion identifies the add-in build, for example 0.6.0+68febc5d, and is empty for heartbeats written by older add-ins.
     Local and SSH modes use add-in heartbeats with process fallback; fallback records have an empty document and pluginResponding=false.
     HTTP mode reports only its connected process; transport failures raise errors.
     Use this tool before choosing a unique document substring for other tools.
