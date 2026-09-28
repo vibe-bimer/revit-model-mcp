@@ -6,6 +6,25 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.7.0...v0.8.0) (2026-09-28)
+
+
+### Features
+
+* **actions:** add a rehearsable element id reset ([0c8d92a](https://github.com/vibe-bimer/revit-model-mcp/commit/0c8d92aaf8a8147b061a1768fab5795997e9921d))
+* **actions:** rebuild a model so Revit hands every element a fresh id ([b1c0b5d](https://github.com/vibe-bimer/revit-model-mcp/commit/b1c0b5d408e1746c4e9a00777147a4c58dece0f3))
+* **actions:** rehost copies, restore joins, and report what a reset costs ([a405693](https://github.com/vibe-bimer/revit-model-mcp/commit/a405693fe07a29af90964714c2d7b8ed87876566))
+* **read:** export the element identifier register to a workbook ([6fb4560](https://github.com/vibe-bimer/revit-model-mcp/commit/6fb456010c128b23fc83aedc2921303a7e783466))
+
+
+### Bug Fixes
+
+* **actions:** read the system member set as elements, and check connectors ([dc9d34c](https://github.com/vibe-bimer/revit-model-mcp/commit/dc9d34c405eedef34e573e3414d9dcc45d4558d6))
+* **actions:** refuse every MEP system member, not only MEP curves ([c81fa91](https://github.com/vibe-bimer/revit-model-mcp/commit/c81fa91dac1f50eb2ee38eba1546b0270b6bf782))
+* **actions:** replace each element in its own sub-transaction ([c0ac48a](https://github.com/vibe-bimer/revit-model-mcp/commit/c0ac48a207e3d86b4ec8a3c0b8678a6ab1ea4545))
+* **bundle:** list the new export tool in the bundle manifest ([aa7f8ce](https://github.com/vibe-bimer/revit-model-mcp/commit/aa7f8ce5b6698eb33a90938e844707885eb251f0))
+* **read:** keep sketch and helper lines out of the component register ([a141ea1](https://github.com/vibe-bimer/revit-model-mcp/commit/a141ea1fc2cd9f4430da5ec07e3ec30fd099030b))
+
 ## [0.7.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.6.0...v0.7.0) (2026-09-28)
 
 
