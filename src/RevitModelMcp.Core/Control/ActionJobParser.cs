@@ -5,7 +5,7 @@ namespace RevitModelMcp.Core.Control;
 public static class ActionJobParser
 {
     public static bool IsAction(string command) => command is
-        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "batch";
+        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "reset-element-ids" or "batch";
 
     public static ControlJobParseResult Parse(string command, ControlJobContract job)
     {
@@ -53,7 +53,7 @@ public static class ActionJobParser
                     action.Steps.Add(parsed);
                 }
             }
-            if (command is "select" or "show" or "isolate" or "move" or "delete" or "set-phase")
+            if (command is "select" or "show" or "isolate" or "move" or "delete" or "set-phase" or "reset-element-ids")
             {
                 Require(job.ElementIds is not null, "elementIds is required.");
                 Require(action.ElementIds.All(elementId => elementId > 0), "Element IDs must be positive.");
@@ -235,6 +235,20 @@ public sealed partial class ControlJobContract
 }
 
 [DataContract]
+public sealed class ElementIdPair
+{
+    [DataMember(Name = "old")] public long Old { get; set; }
+    [DataMember(Name = "new")] public long New { get; set; }
+}
+
+[DataContract]
+public sealed class IneligibleElement
+{
+    [DataMember(Name = "id")] public long Id { get; set; }
+    [DataMember(Name = "reason")] public string Reason { get; set; } = string.Empty;
+}
+
+[DataContract]
 public sealed class ActionResultData
 {
     [DataMember(Name = "dryRun", EmitDefaultValue = false)] public bool? DryRun { get; set; }
@@ -244,6 +258,12 @@ public sealed class ActionResultData
     [DataMember(Name = "undoName", EmitDefaultValue = false)] public string? UndoName { get; set; }
     [DataMember(Name = "committed", EmitDefaultValue = false)] public bool? Committed { get; set; }
     [DataMember(Name = "failedStep")] public int? FailedStep { get; set; }
+
+    /// <summary>Old to new element id for a reset, so a caller can audit the replacement without storing it in the model.</summary>
+    [DataMember(Name = "idMapping", EmitDefaultValue = false)] public List<ElementIdPair>? IdMapping { get; set; }
+
+    /// <summary>Elements the reset refused, with the reason, so nothing fails silently.</summary>
+    [DataMember(Name = "ineligible", EmitDefaultValue = false)] public List<IneligibleElement>? Ineligible { get; set; }
 
     [DataMember(Name = "count", EmitDefaultValue = false)] public int? Count { get; set; }
     [DataMember(Name = "sourceDeleted", EmitDefaultValue = false)] public bool? SourceDeleted { get; set; }

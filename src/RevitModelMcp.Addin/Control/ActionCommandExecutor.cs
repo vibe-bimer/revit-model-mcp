@@ -240,6 +240,8 @@ internal static class ActionCommandExecutor
                     Count = deleted.Count,
                     Verification = new ActionVerification { Changed = deleted }
                 };
+            case "reset-element-ids":
+                return ActionMutations.ResetElementIds(document, action, ids);
             case "place-family":
                 return ActionMutations.PlaceFamily(document, action);
             case "create-wall":

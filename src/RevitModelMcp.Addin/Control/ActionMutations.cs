@@ -276,6 +276,140 @@ internal static class ActionMutations
         return value.ToString("R", CultureInfo.InvariantCulture);
     }
 
+    /// <summary>
+    /// Replaces each element with a copy so Revit assigns a new <see cref="ElementId"/>: the API has no
+    /// way to assign one. A dry run rehearses the whole replacement and reports what would be lost.
+    /// Elements whose deletion takes other elements with them, or whose copy Revit cannot rehost, are
+    /// refused rather than silently skipped.
+    /// </summary>
+    internal static ActionResultData ResetElementIds(Document document, ActionJobContract action, List<ElementId> ids)
+    {
+        var ineligible = new List<IneligibleElement>();
+        var eligible = new List<ElementId>();
+        foreach (var id in ids)
+        {
+            var reason = IneligibilityReason(document, id);
+            if (reason is null)
+            {
+                eligible.Add(id);
+            }
+            else
+            {
+                ineligible.Add(new IneligibleElement { Id = RevitValueReader.GetId(id), Reason = reason });
+            }
+        }
+
+        if (eligible.Count == 0)
+        {
+            throw new InvalidOperationException($"No selected element can be reset. {Describe(ineligible)}");
+        }
+
+        // A real run is all or nothing: a half replaced selection is harder to reason about than a refusal.
+        if (action.DryRun != true && ineligible.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"Refusing to reset {eligible.Count} of {ids.Count} elements while others are ineligible. {Describe(ineligible)}");
+        }
+
+        // One element at a time keeps the old to new pairing exact, and lets each exchange be checked
+        // before the next one starts; Revit does not document the order of a bulk copy result.
+        var mapping = new List<ElementIdPair>();
+        foreach (var id in eligible)
+        {
+            var oldId = RevitValueReader.GetId(id);
+            var expectedCategory = document.GetElement(id)?.Category?.Name ?? string.Empty;
+            var created = ElementTransformUtils.CopyElements(document, new List<ElementId> { id }, XYZ.Zero).ToList();
+            if (created.Count != 1)
+            {
+                throw new InvalidOperationException($"Revit created {created.Count} copies for element {oldId}; expected exactly one.");
+            }
+
+            var newId = RevitValueReader.GetId(created[0]);
+            var copiedCategory = document.GetElement(created[0])?.Category?.Name ?? string.Empty;
+            if (!string.Equals(copiedCategory, expectedCategory, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"The copy of element {oldId} landed in category '{copiedCategory}' instead of '{expectedCategory}'.");
+            }
+
+            document.Delete(new List<ElementId> { id });
+            if (document.GetElement(created[0]) is null)
+            {
+                throw new InvalidOperationException($"Copy {newId} did not survive deleting element {oldId}; the element was not replaced.");
+            }
+
+            mapping.Add(new ElementIdPair { Old = oldId, New = newId });
+        }
+
+        return new ActionResultData
+        {
+            Count = mapping.Count,
+            IdMapping = mapping,
+            Ineligible = ineligible.Count > 0 ? ineligible : null,
+            Verification = new ActionVerification
+            {
+                Changed = mapping.Select(pair => pair.New).ToList()
+            }
+        };
+    }
+
+    private static string? IneligibilityReason(Document document, ElementId id)
+    {
+        var element = document.GetElement(id);
+        if (element is null)
+        {
+            return "The element does not exist in this document.";
+        }
+
+        if (element is ElementType)
+        {
+            return "Element types are not reset; select instances.";
+        }
+
+        if (element.GroupId != ElementId.InvalidElementId)
+        {
+            return "The element belongs to a group; ungroup it before resetting.";
+        }
+
+        if (element is DatumPlane)
+        {
+            return "Datum elements such as grids, levels and reference planes are excluded.";
+        }
+
+        var host = (element as FamilyInstance)?.Host ?? (element as Opening)?.Host;
+        if (host is not null)
+        {
+            return $"The element is hosted by '{host.Category?.Name ?? "another element"}'; copies are not rehosted.";
+        }
+
+        if (element is MEPCurve)
+        {
+            return "MEP curves belong to a system, and copying them breaks the system membership.";
+        }
+
+        // GetDependentElements reports the element itself among the parent/child relationships, so
+        // only the other entries matter: those are the elements Revit deletes along with this one.
+        var idValue = RevitValueReader.GetId(id);
+        var dependents = element.GetDependentElements(null)?
+            .Where(dependent => RevitValueReader.GetId(dependent) != idValue)
+            .ToList();
+        if (dependents is { Count: > 0 })
+        {
+            var sample = string.Join(", ", dependents.Take(3).Select(dependent =>
+                $"{RevitValueReader.GetId(dependent)} ({document.GetElement(dependent)?.Category?.Name ?? "unknown"})"));
+            return $"{dependents.Count} dependent element(s) would be deleted with it: {sample}.";
+        }
+
+        if (!ElementTransformUtils.CanMirrorElement(document, id))
+        {
+            return "Revit reports that this element cannot be copied by this route.";
+        }
+
+        return null;
+    }
+
+    private static string Describe(IReadOnlyList<IneligibleElement> ineligible) =>
+        string.Join("; ", ineligible.Take(5).Select(entry => $"{entry.Id}: {entry.Reason}"));
+
     private static Level FindLevel(Document document, string name)
     {
         using var levels = document.CollectElements().OfClass<Level>()

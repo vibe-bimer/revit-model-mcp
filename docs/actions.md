@@ -34,6 +34,7 @@ Jobs without `targetDocument` retain the active-document behavior.
 | `revit_merge_phases` | `source_phase`, `target_phase` | Move every creation and demolition reference off the source phase into the target, then delete the empty source phase; a refused deletion is reported with `sourceDeleted:false` and `phaseDeleteError`. Not batchable. |
 | `revit_set_parameter` | `element_id`, `parameter`, `value` | Set a string value by parameter name; lengths use mm, areas m2, other doubles internal units. |
 | `revit_delete` | `element_ids` | Delete nonempty IDs and their dependents. |
+| `revit_reset_element_ids` | `element_ids`, `dry_run=false` | Replace elements with copies so Revit assigns new IDs; reports `idMapping` and refuses an element when deletion would remove dependents, when it is hosted, grouped or an MEP system member, or when Revit cannot copy it. |
 | `revit_batch` | `steps`, `dry_run=false` | Execute 1–50 actions with a single undo entry named `revit_batch`. |
 
 `type_name`, `wall_type` and `floor_type` are required arguments that accept `null`.

@@ -22,6 +22,27 @@ public sealed class ActionJobParserTests
     }
 
     [Test]
+    [Arguments("delete")]
+    [Arguments("reset-element-ids")]
+    public async Task Parse_ElementActions_RejectEmptyIds(string command)
+    {
+        var result = ControlJobParser.Parse($$"""{"command":"{{command}}","elementIds":[]}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+    }
+
+    [Test]
+    public async Task Parse_ResetElementIds_KeepsIdsAndDryRun()
+    {
+        var result = ControlJobParser.Parse(
+            """{"command":"reset-element-ids","elementIds":[11,12],"dryRun":true}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.ElementIds).IsEquivalentTo(new long[] { 11, 12 });
+        await Assert.That(result.Action.DryRun).IsTrue();
+    }
+
+    [Test]
     public async Task Parse_Move_PreservesMillimetersAndDefaultsZ()
     {
         var result = ControlJobParser.Parse("""{"command":"move","elementIds":[2147483648],"dxMm":304.8,"dyMm":-200}""");

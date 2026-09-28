@@ -30,6 +30,7 @@ ACTION_COMMANDS = frozenset(
         "merge-phases",
         "set-parameter",
         "delete",
+        "reset-element-ids",
         "batch",
     }
 )

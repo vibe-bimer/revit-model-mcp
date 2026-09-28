@@ -192,6 +192,7 @@ def register_actions(mcp, execute, host_provider) -> None:
             "revit_merge_phases": "Merge Phases",
             "revit_set_parameter": "Set Parameter",
             "revit_delete": "Delete Elements",
+            "revit_reset_element_ids": "Reset Element IDs",
             "revit_batch": "Run Action Batch",
         }[function.__name__]
         return mcp.tool(
@@ -443,6 +444,22 @@ def register_actions(mcp, execute, host_provider) -> None:
         Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected.
         """
         return await send("delete", elementIds=element_ids, dryRun=dry_run, document=document)
+
+    @action
+    async def revit_reset_element_ids(
+        element_ids: NonEmptyIds, dry_run: bool = False, document: Document = None
+    ) -> dict[str, Any]:
+        """Replace elements with copies so Revit assigns new element IDs; the API cannot assign one itself.
+
+        Returns data with count, idMapping (old to new) and ineligible elements with a reason each.
+        An element is refused when deleting it would delete dependents too, when it is hosted (copies are not rehosted), when it belongs to a group or an MEP system, or when Revit reports it cannot be copied.
+        dry_run executes and rolls back, returning the same verification block without changing the model; run it first, because the exchange cannot be undone.
+        A real run refuses the whole selection while any element is ineligible, so dependent elements cannot be destroyed by accident.
+        This never changes an element's ID in place and never writes the old ID into a parameter.
+        """
+        return await send(
+            "reset-element-ids", elementIds=element_ids, dryRun=dry_run, document=document
+        )
 
     @action
     async def revit_batch(

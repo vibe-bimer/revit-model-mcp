@@ -28,6 +28,7 @@ ACTION_TOOLS = {
     "revit_merge_phases",
     "revit_set_parameter",
     "revit_delete",
+    "revit_reset_element_ids",
     "revit_batch",
 }
 
@@ -134,6 +135,11 @@ def action_server():
             {"elementId": 1, "parameter": "Comments", "value": ""},
         ),
         ("revit_delete", {"element_ids": [1, 2]}, {"elementIds": [1, 2]}),
+        (
+            "revit_reset_element_ids",
+            {"element_ids": [4, 5]},
+            {"elementIds": [4, 5]},
+        ),
     ],
 )
 @pytest.mark.parametrize("dry_run", [False, True])
