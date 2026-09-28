@@ -193,6 +193,7 @@ def register_actions(mcp, execute, host_provider) -> None:
             "revit_set_parameter": "Set Parameter",
             "revit_delete": "Delete Elements",
             "revit_reset_element_ids": "Reset Element IDs",
+            "revit_rebuild_model_ids": "Rebuild Model With New IDs",
             "revit_batch": "Run Action Batch",
         }[function.__name__]
         return mcp.tool(
@@ -459,6 +460,37 @@ def register_actions(mcp, execute, host_provider) -> None:
         """
         return await send(
             "reset-element-ids", elementIds=element_ids, dryRun=dry_run, document=document
+        )
+
+    @action
+    async def revit_rebuild_model_ids(
+        destination_path: str,
+        view: str | None = None,
+        template_path: str | None = None,
+        overwrite: bool = False,
+        remove_template_levels: bool = True,
+        dry_run: bool = False,
+        document: Document = None,
+    ) -> dict[str, Any]:
+        """Give every component new IDs by copying a 3D view's selectable elements into a new model, because Revit does not allow assigning an element ID.
+
+        The open model is never modified: the result is written to `destination_path` on the workstation, and the source stays as it is.
+        `view` chooses the 3D view to read; without it the first non-perspective 3D view is used, and only the elements that view can select are copied.
+        Levels, grids and reference planes travel so hosts resolve; cameras, the sun path, the section box, views and elements without a category are left behind and reported under excluded.
+        Views, sheets, schedules, annotations, phases, worksets, MEP systems and any unselected host do not travel, so the result is geometry, types and parameters.
+        Data carries destinationPath, saved, count, sourceView, sourceElementCount, datumCount, sourceCategoryCounts, copiedCategoryCounts, newIdMin/newIdMax, idMapping (old to new, verified against category and type) and excluded elements with a reason each.
+        `overwrite` replaces an existing file, `template_path` starts the copy from a template instead of the default metric template, and remove_template_levels drops the template's own levels.
+        `dry_run` performs the copy and reports the mapping without saving a file.
+        """
+        return await send(
+            "rebuild-model-ids",
+            view=view,
+            destinationPath=destination_path,
+            overwrite=overwrite,
+            templatePath=template_path,
+            removeTemplateLevels=remove_template_levels,
+            dryRun=dry_run,
+            document=document,
         )
 
     @action

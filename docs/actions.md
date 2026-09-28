@@ -36,6 +36,7 @@ Jobs without `targetDocument` retain the active-document behavior.
 | `revit_delete` | `element_ids` | Delete nonempty IDs and their dependents. |
 | `revit_reset_element_ids` | `element_ids`, `dry_run=false` | Replace elements with copies so Revit assigns new IDs; reports `idMapping` and refuses an element when deletion would remove dependents, when it is hosted or grouped, when it is an MEP curve or an MEP system member (a copy does not rejoin the network, and Revit re-heals the run around the deleted original), or when Revit cannot copy it. |
 | `revit_batch` | `steps`, `dry_run=false` | Execute 1–50 actions with a single undo entry named `revit_batch`. |
+| `revit_rebuild_model_ids` | `destination_path`, `view`, `template_path`, `overwrite=false`, `remove_template_levels=true`, `dry_run=false` | Copy the selectable components of a 3D view into a new model, so Revit assigns every element a fresh ID; the open model is never changed. Levels, grids and reference planes travel first so hosts resolve; cameras, the sun path, the section box, views and elements without a category are left behind and reported under `excluded`. Views, sheets, schedules, annotations, phases, worksets, MEP systems and unselected hosts do not travel, so the result is geometry, types and parameters. Data reports `count`, `newIdMin`/`newIdMax`, `sourceCategoryCounts`, `copiedCategoryCounts` and an `idMapping` verified against category and type. |
 
 `type_name`, `wall_type` and `floor_type` are required arguments that accept `null`.
 
@@ -44,6 +45,8 @@ A dry run executes the mutation, reads its prospective result, and rolls back th
 A successful dry run includes `data.dryRun:true`, `data.rolledBack:true` and the same `verification` shape as a real write.
 An action that throws returns an error without a verification block; a missing family also returns `closestFamilies` on the single-action tool.
 `revit_isolate` has no `dry_run` argument; it uses temporary isolation only.
+`revit_rebuild_model_ids` is not a transaction: `dry_run=true` performs the copy and reports the mapping without saving a file, and a real run writes the new model while the source is never modified or saved.
+The template the new model starts from carries no real view, so the rebuild adds a three-dimensional view when one is missing; without it Revit refuses to open the file.
 Created IDs in a dry run are provisional and do not identify persisted elements.
 
 Successful real writes return `data.dryRun:false` and re-read the affected elements after commit.

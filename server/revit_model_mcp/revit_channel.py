@@ -31,6 +31,7 @@ ACTION_COMMANDS = frozenset(
         "set-parameter",
         "delete",
         "reset-element-ids",
+        "rebuild-model-ids",
         "batch",
     }
 )

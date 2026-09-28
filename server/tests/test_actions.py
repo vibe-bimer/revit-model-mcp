@@ -29,6 +29,7 @@ ACTION_TOOLS = {
     "revit_set_parameter",
     "revit_delete",
     "revit_reset_element_ids",
+    "revit_rebuild_model_ids",
     "revit_batch",
 }
 
@@ -139,6 +140,17 @@ def action_server():
             "revit_reset_element_ids",
             {"element_ids": [4, 5]},
             {"elementIds": [4, 5]},
+        ),
+        (
+            "revit_rebuild_model_ids",
+            {"destination_path": "E:/out/new.rvt"},
+            {
+                "view": None,
+                "destinationPath": "E:/out/new.rvt",
+                "overwrite": False,
+                "templatePath": None,
+                "removeTemplateLevels": True,
+            },
         ),
     ],
 )

@@ -94,6 +94,10 @@ internal static class ActionCommandExecutor
         ActionJobContract action, ActionFailures failures, out bool viewOpened, bool deferDryRun = false)
     {
         viewOpened = false;
+        // A rebuild works across two documents: the source must stay outside any transaction, and the new
+        // document runs its own, so it returns before the action transaction below is started.
+        if (command == "rebuild-model-ids")
+            return ModelRebuild.Rebuild(document, action);
         if (command is "select" or "show" or "isolate" && uiDocument is null)
             throw new InvalidOperationException($"Cannot run '{command}' on '{document.Title}' because it is not the active document; activate it in Revit first.");
         var ids = command == "isolate" && action.Reset ? [] : ResolveIds(document, action.ElementIds);

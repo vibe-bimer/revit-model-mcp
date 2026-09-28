@@ -6,7 +6,7 @@ namespace RevitModelMcp.Core.Control;
 public static class ActionJobParser
 {
     public static bool IsAction(string command) => command is
-        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "reset-element-ids" or "batch";
+        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "reset-element-ids" or "rebuild-model-ids" or "batch";
 
     public static ControlJobParseResult Parse(string command, ControlJobContract job)
     {
@@ -39,7 +39,12 @@ public static class ActionJobParser
                 TargetPhase = job.TargetPhase,
                 ElementId = job.ActionElementId ?? 0,
                 Parameter = job.Parameter,
-                Value = job.Value
+                Value = job.Value,
+                View = job.View,
+                DestinationPath = job.DestinationPath,
+                Overwrite = job.Overwrite ?? false,
+                TemplatePath = job.TemplatePath,
+                RemoveTemplateLevels = job.RemoveTemplateLevels ?? true
             };
             if (command == "batch")
             {
@@ -47,7 +52,7 @@ public static class ActionJobParser
                 foreach (var step in job.Steps!)
                 {
                     var stepCommand = step?.Command ?? string.Empty;
-                    Require(IsAction(stepCommand) && stepCommand is not ("show" or "batch" or "merge-phases"),
+                    Require(IsAction(stepCommand) && stepCommand is not ("show" or "batch" or "merge-phases" or "rebuild-model-ids"),
                         "Batch steps must be move, place-family, create-wall, create-floor, set-phase, set-parameter, delete, select or isolate.");
                     var parsed = Parse(stepCommand, step!);
                     Require(parsed.Error is null, $"Step {action.Steps.Count}: {parsed.Error}");
@@ -125,6 +130,22 @@ public static class ActionJobParser
                 Require(action.ElementId > 0, "elementId must be positive.");
                 Require(!string.IsNullOrWhiteSpace(action.Parameter), "parameter is required.");
                 Require(action.Value is not null, "value is required (an empty string is allowed).");
+            }
+            if (command == "rebuild-model-ids")
+            {
+                Require(!string.IsNullOrWhiteSpace(action.DestinationPath), "destinationPath is required.");
+                action.DestinationPath = action.DestinationPath!.Trim();
+                Require(action.DestinationPath.EndsWith(".rvt", StringComparison.OrdinalIgnoreCase),
+                    "destinationPath must name a .rvt file.");
+                Require(action.DestinationPath.Length > 4, "destinationPath must not be a bare .rvt file name.");
+                if (action.TemplatePath is not null)
+                {
+                    Require(!string.IsNullOrWhiteSpace(action.TemplatePath), "templatePath must not be blank.");
+                    action.TemplatePath = action.TemplatePath.Trim();
+                    Require(action.TemplatePath.EndsWith(".rte", StringComparison.OrdinalIgnoreCase)
+                        || action.TemplatePath.EndsWith(".rvt", StringComparison.OrdinalIgnoreCase),
+                        "templatePath must name a .rte or .rvt file.");
+                }
             }
             var result = ControlJobParseResult.Create(ControlJobKind.Action, command);
             result.Action = action;
@@ -204,6 +225,18 @@ public sealed class ActionJobContract
     public long ElementId { get; set; }
     public string? Parameter { get; set; }
     public string? Value { get; set; }
+
+    /// <summary>The 3D view whose selectable components a rebuild copies; the default is the first non-template 3D view.</summary>
+    public string? View { get; set; }
+
+    /// <summary>Where a rebuild writes the new model. The source document is never saved.</summary>
+    public string? DestinationPath { get; set; }
+
+    public bool Overwrite { get; set; }
+    public string? TemplatePath { get; set; }
+
+    /// <summary>Remove the destination template's own levels once the copied levels exist, so the result has one level list.</summary>
+    public bool RemoveTemplateLevels { get; set; }
 }
 
 public sealed partial class ControlJobContract
@@ -233,6 +266,10 @@ public sealed partial class ControlJobContract
     [DataMember(Name = "elementId")] public long? ActionElementId { get; set; }
     [DataMember(Name = "parameter")] public string? Parameter { get; set; }
     [DataMember(Name = "value")] public string? Value { get; set; }
+    [DataMember(Name = "destinationPath")] public string? DestinationPath { get; set; }
+    [DataMember(Name = "overwrite")] public bool? Overwrite { get; set; }
+    [DataMember(Name = "templatePath")] public string? TemplatePath { get; set; }
+    [DataMember(Name = "removeTemplateLevels")] public bool? RemoveTemplateLevels { get; set; }
 }
 
 [DataContract]
@@ -292,6 +329,7 @@ public sealed class ActionResultData
     [DataMember(Name = "dependentCategories", EmitDefaultValue = false)] public List<ElementCategoryCount>? DependentCategories { get; set; }
 
     [DataMember(Name = "count", EmitDefaultValue = false)] public int? Count { get; set; }
+    [DataMember(Name = "notes", EmitDefaultValue = false)] public List<string>? Notes { get; set; }
     [DataMember(Name = "sourceDeleted", EmitDefaultValue = false)] public bool? SourceDeleted { get; set; }
     [DataMember(Name = "phaseDeleteError", EmitDefaultValue = false)] public string? PhaseDeleteError { get; set; }
     [DataMember(Name = "id", EmitDefaultValue = false)] public long? Id { get; set; }
@@ -302,4 +340,47 @@ public sealed class ActionResultData
     [DataMember(Name = "newValue", EmitDefaultValue = false)] public string? NewValue { get; set; }
     [DataMember(Name = "parameterScope", EmitDefaultValue = false)] public string? ParameterScope { get; set; }
     [DataMember(Name = "closestFamilies", EmitDefaultValue = false)] public List<string>? ClosestFamilies { get; set; }
+
+    /// <summary>Where a rebuild wrote the new model.</summary>
+    [DataMember(Name = "destinationPath", EmitDefaultValue = false)] public string? DestinationPath { get; set; }
+
+    /// <summary>The 3D view a rebuild read.</summary>
+    [DataMember(Name = "sourceView", EmitDefaultValue = false)] public string? SourceView { get; set; }
+
+    [DataMember(Name = "sourceElementCount", EmitDefaultValue = false)] public int? SourceElementCount { get; set; }
+
+    /// <summary>Levels, grids and reference planes in the selection: they are copied first so hosted elements resolve.</summary>
+    [DataMember(Name = "datumCount", EmitDefaultValue = false)] public int? DatumCount { get; set; }
+
+    /// <summary>Elements the rebuild left behind, with the reason, so nothing is dropped silently.</summary>
+    [DataMember(Name = "excluded", EmitDefaultValue = false)] public List<IneligibleElement>? Excluded { get; set; }
+
+    [DataMember(Name = "sourceCategoryCounts", EmitDefaultValue = false)] public List<ElementCategoryCount>? SourceCategoryCounts { get; set; }
+    [DataMember(Name = "copiedCategoryCounts", EmitDefaultValue = false)] public List<ElementCategoryCount>? CopiedCategoryCounts { get; set; }
+
+    /// <summary>The lowest and highest new element id, which shows that the ids really are fresh.</summary>
+    [DataMember(Name = "newIdMin", EmitDefaultValue = false)] public long? NewIdMin { get; set; }
+
+    [DataMember(Name = "newIdMax", EmitDefaultValue = false)] public long? NewIdMax { get; set; }
+
+    [DataMember(Name = "saved", EmitDefaultValue = false)] public bool? Saved { get; set; }
+    [DataMember(Name = "sizeBytes", EmitDefaultValue = false)] public long? SizeBytes { get; set; }
+    [DataMember(Name = "templatePath", EmitDefaultValue = false)] public string? TemplatePath { get; set; }
+    [DataMember(Name = "templateLevelsRemoved", EmitDefaultValue = false)] public int? TemplateLevelsRemoved { get; set; }
+    [DataMember(Name = "templateLevelsKept", EmitDefaultValue = false)] public int? TemplateLevelsKept { get; set; }
+
+    /// <summary>True when one copy call was refused and the rebuild fell back to copying element by element.</summary>
+    [DataMember(Name = "isolatedCopy", EmitDefaultValue = false)] public bool? IsolatedCopy { get; set; }
+
+    /// <summary>
+    /// True when every id pair was checked against the copied element's category and type, so a caller can
+    /// trust the mapping. A copy call does not promise the order of its return value, so this is verified
+    /// rather than assumed.
+    /// </summary>
+    [DataMember(Name = "idMappingVerified", EmitDefaultValue = false)] public bool? IdMappingVerified { get; set; }
+
+    [DataMember(Name = "idMappingTruncated", EmitDefaultValue = false)] public bool? IdMappingTruncated { get; set; }
+
+    /// <summary>How many id pairs failed the category and type check, when the mapping could not be verified.</summary>
+    [DataMember(Name = "mappingMismatches", EmitDefaultValue = false)] public int? MappingMismatches { get; set; }
 }

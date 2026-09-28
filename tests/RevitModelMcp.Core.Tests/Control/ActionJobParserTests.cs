@@ -43,6 +43,43 @@ public sealed class ActionJobParserTests
     }
 
     [Test]
+    [Arguments("""{"command":"rebuild-model-ids"}""")]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out.txt"}""")]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":".rvt"}""")]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out.rvt","templatePath":"E:/t.rtx"}""")]
+    public async Task Parse_RebuildModelIds_RejectsAnUnusableDestination(string json)
+    {
+        var result = ControlJobParser.Parse(json);
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+    }
+
+    [Test]
+    public async Task Parse_RebuildModelIds_KeepsViewTemplateAndDefaults()
+    {
+        var result = ControlJobParser.Parse(
+            """{"command":"rebuild-model-ids","destinationPath":" E:/out/new.rvt ","templatePath":"E:/templates/empty.rte","view":"{3D}","overwrite":true,"dryRun":true}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.DestinationPath).IsEqualTo("E:/out/new.rvt");
+        await Assert.That(result.Action.TemplatePath).IsEqualTo("E:/templates/empty.rte");
+        await Assert.That(result.Action.View).IsEqualTo("{3D}");
+        await Assert.That(result.Action.Overwrite).IsTrue();
+        await Assert.That(result.Action.RemoveTemplateLevels).IsTrue();
+        await Assert.That(result.Action.DryRun).IsTrue();
+        await Assert.That(result.Action.ElementIds).IsEmpty();
+    }
+
+    [Test]
+    public async Task Parse_RebuildModelIds_IsNotABatchStep()
+    {
+        var result = ControlJobParser.Parse(
+            """{"command":"batch","steps":[{"command":"rebuild-model-ids","destinationPath":"E:/out.rvt"}]}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+    }
+
+    [Test]
     public async Task Parse_Move_PreservesMillimetersAndDefaultsZ()
     {
         var result = ControlJobParser.Parse("""{"command":"move","elementIds":[2147483648],"dxMm":304.8,"dyMm":-200}""");
