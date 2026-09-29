@@ -150,6 +150,8 @@ def action_server():
                 "overwrite": False,
                 "templatePath": None,
                 "removeTemplateLevels": True,
+                "seed": 0,
+                "duplicateNames": "override",
             },
         ),
     ],

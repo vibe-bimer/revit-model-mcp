@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using Autodesk.Revit.DB;
 using Nice3point.Revit.Extensions;
@@ -20,6 +21,7 @@ internal static class ModelRebuild
     private const string RebuildTransactionName = "revit_rebuild_model_ids";
     private const string TemplateLevelPrefix = "__rebuild_";
     private const string TemplateTypeSuffix = " (模板)";
+    private const string SeedLevelPrefix = "__rebuild_seed_";
 
     internal static ActionResultData Rebuild(Document source, ActionJobContract action)
     {
@@ -52,14 +54,28 @@ internal static class ModelRebuild
         result.SourceCategoryCounts = CountCategories(source, ordered);
 
         Document? destination = null;
+        var phases = new PhaseLog();
         try
         {
             destination = templatePath is null
                 ? source.Application.NewProjectDocument(UnitSystem.Metric)
                 : source.Application.NewProjectDocument(templatePath);
             result.TemplatePath = templatePath ?? "the default metric template";
+            phases.Mark("new-project");
 
-            var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels, result, out var renamedTypes);
+            var seed = CreateSeed(destination, action.Seed);
+            phases.Mark("seed");
+            if (seed.Count > 0)
+            {
+                result.Seed = seed.Count;
+                (result.Notes ??= []).Add($"{seed.Count} temporary level(s) were added to the new model before the copy so this copy's ids start after them, and were removed again afterwards.");
+            }
+
+            var answerDuplicates = !string.Equals(action.DuplicateNames, "rename", StringComparison.OrdinalIgnoreCase);
+            result.DuplicateNames = answerDuplicates ? "override" : "rename";
+            var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels, seed, answerDuplicates,
+                result, phases, out var renamedTypes);
+            phases.Mark("copy");
             if (newIds.Count == 0)
                 throw new InvalidOperationException("Revit copied no element into the new model; nothing was written.");
             result.Count = newIds.Count;
@@ -67,26 +83,37 @@ internal static class ModelRebuild
             result.NewIdMin = newIds.Min(RevitValueReader.GetId);
             result.NewIdMax = newIds.Max(RevitValueReader.GetId);
             BuildMapping(source, destination, ordered, newIds, result);
+            phases.Mark("mapping");
             EnsureOpenableView(destination, result);
+            phases.Mark("view");
 
             if (action.DryRun)
             {
                 result.RolledBack = true;
+                (result.Notes ??= []).Add($"phase timings: {phases.Summary()}.");
                 return result;
             }
 
-            var leftovers = RemoveRenamedTemplateElements(destination, renamedTypes);
-            if (leftovers.Removed > 0 || leftovers.Kept > 0)
-                (result.Notes ??= []).Add($"{leftovers.Removed} of the renamed template element(s) were removed again, and {leftovers.Kept} stayed because Revit still uses them.");
+            if (renamedTypes.Count > 0)
+            {
+                var leftovers = RemoveRenamedTemplateElements(destination, renamedTypes);
+                if (leftovers.Removed > 0 || leftovers.Kept > 0)
+                    (result.Notes ??= []).Add($"{leftovers.Removed} of the renamed template element(s) were removed again, and {leftovers.Kept} stayed because Revit still uses them.");
+            }
+            phases.Mark("cleanup");
 
             destination.SaveAs(destinationPath, new SaveAsOptions { OverwriteExistingFile = action.Overwrite });
             result.Saved = true;
             result.SizeBytes = new FileInfo(destinationPath).Length;
+            phases.Mark("save");
+            (result.Notes ??= []).Add($"phase timings: {phases.Summary()}.");
             return result;
         }
         finally
         {
             Close(destination);
+            phases.Mark("close");
+            PluginLog.Info($"Rebuild phases: {phases.Summary()}.");
         }
     }
 
@@ -178,31 +205,49 @@ internal static class ModelRebuild
     private static bool IsDatum(Element? element) => element is Level or Grid or ReferencePlane;
 
     private static List<ElementId> Copy(Document source, Document destination, IReadOnlyList<ElementId> ordered,
-        bool removeTemplateLevels, ActionResultData result, out List<ElementId> renamedTypes)
+        bool removeTemplateLevels, IReadOnlyList<ElementId> seed, bool answerDuplicates, ActionResultData result,
+        PhaseLog phases, out List<ElementId> renamedTypes)
     {
         renamedTypes = [];
         var reserved = (Renamed: new List<ElementId>(), Removed: 0);
         InTransaction(destination, () =>
         {
             ReserveDestinationLevelNames(source, destination, ordered);
-            reserved = ReserveDestinationNames(source, destination);
+            if (!answerDuplicates) reserved = ReserveDestinationNames(source, destination);
         });
+        phases.Mark("reserve");
         renamedTypes = reserved.Renamed;
         if (renamedTypes.Count > 0 || reserved.Removed > 0)
             (result.Notes ??= []).Add($"{renamedTypes.Count} element(s) the new project's template contributed were renamed and {reserved.Removed} were removed before the copy, so Revit would not ask how to resolve a duplicate name.");
 
         var duplicates = new ReportDuplicateTypeNames(source, destination);
         var isolation = new Isolation { Duplicates = duplicates };
-        var copied = TryCopyGroup(source, destination, ordered, isolation);
-        if (copied is null)
+        var answeredBefore = DialogOverride.Answered;
+        List<ElementId>? copied;
+        // Answering the duplicate-name question keeps the source model's own types, which is why the fast path
+        // needs neither the rename above nor the cleanup that removes the renamed elements again.
+        using (IDisposable? guard = answerDuplicates ? DialogOverride.Scope() : null)
         {
-            // One copy call is the only way to keep every reference between the copied elements (stairs,
-            // railings, curtain panels), so it is tried first. When Revit refuses it, the elements Revit
-            // rejects are isolated instead of discarding the whole rebuild.
-            result.IsolatedCopy = true;
-            (result.Notes ??= []).Add("Revit refused the single copy call, so the rebuild isolated the elements Revit rejects and copied the rest; references between the isolated groups are lost.");
-            copied = [];
-            IsolateCopy(source, destination, ordered, copied, isolation, result);
+            copied = TryCopyGroup(source, destination, ordered, isolation, answerDuplicates);
+            phases.Mark("copy-call");
+            if (copied is null)
+            {
+                // One copy call is the only way to keep every reference between the copied elements (stairs,
+                // railings, curtain panels), so it is tried first. When Revit refuses it, the elements Revit
+                // rejects are isolated instead of discarding the whole rebuild.
+                result.IsolatedCopy = true;
+                (result.Notes ??= []).Add("Revit refused the single copy call, so the rebuild isolated the elements Revit rejects and copied the rest; references between the isolated groups are lost.");
+                copied = [];
+                IsolateCopy(source, destination, ordered, copied, isolation, result, answerDuplicates);
+                phases.Mark("isolate");
+            }
+        }
+
+        var answered = DialogOverride.Answered - answeredBefore;
+        if (answered > 0)
+        {
+            result.AutoAnsweredDialogs = answered;
+            (result.Notes ??= []).Add($"{answered} question(s) Revit would have waited on were answered with OK, so the copy kept the source model's own types.");
         }
 
         if (duplicates.Count > 0)
@@ -211,14 +256,68 @@ internal static class ModelRebuild
         if (isolation.Truncated)
             (result.Notes ??= []).Add($"Revit rejected so many elements that the rebuild stopped isolating them after {MaxIsolationTransactions} attempts; the rejected elements are not in the new model.");
 
+        RemoveSeed(destination, seed);
+        phases.Mark("remove-seed");
+
         if (removeTemplateLevels && copied.Count > 0)
         {
             var levels = InTransaction(destination, () => RemoveTemplateLevels(destination, copied));
             result.TemplateLevelsRemoved = levels.Removed;
             result.TemplateLevelsKept = levels.Kept;
         }
+        phases.Mark("remove-template-levels");
 
         return copied.OrderBy(RevitValueReader.GetId).ToList();
+    }
+
+    /// <summary>
+    /// Adds the requested number of temporary levels to the new model before the copy. Revit hands the copied
+    /// elements the ids that follow the ids the new model already holds, so two rebuilds of the same source
+    /// otherwise produce the same ids; the seed moves each copy into a block of its own.
+    /// </summary>
+    private static List<ElementId> CreateSeed(Document destination, int seed)
+    {
+        if (seed <= 0) return [];
+        var ids = new List<ElementId>(seed);
+        InTransaction(destination, () =>
+        {
+            for (var index = 0; index < seed; index++)
+            {
+                var level = Level.Create(destination, SeedElevation(index));
+                try
+                {
+                    level.Name = $"{SeedLevelPrefix}{index}";
+                }
+                catch (Exception exception)
+                {
+                    PluginLog.Warn($"A seed level could not be named: {exception.Message}");
+                }
+                ids.Add(level.Id);
+            }
+        });
+        return ids;
+    }
+
+    /// <summary>Far below the model, so a seed level never collides with a real one; the seed is removed again anyway.</summary>
+    private static double SeedElevation(int index) => -1_000_000d - index;
+
+    private static void RemoveSeed(Document destination, IReadOnlyList<ElementId> seed)
+    {
+        if (seed.Count == 0) return;
+        InTransaction(destination, () =>
+        {
+            foreach (var id in seed)
+            {
+                try
+                {
+                    destination.Delete(id);
+                }
+                catch (Exception exception)
+                {
+                    PluginLog.Warn($"A seed level could not be removed: {exception.Message}");
+                }
+            }
+        });
     }
 
     /// <summary>
@@ -226,7 +325,7 @@ internal static class ModelRebuild
     /// the next one is attempted. A null result means Revit rolled the group back and recorded why.
     /// </summary>
     private static List<ElementId>? TryCopyGroup(Document source, Document destination, IReadOnlyList<ElementId> ids,
-        Isolation isolation)
+        Isolation isolation, bool answerDuplicates)
     {
         isolation.Transactions++;
         using var transaction = new Transaction(destination, RebuildTransactionName);
@@ -237,7 +336,7 @@ internal static class ModelRebuild
             .SetFailuresPreprocessor(failures).SetClearAfterRollback(true));
         try
         {
-            var copied = CopyElements(source, destination, ids, isolation);
+            var copied = CopyElements(source, destination, ids, isolation, answerDuplicates);
             if (transaction.Commit() != TransactionStatus.Committed)
             {
                 isolation.Record(failures, null);
@@ -260,7 +359,7 @@ internal static class ModelRebuild
     /// longer costs the whole model. Each accepted half keeps the internal references of that half.
     /// </summary>
     private static void IsolateCopy(Document source, Document destination, IReadOnlyList<ElementId> ids,
-        List<ElementId> copied, Isolation isolation, ActionResultData result)
+        List<ElementId> copied, Isolation isolation, ActionResultData result, bool answerDuplicates)
     {
         if (isolation.Transactions >= MaxIsolationTransactions)
         {
@@ -283,9 +382,9 @@ internal static class ModelRebuild
         foreach (var half in new[] { ids.Take(middle).ToList(), ids.Skip(middle).ToList() })
         {
             if (half.Count == 0) continue;
-            var group = TryCopyGroup(source, destination, half, isolation);
+            var group = TryCopyGroup(source, destination, half, isolation, answerDuplicates);
             if (group is not null) copied.AddRange(group);
-            else IsolateCopy(source, destination, half, copied, isolation, result);
+            else IsolateCopy(source, destination, half, copied, isolation, result, answerDuplicates);
         }
     }
 
@@ -319,10 +418,17 @@ internal static class ModelRebuild
     }
 
     private static ICollection<ElementId> CopyElements(Document source, Document destination, IReadOnlyList<ElementId> ids,
-        Isolation isolation)
+        Isolation isolation, bool answerDuplicates)
     {
         var options = new CopyPasteOptions();
-        options.SetDuplicateTypeNamesHandler(isolation.Duplicates);
+        if (!answerDuplicates)
+        {
+            // Without an answer the handler is what keeps the copy moving; with the override the handler must
+            // stay off, because Revit only asks the question when no handler is set, and the answer is what
+            // keeps the source model's own types.
+            options.SetDuplicateTypeNamesHandler(isolation.Duplicates);
+        }
+
         return ElementTransformUtils.CopyElements(source, ids.ToList(), destination, Transform.Identity, options);
     }
 
@@ -407,22 +513,28 @@ internal static class ModelRebuild
         var renamed = new List<ElementId>();
         var removed = 0;
         var names = SourceNames(source);
+        var failures = new List<string>();
 
         foreach (var type in new FilteredElementCollector(destination).WhereElementIsElementType()
                      .Cast<ElementType>().ToList())
             if (type.Name is { Length: > 0 } name && names.Contains(name))
-                Reserve(type, destination, renamed, ref removed);
+                Reserve(type, destination, renamed, ref removed, failures);
 
         foreach (var material in new FilteredElementCollector(destination).OfClass(typeof(Material))
                      .Cast<Material>().ToList())
             if (material.Name is { Length: > 0 } name && names.Contains(name))
-                Reserve(material, destination, renamed, ref removed);
+                Reserve(material, destination, renamed, ref removed, failures);
 
         foreach (var pattern in new FilteredElementCollector(destination)
                      .WherePasses(new ElementMulticlassFilter([typeof(LinePatternElement), typeof(FillPatternElement)]))
                      .Cast<Element>().ToList())
             if (pattern.Name is { Length: > 0 } name && names.Contains(name))
-                Reserve(pattern, destination, renamed, ref removed);
+                Reserve(pattern, destination, renamed, ref removed, failures);
+
+        // One line per run: every element that kept its name is expected on some templates, and logging each
+        // one used to fill the log with thousands of lines a day.
+        if (failures.Count > 0)
+            PluginLog.Warn($"{failures.Count} template element(s) kept a name the source also uses: {failures[0]}");
 
         return (renamed, removed);
     }
@@ -442,9 +554,10 @@ internal static class ModelRebuild
         return names;
     }
 
-    private static void Reserve(Element element, Document destination, List<ElementId> renamed, ref int removed)
+    private static void Reserve(Element element, Document destination, List<ElementId> renamed, ref int removed,
+        List<string> failures)
     {
-        if (TryRename(element, element.Name)) renamed.Add(element.Id);
+        if (TryRename(element, element.Name, failures)) renamed.Add(element.Id);
         else
         {
             // An element Revit refuses to rename keeps a name the source can collide with, and removing it
@@ -455,12 +568,12 @@ internal static class ModelRebuild
             }
             catch (Exception exception)
             {
-                PluginLog.Warn($"A template element could neither be renamed nor removed: {exception.GetType().Name}: {exception.Message}");
+                failures.Add($"neither renamed nor removed ({exception.GetType().Name}: {FirstLine(exception.Message)})");
             }
         }
     }
 
-    private static bool TryRename(Element element, string original)
+    private static bool TryRename(Element element, string original, List<string> failures)
     {
         try
         {
@@ -476,7 +589,7 @@ internal static class ModelRebuild
             }
             catch (Exception second)
             {
-                PluginLog.Warn($"A template element could not be renamed: {first.GetType().Name}: {first.Message}; {second.GetType().Name}: {second.Message}");
+                failures.Add($"could not be renamed ({first.GetType().Name}: {FirstLine(first.Message)}; {second.GetType().Name}: {FirstLine(second.Message)})");
                 return false;
             }
         }
@@ -496,6 +609,7 @@ internal static class ModelRebuild
         transaction.SetFailureHandlingOptions(transaction.GetFailureHandlingOptions()
             .SetFailuresPreprocessor(failures).SetClearAfterRollback(true));
         var removed = 0;
+        var deleteFailures = new List<string>();
         foreach (var id in renamed)
         {
             try
@@ -504,10 +618,12 @@ internal static class ModelRebuild
             }
             catch (Exception exception)
             {
-                PluginLog.Warn($"A renamed template element could not be removed: {exception.Message}");
+                deleteFailures.Add($"{exception.GetType().Name}: {FirstLine(exception.Message)}");
             }
         }
 
+        if (deleteFailures.Count > 0)
+            PluginLog.Warn($"{deleteFailures.Count} of {renamed.Count} renamed template element(s) could not be removed: {deleteFailures[0]}");
         if (transaction.Commit() != TransactionStatus.Committed) return (0, renamed.Count);
         return (removed, renamed.Count - removed);
     }
@@ -700,5 +816,25 @@ internal static class ModelRebuild
 
             return rollBack ? FailureProcessingResult.ProceedWithRollBack : FailureProcessingResult.Continue;
         }
+    }
+
+    /// <summary>
+    /// Records how long each step of a rebuild took, so a slow copy can be attributed to the step that
+    /// caused it. The marks are reported in the result and in the plugin log.
+    /// </summary>
+    private sealed class PhaseLog
+    {
+        private readonly Stopwatch _watch = Stopwatch.StartNew();
+        private readonly List<string> _phases = [];
+        private long _last;
+
+        public void Mark(string name)
+        {
+            var elapsed = _watch.ElapsedMilliseconds;
+            _phases.Add($"{name}={elapsed - _last}");
+            _last = elapsed;
+        }
+
+        public string Summary() => $"{string.Join(" ", _phases)} total={_watch.ElapsedMilliseconds}";
     }
 }

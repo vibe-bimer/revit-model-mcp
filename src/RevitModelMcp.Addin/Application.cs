@@ -51,6 +51,7 @@ public sealed class Application : ExternalApplication
             Application.ControlledApplication.VersionNumber);
         Application.ViewActivated += OnViewActivated;
         Application.ControlledApplication.DocumentClosing += OnDocumentClosing;
+        DialogOverride.Attach(Application);
         _activeDocument = RevitContext.UiApplication?.ActiveUIDocument?.Document;
         _instanceHeartbeat.Start(_activeDocument);
         try

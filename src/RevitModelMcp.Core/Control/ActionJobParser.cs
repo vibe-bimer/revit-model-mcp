@@ -44,7 +44,9 @@ public static class ActionJobParser
                 DestinationPath = job.DestinationPath,
                 Overwrite = job.Overwrite ?? false,
                 TemplatePath = job.TemplatePath,
-                RemoveTemplateLevels = job.RemoveTemplateLevels ?? true
+                RemoveTemplateLevels = job.RemoveTemplateLevels ?? true,
+                Seed = job.Seed ?? 0,
+                DuplicateNames = job.DuplicateNames ?? "override"
             };
             if (command == "batch")
             {
@@ -146,6 +148,10 @@ public static class ActionJobParser
                         || action.TemplatePath.EndsWith(".rvt", StringComparison.OrdinalIgnoreCase),
                         "templatePath must name a .rte or .rvt file.");
                 }
+                Require(action.Seed is >= 0 and <= 20000, "seed must be between 0 and 20000.");
+                action.DuplicateNames = action.DuplicateNames.Trim().ToLowerInvariant();
+                Require(action.DuplicateNames is "override" or "rename",
+                    "duplicateNames must be 'override' or 'rename'.");
             }
             var result = ControlJobParseResult.Create(ControlJobKind.Action, command);
             result.Action = action;
@@ -237,6 +243,20 @@ public sealed class ActionJobContract
 
     /// <summary>Remove the destination template's own levels once the copied levels exist, so the result has one level list.</summary>
     public bool RemoveTemplateLevels { get; set; }
+
+    /// <summary>
+    /// Elements the rebuild adds to the new model before the copy and removes again afterwards. Revit hands the
+    /// copied elements the ids that follow the ids the new model already holds, so a seed shifts this copy's ids
+    /// away from every other copy made from the same source.
+    /// </summary>
+    public int Seed { get; set; }
+
+    /// <summary>
+    /// How a rebuild handles a name the paste would duplicate: "override" answers Revit's question with OK so
+    /// the copy keeps the source model's own types, "rename" renames the destination template's elements first
+    /// and removes them again afterwards, which is slower and can fail on elements Revit refuses to delete.
+    /// </summary>
+    public string DuplicateNames { get; set; } = "override";
 }
 
 public sealed partial class ControlJobContract
@@ -270,6 +290,8 @@ public sealed partial class ControlJobContract
     [DataMember(Name = "overwrite")] public bool? Overwrite { get; set; }
     [DataMember(Name = "templatePath")] public string? TemplatePath { get; set; }
     [DataMember(Name = "removeTemplateLevels")] public bool? RemoveTemplateLevels { get; set; }
+    [DataMember(Name = "seed")] public int? Seed { get; set; }
+    [DataMember(Name = "duplicateNames")] public string? DuplicateNames { get; set; }
 }
 
 [DataContract]
@@ -368,6 +390,15 @@ public sealed class ActionResultData
     [DataMember(Name = "templatePath", EmitDefaultValue = false)] public string? TemplatePath { get; set; }
     [DataMember(Name = "templateLevelsRemoved", EmitDefaultValue = false)] public int? TemplateLevelsRemoved { get; set; }
     [DataMember(Name = "templateLevelsKept", EmitDefaultValue = false)] public int? TemplateLevelsKept { get; set; }
+
+    /// <summary>Elements a rebuild added to the new model before the copy so this copy's ids sit in their own block.</summary>
+    [DataMember(Name = "seed", EmitDefaultValue = false)] public int? Seed { get; set; }
+
+    /// <summary>Questions Revit asked while the rebuild pasted, which the rebuild answered itself instead of waiting.</summary>
+    [DataMember(Name = "autoAnsweredDialogs", EmitDefaultValue = false)] public int? AutoAnsweredDialogs { get; set; }
+
+    /// <summary>How the rebuild handled a duplicated name: "override" or "rename".</summary>
+    [DataMember(Name = "duplicateNames", EmitDefaultValue = false)] public string? DuplicateNames { get; set; }
 
     /// <summary>True when one copy call was refused and the rebuild fell back to copying element by element.</summary>
     [DataMember(Name = "isolatedCopy", EmitDefaultValue = false)] public bool? IsolatedCopy { get; set; }

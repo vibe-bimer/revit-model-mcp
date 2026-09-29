@@ -66,8 +66,49 @@ public sealed class ActionJobParserTests
         await Assert.That(result.Action.View).IsEqualTo("{3D}");
         await Assert.That(result.Action.Overwrite).IsTrue();
         await Assert.That(result.Action.RemoveTemplateLevels).IsTrue();
+        await Assert.That(result.Action.Seed).IsEqualTo(0);
+        await Assert.That(result.Action.DuplicateNames).IsEqualTo("override");
         await Assert.That(result.Action.DryRun).IsTrue();
         await Assert.That(result.Action.ElementIds).IsEmpty();
+    }
+
+    [Test]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","seed":-1}""")]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","seed":20001}""")]
+    public async Task Parse_RebuildModelIds_RejectsASeedOutsideItsRange(string json)
+    {
+        var result = ControlJobParser.Parse(json);
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+    }
+
+    [Test]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","duplicateNames":"wait"}""")]
+    public async Task Parse_RebuildModelIds_RejectsAnUnknownDuplicateNamesMode(string json)
+    {
+        var result = ControlJobParser.Parse(json);
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+    }
+
+    [Test]
+    public async Task Parse_RebuildModelIds_KeepsTheDuplicateNamesMode()
+    {
+        var result = ControlJobParser.Parse(
+            """{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","duplicateNames":" Rename "}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.DuplicateNames).IsEqualTo("rename");
+    }
+
+    [Test]
+    public async Task Parse_RebuildModelIds_KeepsTheSeed()
+    {
+        var result = ControlJobParser.Parse(
+            """{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","seed":3000}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.Seed).IsEqualTo(3000);
     }
 
     [Test]
