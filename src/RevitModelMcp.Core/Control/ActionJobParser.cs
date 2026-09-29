@@ -149,7 +149,7 @@ public static class ActionJobParser
                         || action.TemplatePath.EndsWith(".rvt", StringComparison.OrdinalIgnoreCase),
                         "templatePath must name a .rte or .rvt file.");
                 }
-                Require(action.Seed is >= 0 and <= 20000, "seed must be between 0 and 20000.");
+                Require(action.Seed is >= 0 and <= 200000, "seed must be between 0 and 200000.");
                 action.DuplicateNames = action.DuplicateNames.Trim().ToLowerInvariant();
                 Require(action.DuplicateNames is "override" or "rename",
                     "duplicateNames must be 'override' or 'rename'.");
@@ -250,7 +250,8 @@ public sealed class ActionJobContract
     /// <summary>
     /// Elements the rebuild adds to the new model before the copy and removes again afterwards. Revit hands the
     /// copied elements the ids that follow the ids the new model already holds, so a seed shifts this copy's ids
-    /// away from every other copy made from the same source.
+    /// away from every other copy made from the same source. One seeded element costs about 3 ms, so a farm
+    /// should keep a block as small as the copies it holds need.
     /// </summary>
     public int Seed { get; set; }
 

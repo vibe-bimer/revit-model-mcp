@@ -75,7 +75,7 @@ public sealed class ActionJobParserTests
 
     [Test]
     [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","seed":-1}""")]
-    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","seed":20001}""")]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","seed":200001}""")]
     public async Task Parse_RebuildModelIds_RejectsASeedOutsideItsRange(string json)
     {
         var result = ControlJobParser.Parse(json);
