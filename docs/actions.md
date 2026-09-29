@@ -47,6 +47,7 @@ An action that throws returns an error without a verification block; a missing f
 `revit_isolate` has no `dry_run` argument; it uses temporary isolation only.
 `revit_rebuild_model_ids` is not a transaction: `dry_run=true` performs the copy and reports the mapping without saving a file, and a real run writes the new model while the source is never modified or saved.
 The template the new model starts from carries no real view, so the rebuild adds a three-dimensional view when one is missing; without it Revit refuses to open the file.
+When a name the source uses already exists in the new project, Revit asks the user how to resolve the duplicate while it pastes, and that question blocks an unattended run; the rebuild renames or removes those template elements before the copy instead, reports how many it changed, and keeps a last-resort handler so a missed duplicate fails the copy rather than waiting forever.
 Created IDs in a dry run are provisional and do not identify persisted elements.
 
 Successful real writes return `data.dryRun:false` and re-read the affected elements after commit.

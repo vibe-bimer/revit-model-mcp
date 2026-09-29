@@ -19,6 +19,7 @@ internal static class ModelRebuild
     private const int MaxIsolationTransactions = 400;
     private const string RebuildTransactionName = "revit_rebuild_model_ids";
     private const string TemplateLevelPrefix = "__rebuild_";
+    private const string TemplateTypeSuffix = " (模板)";
 
     internal static ActionResultData Rebuild(Document source, ActionJobContract action)
     {
@@ -58,7 +59,7 @@ internal static class ModelRebuild
                 : source.Application.NewProjectDocument(templatePath);
             result.TemplatePath = templatePath ?? "the default metric template";
 
-            var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels, result);
+            var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels, result, out var renamedTypes);
             if (newIds.Count == 0)
                 throw new InvalidOperationException("Revit copied no element into the new model; nothing was written.");
             result.Count = newIds.Count;
@@ -73,6 +74,10 @@ internal static class ModelRebuild
                 result.RolledBack = true;
                 return result;
             }
+
+            var leftovers = RemoveRenamedTemplateElements(destination, renamedTypes);
+            if (leftovers.Removed > 0 || leftovers.Kept > 0)
+                (result.Notes ??= []).Add($"{leftovers.Removed} of the renamed template element(s) were removed again, and {leftovers.Kept} stayed because Revit still uses them.");
 
             destination.SaveAs(destinationPath, new SaveAsOptions { OverwriteExistingFile = action.Overwrite });
             result.Saved = true;
@@ -173,11 +178,21 @@ internal static class ModelRebuild
     private static bool IsDatum(Element? element) => element is Level or Grid or ReferencePlane;
 
     private static List<ElementId> Copy(Document source, Document destination, IReadOnlyList<ElementId> ordered,
-        bool removeTemplateLevels, ActionResultData result)
+        bool removeTemplateLevels, ActionResultData result, out List<ElementId> renamedTypes)
     {
-        InTransaction(destination, () => ReserveDestinationLevelNames(source, destination, ordered));
+        renamedTypes = [];
+        var reserved = (Renamed: new List<ElementId>(), Removed: 0);
+        InTransaction(destination, () =>
+        {
+            ReserveDestinationLevelNames(source, destination, ordered);
+            reserved = ReserveDestinationNames(source, destination);
+        });
+        renamedTypes = reserved.Renamed;
+        if (renamedTypes.Count > 0 || reserved.Removed > 0)
+            (result.Notes ??= []).Add($"{renamedTypes.Count} element(s) the new project's template contributed were renamed and {reserved.Removed} were removed before the copy, so Revit would not ask how to resolve a duplicate name.");
 
-        var isolation = new Isolation();
+        var duplicates = new ReportDuplicateTypeNames(source, destination);
+        var isolation = new Isolation { Duplicates = duplicates };
         var copied = TryCopyGroup(source, destination, ordered, isolation);
         if (copied is null)
         {
@@ -189,6 +204,9 @@ internal static class ModelRebuild
             copied = [];
             IsolateCopy(source, destination, ordered, copied, isolation, result);
         }
+
+        if (duplicates.Count > 0)
+            (result.Notes ??= []).Add($"Revit reported {duplicates.Count} duplicate type name(s) the rename did not cover; the copy used the types the new project already had for them.");
 
         if (isolation.Truncated)
             (result.Notes ??= []).Add($"Revit rejected so many elements that the rebuild stopped isolating them after {MaxIsolationTransactions} attempts; the rejected elements are not in the new model.");
@@ -219,7 +237,7 @@ internal static class ModelRebuild
             .SetFailuresPreprocessor(failures).SetClearAfterRollback(true));
         try
         {
-            var copied = CopyElements(source, destination, ids);
+            var copied = CopyElements(source, destination, ids, isolation);
             if (transaction.Commit() != TransactionStatus.Committed)
             {
                 isolation.Record(failures, null);
@@ -300,8 +318,64 @@ internal static class ModelRebuild
         }
     }
 
-    private static ICollection<ElementId> CopyElements(Document source, Document destination, IReadOnlyList<ElementId> ids) =>
-        ElementTransformUtils.CopyElements(source, ids.ToList(), destination, Transform.Identity, new CopyPasteOptions());
+    private static ICollection<ElementId> CopyElements(Document source, Document destination, IReadOnlyList<ElementId> ids,
+        Isolation isolation)
+    {
+        var options = new CopyPasteOptions();
+        options.SetDuplicateTypeNamesHandler(isolation.Duplicates);
+        return ElementTransformUtils.CopyElements(source, ids.ToList(), destination, Transform.Identity, options);
+    }
+
+    /// <summary>
+    /// Revit asks the user how to resolve a duplicate type name while it pastes, and that question blocks an
+    /// unattended run. The rebuild renames every type the destination already has before it copies, so this
+    /// handler only reports what slipped through a rule the rename did not anticipate, and it continues with
+    /// the destination types rather than waiting for an answer.
+    /// </summary>
+    private sealed class ReportDuplicateTypeNames : IDuplicateTypeNamesHandler
+    {
+        private readonly Document _source;
+        private readonly Document _destination;
+
+        internal ReportDuplicateTypeNames(Document source, Document destination)
+        {
+            _source = source;
+            _destination = destination;
+        }
+
+        public int Count { get; private set; }
+
+        public DuplicateTypeAction OnDuplicateTypeNamesFound(DuplicateTypeNamesHandlerArgs args)
+        {
+            try
+            {
+                var names = new List<string>();
+                foreach (var id in args.GetTypeIds())
+                {
+                    Count++;
+                    names.Add($"{Describe(_source, id)} -> {Describe(_destination, id)}");
+                }
+
+                PluginLog.Warn($"Duplicate type names in the rebuild copy: {string.Join("; ", names)}");
+            }
+            catch (Exception exception)
+            {
+                PluginLog.Warn($"Duplicate type names could not be reported: {exception.Message}");
+            }
+
+            return DuplicateTypeAction.UseDestinationTypes;
+        }
+
+        private static string Describe(Document document, ElementId id)
+        {
+            if (document.GetElement(id) is ElementType type)
+                return $"{type.Category?.Name}/{type.Name}({RevitValueReader.GetId(id)})";
+            var element = document.GetElement(id);
+            return element is null
+                ? $"{RevitValueReader.GetId(id)} (missing)"
+                : $"{element.GetType().Name}/{element.Name}({RevitValueReader.GetId(id)})";
+        }
+    }
 
     /// <summary>
     /// Renames the levels a fresh project already has when they carry a name the source also uses, so the
@@ -320,6 +394,122 @@ internal static class ModelRebuild
             if (!names.Contains(level.Name)) continue;
             level.Name = $"{TemplateLevelPrefix}{index++}";
         }
+    }
+
+    /// <summary>
+    /// Renames the destination elements whose name the source can bring in, so Revit never asks the user how
+    /// to resolve a duplicate name while it pastes — that question blocks an unattended run. The question
+    /// covers more than element types: Revit reported source materials and a source line pattern by name, so
+    /// every named kind the paste can carry is reserved the same way.
+    /// </summary>
+    private static (List<ElementId> Renamed, int Removed) ReserveDestinationNames(Document source, Document destination)
+    {
+        var renamed = new List<ElementId>();
+        var removed = 0;
+        var names = SourceNames(source);
+
+        foreach (var type in new FilteredElementCollector(destination).WhereElementIsElementType()
+                     .Cast<ElementType>().ToList())
+            if (type.Name is { Length: > 0 } name && names.Contains(name))
+                Reserve(type, destination, renamed, ref removed);
+
+        foreach (var material in new FilteredElementCollector(destination).OfClass(typeof(Material))
+                     .Cast<Material>().ToList())
+            if (material.Name is { Length: > 0 } name && names.Contains(name))
+                Reserve(material, destination, renamed, ref removed);
+
+        foreach (var pattern in new FilteredElementCollector(destination)
+                     .WherePasses(new ElementMulticlassFilter([typeof(LinePatternElement), typeof(FillPatternElement)]))
+                     .Cast<Element>().ToList())
+            if (pattern.Name is { Length: > 0 } name && names.Contains(name))
+                Reserve(pattern, destination, renamed, ref removed);
+
+        return (renamed, removed);
+    }
+
+    /// <summary>Every name the source document can hand to the paste.</summary>
+    private static HashSet<string> SourceNames(Document source)
+    {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var element in new FilteredElementCollector(source).WhereElementIsElementType().Cast<Element>())
+            if (element.Name is { Length: > 0 } name) names.Add(name);
+
+        foreach (var element in new FilteredElementCollector(source)
+                     .WherePasses(new ElementMulticlassFilter([typeof(Material), typeof(LinePatternElement), typeof(FillPatternElement)]))
+                     .Cast<Element>())
+            if (element.Name is { Length: > 0 } name) names.Add(name);
+
+        return names;
+    }
+
+    private static void Reserve(Element element, Document destination, List<ElementId> renamed, ref int removed)
+    {
+        if (TryRename(element, element.Name)) renamed.Add(element.Id);
+        else
+        {
+            // An element Revit refuses to rename keeps a name the source can collide with, and removing it
+            // takes that name away just as well: the copy brings the source's own element back in.
+            try
+            {
+                if (destination.Delete(element.Id).Count > 0) removed++;
+            }
+            catch (Exception exception)
+            {
+                PluginLog.Warn($"A template element could neither be renamed nor removed: {exception.GetType().Name}: {exception.Message}");
+            }
+        }
+    }
+
+    private static bool TryRename(Element element, string original)
+    {
+        try
+        {
+            element.Name = $"{original}{TemplateTypeSuffix}";
+            return true;
+        }
+        catch (Exception first)
+        {
+            try
+            {
+                element.Name = $"{original}{TemplateTypeSuffix} {RevitValueReader.GetId(element.Id)}";
+                return true;
+            }
+            catch (Exception second)
+            {
+                PluginLog.Warn($"A template element could not be renamed: {first.GetType().Name}: {first.Message}; {second.GetType().Name}: {second.Message}");
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes the renamed template elements once the copy has brought the source names in, so the new model does
+    /// not carry unused leftovers. An element Revit still needs refuses the delete and stays. The transaction is
+    /// best effort: when Revit rolls it back the model simply keeps every renamed element.
+    /// </summary>
+    private static (int Removed, int Kept) RemoveRenamedTemplateElements(Document destination, IReadOnlyList<ElementId> renamed)
+    {
+        if (renamed.Count == 0) return (0, 0);
+        using var transaction = new Transaction(destination, RebuildTransactionName);
+        if (transaction.Start() != TransactionStatus.Started) return (0, renamed.Count);
+        var failures = new RebuildFailures();
+        transaction.SetFailureHandlingOptions(transaction.GetFailureHandlingOptions()
+            .SetFailuresPreprocessor(failures).SetClearAfterRollback(true));
+        var removed = 0;
+        foreach (var id in renamed)
+        {
+            try
+            {
+                if (destination.Delete(id).Count > 0) removed++;
+            }
+            catch (Exception exception)
+            {
+                PluginLog.Warn($"A renamed template element could not be removed: {exception.Message}");
+            }
+        }
+
+        if (transaction.Commit() != TransactionStatus.Committed) return (0, renamed.Count);
+        return (removed, renamed.Count - removed);
     }
 
     private static (int Removed, int Kept) RemoveTemplateLevels(Document destination, IEnumerable<ElementId> copied)
@@ -466,6 +656,7 @@ internal static class ModelRebuild
     /// <summary>What the isolated copy learned about the elements Revit refuses.</summary>
     private sealed class Isolation
     {
+        public ReportDuplicateTypeNames Duplicates { get; set; } = null!;
         public int Transactions { get; set; }
         public int WarningsDismissed { get; set; }
         public bool Truncated { get; set; }
