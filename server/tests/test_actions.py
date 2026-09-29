@@ -152,6 +152,7 @@ def action_server():
                 "removeTemplateLevels": True,
                 "seed": 0,
                 "duplicateNames": "override",
+                "copies": 1,
             },
         ),
     ],

@@ -46,6 +46,7 @@ public static class ActionJobParser
                 TemplatePath = job.TemplatePath,
                 RemoveTemplateLevels = job.RemoveTemplateLevels ?? true,
                 Seed = job.Seed ?? 0,
+                Copies = job.Copies ?? 1,
                 DuplicateNames = job.DuplicateNames ?? "override"
             };
             if (command == "batch")
@@ -152,6 +153,8 @@ public static class ActionJobParser
                 action.DuplicateNames = action.DuplicateNames.Trim().ToLowerInvariant();
                 Require(action.DuplicateNames is "override" or "rename",
                     "duplicateNames must be 'override' or 'rename'.");
+                Require(action.Copies is >= 1 and <= 50, "copies must be between 1 and 50.");
+                Require(!(action.DryRun && action.Copies > 1), "copies is only available without dryRun.");
             }
             var result = ControlJobParseResult.Create(ControlJobKind.Action, command);
             result.Action = action;
@@ -257,6 +260,13 @@ public sealed class ActionJobContract
     /// and removes them again afterwards, which is slower and can fail on elements Revit refuses to delete.
     /// </summary>
     public string DuplicateNames { get; set; } = "override";
+
+    /// <summary>
+    /// How many copies one run writes. The copies come out of one new model, one after another, so Revit hands
+    /// each copy the ids that follow the copy before it: the files hold the same geometry with different ids and
+    /// the run does not need to burn ids for every copy. The destination path may carry "{n}" for the number.
+    /// </summary>
+    public int Copies { get; set; } = 1;
 }
 
 public sealed partial class ControlJobContract
@@ -292,6 +302,20 @@ public sealed partial class ControlJobContract
     [DataMember(Name = "removeTemplateLevels")] public bool? RemoveTemplateLevels { get; set; }
     [DataMember(Name = "seed")] public int? Seed { get; set; }
     [DataMember(Name = "duplicateNames")] public string? DuplicateNames { get; set; }
+    [DataMember(Name = "copies")] public int? Copies { get; set; }
+}
+
+[DataContract]
+public sealed class RebuildCopyResult
+{
+    [DataMember(Name = "destinationPath")] public string? DestinationPath { get; set; }
+    [DataMember(Name = "count")] public int Count { get; set; }
+    [DataMember(Name = "newIdMin")] public long NewIdMin { get; set; }
+    [DataMember(Name = "newIdMax")] public long NewIdMax { get; set; }
+    [DataMember(Name = "sizeBytes")] public long SizeBytes { get; set; }
+    [DataMember(Name = "idMappingVerified")] public bool IdMappingVerified { get; set; }
+    [DataMember(Name = "mappingMismatches", EmitDefaultValue = false)] public int? MappingMismatches { get; set; }
+    [DataMember(Name = "idMapping", EmitDefaultValue = false)] public List<ElementIdPair>? IdMapping { get; set; }
 }
 
 [DataContract]
@@ -399,6 +423,12 @@ public sealed class ActionResultData
 
     /// <summary>How the rebuild handled a duplicated name: "override" or "rename".</summary>
     [DataMember(Name = "duplicateNames", EmitDefaultValue = false)] public string? DuplicateNames { get; set; }
+
+    /// <summary>How many copies one run wrote; absent when the run wrote one.</summary>
+    [DataMember(Name = "copies", EmitDefaultValue = false)] public int? Copies { get; set; }
+
+    /// <summary>One entry per copy: where it was written, how many elements it holds and its own id mapping.</summary>
+    [DataMember(Name = "copyResults", EmitDefaultValue = false)] public List<RebuildCopyResult>? CopyResults { get; set; }
 
     /// <summary>True when one copy call was refused and the rebuild fell back to copying element by element.</summary>
     [DataMember(Name = "isolatedCopy", EmitDefaultValue = false)] public bool? IsolatedCopy { get; set; }

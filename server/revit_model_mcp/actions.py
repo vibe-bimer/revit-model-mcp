@@ -471,6 +471,7 @@ def register_actions(mcp, execute, host_provider) -> None:
         remove_template_levels: bool = True,
         seed: int = 0,
         duplicate_names: str = "override",
+        copies: int = 1,
         dry_run: bool = False,
         document: Document = None,
     ) -> dict[str, Any]:
@@ -484,6 +485,7 @@ def register_actions(mcp, execute, host_provider) -> None:
         `overwrite` replaces an existing file, `template_path` starts the copy from a template instead of the default metric template, and remove_template_levels drops the template's own levels.
         `seed` adds that many temporary levels to the new model before the copy and removes them again, which moves the new IDs into their own block: rebuilding the same source twice otherwise yields the same IDs, so pass a different seed per copy (for example 0, 1000, 2000) when you need copies whose IDs do not overlap.
         `duplicate_names` decides what happens when the new project already holds a name the source pastes: `override` answers Revit's question with OK so the copy keeps the source's own types, `rename` renames the template's elements first and removes them again afterwards, which is slower and can fail on elements Revit refuses to delete.
+        `copies` writes that many files from one new model: every copy holds the same components with ids of its own, because each copy's ids start after the copy before it. The copies are written to `destination_path` with `{n}` replaced by the copy number, or with the number appended before the extension when the path has no `{n}`; each copy's own mapping is reported under `copyResults`, and the per-copy phase timings are in the plugin log.
         `dry_run` performs the copy and reports the mapping without saving a file.
         """
         return await send(
@@ -495,6 +497,7 @@ def register_actions(mcp, execute, host_provider) -> None:
             removeTemplateLevels=remove_template_levels,
             seed=seed,
             duplicateNames=duplicate_names,
+            copies=copies,
             dryRun=dry_run,
             document=document,
         )

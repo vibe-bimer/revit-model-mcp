@@ -16,6 +16,7 @@ namespace RevitModelMcp.Control;
 /// </summary>
 internal static class ModelRebuild
 {
+    private const int MaxCopies = 50;
     private const int MaxMappingEntries = 5_000;
     private const int MaxIsolationTransactions = 400;
     private const string RebuildTransactionName = "revit_rebuild_model_ids";
@@ -29,10 +30,15 @@ internal static class ModelRebuild
         var templatePath = string.IsNullOrWhiteSpace(action.TemplatePath) ? null : Path.GetFullPath(action.TemplatePath);
         if (templatePath is not null && !File.Exists(templatePath))
             throw new FileNotFoundException($"The template file was not found: {templatePath}.", templatePath);
-        if (File.Exists(destinationPath) && !action.Overwrite)
-            throw new IOException($"The destination file already exists: {destinationPath}. Pass overwrite=true to replace it.");
-        var directory = Path.GetDirectoryName(destinationPath);
-        if (!string.IsNullOrEmpty(directory)) Directory.CreateDirectory(directory);
+        var copies = action.DryRun ? 1 : Math.Clamp(action.Copies, 1, MaxCopies);
+        var paths = DestinationPaths(destinationPath, copies);
+        foreach (var path in paths)
+        {
+            if (File.Exists(path) && !action.Overwrite)
+                throw new IOException($"The destination file already exists: {path}. Pass overwrite=true to replace it.");
+            var pathDirectory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(pathDirectory)) Directory.CreateDirectory(pathDirectory);
+        }
 
         var view = ResolveView(source, action.View);
         var selected = SelectSource(source, view, out var excluded);
@@ -45,7 +51,8 @@ internal static class ModelRebuild
             SourceView = view.Name,
             Excluded = excluded.Count == 0 ? null : excluded,
             DryRun = action.DryRun,
-            Count = 0
+            Count = 0,
+            Copies = copies > 1 ? copies : null
         };
 
         var ordered = OrderForCopy(source, selected, result);
@@ -63,49 +70,109 @@ internal static class ModelRebuild
             result.TemplatePath = templatePath ?? "the default metric template";
             phases.Mark("new-project");
 
-            var seed = CreateSeed(destination, action.Seed);
-            phases.Mark("seed");
-            if (seed.Count > 0)
-            {
-                result.Seed = seed.Count;
-                (result.Notes ??= []).Add($"{seed.Count} temporary level(s) were added to the new model before the copy so this copy's ids start after them, and were removed again afterwards.");
-            }
-
             var answerDuplicates = !string.Equals(action.DuplicateNames, "rename", StringComparison.OrdinalIgnoreCase);
             result.DuplicateNames = answerDuplicates ? "override" : "rename";
-            var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels, seed, answerDuplicates,
-                result, phases, out var renamedTypes);
-            phases.Mark("copy");
-            if (newIds.Count == 0)
-                throw new InvalidOperationException("Revit copied no element into the new model; nothing was written.");
-            result.Count = newIds.Count;
-            result.CopiedCategoryCounts = CountCategories(destination, newIds);
-            result.NewIdMin = newIds.Min(RevitValueReader.GetId);
-            result.NewIdMax = newIds.Max(RevitValueReader.GetId);
-            BuildMapping(source, destination, ordered, newIds, result);
-            phases.Mark("mapping");
-            EnsureOpenableView(destination, result);
-            phases.Mark("view");
 
-            if (action.DryRun)
+            var copyResults = new List<RebuildCopyResult>(copies);
+            for (var index = 0; index < copies; index++)
             {
-                result.RolledBack = true;
-                (result.Notes ??= []).Add($"phase timings: {phases.Summary()}.");
-                return result;
+                var first = index == 0;
+                var copyPhases = new PhaseLog();
+                var scratch = new ActionResultData { DestinationPath = paths[index] };
+
+                var seed = first ? CreateSeed(destination, action.Seed) : [];
+                copyPhases.Mark("seed");
+                if (first && seed.Count > 0)
+                {
+                    result.Seed = seed.Count;
+                    (result.Notes ??= []).Add($"{seed.Count} temporary level(s) were added to the new model before the copy so this copy's ids start after them, and were removed again afterwards.");
+                }
+
+                var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels && first, seed,
+                    answerDuplicates && first, scratch, copyPhases, first, out var renamedTypes);
+                copyPhases.Mark("copy");
+                if (newIds.Count == 0)
+                    throw new InvalidOperationException("Revit copied no element into the new model; nothing was written.");
+
+                BuildMapping(source, destination, ordered, newIds, scratch);
+                EnsureOpenableView(destination, scratch);
+                copyPhases.Mark("view");
+
+                if (first)
+                {
+                    result.CopiedCategoryCounts = CountCategories(destination, newIds);
+                    result.IdMapping = scratch.IdMapping;
+                    result.IdMappingVerified = scratch.IdMappingVerified;
+                    result.IdMappingTruncated = scratch.IdMappingTruncated;
+                    result.MappingMismatches = scratch.MappingMismatches;
+                    result.AutoAnsweredDialogs = scratch.AutoAnsweredDialogs;
+                    result.IsolatedCopy = scratch.IsolatedCopy;
+                    result.TemplateLevelsRemoved = scratch.TemplateLevelsRemoved;
+                    result.TemplateLevelsKept = scratch.TemplateLevelsKept;
+                    result.Excluded = scratch.Excluded ?? result.Excluded;
+                    foreach (var note in scratch.Notes ?? []) (result.Notes ??= []).Add(note);
+                }
+                else
+                {
+                    foreach (var note in scratch.Notes ?? [])
+                        (result.Notes ??= []).Add($"{Path.GetFileName(paths[index])}: {note}");
+                }
+
+                if (action.DryRun)
+                {
+                    result.RolledBack = true;
+                    (result.Notes ??= []).Add($"phase timings: {phases.Summary()}.");
+                    return result;
+                }
+
+                if (first && renamedTypes.Count > 0)
+                {
+                    var leftovers = RemoveRenamedTemplateElements(destination, renamedTypes);
+                    if (leftovers.Removed > 0 || leftovers.Kept > 0)
+                        (result.Notes ??= []).Add($"{leftovers.Removed} of the renamed template element(s) were removed again, and {leftovers.Kept} stayed because Revit still uses them.");
+                }
+                copyPhases.Mark("cleanup");
+
+                destination.SaveAs(paths[index], new SaveAsOptions { OverwriteExistingFile = action.Overwrite });
+                copyPhases.Mark("save");
+
+                copyResults.Add(new RebuildCopyResult
+                {
+                    DestinationPath = paths[index],
+                    Count = newIds.Count,
+                    NewIdMin = newIds.Min(RevitValueReader.GetId),
+                    NewIdMax = newIds.Max(RevitValueReader.GetId),
+                    SizeBytes = new FileInfo(paths[index]).Length,
+                    IdMappingVerified = scratch.IdMappingVerified ?? false,
+                    MappingMismatches = scratch.MappingMismatches,
+                    IdMapping = scratch.IdMapping
+                });
+                PluginLog.Info($"Rebuild copy {index + 1}/{copies} '{Path.GetFileName(paths[index])}': {copyPhases.Summary()}.");
+
+                if (index < copies - 1)
+                {
+                    // The next copy needs the template's own content again, and Revit does not hand the ids of
+                    // deleted elements out twice, so the copy that follows lands in a block of its own.
+                    var freed = DeleteCopied(destination, newIds);
+                    copyPhases.Mark("delete-copy");
+                    PluginLog.Info($"Rebuild copy {index + 1} removed again: {freed.Deleted} element(s) deleted, {freed.Left} stayed.");
+                    if (freed.Left > 0)
+                        (result.Notes ??= []).Add($"{freed.Left} element(s) of copy {index + 1} could not be removed before the next copy, so they stay in the copies that follow.");
+                }
             }
 
-            if (renamedTypes.Count > 0)
-            {
-                var leftovers = RemoveRenamedTemplateElements(destination, renamedTypes);
-                if (leftovers.Removed > 0 || leftovers.Kept > 0)
-                    (result.Notes ??= []).Add($"{leftovers.Removed} of the renamed template element(s) were removed again, and {leftovers.Kept} stayed because Revit still uses them.");
-            }
-            phases.Mark("cleanup");
-
-            destination.SaveAs(destinationPath, new SaveAsOptions { OverwriteExistingFile = action.Overwrite });
+            result.Count = copyResults[0].Count;
+            result.SizeBytes = copyResults[0].SizeBytes;
+            result.NewIdMin = copyResults.Min(copy => copy.NewIdMin);
+            result.NewIdMax = copyResults.Max(copy => copy.NewIdMax);
             result.Saved = true;
-            result.SizeBytes = new FileInfo(destinationPath).Length;
-            phases.Mark("save");
+            result.IdMappingVerified = copyResults.All(copy => copy.IdMappingVerified);
+            if (copies > 1)
+            {
+                result.CopyResults = copyResults;
+                (result.Notes ??= []).Add($"{copies} copies were written from one new model; each copy's ids start after the copy before it, and its own mapping sits in copyResults.");
+            }
+
             (result.Notes ??= []).Add($"phase timings: {phases.Summary()}.");
             return result;
         }
@@ -115,6 +182,57 @@ internal static class ModelRebuild
             phases.Mark("close");
             PluginLog.Info($"Rebuild phases: {phases.Summary()}.");
         }
+    }
+
+    /// <summary>
+    /// The file each copy is written to: the requested path with "{n}" replaced by the copy number, or the copy
+    /// number appended before the extension when the path carries no placeholder.
+    /// </summary>
+    private static List<string> DestinationPaths(string destinationPath, int copies)
+    {
+        if (copies == 1) return [destinationPath];
+        var directory = Path.GetDirectoryName(destinationPath) ?? string.Empty;
+        var name = Path.GetFileNameWithoutExtension(destinationPath);
+        var extension = Path.GetExtension(destinationPath);
+        var paths = new List<string>(copies);
+        for (var index = 1; index <= copies; index++)
+            paths.Add(destinationPath.Contains("{n}")
+                ? destinationPath.Replace("{n}", index.ToString())
+                : Path.Combine(directory, $"{name}-{index}{extension}"));
+        return paths;
+    }
+
+    /// <summary>
+    /// Removes the elements of one copy so the next copy starts from the template's own content again. Revit
+    /// keeps handing out higher ids in a document, so the copy that follows lands in a block of its own.
+    /// </summary>
+    private static (int Deleted, int Left) DeleteCopied(Document destination, IReadOnlyList<ElementId> ids)
+    {
+        if (ids.Count == 0) return (0, 0);
+        var deleted = 0;
+        try
+        {
+            deleted = InTransaction(destination, () => destination.Delete(ids.ToList()).Count);
+        }
+        catch (Exception exception)
+        {
+            // Revit refuses the whole call when one element cannot go, so the rest is removed one by one.
+            PluginLog.Warn($"A copy could not be removed in one call ({FirstLine(exception.Message)}); removing it element by element.");
+            foreach (var id in ids)
+            {
+                try
+                {
+                    deleted += InTransaction(destination, () => destination.Delete(id).Count);
+                }
+                catch (Exception inner)
+                {
+                    PluginLog.Warn($"A copied element could not be removed: {FirstLine(inner.Message)}");
+                }
+            }
+        }
+
+        var left = ids.Count(id => destination.GetElement(id) is not null);
+        return (deleted, left);
     }
 
     private static View3D ResolveView(Document document, string? requested)
@@ -206,15 +324,20 @@ internal static class ModelRebuild
 
     private static List<ElementId> Copy(Document source, Document destination, IReadOnlyList<ElementId> ordered,
         bool removeTemplateLevels, IReadOnlyList<ElementId> seed, bool answerDuplicates, ActionResultData result,
-        PhaseLog phases, out List<ElementId> renamedTypes)
+        PhaseLog phases, bool first, out List<ElementId> renamedTypes)
     {
         renamedTypes = [];
         var reserved = (Renamed: new List<ElementId>(), Removed: 0);
-        InTransaction(destination, () =>
+        if (first)
         {
-            ReserveDestinationLevelNames(source, destination, ordered);
-            if (!answerDuplicates) reserved = ReserveDestinationNames(source, destination);
-        });
+            // Only the first copy meets the template's own content; every later copy finds the model the copy
+            // before it left behind, where the names are already the source's own.
+            InTransaction(destination, () =>
+            {
+                ReserveDestinationLevelNames(source, destination, ordered);
+                if (!answerDuplicates) reserved = ReserveDestinationNames(source, destination);
+            });
+        }
         phases.Mark("reserve");
         renamedTypes = reserved.Renamed;
         if (renamedTypes.Count > 0 || reserved.Removed > 0)

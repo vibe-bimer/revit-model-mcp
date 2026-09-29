@@ -68,6 +68,7 @@ public sealed class ActionJobParserTests
         await Assert.That(result.Action.RemoveTemplateLevels).IsTrue();
         await Assert.That(result.Action.Seed).IsEqualTo(0);
         await Assert.That(result.Action.DuplicateNames).IsEqualTo("override");
+        await Assert.That(result.Action.Copies).IsEqualTo(1);
         await Assert.That(result.Action.DryRun).IsTrue();
         await Assert.That(result.Action.ElementIds).IsEmpty();
     }
@@ -99,6 +100,27 @@ public sealed class ActionJobParserTests
 
         await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
         await Assert.That(result.Action!.DuplicateNames).IsEqualTo("rename");
+    }
+
+    [Test]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","copies":0}""")]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","copies":51}""")]
+    [Arguments("""{"command":"rebuild-model-ids","destinationPath":"E:/out/new.rvt","copies":3,"dryRun":true}""")]
+    public async Task Parse_RebuildModelIds_RejectsAnUnusableCopyCount(string json)
+    {
+        var result = ControlJobParser.Parse(json);
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+    }
+
+    [Test]
+    public async Task Parse_RebuildModelIds_KeepsTheCopyCount()
+    {
+        var result = ControlJobParser.Parse(
+            """{"command":"rebuild-model-ids","destinationPath":"E:/out/new-{n}.rvt","copies":9}""");
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.Copies).IsEqualTo(9);
     }
 
     [Test]
