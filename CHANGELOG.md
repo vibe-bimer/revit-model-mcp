@@ -6,6 +6,18 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.1](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.8.0...v0.8.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* **actions:** keep the rebuild from waiting on a duplicate-name question ([13194e4](https://github.com/vibe-bimer/revit-model-mcp/commit/13194e4cd91938135311e36f3182fc40a188d3fc))
+
+
+### Documentation
+
+* record the 2020 evidence for the export, reset and rebuild tools ([f1ea0f9](https://github.com/vibe-bimer/revit-model-mcp/commit/f1ea0f92ae04b5fbf647184566a8e8563aff7086))
+
 ## [0.8.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.7.0...v0.8.0) (2026-09-28)
 
 
