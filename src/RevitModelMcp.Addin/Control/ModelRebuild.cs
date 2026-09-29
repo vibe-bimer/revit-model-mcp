@@ -70,8 +70,9 @@ internal static class ModelRebuild
             result.TemplatePath = templatePath ?? "the default metric template";
             phases.Mark("new-project");
 
-            var answerDuplicates = !string.Equals(action.DuplicateNames, "rename", StringComparison.OrdinalIgnoreCase);
-            result.DuplicateNames = answerDuplicates ? "override" : "rename";
+            var answerDuplicates = string.Equals(action.DuplicateNames, "override", StringComparison.OrdinalIgnoreCase);
+            var renameTemplate = string.Equals(action.DuplicateNames, "rename", StringComparison.OrdinalIgnoreCase);
+            result.DuplicateNames = action.DuplicateNames.ToLowerInvariant();
 
             var copyResults = new List<RebuildCopyResult>(copies);
             for (var index = 0; index < copies; index++)
@@ -92,8 +93,15 @@ internal static class ModelRebuild
                 // out again and the copy that follows starts from the same clean model as this one.
                 var beforeCopy = index < copies - 1 ? SnapshotIds(destination) : [];
                 var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels && first, seed,
-                    answerDuplicates && first, scratch, copyPhases, first, out var renamedTypes);
+                    answerDuplicates && first, renameTemplate && first, scratch, copyPhases, first, out var renamedTypes);
                 var afterCopy = index < copies - 1 ? SnapshotIds(destination) : [];
+                if (scratch.IdMappingVerified != true)
+                {
+                    // Revit refused the paste while it was asking which version of a duplicate name to keep. The
+                    // elements it did copy are taken out again and the copy is repeated with the names the new
+                    // model already holds, which is what keeps a copy complete instead of eleven elements short.
+                    newIds = RetryCopy(source, destination, ordered, newIds, scratch, copyPhases, result, paths[index]);
+                }
                 copyPhases.Mark("copy");
                 if (newIds.Count == 0)
                     throw new InvalidOperationException("Revit copied no element into the new model; nothing was written.");
@@ -218,6 +226,34 @@ internal static class ModelRebuild
     /// Removes the elements of one copy so the next copy starts from the template's own content again. Revit
     /// keeps handing out higher ids in a document, so the copy that follows lands in a block of its own.
     /// </summary>
+    /// <summary>
+    /// Copies again after Revit refused the paste. The elements the refused attempt did copy are removed first,
+    /// and the repeated copy takes the names the new model already holds, so Revit asks nothing and copies all.
+    /// </summary>
+    private static List<ElementId> RetryCopy(Document source, Document destination, IReadOnlyList<ElementId> ordered,
+        List<ElementId> refused, ActionResultData scratch, PhaseLog phases, ActionResultData result, string path)
+    {
+        DeleteCopied(destination, refused);
+        var retry = new ActionResultData { DestinationPath = path };
+        var ids = Copy(source, destination, ordered, false, [], false, false, retry, phases, false, out _);
+        PluginLog.Info($"Rebuild copy '{Path.GetFileName(path)}' was refused, repeated with the names the new model holds: {ids.Count} element(s).");
+        (result.Notes ??= []).Add($"{Path.GetFileName(path)}: Revit refused the first paste while it was asking about duplicate names, so the copy was repeated with the names the new model already holds.");
+        MergeCopy(scratch, retry);
+        return ids;
+    }
+
+    /// <summary>Moves what one copy learned into the result the caller sees.</summary>
+    private static void MergeCopy(ActionResultData target, ActionResultData copy)
+    {
+        target.IdMapping = copy.IdMapping;
+        target.IdMappingVerified = copy.IdMappingVerified;
+        target.IdMappingTruncated = copy.IdMappingTruncated;
+        target.MappingMismatches = copy.MappingMismatches;
+        target.AutoAnsweredDialogs = copy.AutoAnsweredDialogs;
+        target.IsolatedCopy = copy.IsolatedCopy;
+        target.Notes = copy.Notes;
+    }
+
     /// <summary>Every element id a document holds, so the elements one paste added can be found again.</summary>
     private static HashSet<ElementId> SnapshotIds(Document document) =>
         new(new FilteredElementCollector(document).WhereElementIsNotElementType().ToElementIds()
@@ -340,19 +376,19 @@ internal static class ModelRebuild
     private static bool IsDatum(Element? element) => element is Level or Grid or ReferencePlane;
 
     private static List<ElementId> Copy(Document source, Document destination, IReadOnlyList<ElementId> ordered,
-        bool removeTemplateLevels, IReadOnlyList<ElementId> seed, bool answerDuplicates, ActionResultData result,
-        PhaseLog phases, bool first, out List<ElementId> renamedTypes)
+        bool removeTemplateLevels, IReadOnlyList<ElementId> seed, bool answerDuplicates, bool renameTemplate,
+        ActionResultData result, PhaseLog phases, bool first, out List<ElementId> renamedTypes)
     {
         renamedTypes = [];
         var reserved = (Renamed: new List<ElementId>(), Removed: 0);
         if (first)
         {
             // Only the first copy meets the template's own content; every later copy finds the model the copy
-            // before it left behind, where the names are already the source's own.
+            // before it left behind, where the template's names have already made way.
             InTransaction(destination, () =>
             {
                 ReserveDestinationLevelNames(source, destination, ordered);
-                if (!answerDuplicates) reserved = ReserveDestinationNames(source, destination);
+                if (renameTemplate) reserved = ReserveDestinationNames(source, destination);
             });
         }
         phases.Mark("reserve");

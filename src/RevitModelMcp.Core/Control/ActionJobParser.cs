@@ -151,9 +151,15 @@ public static class ActionJobParser
                 }
                 Require(action.Seed is >= 0 and <= 200000, "seed must be between 0 and 200000.");
                 action.DuplicateNames = action.DuplicateNames.Trim().ToLowerInvariant();
-                Require(action.DuplicateNames is "override" or "rename",
-                    "duplicateNames must be 'override' or 'rename'.");
+                Require(action.DuplicateNames is "override" or "reuse" or "rename",
+                    "duplicateNames must be 'override', 'reuse' or 'rename'.");
                 Require(action.Copies is >= 1 and <= 50, "copies must be between 1 and 50.");
+                if (job.DuplicateNames is null && action.Copies > 1)
+                {
+                    // A batch pastes the same model over and over: taking the names the new model already holds
+                    // is what keeps every copy from asking, and asking is what makes Revit refuse a paste.
+                    action.DuplicateNames = "reuse";
+                }
                 Require(!(action.DryRun && action.Copies > 1), "copies is only available without dryRun.");
             }
             var result = ControlJobParseResult.Create(ControlJobKind.Action, command);
@@ -256,9 +262,11 @@ public sealed class ActionJobContract
     public int Seed { get; set; }
 
     /// <summary>
-    /// How a rebuild handles a name the paste would duplicate: "override" answers Revit's question with OK so
-    /// the copy keeps the source model's own types, "rename" renames the destination template's elements first
-    /// and removes them again afterwards, which is slower and can fail on elements Revit refuses to delete.
+    /// How a rebuild handles a name the paste would duplicate. "override" answers Revit's question with OK so
+    /// the copy keeps the source model's own types; "reuse" never asks and keeps the version the new model
+    /// already holds, which is what a batch of copies uses because asking is what makes Revit refuse a paste;
+    /// "rename" renames the destination template's elements first and removes them again afterwards, which is
+    /// slower and can fail on elements Revit refuses to delete.
     /// </summary>
     public string DuplicateNames { get; set; } = "override";
 
