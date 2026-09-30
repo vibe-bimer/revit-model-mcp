@@ -89,12 +89,8 @@ internal static class ModelRebuild
                     (result.Notes ??= []).Add($"{seed.Count} temporary level(s) were added to the new model before the copy so this copy's ids start after them, and were removed again afterwards.");
                 }
 
-                // Remember what the model holds before the paste, so the elements the paste adds can be taken
-                // out again and the copy that follows starts from the same clean model as this one.
-                var beforeCopy = index < copies - 1 ? SnapshotIds(destination) : [];
                 var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels && first, seed,
                     answerDuplicates && first, renameTemplate && first, scratch, copyPhases, first, out var renamedTypes);
-                var afterCopy = index < copies - 1 ? SnapshotIds(destination) : [];
                 copyPhases.Mark("copy");
                 if (newIds.Count == 0)
                     throw new InvalidOperationException("Revit copied no element into the new model; nothing was written.");
@@ -148,7 +144,13 @@ internal static class ModelRebuild
                 }
                 copyPhases.Mark("cleanup");
 
-                destination.SaveAs(paths[index], new SaveAsOptions { OverwriteExistingFile = action.Overwrite });
+                destination.SaveAs(paths[index], new SaveAsOptions
+                {
+                    OverwriteExistingFile = action.Overwrite,
+                    // A copy is written to be handed over, so one previous version is enough: every extra backup
+                    // is another seven megabytes written on every copy.
+                    MaximumBackups = 1
+                });
                 copyPhases.Mark("save");
 
                 copyResults.Add(new RebuildCopyResult
@@ -169,18 +171,10 @@ internal static class ModelRebuild
                     // The next copy needs the template's own content again, and Revit does not hand the ids of
                     // deleted elements out twice, so the copy that follows lands in a block of its own.
                     var freed = DeleteCopied(destination, newIds);
-                    // The paste also brings its own types and materials. Left in place they make the next paste
-                    // answer dozens of duplicate-name questions, and Revit then refuses the copy call; taking
-                    // them out keeps every copy as cheap and as complete as the first one.
-                    afterCopy.ExceptWith(beforeCopy);
-                    var brought = afterCopy
-                        .Where(id => destination.GetElement(id) is not View && !newIds.Contains(id))
-                        .ToList();
-                    var cleared = DeleteCopied(destination, brought);
                     copyPhases.Mark("delete-copy");
-                    PluginLog.Info($"Rebuild copy {index + 1} removed again: {freed.Deleted} element(s) and {cleared.Deleted} brought element(s) deleted, {freed.Left + cleared.Left} stayed.");
-                    if (freed.Left + cleared.Left > 0)
-                        (result.Notes ??= []).Add($"{freed.Left + cleared.Left} element(s) of copy {index + 1} could not be removed before the next copy, so they stay in the copies that follow.");
+                    PluginLog.Info($"Rebuild copy {index + 1} removed again: {freed.Deleted} element(s) deleted, {freed.Left} stayed.");
+                    if (freed.Left > 0)
+                        (result.Notes ??= []).Add($"{freed.Left} element(s) of copy {index + 1} could not be removed before the next copy, so they stay in the copies that follow.");
                 }
             }
 
@@ -243,11 +237,6 @@ internal static class ModelRebuild
         (result.Notes ??= []).Add($"{Path.GetFileName(path)}: the first paste did not map one to one, so the copy was repeated with the names the new model already holds.");
         return ids;
     }
-
-    /// <summary>Every element id a document holds, so the elements one paste added can be found again.</summary>
-    private static HashSet<ElementId> SnapshotIds(Document document) =>
-        new(new FilteredElementCollector(document).WhereElementIsNotElementType().ToElementIds()
-            .Concat(new FilteredElementCollector(document).WhereElementIsElementType().ToElementIds()));
 
     private static (int Deleted, int Left) DeleteCopied(Document destination, IReadOnlyList<ElementId> ids)
     {
