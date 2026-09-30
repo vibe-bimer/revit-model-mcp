@@ -6,6 +6,28 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.8.1...v0.9.0) (2026-09-30)
+
+
+### Features
+
+* **rebuild:** write several copies from one model ([ca6b77b](https://github.com/vibe-bimer/revit-model-mcp/commit/ca6b77bde214f6282113e3368c3f88f1f5110f91))
+
+
+### Bug Fixes
+
+* **farm:** give every instance its own copy of the model ([2357a7d](https://github.com/vibe-bimer/revit-model-mcp/commit/2357a7ddced77c1325230076bcc87e8417bbfcbd))
+* **rebuild:** clear the pasted types between copies of one model ([b9867de](https://github.com/vibe-bimer/revit-model-mcp/commit/b9867de130ff6b7f142bb9d171c52432cf19f621))
+* **rebuild:** make a batch of copies come out whole every time ([20354ec](https://github.com/vibe-bimer/revit-model-mcp/commit/20354ecc6d009a96d8d4edfdfcefdca3555d885b))
+* **rebuild:** only repeat a copy when its mapping really failed ([437b78b](https://github.com/vibe-bimer/revit-model-mcp/commit/437b78b027725e4139a52131e22ce793a60c7fbf))
+
+
+### Performance
+
+* **rebuild:** answer Revit's duplicate-name question instead of renaming the template ([5aaea7c](https://github.com/vibe-bimer/revit-model-mcp/commit/5aaea7c8b64bed81846b3b5d937b9960e2efa235))
+* **rebuild:** retry a refused copy before walking it element by element ([2bc8cc8](https://github.com/vibe-bimer/revit-model-mcp/commit/2bc8cc88ae762b523bf0796103e37aa6569984ee))
+* **rebuild:** reuse the pasted types and keep one backup ([a15fdb8](https://github.com/vibe-bimer/revit-model-mcp/commit/a15fdb821e38c40a48140f806304d5b4de72bdf7))
+
 ## [0.8.1](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.8.0...v0.8.1) (2026-09-29)
 
 
