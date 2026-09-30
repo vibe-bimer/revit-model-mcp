@@ -95,18 +95,21 @@ internal static class ModelRebuild
                 var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels && first, seed,
                     answerDuplicates && first, renameTemplate && first, scratch, copyPhases, first, out var renamedTypes);
                 var afterCopy = index < copies - 1 ? SnapshotIds(destination) : [];
-                if (scratch.IdMappingVerified != true)
-                {
-                    // Revit refused the paste while it was asking which version of a duplicate name to keep. The
-                    // elements it did copy are taken out again and the copy is repeated with the names the new
-                    // model already holds, which is what keeps a copy complete instead of eleven elements short.
-                    newIds = RetryCopy(source, destination, ordered, newIds, scratch, copyPhases, result, paths[index]);
-                }
                 copyPhases.Mark("copy");
                 if (newIds.Count == 0)
                     throw new InvalidOperationException("Revit copied no element into the new model; nothing was written.");
 
                 BuildMapping(source, destination, ordered, newIds, scratch);
+                copyPhases.Mark("mapping");
+                if (scratch.IdMappingVerified != true)
+                {
+                    // The copy came out without a one-to-one mapping, which is what happens when Revit pastes
+                    // through its element by element path. The elements are taken out again and the copy is
+                    // repeated with the names the new model already holds, which lands complete.
+                    newIds = RetryCopy(source, destination, ordered, newIds, copyPhases, result, paths[index]);
+                    BuildMapping(source, destination, ordered, newIds, scratch);
+                }
+
                 EnsureOpenableView(destination, scratch);
                 copyPhases.Mark("view");
 
@@ -231,27 +234,14 @@ internal static class ModelRebuild
     /// and the repeated copy takes the names the new model already holds, so Revit asks nothing and copies all.
     /// </summary>
     private static List<ElementId> RetryCopy(Document source, Document destination, IReadOnlyList<ElementId> ordered,
-        List<ElementId> refused, ActionResultData scratch, PhaseLog phases, ActionResultData result, string path)
+        List<ElementId> refused, PhaseLog phases, ActionResultData result, string path)
     {
         DeleteCopied(destination, refused);
         var retry = new ActionResultData { DestinationPath = path };
         var ids = Copy(source, destination, ordered, false, [], false, false, retry, phases, false, out _);
-        PluginLog.Info($"Rebuild copy '{Path.GetFileName(path)}' was refused, repeated with the names the new model holds: {ids.Count} element(s).");
-        (result.Notes ??= []).Add($"{Path.GetFileName(path)}: Revit refused the first paste while it was asking about duplicate names, so the copy was repeated with the names the new model already holds.");
-        MergeCopy(scratch, retry);
+        PluginLog.Info($"Rebuild copy '{Path.GetFileName(path)}' did not map one to one, repeated with the names the new model holds: {ids.Count} element(s), {refused.Count} element(s) removed first.");
+        (result.Notes ??= []).Add($"{Path.GetFileName(path)}: the first paste did not map one to one, so the copy was repeated with the names the new model already holds.");
         return ids;
-    }
-
-    /// <summary>Moves what one copy learned into the result the caller sees.</summary>
-    private static void MergeCopy(ActionResultData target, ActionResultData copy)
-    {
-        target.IdMapping = copy.IdMapping;
-        target.IdMappingVerified = copy.IdMappingVerified;
-        target.IdMappingTruncated = copy.IdMappingTruncated;
-        target.MappingMismatches = copy.MappingMismatches;
-        target.AutoAnsweredDialogs = copy.AutoAnsweredDialogs;
-        target.IsolatedCopy = copy.IsolatedCopy;
-        target.Notes = copy.Notes;
     }
 
     /// <summary>Every element id a document holds, so the elements one paste added can be found again.</summary>
@@ -954,10 +944,16 @@ internal static class ModelRebuild
         public bool Truncated { get; set; }
         public string? LastReason { get; private set; }
 
+        /// <summary>Why Revit refused a paste, in the order it refused them.</summary>
+        public List<string> Refusals { get; } = [];
+
         public void Record(RebuildFailures failures, Exception? exception)
         {
             var message = failures.Message ?? exception?.Message;
-            if (!string.IsNullOrWhiteSpace(message)) LastReason = FirstLine(message);
+            if (string.IsNullOrWhiteSpace(message)) return;
+            LastReason = FirstLine(message);
+            Refusals.Add(LastReason);
+            PluginLog.Warn($"A rebuild paste was refused: {LastReason}");
         }
     }
 
