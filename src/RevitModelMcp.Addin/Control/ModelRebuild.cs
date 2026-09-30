@@ -90,14 +90,15 @@ internal static class ModelRebuild
                 }
 
                 var newIds = Copy(source, destination, ordered, action.RemoveTemplateLevels && first, seed,
-                    answerDuplicates && first, renameTemplate && first, scratch, copyPhases, first, out var renamedTypes);
+                    answerDuplicates && first, renameTemplate && first, false, scratch, copyPhases, first,
+                    out var renamedTypes);
                 copyPhases.Mark("copy");
                 if (newIds.Count == 0)
                     throw new InvalidOperationException("Revit copied no element into the new model; nothing was written.");
 
-                BuildMapping(source, destination, ordered, newIds, scratch);
+                if (newIds.Count > 0) BuildMapping(source, destination, ordered, newIds, scratch);
                 copyPhases.Mark("mapping");
-                if (scratch.IdMappingVerified != true)
+                if (newIds.Count == 0 || scratch.IdMappingVerified != true)
                 {
                     // The copy came out without a one-to-one mapping, which is what happens when Revit pastes
                     // through its element by element path. The elements are taken out again and the copy is
@@ -232,7 +233,7 @@ internal static class ModelRebuild
     {
         DeleteCopied(destination, refused);
         var retry = new ActionResultData { DestinationPath = path };
-        var ids = Copy(source, destination, ordered, false, [], false, false, retry, phases, false, out _);
+        var ids = Copy(source, destination, ordered, false, [], false, false, true, retry, phases, false, out _);
         PluginLog.Info($"Rebuild copy '{Path.GetFileName(path)}' did not map one to one, repeated with the names the new model holds: {ids.Count} element(s), {refused.Count} element(s) removed first.");
         (result.Notes ??= []).Add($"{Path.GetFileName(path)}: the first paste did not map one to one, so the copy was repeated with the names the new model already holds.");
         return ids;
@@ -356,7 +357,8 @@ internal static class ModelRebuild
 
     private static List<ElementId> Copy(Document source, Document destination, IReadOnlyList<ElementId> ordered,
         bool removeTemplateLevels, IReadOnlyList<ElementId> seed, bool answerDuplicates, bool renameTemplate,
-        ActionResultData result, PhaseLog phases, bool first, out List<ElementId> renamedTypes)
+        bool isolateOnRefusal, ActionResultData result, PhaseLog phases, bool first,
+        out List<ElementId> renamedTypes)
     {
         renamedTypes = [];
         var reserved = (Renamed: new List<ElementId>(), Removed: 0);
