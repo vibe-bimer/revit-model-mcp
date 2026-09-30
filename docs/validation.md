@@ -26,6 +26,7 @@ All 14 action tools ran on that year: `select`, `show` and `isolate` ran for rea
 `revit_create_floor` exercised the Revit 2020 `Document.Create.NewFloor` path, and `revit_set_phase` exercised the phase-order check that Revit only exposes from 2022.
 `revit_export_element_ids` wrote a workbook for the components of `MEP文件.rvt` with the frozen header, the autofilter and the category→family→type order intact.
 `revit_reset_element_ids` reset 27 unconnected components of `MEP文件.rvt` with the register unchanged, and its system guard kept every pipe, duct and connected accessory out of the run.
-`revit_rebuild_model_ids` copied the 899 selectable elements of `建筑结构.rvt` into a new model with IDs 2592–4375 and the source untouched; the new model opened without a prompt, carried 900 elements in its three-dimensional view, and kept the source wall and level types.
+`revit_rebuild_model_ids` copied the 899 selectable elements of `建筑结构.rvt` into a new model and the source stayed untouched; the new model opened without a prompt, carried 900 elements in its three-dimensional view, and kept the source wall and level types.
+On the 0.9.0 build, one task wrote ten copies of that model in 165 s (16.5 s a copy): every copy held 899 components with `idMappingVerified=true`, no id appeared in two copies, and the ids ran 2473–4256, 19259–21042, … 44771–46554.
 Screenshots and JSON evidence are on the [`validation-assets` branch](https://github.com/sharafutdinovdi/revit-model-mcp/tree/validation-assets).
 The Revit undo menu label for a batch (`revit_batch`) cannot be verified through the API.
