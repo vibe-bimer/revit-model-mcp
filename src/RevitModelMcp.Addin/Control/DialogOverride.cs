@@ -13,21 +13,29 @@ namespace RevitModelMcp.Control;
 /// </summary>
 internal static class DialogOverride
 {
+    private const string AnswerEverythingVariable = "REVIT_MCP_ANSWER_DIALOGS";
     private static int _scopes;
     private static int _answered;
+    private static bool _answerEverything;
 
     /// <summary>How many dialogs were answered since Revit started.</summary>
     public static int Answered => Volatile.Read(ref _answered);
 
-    public static void Attach(UIControlledApplication application) =>
+    public static void Attach(UIControlledApplication application)
+    {
+        // An instance that runs unattended - a copy farm, a build agent - must never wait for an answer, and
+        // Revit asks about an already open file before any job runs. Only such an instance sets the variable.
+        _answerEverything = Environment.GetEnvironmentVariable(AnswerEverythingVariable) == "1";
+        if (_answerEverything) PluginLog.Info($"Every dialog of this instance is answered automatically ({AnswerEverythingVariable}=1).");
         application.DialogBoxShowing += OnDialogBoxShowing;
+    }
 
     /// <summary>Answers dialogs until the returned scope is disposed.</summary>
     public static IDisposable Scope() => new ScopeGuard();
 
     private static void OnDialogBoxShowing(object? sender, DialogBoxShowingEventArgs args)
     {
-        if (Volatile.Read(ref _scopes) <= 0) return;
+        if (!_answerEverything && Volatile.Read(ref _scopes) <= 0) return;
         try
         {
             Interlocked.Increment(ref _answered);

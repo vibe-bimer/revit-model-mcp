@@ -33,7 +33,7 @@ param(
     [int] $Instances = 3,
     [int] $Copies = 21,
     [int] $CopiesPerBatch = 7,
-    [string] $Model = 'E:\revitmcp-test\建筑结构.rvt',
+    [string] $Model = '',
     [string] $Destination = 'E:\revitmcp-test\farm',
     [int] $FirstPort = 53110,
     [int] $BlockSize = 2048,
@@ -44,6 +44,17 @@ $ErrorActionPreference = 'Stop'
 $revitExe = 'D:\Program Files\Autodesk\Revit 2020\Revit.exe'
 $logDirectory = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'RevitModelMcp\Logs'
 
+if (-not $Model) {
+    # Take the model the folder holds instead of a hardcoded name, so a renamed or non-ASCII file still works.
+    $candidate = Get-ChildItem 'E:\revitmcp-test' -Filter '*.rvt' -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -notmatch '-farm\d+\.rvt$' } | Sort-Object Length -Descending | Select-Object -First 1
+    if (-not $candidate) { throw 'No model found in E:\revitmcp-test; pass -Model.' }
+    $Model = $candidate.FullName
+    Write-Output "farm model: $Model"
+}
+if (-not (Test-Path -LiteralPath $Model)) { throw "The model was not found: $Model" }
+$modelCopyFolder = Split-Path -Parent $Model
+$modelCopyName = [IO.Path]::GetFileNameWithoutExtension($Model)
 $standardDirectory = Join-Path $env:LOCALAPPDATA 'RevitModelMcp'
 $standardSettings = Join-Path $standardDirectory 'settings.json'
 $standardToken = if (Test-Path $standardSettings) { (Get-Content $standardSettings -Raw | ConvertFrom-Json).token } else { '' }
@@ -60,6 +71,7 @@ function Get-FarmInstance {
             Task      = 'RevitMcpLaunch2020'
             Prefix    = 'batch1'
             Standard  = $true
+            Model     = $Model
         }
     }
     [pscustomobject]@{
@@ -70,6 +82,9 @@ function Get-FarmInstance {
         Task      = "RevitMcpFarm$port"
         Prefix    = "batch$($Index + 1)"
         Standard  = $false
+        # Revit asks whether to open a file another instance already holds, and that question would block the
+        # instance forever, so every extra instance opens a copy of the model of its own.
+        Model     = Join-Path $modelCopyFolder "$modelCopyName-farm$port.rvt"
     }
 }
 
@@ -104,11 +119,13 @@ function Start-FarmInstance {
         return
     }
     New-Item -ItemType Directory -Force -Path $Instance.Directory | Out-Null
+    Copy-Item -LiteralPath $Model -Destination $Instance.Model -Force
     $wrapper = @"
 `$env:REVIT_MCP_HTTP_PORT = '$($Instance.Port)'
 `$env:REVIT_MCP_TOKEN = '$($Instance.Token)'
 `$env:REVIT_MCP_CHANNEL_DIR = '$($Instance.Directory)'
-Start-Process '$revitExe' -ArgumentList '"$Model"'
+`$env:REVIT_MCP_ANSWER_DIALOGS = '1'
+Start-Process '$revitExe' -ArgumentList '"$($Instance.Model)"'
 "@
     $wrapperPath = Join-Path 'C:\Users\Administrator' "launch-$($Instance.Task).ps1"
     Set-Content -Path $wrapperPath -Value $wrapper -Encoding ASCII
@@ -159,7 +176,7 @@ switch ($Action) {
         foreach ($instance in $farm) {
             try {
                 $health = Invoke-FarmRequest -Method Get -Port $instance.Port -Token $instance.Token -Path '/health'
-                Write-Output ("port {0} ok plugin={1} document='{2}'" -f $instance.Port, $health.pluginVersion, $health.documentName)
+                Write-Output ("port {0} ok plugin={1} document='{2}' model='{3}'" -f $instance.Port, $health.pluginVersion, $health.documentName, [IO.Path]::GetFileName($instance.Model))
             } catch {
                 Write-Output ("port {0} not reachable" -f $instance.Port)
             }
@@ -184,6 +201,7 @@ switch ($Action) {
         foreach ($instance in ($farm | Where-Object { $_.Index -gt 0 })) {
             Stop-FarmInstance -Instance $instance
             Remove-Item $instance.Directory -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item $instance.Model -Force -ErrorAction SilentlyContinue
         }
         Start-ScheduledTask -TaskName 'RevitMcpLaunch2020'
         Write-Output 'farm removed, the standard instance is coming back'
