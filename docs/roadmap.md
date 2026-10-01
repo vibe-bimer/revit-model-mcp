@@ -1,23 +1,27 @@
-# Roadmap
+# 路线图
 
-Review date: 2026-09-12.
+!!! note "中文版"
+    本页为中文精简版；把右上角语言切到 English 可看完整英文原文。
 
-## Known gaps
+## 已交付
 
-- Public-source cleanup: legacy snapshot readers, contracts and fixtures still contain organization-specific family and parameter identifiers; removing those fields changes the legacy feed contract.
-- English diagnostics: Capture, Core, view sessions and tests still contain Russian messages or fixtures; localized model parameter aliases must retain their lookup behavior during translation.
-- Python naming: `ReadJob` and `RevitReadChannel` also carry actions, and the MCP display name still says Reader; rename with an explicit compatibility policy.
-- File protocol: jobs lack correlation IDs and interprocess response ownership; use one server process per channel directory.
-- File responses: writes are not atomic, and a polling client can observe incomplete JSON; atomic publication needs transport regression coverage.
-- Capture diagnostics: `model-health` reports `skipped` and `links-status` reports per-link `error`; other best-effort readers still swallow some parameter and geometry failures without reporting skipped fields or logging their cause.
-- Revit resources: reader and legacy snapshot paths still need a collector/filter disposal audit under live Revit.
-- HTTP shutdown: listener tasks are detached and the cancellation source is not disposed; drain in-flight handlers before disposing shared state.
-- HTTP artifacts: exports that are never fetched are not registered for image cleanup; result expiry can also race with an image download.
-- HTTP capacity: completed response storage has time-based expiry but no byte/count budget, and a request body has no read deadline.
-- Action policy: `dry_run` and `verification` exist; confirmation tokens and an unattended execution policy do not.
-- Parameter edits: duplicate parameter names and implicit type fallback need explicit disambiguation before expanding the action API.
-- Dependency reproducibility: floating NuGet and Python ranges can change restores; pin the resolved graph before promising reproducible binaries.
-- Compatibility: no live validation of reads or actions on Revit 2022–2025 or 2027 in the 2026-09-12 validation pass; CI compilation does not verify HTTP ACL behavior or live execution.
-- Publishing: v0.1.0 ships GitHub release assets; MCP Registry and PyPI publishing are unavailable.
-- Batch undo: the Revit undo menu label (`revit_batch`) cannot be verified through the API.
-- Installation: `install.ps1` has no rollback across years if a later year fails.
+- 33 个工具（19 读取 + 14 动作）覆盖读、查、导出、编辑、阶段、批量与 ID 重建
+- Revit 2020–2027 构建；2020 与 2026 真机实测
+- 双门禁写入、dry_run、批量一次撤销、结果自校验
+- 整模型换新 ID：单任务可出多份，份间 ID 零重叠（2020 实测 10 份 165 s）
+- 中英双语的生成式功能文档站（本页所在站点）
+
+## 进行中
+
+- 参考页中文覆盖（部分页面为中文精简版，英文全文保留）
+- 站点自动更新（定时拉取 + 重新生成 + 原子发布）
+
+## 计划
+
+- 2022–2025 / 2027 的真机动作验证
+- 多实例并行调度（用于多模型场景；同模型多份仍推荐串行批量）
+- 每个工具的返回值字段文档化（当前在工具页的表里）
+
+## 已知缺口 <a id="known-gaps"></a>
+
+本节是英文页对应小节的锚点，便于英文页面内的交叉链接在中文界面同样可用。

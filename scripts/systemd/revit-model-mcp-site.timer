@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the documentation refresh regularly
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=@INTERVAL@s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

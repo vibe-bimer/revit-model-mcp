@@ -7,7 +7,15 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-MKDOCS="${MKDOCS:-mkdocs}"
+if [ -z "${MKDOCS:-}" ]; then
+  for candidate in "$ROOT/.venv-docs/bin/mkdocs" "$HOME/.venv-docs/bin/mkdocs" "$(command -v mkdocs || true)"; do
+    if [ -n "$candidate" ] && [ -x "$candidate" ]; then MKDOCS="$candidate"; break; fi
+  done
+fi
+if [ -z "${MKDOCS:-}" ] && command -v uv >/dev/null 2>&1; then
+  MKDOCS="uv run --with-requirements $ROOT/docs/requirements.txt mkdocs"
+fi
+[ -n "${MKDOCS:-}" ] || { echo "mkdocs was not found; install docs/requirements.txt or set MKDOCS" >&2; exit 1; }
 PYTHON="${PYTHON:-python3}"
 
 echo "== pulling"
@@ -18,7 +26,7 @@ echo "== checking that the tool registry and the pages agree"
 
 echo "== building"
 rm -rf site.new
-"$MKDOCS" build --strict -d site.new
+eval "$MKDOCS build --strict -d site.new"
 
 echo "== publishing"
 rm -rf site.prev

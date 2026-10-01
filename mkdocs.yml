@@ -79,26 +79,29 @@ plugins:
         - locale: en
           name: English
           build: true
-  - llmstxt:
-      full_output: llms-full.txt
-      sections:
-        Getting started:
-          - index.md
-          - server.md
-          - contributing.md
-        Concepts:
-          - how-it-works.md
-          - transport.md
-          - security.md
-          - architecture.md
-        Reference:
-          - tools.md
-          - actions.md
-          - validation.md
-          - feed-format.md
-          - roadmap.md
-          - changelog.md
-          - security-policy.md
+          nav_translations:
+            首页: Home
+            指南: Guide
+            服务器: Server
+            工作原理: How it works
+            传输与接入: Transport
+            安全: Security
+            架构: Architecture
+            参考: Reference
+            读取工具: Read tools
+            动作工具: Action tools
+            实测证据: Validation
+            文件通道格式: Feed format
+            路线图: Roadmap
+            项目: Project
+            隐私: Privacy
+            贡献: Contributing
+            变更日志: Changelog
+            安全政策: Security policy
+            功能: Features
+            按版本: By version
+            工具手册: Tools
+            提示词库: Prompts
 
 nav:
   # >>> features-nav
@@ -152,21 +155,21 @@ nav:
               - revit_batch: features/revit_batch.md
       - features/prompts.md
   # <<< features-nav
-  - Home: index.md
-  - Guide:
-      - Server: server.md
-      - How it works: how-it-works.md
-      - Transport: transport.md
-      - Security: security.md
-      - Architecture: architecture.md
-  - Reference:
-      - Tools: tools.md
-      - Actions: actions.md
-      - Validation: validation.md
-      - Feed format: feed-format.md
-      - Roadmap: roadmap.md
-  - Project:
-      - Privacy: privacy.md
-      - Contributing: contributing.md
-      - Changelog: changelog.md
-      - Security policy: security-policy.md
+  - 首页: index.md
+  - 指南:
+      - 服务器: server.md
+      - 工作原理: how-it-works.md
+      - 传输与接入: transport.md
+      - 安全: security.md
+      - 架构: architecture.md
+  - 参考:
+      - 读取工具: tools.md
+      - 动作工具: actions.md
+      - 实测证据: validation.md
+      - 文件通道格式: feed-format.md
+      - 路线图: roadmap.md
+  - 项目:
+      - 隐私: privacy.md
+      - 贡献: contributing.md
+      - 变更日志: changelog.md
+      - 安全政策: security-policy.md

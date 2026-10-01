@@ -1,73 +1,37 @@
-# How it works
+# 工作原理
 
-The Python server runs beside the MCP client and communicates over stdio.
-The add-in runs inside Revit on Windows and reads the active document through an ExternalEvent.
-A remote client can use HTTP with a bearer token or the SSH file channel.
+!!! note "中文版"
+    本页为中文精简版；把右上角语言切到 English 可看完整英文原文。
 
-## Compatibility
+Revit Model MCP 由三部分组成：
 
-The add-in targets the lowest stable Revit API build of each supported year for compatibility with every patch of that year.
+| 组件 | 运行位置 | 职责 |
+| --- | --- | --- |
+| **MCP 服务器**（Python） | AI 客户端所在机器 | 把 33 个工具暴露给客户端；默认只读；写操作需要双门禁 |
+| **插件**（C# / .NET） | Revit 工作站 | 在 Revit 进程内用 `ExternalEvent` 执行请求；持有 HTTP 与文件两个通道 |
+| **Core 库**（C#） | 随插件 | 解析契约、校验参数、序列化结果——与 Revit API 无关，可单测 |
 
-## First call
+## 一次调用的路径
 
-1. Revit loads `RevitModelMcp.addin` and starts a file watcher, heartbeat and optional HTTP listener.
-2. The MCP client calls `revit_ping`; the server constructs `{"command":"ping"}`.
-3. HTTP queues the job in memory; local or SSH mode publishes it as `trigger.txt` in the Windows channel directory.
-4. An ExternalEvent invokes the shared command handler on Revit's API thread.
-5. The handler returns `success:true` with `data:"pong"`; the server delivers the JSON result over MCP.
+```mermaid
+sequenceDiagram
+    participant C as AI 客户端
+    participant S as MCP 服务器
+    participant A as 插件（Revit 进程）
+    participant R as Revit API
+    C->>S: tools/call（如 revit_query_elements）
+    S->>A: HTTP POST /jobs（Bearer token）或文件通道
+    A->>A: 入队 → ExternalEvent.Raise()
+    A->>R: 在 Revit 主线程读取/写入
+    R-->>A: 元素、参数、几何
+    A-->>S: 结果 JSON（含 elapsedMs、verification）
+    S-->>C: 工具结果
+```
 
-The channel directory defaults to `%LOCALAPPDATA%\RevitModelMcp`, not `%LOCALAPPDATA%\RevitDevLoader`.
-The add-in loads directly through its manifest and does not require a separate loader.
-The [feed format](feed-format.md) documents paths and response fields.
+要点：
 
-## Read-only and actions
-
-The default tools read model data or export a view to PNG.
-Exports and diagnostics write files outside the Revit model.
-Actions appear in MCP only when the Python process starts with `REVIT_MCP_ALLOW_WRITE=1`.
-The add-in also requires `%LOCALAPPDATA%\RevitModelMcp\allow-write` for every action.
-Deleting that gate file disables action execution without restarting Revit.
-The MCP environment gate controls tool registration; direct HTTP callers are checked against the token and workstation gate.
-
-Selection and navigation use UI calls.
-Model changes and temporary isolation run in individual transactions.
-`revit_batch` groups the per-step transactions in a `TransactionGroup` with one undo entry on success and one rollback of the group on failure or a batch dry run.
-Warnings are dismissed and reported on success; unresolved errors roll back the action.
-Action handling attempts TaskDialog overrides and reports their messages.
-The tools do not save the model.
-
-## Routing and waiting
-
-HTTP defaults to `127.0.0.1:53110`; the bearer token is stored in the per-user `settings.json`.
-Each HTTP endpoint belongs to one Revit process.
-A tunnel can connect a remote client while the listener stays on loopback.
-See [transport configuration](transport.md) for LAN and Tailscale routes.
-
-Local and SSH modes run Windows PowerShell under the Revit account.
-They locate responses by command and filename; they have no request correlation ID.
-Use one server process per file channel directory and a distinctive `document` filter for multiple Revit instances.
-HTTP polls by job ID and retains completed results for ten minutes.
-Timeouts do not cancel accepted jobs, especially actions.
-
-The [architecture](architecture.md) describes scheduling and failure behavior.
-The [server reference](../server/README.md) lists environment settings.
-
-## Model naming defaults
-
-Queries and catalog lookups accept names from the active document.
-The snapshot and view dump use the following generic defaults:
-
-| Data | Default |
-| --- | --- |
-| View dump profile parameters | Names starting with `Project_`, matched without case sensitivity; instance values take precedence over type values |
-| View dump measurements | `Length`, `Thickness`, `Area`, and `Volume`, matched without case sensitivity; lengths are reported in millimeters, areas in square meters, and volumes in cubic meters |
-| Snapshot regions | Family instances whose family name contains `Region`, matched without case sensitivity |
-| Region comments | Named parameters `Comment 1` and `Comment 2` |
-| Annotation parameters | Built-in `Mark`, plus named parameters `Segment`, `Number`, and `Zone Code` |
-| Curtain panel parameters | The annotation parameters plus `NameOverride` |
-| View counts | Non-template views with the case-sensitive prefixes `Coordination_` and `Construction_` |
-| Section prefix labels | Case-sensitive leading text `Coordination` or `Construction`; all other names receive `other` |
-
-Missing annotation, curtain panel, and profile parameter values are omitted; missing region comments are null.
-The snapshot exposes `regions`, `regionCount`, region `comment1` and `comment2`, model counts `totalRegions`, `coordinationViews` and `constructionViews`, and panel statistics `panelsWithSegment` and `panelsWithNumber`.
-Model names and localized category labels are returned as stored in Revit.
+- **只在 Revit 主线程动模型**：所有动作都经 `ExternalEvent` 排队执行，所以同一时刻只有一个任务，动作类工具还要求"恰好一个 Revit 实例"。
+- **读取默认只读**：读取工具不写模型，也不改变你的视图状态（`select`/`show`/`isolate` 属于动作类，会改选中与可见性）。
+- **写操作双门禁**：客户端要 `REVIT_MCP_ALLOW_WRITE=1`，工作站要有 `%LOCALAPPDATA%\RevitModelMcp\allow-write` 文件。
+- **结果自证**：动作返回 `verification`（改动前/后对照），重建类工具返回 `idMapping`/`idMappingVerified`，超时或失败不会被伪装成成功。
+- **单位统一**：入参与返回值一律 mm / m² / m³，内部按 Revit API 单位换算。
