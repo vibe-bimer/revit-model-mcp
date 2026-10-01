@@ -1,16 +1,15 @@
-# Triage 标签
+# 分诊标签
 
-!!! note "中文版"
-    本页是中文说明；英文原文见本页的 English 版本（右上角切换）。
+技能使用五种标准分诊角色。本页将这些角色映射到本仓库 Issue 跟踪器实际使用的标签字符串。
 
-五个标准 triage 角色沿用默认标签名，状态机按下面的顺序流转：
-
-| 标签 | 含义 | 下一步 |
+| mattpocock/skills 中的标签 | 本仓库跟踪器中的标签 | 含义 |
 | --- | --- | --- |
-| `needs-triage` | 新进来、还没人看过 | 维护者判定类型与优先级 |
-| `needs-info` | 信息不足，等提问者补充 | 补充后回到 `needs-triage` |
-| `ready-for-agent` | 范围清楚，可以交给 agent 做 | 由 agent 认领并开工 |
-| `ready-for-human` | 需要人工决策或人工操作 | 由维护者处理 |
-| `wontfix` | 明确不做 | 关闭并说明原因 |
+| `needs-triage` | `needs-triage` | 需要维护者评估该 Issue |
+| `needs-info` | `needs-info` | 等待报告者提供更多信息 |
+| `ready-for-agent` | `ready-for-agent` | 规格完整，可以交给无人值守（AFK）Agent |
+| `ready-for-human` | `ready-for-human` | 需要人工实现 |
+| `wontfix` | `wontfix` | 不会采取处理行动 |
 
-规则：任何时候一张 issue 只应处于其中一个状态；状态变化时同步加/去标签，并在评论里写清理由。
+当技能提到某种角色（例如“应用 AFK-ready 分诊标签”）时，使用上表对应的标签字符串。
+
+调整标签映射时，修改表中本仓库跟踪器的标签列，使其与实际使用的命名一致。

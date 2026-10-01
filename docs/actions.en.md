@@ -3,12 +3,19 @@
 Read-only by default. Actions are a separate tool set you enable on purpose.
 Transaction warnings are dismissed and reported in `warningsDismissed` (omitted when empty); errors that cannot be safely resolved roll back the action.
 
-Action tools have no `document` or timeout arguments.
-They use the default timeouts and require exactly one instance returned by the transport.
+## Instance and document targeting
+
+Every action tool accepts `document=null`; none exposes custom timeout arguments.
+They use the default 120-second response and 300-second pickup budgets; pickup applies only to local and SSH transports.
+The MCP transport must discover exactly one running Revit instance before sending any action, even when `document` is provided.
+Otherwise, the call fails with `Actions require exactly one running Revit instance.`
 HTTP addresses one endpoint; the file transports discover workstation instances.
-All IDs are unitless Revit element IDs.
+`document` selects an open document inside that one process, not an instance from a list of processes.
+All IDs are unitless, positive integer Revit element IDs, up to 9,223,372,036,854,775,807.
 Revit 2020–2023 accept IDs up to 2,147,483,647 only; larger IDs fail on those years.
 
+The MCP `document` argument becomes `targetDocument` in the action job.
+Provide it when the target process has multiple open documents; omit it only when a single document is open.
 Action jobs with `targetDocument` resolve that reference when the add-in executes the job.
 The reference must match exactly one open document by a case-insensitive substring of its title or file name.
 The resolved document is bound by its title and full path for all mutations and verification, even if another document is active.
@@ -21,7 +28,12 @@ Otherwise, they return `Cannot run '<command>' on '<title>' because it is not th
 Jobs without `targetDocument` retain the active-document behavior.
 `activeView` always reports the actual active view, even when a mutation targets another document.
 
-| Tool | Arguments | Action and units |
+## Tool catalogue
+
+Every row also accepts the common `document=null` argument. Arguments without defaults are required, even when they accept `null`.
+See the [feature overview](features/index.md) for each tool's full parameter table, prompts and Revit-year validation status.
+
+| Tool | Arguments beyond `document=null` | Action and units |
 | --- | --- | --- |
 | `revit_select` | `element_ids` | Select IDs; `[]` clears selection. Return `count`, the current selection size after the call. |
 | `revit_show` | `element_ids`, `select=true` | Show nonempty IDs; return `activeView`, `viewOpened` and `count`, the current selection size after the call. With `select=false`, `count` reports the previous selection. |
@@ -30,28 +42,43 @@ Jobs without `targetDocument` retain the active-document behavior.
 | `revit_place_family` | `family`, `type_name`, `x_mm`, `y_mm`, `level`, `rotation_deg=0` | Place a loaded family at model XY in mm on a named level; rotate about Z in degrees. |
 | `revit_create_wall` | `start_mm`, `end_mm`, `level`, `wall_type`, `height_mm=3000` | Create a straight wall; endpoints are `[x,y]` in model mm. |
 | `revit_create_floor` | `points_mm`, `level`, `floor_type` | Create a floor from a closed boundary; `points_mm` are `[x,y]` polygon vertices in model mm, at least 3, closed automatically; null `floor_type` chooses the first floor type. |
-| `revit_set_phase` | `element_ids`, `created_phase`, `demolished_phase` | Assign project phases by exact name; each phase argument is a name, `""` to clear that assignment, or null to leave it unchanged; at least one non-null. The Revit API cannot create or rename phases — add new phases in the UI first. |
+| `revit_set_phase` | `element_ids`, `created_phase`, `demolished_phase` | Assign project phases by exact name; each phase argument is a name, `""` to clear that assignment, or null to leave it unchanged; at least one non-null. These tools do not create or rename phases — add new phases in the UI first. |
 | `revit_merge_phases` | `source_phase`, `target_phase` | Move every creation and demolition reference off the source phase into the target, then delete the empty source phase; a refused deletion is reported with `sourceDeleted:false` and `phaseDeleteError`. Not batchable. |
 | `revit_set_parameter` | `element_id`, `parameter`, `value` | Set a string value by parameter name; lengths use mm, areas m2, other doubles internal units. |
 | `revit_delete` | `element_ids` | Delete nonempty IDs and their dependents. |
 | `revit_reset_element_ids` | `element_ids`, `dry_run=false` | Replace elements with copies so Revit assigns new IDs; reports `idMapping` and refuses an element when deletion would remove dependents, when it is hosted or grouped, when it is an MEP curve or an MEP system member (a copy does not rejoin the network, and Revit re-heals the run around the deleted original), or when Revit cannot copy it. |
 | `revit_batch` | `steps`, `dry_run=false` | Execute 1–50 actions with a single undo entry named `revit_batch`. |
-| `revit_rebuild_model_ids` | `destination_path`, `view`, `template_path`, `overwrite=false`, `remove_template_levels=true`, `seed=0`, `duplicate_names=override`, `copies=1`, `dry_run=false` | Copy the selectable components of a 3D view into a new model, so Revit assigns every element a fresh ID; the open model is never changed. Levels, grids and reference planes travel first so hosts resolve; cameras, the sun path, the section box, views and elements without a category are left behind and reported under `excluded`. Views, sheets, schedules, annotations, phases, worksets, MEP systems and unselected hosts do not travel, so the result is geometry, types and parameters. Data reports `count`, `newIdMin`/`newIdMax`, `sourceCategoryCounts`, `copiedCategoryCounts` and an `idMapping` verified against category and type. |
+| `revit_rebuild_model_ids` | `destination_path`, `view=null`, `template_path=null`, `overwrite=false`, `remove_template_levels=true`, `seed=0`, `duplicate_names="override"`, `copies=1`, `dry_run=false` | Copy the selectable components of a 3D view into a new model, so Revit assigns every element a fresh ID; the open model is never changed. Levels, grids and reference planes travel first so hosts resolve; cameras, the sun path, the section box, views and elements without a category are left behind and reported under `excluded`. Views, sheets, schedules, annotations, phases, worksets, MEP systems and unselected hosts do not travel, so the result is geometry, types and parameters. Data reports `count`, `newIdMin`/`newIdMax`, `sourceCategoryCounts`, `copiedCategoryCounts` and an `idMapping` verified against category and type. |
 
 `type_name`, `wall_type` and `floor_type` are required arguments that accept `null`.
 
-`revit_move`, `revit_place_family`, `revit_create_wall`, `revit_create_floor`, `revit_set_phase`, `revit_merge_phases`, `revit_set_parameter` and `revit_delete` accept a final `dry_run=false` argument.
+## Dry runs and ID replacement
+
+`revit_move`, `revit_place_family`, `revit_create_wall`, `revit_create_floor`, `revit_set_phase`, `revit_merge_phases`, `revit_set_parameter` and `revit_delete` also accept `dry_run=false`, before the common `document` argument.
 A dry run executes the mutation, reads its prospective result, and rolls back the transaction.
 A successful dry run includes `data.dryRun:true`, `data.rolledBack:true` and the same `verification` shape as a real write.
 An action that throws returns an error without a verification block; a missing family also returns `closestFamilies` on the single-action tool.
-`revit_isolate` has no `dry_run` argument; it uses temporary isolation only.
+`revit_select`, `revit_show` and `revit_isolate` have no `dry_run` argument; isolation is temporary only.
+`revit_reset_element_ids` also supports `dry_run`; run it first because a real exchange cannot be undone.
+It refuses the entire selection if any element is ineligible, never changes an ID in place and never writes the old ID into a parameter.
+Created IDs in a dry run are provisional and do not identify persisted elements.
+
+## Rebuilding into new model files
+
 `revit_rebuild_model_ids` is not a transaction: `dry_run=true` performs the copy and reports the mapping without saving a file, and a real run writes the new model while the source is never modified or saved.
+`destination_path` is a path on the Revit workstation, not the MCP client.
+Without `view`, the tool uses the first non-perspective 3D view; only components selectable in that view are copied.
+`template_path` chooses a template instead of the default metric template; `remove_template_levels=true` removes the template's own levels.
+`overwrite=true` explicitly replaces an existing destination; the default is false.
+The response also includes `destinationPath`, `saved`, `sourceView`, `sourceElementCount`, `datumCount` and a reason for each excluded element.
 The template the new model starts from carries no real view, so the rebuild adds a three-dimensional view when one is missing; without it Revit refuses to open the file.
 When a name the source uses already exists in the new project, Revit asks the user how to resolve the duplicate while it pastes, and that question blocks an unattended run; by default the rebuild answers it with OK (`duplicate_names=override`), which keeps the source model's own types and reports how many questions it answered under `autoAnsweredDialogs`. `duplicate_names=rename` renames the template's elements first and removes them again afterwards: it costs about 30 seconds per copy and Revit refuses many of those deletes, so it is only a fallback.
-`duplicate_names=reuse` never asks about a duplicated name and keeps the version the new model already holds; a run that writes several copies uses it by default, because asking is what makes Revit refuse a paste. A copy Revit refuses anyway is repeated with that same setting, so a copy comes out whole instead of eleven elements short.
-`copies=2` and up write several files from one new model, one copy after another, and remove the elements of each copy before the next one: Revit keeps handing out higher ids in a document, so every copy holds the same components with ids of its own and no ids have to be burned first. `destination_path` may carry `{n}` for the copy number, and the per-copy paths, sizes and id mappings are reported under `copyResults`. Revit sometimes refuses the bulk paste of a later copy: that copy then falls back to the element-by-element path and comes out smaller with `idMappingVerified=false` in its `copyResults` entry, so callers must check every entry. One copy per run is the reliable shape; for throughput, run one copy per run across several Revit instances, which take their port and channel directory from `REVIT_MCP_HTTP_PORT`, `REVIT_MCP_TOKEN` and `REVIT_MCP_CHANNEL_DIR`.
+`duplicate_names=reuse` never asks about a duplicated name and keeps the version the new model already holds; a run that writes several copies uses it by default, because asking is what makes Revit refuse a paste. A copy Revit refuses anyway is retried with that same setting; the recorded retry recovered a copy that was eleven elements short, but callers must still verify the returned mapping.
+`copies=2` and up write several files from one new model, one copy after another, and remove the elements of each copy before the next one: Revit keeps handing out higher ids in a document, so every copy holds the same components with ids of its own and no ids have to be burned first. `destination_path` may carry `{n}` for the copy number; without it the number is appended before the extension. The per-copy paths, sizes and ID mappings are reported under `copyResults`. Revit sometimes refuses the bulk paste of a later copy: that copy then falls back to the element-by-element path and comes out smaller with `idMappingVerified=false` in its `copyResults` entry, so callers must check every entry. One copy per run was the reliable shape in the recorded tests; see [rebuild performance](rebuild-performance.md) for the measurements. For parallel runs across several Revit instances, use separate HTTP endpoints or transports that each discover exactly one instance; `document` does not bypass the single-instance gate. The instances take their port, token and channel directory from `REVIT_MCP_HTTP_PORT`, `REVIT_MCP_TOKEN` and `REVIT_MCP_CHANNEL_DIR`.
 Revit assigns the copied elements the IDs that follow the ones the new model already holds, so two rebuilds of the same source produce the same IDs; `seed` adds that many temporary levels to the new model before the copy and removes them again, which moves a copy's IDs into a block of their own.
-Created IDs in a dry run are provisional and do not identify persisted elements.
+Created IDs reported by a rebuild dry run likewise do not identify a saved output model.
+
+## Verification and committed changes
 
 Successful real writes return `data.dryRun:false` and re-read the affected elements after commit.
 `verification.before` is captured before the change; `verification.after` is re-read after commit or before rollback on a dry run.
@@ -72,7 +99,9 @@ For example, setting Comments on element 123 returns:
 }
 ```
 
-`revit_batch` takes action names and their normal snake_case arguments:
+## Batch execution
+
+`revit_batch` takes action names and their normal snake_case arguments. Set `document` once on the batch, not inside each step's `args`:
 
 ```json
 {
@@ -94,6 +123,8 @@ A per-step `dry_run:true` inside a real batch is accepted and previews only that
 Verification describes each step's immediate result; subsequent steps may change those elements again.
 Batches accept 1–50 steps; `select` and `isolate` are allowed, while `show`, nested batches and unknown argument keys are rejected.
 
+## Navigation, dialogs and family names
+
 `revit_show` checks the open UI views before calling `ShowElements`.
 If none contains a requested element, it opens a non-template plan for an element's level.
 Floor plans take priority, followed by names starting with the level name.
@@ -110,10 +141,13 @@ Inside `revit_batch`, a missing family surfaces only as `steps[].error` text; `c
 For `Family: Type`, `type_name=null` uses the embedded type; a conflicting `type_name` is rejected.
 For a family name alone, `type_name=null` selects the first loaded type.
 
+## Gates {#gates}
+
 Both gates must be enabled:
 
 1. Set `REVIT_MCP_ALLOW_WRITE=1` in the Python server process environment and restart the server.
-   With any other value or no value, MCP `list_tools` does not include the action tools.
+   The boolean parser trims whitespace and ignores case: `1`, `true`, `yes` and `on` enable actions; `0`, `false`, `no` and `off` disable them.
+   When unset, actions are disabled and MCP `list_tools` omits them. Unrecognized values raise a configuration error rather than silently disabling actions.
 2. Create `%LOCALAPPDATA%\RevitModelMcp\allow-write` on the Revit workstation:
 
    ```powershell
@@ -126,6 +160,10 @@ Without it, the response contains `success:false` and `error:"actions disabled o
 Removing the file disables actions immediately; restarting Revit is unnecessary.
 The gate stays in the default local application data directory even if the transport uses `REVIT_MCP_CHANNEL_DIR`.
 
+Direct HTTP action requests require authentication and the workstation gate; the Python environment gate controls exposure of the MCP action tools.
+
+## Units and parameter scope
+
 Actions address the process ID reported by the transport.
 Coordinates use model axes and the named level's project elevation.
 Pass `null` for `type_name` to choose the family's first type, or for `wall_type` to choose the first basic wall type.
@@ -135,6 +173,8 @@ Parameter values use invariant numeric notation; other Double parameters use Rev
 Type parameter edits affect all instances of that type and return `parameterScope:"type"`.
 ElementId and read-only parameters cannot be set.
 
+## Transactions and timeout safety
+
 Responses from the action executor include `activeView`, including action errors.
 Transport rejection and target-mismatch responses may omit action metadata.
 Model changes and temporary isolation use individual transactions named after the tool.
@@ -142,5 +182,6 @@ Model changes and temporary isolation use individual transactions named after th
 Warnings at commit are dismissed and reported on successful actions.
 Errors permit one `FixElements` or `SetValue` resolution when Revit allows it; unresolved or repeated errors roll back the transaction.
 Selection and navigation use UI calls without model transactions.
-The tools do not save the model.
-After a timeout, inspect the model before retrying an action; the previous call may have executed.
+Actions do not save the addressed source model; `revit_rebuild_model_ids` saves only its new output model files on the workstation.
+A timeout does not prove that an action rolled back or never ran; even a pickup timeout can leave a pending job that executes later.
+After a timeout or a post-commit verification failure, inspect the model and any output files before retrying; the previous call may have executed.

@@ -221,7 +221,7 @@ The Revit environment must contain the override before Revit starts.
 | --- | --- |
 | `mcp_<uuid>.tmp` | JSON job before publication |
 | `trigger.txt` | Published job awaiting pickup |
-| `response_<timestamp>_<command>.json` | Add-in response |
+| `response_<timestamp>_<command>_<correlationId>.json` | Add-in response |
 | `view_<timestamp>_<id>.png` | Exported view before download |
 | `instance_<processId>.json` | Instance heartbeat |
 

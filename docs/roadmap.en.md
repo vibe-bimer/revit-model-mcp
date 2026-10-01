@@ -2,6 +2,9 @@
 
 Review date: 2026-09-12.
 
+!!! note "Historical review, not a current feature list"
+    This page preserves the review's scope. Correlation IDs and atomic response publication were added in 0.6.0; package and registry publishing also changed later. Other bullets have not all been re-audited here. Check the [changelog](changelog.md) and [validation evidence](validation.md) before treating a historical gap as current.
+
 ## Known gaps
 
 - Public-source cleanup: legacy snapshot readers, contracts and fixtures still contain organization-specific family and parameter identifiers; removing those fields changes the legacy feed contract.

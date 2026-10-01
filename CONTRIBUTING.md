@@ -38,7 +38,7 @@ NuGet manifests under `build/install/` and publishing workflow updates still req
 All merges use squash with the PR title and body, and history remains linear.
 ## Automated checks
 
-CI builds the Revit 2022, 2026 and 2027 add-ins, runs Core and Python tests, builds and smoke-tests both MSI scopes, and validates the Python package.
+CI builds the Revit 2020, 2022, 2026 and 2027 add-ins, runs Core and Python tests, builds and smoke-tests both MSI scopes, and validates the Python package.
 PR checks validate the Conventional Commit title, all workflow files with `actionlint`, C# formatting from `.editorconfig`, and Python lint and formatting with Ruff.
 CodeQL analyzes C# and Python on PRs, pushes to `main` and a weekly schedule.
 Successful PR checks publish one updated comment with add-in artifact links and the Revit years built.
@@ -83,7 +83,7 @@ dotnet format RevitModelMcp.sln --verify-no-changes --verbosity minimal
 `DeployAddin=false` prevents deployment to the local Revit installation.
 Core tests need no running Revit instance.
 The test runner is Microsoft.Testing.Platform; use `--project` as shown.
-Release builds cover `Release.R20` and `Release.R22` through `Release.R27`.
+The seven release builds cover `Release.R20` and `Release.R22` through `Release.R27`: Revit 2020 and 2022–2027, not Revit 2021.
 Run `dotnet format RevitModelMcp.sln` with the same environment variables to apply formatting.
 
 Run Python tests and package builds on Windows, macOS or Linux with Python 3.11+ and uv:
@@ -118,6 +118,24 @@ On Windows, use `.venv\Scripts\python.exe` and `.venv\Scripts\mkdocs.exe`.
 Open `http://127.0.0.1:8000/revit-model-mcp/`.
 Run `mkdocs build --strict` in the activated environment before submitting a PR.
 
+Maintain the Chinese and English documentation together. Tool pages and navigation are generated from the current MCP registry snapshot in [`tools.json`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/tools.json), reviewed bilingual titles, summaries, prompts and parameter meanings in [`capabilities.yaml`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/capabilities.yaml), and complete Chinese tool descriptions in [`contracts.yaml`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/contracts.yaml). After tool descriptions, signatures, schemas or registration change, activate the documentation environment and make the server importable with `python -m pip install -e server`, then refresh the snapshot:
+
+```sh
+python tools/site/generate_features.py --dump
+```
+
+Review and update both languages in the capability entries, including every affected parameter meaning. Translate each complete changed description in the contract entry and update its `source` to the exact SHA-256 of the current UTF-8 tool description; do not merely refresh the hash without reviewing the translation. Do not hand-edit generated pages or claim live validation from registry dumps. Then regenerate and run these checks from the repository root:
+
+```sh
+python tools/site/generate_features.py --write
+python tools/site/generate_features.py --verify-registry --check
+python -m unittest discover -s tools/site -p 'test_*.py'
+mkdocs build --strict
+python tools/site/check_site.py --site-dir site
+```
+
+These checks cover registry freshness, reviewed translation completeness, generated-page drift, bilingual navigation, internal links and anchors. Source changes block site publication until the translations are refreshed, generated pages are updated and every check passes.
+
 ## Test coverage
 
 The Python tests cover job construction, transport failures, downloads, action validation and MCP stdio registration with both flag states.
@@ -132,7 +150,7 @@ Automated tests do not validate live Revit behavior; see [validation evidence](d
 1. Merge PRs with Conventional Commit titles.
 2. release-please maintains a `chore(main): release X.Y.Z` PR with generated changelog entries and version updates.
 3. The maintainer checks the release PR and merges it after required checks pass.
-4. Check the Release please workflow, both MSI assets, six ZIPs, wheel, source distribution and `SHA256SUMS.txt`.
+4. Check the Release please workflow, both MSI assets, seven per-year ZIPs, wheel, source distribution and `SHA256SUMS.txt`.
 5. Check PyPI, MCP Registry and WinGet job results for stable releases; download the manifests if WinGet submission is not configured.
 
 release-please owns [CHANGELOG.md](CHANGELOG.md), the version in `server/pyproject.toml` and both versions in `server/server.json`.
@@ -155,11 +173,11 @@ Repository Actions settings must allow GitHub Actions to create pull requests.
 
 ## Release assets
 
-CI uploads installable R22, R26 and R27 folder layouts and an `installers` artifact.
+CI uploads installable R20, R22, R26 and R27 folder layouts and an `installers` artifact.
 It extracts both MSIs, rejects Revit API assemblies, and checks installation and removal for each built year.
-The release-please workflow or a manually pushed `v<version>` tag triggers all six add-in builds and Core/server tests.
+The release-please workflow or a manually pushed `v<version>` tag triggers all seven add-in builds and Core/server tests.
 The tag version must match `server/pyproject.toml`.
-The GitHub Release contains six per-year ZIPs, single-user and multi-user MSIs, the Python wheel and source distribution, and `SHA256SUMS.txt` covering every asset.
+The GitHub Release contains seven per-year ZIPs, single-user and multi-user MSIs, the Python wheel and source distribution, and `SHA256SUMS.txt` covering every asset.
 Extract each year's ZIP into `%APPDATA%\Autodesk\Revit\Addins\20<yy>` while that Revit instance is closed.
 The archive root contains `RevitModelMcp.addin` and the `RevitModelMcp` assembly directory.
 

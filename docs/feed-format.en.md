@@ -1,6 +1,6 @@
 # Feed format
 
-The v0.2.0 protocol uses UTF-8 JSON and case-sensitive field names.
+The current channel protocol uses UTF-8 JSON and case-sensitive field names.
 It has no `schemaVersion` field; the package version identifies the documented contract.
 The standalone add-in does not write a feed under `%LOCALAPPDATA%\RevitDevLoader`.
 Its default channel is `%LOCALAPPDATA%\RevitModelMcp`.
@@ -9,7 +9,7 @@ Its default channel is `%LOCALAPPDATA%\RevitModelMcp`.
 
 | Location | Contents |
 |---|---|
-| Channel directory | `trigger.txt`, `mcp_<uuid>.tmp`, `response_<timestamp>_<command>.json`, `view_<timestamp>_<id>.png`, `instance_<processId>.json` and heartbeat `.tmp` files |
+| Channel directory | `trigger.txt`, `mcp_<uuid>.tmp`, `response_<timestamp>_<command>_<correlationId>.json`, `view_<timestamp>_<id>.png`, `instance_<processId>.json` and heartbeat `.tmp` files |
 | Channel directory, legacy snapshots | `latest.json`, `latest.txt`, `snapshot_yyyyMMdd_HHmmss.json` |
 | Channel directory, legacy view dumps | `views_dump_yyyyMMdd_HHmmss_fff.json` and matching `.txt`; a numeric suffix avoids existing names |
 | `%LOCALAPPDATA%\RevitModelMcp\settings.json` | HTTP listener settings and persistent bearer token |
@@ -46,7 +46,7 @@ An HTTP endpoint also rejects jobs addressed to another process.
 | `dx_mm`, `dy_mm`, `dz_mm`, `x_mm`, `y_mm` | `dxMm`, `dyMm`, `dzMm`, `xMm`, `yMm` |
 | `start_mm`, `end_mm`, `wall_type`, `height_mm`, `rotation_deg` | `startMm`, `endMm`, `wallType`, `heightMm`, `rotationDeg` |
 
-`save_to` and timeouts are client options, not job fields.
+View-export `save_to` and timeouts are client options, not job fields. For the Excel ID register, `save_to` becomes `saveTo` in the job because the workbook is written on the Revit workstation. The file transport adds a unique `correlationId`; jobs above show only the command-specific fields.
 `parameterFilters` entries contain `parameter`, `operator` and an optional `value`.
 Numeric filter values use mm for lengths, m2 for areas and m3 for volumes.
 Other measurable filter values use the document's display units; unmeasurable doubles use internal values.
@@ -195,7 +195,7 @@ Each sample list is capped independently at `sampleLimit`; `byCategory` contains
 `data` depends on the command and is omitted when null.
 `message` carries optional diagnostic text.
 Read failures use `success:false` and `message`; the Python server converts them to MCP tool errors.
-Partial reads use `success:false`, `partial:true` and any available `data`; the server also treats them as errors.
+Partial reads use `success:false`, `partial:true` and any available `data`. The current file-channel implementation can return a terminal partial envelope when `data` is a dictionary/list and `elapsedMs` is positive, despite the public read-tool descriptions promising an error instead. Accept complete totals only with `success:true` and `partial:false` (or no `partial` field). A client response-wait timeout still raises an error; it does not cancel the job.
 Action failures retain the response object and add `error`.
 `revit_list_instances` returns a list of instance objects directly, outside this response envelope.
 

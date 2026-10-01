@@ -61,7 +61,7 @@ mcp-name: io.github.sharafutdinovdi/revit-model-mcp
 | Variable | Default | Behavior |
 |---|---|---|
 | `REVIT_MCP_HOST` | `local` | Local PowerShell, `ssh:<alias>` or an `http://` / `https://` add-in endpoint. `--host` overrides it. |
-| `REVIT_MCP_ALLOW_WRITE` | Unset | Only `1` registers the nine action tools, including `revit_batch` at server startup; the workstation gate is also required. |
+| `REVIT_MCP_ALLOW_WRITE` | Unset | `1` registers the 14 action tools, including `revit_batch`, at server startup; the workstation gate is also required. Boolean settings also accept `true/false`, `yes/no` and `on/off`, without regard to case or surrounding whitespace. |
 | `REVIT_MCP_TOKEN` | Unset | HTTP bearer token from workstation settings. `--token` overrides it. |
 | `REVIT_MCP_SSH_MUX` | Enabled | `0` disables OpenSSH connection multiplexing. Local mode ignores SSH settings. |
 | `REVIT_MCP_SSH_OPTIONS` | Unset | Extra SSH arguments, parsed with shell quoting and appended after built-in options, before the host. Example: `-o ServerAliveInterval=30 -p 2222`. |

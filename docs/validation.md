@@ -1,10 +1,11 @@
-# 实测证据
+# 验证证据
 
-!!! note "中文版"
-    本页为中文精简版；把右上角语言切到 English 可看完整英文原文。
+以下为截至 2026-09-29 的验证状态；✅ 表示检查已完成，— 表示没有该项检查的验证证据。
+CI 证据包括 v0.1.0 发布时的 R22–R26 构建，以及 R22 / R26 / R27 的 CI 构建。
+本地构建证据包括 `Release.R26`、`Release.R27`，以及通过 `install.ps1 -Source Build` 完成的 Revit 2024 构建。
 
 | Revit 年份 | CI 构建 | 本地构建 | 真机读取 | 真机动作 | 安装脚本 |
-| --- | :--: | :--: | :--: | :--: | :--: |
+| --- | --- | --- | --- | --- | --- |
 | 2020 | ✅ | ✅ | ✅ | ✅ | — |
 | 2022 | ✅ | — | — | — | — |
 | 2023 | ✅ | — | — | — | — |
@@ -13,8 +14,22 @@
 | 2026 | ✅ | ✅ | ✅ | ✅ | ✅ |
 | 2027 | ✅ | ✅ | — | — | — |
 
-**2020（Revit 20.0.0.377）**：19 个读取工具与 14 个动作工具全部真机跑过；`revit_create_floor` 走 `Document.Create.NewFloor` 路径、`revit_set_phase` 走阶段顺序检查兜底；重建 ID 实测 899 构件/份、单任务 10 份 165 s、每份 ID 零重叠；ID 清单导出 954 行 xlsx（表头、冻结、筛选、类别→族→类型排序均正确）。
+真机检查使用 Revit 2026.4 和 Autodesk 的 `Snowdon Towers Sample Architectural.rvt`，由 macOS 通过 SSH 传输调用。
+19 个读取工具中有 18 个已经过真机验证，包括全部四个协调工具；`revit_export_element_ids` 仅在 2020 上验证。
+真机动作检查覆盖 `select`、`show`、`isolate`、`move`、`create_wall`、`set_parameter`、`delete` 和 `batch`；支持试运行的动作同时检查了试运行与真实写入。`revit_reset_element_ids` 和 `revit_rebuild_model_ids` 仅在 2020 上验证。
+安装器检查覆盖：2024 和 2026 上带 `-SignThumbprint` 的 `-Source Build`、2024 上从 v0.1.0 安装的 `-Source Release`，以及 `-Uninstall`。
+在这一轮验证中，Revit 2022–2025 和 2027 的插件行为只有构建证据，没有这些年份的真机读取或动作验证。
 
-**2026（Revit 2026.4 + Snowdon Towers 样例）**：19 个读取工具全部真机验证；动作类部分真机检查（`select`/`show`/`isolate`/`move`/`create_wall`/`set_parameter`/`delete`/`batch`），其余为本机构建证据；重建 ID 未在该年份实测。
+Revit 2020 检查于 2026-09-28 和 2026-09-29 进行，使用 Windows 工作站上的 Revit 2020（20.0.0.377）、`E:\revitmcp-test\MEP文件.rvt` 和 `E:\revitmcp-test\建筑结构.rvt`，由 Linux 通过插件 HTTP 通道调用。
+全部 19 个读取工具均已真机验证，包括 `revit_export_view`、`revit_export_element_ids` 和全部四个协调工具。
+全部 14 个动作工具都在该年份执行过：`select`、`show` 和 `isolate` 真实执行；`move`、`place_family`、`create_wall`、`create_floor`、`set_parameter`、`delete`、`set_phase`、`merge_phases`、`batch`、`reset_element_ids` 和 `rebuild_model_ids` 使用 `dry_run` 检查，并返回了 `verification`。
+`revit_create_floor` 覆盖了 Revit 2020 的 `Document.Create.NewFloor` 路径；`revit_set_phase` 覆盖了阶段顺序检查的兼容路径，而对应检查 API 直到 Revit 2022 才公开。
+`revit_export_element_ids` 为 `MEP文件.rvt` 的构件写出了工作簿，冻结表头、自动筛选，以及类别 → 族 → 类型的排序均保持完整。
+`revit_reset_element_ids` 重置了 `MEP文件.rvt` 中 27 个未连接构件的 ID，清单保持不变；其系统保护检查将所有管道、风管和已连接附件排除在执行范围外。
+`revit_rebuild_model_ids` 将 `建筑结构.rvt` 中 899 个可选元素复制到新模型，源模型保持不变；新模型打开时没有提示框，其三维视图包含 900 个元素，并保留源模型的墙和标高类型。
+在 0.9.0 构建上，单个任务用 165 s 写出该模型的十份副本（每份 16.5 s）：每份包含 899 个构件，`idMappingVerified=true`，没有任何 ID 出现在两份副本中，ID 区间为 2473–4256、19259–21042、……、44771–46554。
+截图和 JSON 证据位于 [`validation-assets` 分支](https://github.com/sharafutdinovdi/revit-model-mcp/tree/validation-assets)。
+Revit 批处理（`revit_batch`）在撤销菜单中的标签无法通过 API 验证。
 
-**其它年份**：只有构建证据，动作行为未在真机验证——首次使用建议先 `dry_run`。
+!!! note "历史记录，不是本次新增验证"
+    本页保留英文原文的日期、构建与真机检查范围。翻译工作没有执行新的 Revit 验证，也不将构建通过等同于真机行为已验证。

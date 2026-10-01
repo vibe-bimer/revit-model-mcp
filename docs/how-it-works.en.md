@@ -44,7 +44,7 @@ A tunnel can connect a remote client while the listener stays on loopback.
 See [transport configuration](transport.md) for LAN and Tailscale routes.
 
 Local and SSH modes run Windows PowerShell under the Revit account.
-They locate responses by command and filename; they have no request correlation ID.
+Each file-channel request carries a unique `correlationId`; the server matches the response filename and envelope to that ID. Responses are published atomically through a temporary file and replacement.
 Use one server process per file channel directory and a distinctive `document` filter for multiple Revit instances.
 HTTP polls by job ID and retains completed results for ten minutes.
 Timeouts do not cancel accepted jobs, especially actions.

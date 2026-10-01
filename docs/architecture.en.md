@@ -29,14 +29,14 @@ flowchart LR
 3. The file watcher requests an ExternalEvent. A 10-second timer provides a fallback check.
 4. Revit executes the handler in its API context. The channel matches `targetDocument` and claims the trigger.
 5. Readers produce a response. Paged sessions request further ExternalEvent callbacks until complete.
-6. The server detects a new `response_<timestamp>_<command>.json` and validates the response.
+6. The server detects `response_<timestamp>_<command>_<correlationId>.json`, matches the request ID and validates the response.
 7. The host removes response and temporary files. View exports also copy and remove the remote PNG.
 
 Jobs contain a `command` and command-specific fields.
 Successful responses contain `command`, `success` and `data`.
 Responses also carry timing and responder metadata.
 See the [response contracts](../src/RevitModelMcp.Core/Models/ReadCommandModels.cs).
-The file protocol has no request correlation identifier.
+The file protocol carries a request `correlationId` in both the job and response.
 HTTP assigns a `jobId` and polls `/jobs/{id}`; completed results expire after ten minutes.
 The asyncio lock serializes calls within one server process only.
 One server process per channel directory avoids competing response consumers.
