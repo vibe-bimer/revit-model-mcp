@@ -15,13 +15,13 @@
 | `include_geometry` | `false` | 是否返回位置、包围盒与所在房间中心（模型 mm）（boolean） |
 | `level` | — | 标高过滤（any） |
 | `limit` | `100` | 每页条数（配合 offset 分页）（integer） |
-| `offset` | `0` | integer |
-| `parameter_filters` | — | AND-combined objects with an exact localized parameter name in parameter, an operator (equals, contains, greater, less, empty, not-empty, exists), and value for comparisons; default null applies no parameter filters. Numeric values use mm, m2, m3 or other document display units; contains requires text, and empty/not-empty/exists need no value.（any） |
+| `offset` | `0` | 从第几条开始（配合 limit 分页）（integer） |
+| `parameter_filters` | — | 参数过滤条件（equals / contains / greater / less / empty / not-empty / exists）（any） |
 | `phase` | — | 阶段过滤（any） |
-| `sort_direction` | `"asc"` | Sort order: asc or desc, case-insensitively; default asc means ascending. Applies to sort_field before offset and limit.（string） |
+| `sort_direction` | `"asc"` | 排序方向：asc / desc（string） |
 | `sort_field` | `"id"` | 排序字段（默认按构件 ID）（string） |
-| `type_name` | — | Exact type name to match, case-insensitively, combined with the other model filters. Default null applies no type filter; discover names with the family-types catalog.（any） |
-| `view` | — | Exact non-template view name from the views catalog, matched case-insensitively, to restrict the element collector. Default null searches the document without a view filter; combines with the other model filters.（any） |
+| `type_name` | — | 类型名称（与族一起定位）（any） |
+| `view` | — | 视图名称（或视图 ID）（any） |
 | `workset` | — | 工作集过滤（any） |
 
 ??? note "通用参数"

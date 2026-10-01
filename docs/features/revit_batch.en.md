@@ -11,8 +11,8 @@ Execute up to 50 actions with one undo step; roll back the batch on its first fa
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `steps` ✔ | — | array |
-| `dry_run` | `false` | boolean |
+| `steps` ✔ | — | one to fifty action steps; the batch rolls back when a step fails（array） |
+| `dry_run` | `false` | rehearse: execute, return the same verification block, then roll back（boolean） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

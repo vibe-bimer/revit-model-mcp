@@ -13,7 +13,7 @@
 | --- | --- | --- |
 | `source_phase` ✔ | — | 被合并掉的阶段名（合并后删除）（string） |
 | `target_phase` ✔ | — | 接收引用的阶段名（string） |
-| `dry_run` | `false` | boolean |
+| `dry_run` | `false` | 彩排：执行后回滚，返回同样的校验块，不写模型（boolean） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

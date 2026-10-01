@@ -11,10 +11,10 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `element_id` ✔ | — | integer |
-| `parameter` ✔ | — | Set a named instance parameter, falling back to its shared type; use for edits, with length in mm, area in m2 and other doubles in internal units.（string） |
-| `value` ✔ | — | string |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `element_id` ✔ | — | 单个构件的 Revit ID（integer） |
+| `parameter` ✔ | — | 参数名（本地化名称）（string） |
+| `value` ✔ | — | 要写入的值（长度 mm、面积 m²，其余按内部单位）（string） |
+| `dry_run` | `false` | 彩排：执行后回滚，返回同样的校验块，不写模型（boolean） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

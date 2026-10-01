@@ -8,9 +8,9 @@ Read model object membership or dependencies.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `relation` ✔ | — | string |
-| `source_id` | — | Positive integer Revit ID of the source group for group-elements or family instance for nested-family. Default null is valid for name-based relations; these two ID-based relations require a value.（any） |
-| `source_name` | — | Exact, case-insensitive source name: a level for level-rooms, area scheme for area-scheme-elements, or view template for view-template-dependents. Default null is valid for ID-based relations; name-based relations require a value from the catalog.（any） |
+| `relation` ✔ | — | which relation to read: level-rooms, area-scheme-elements, group-elements, nested-family or view-template-dependents（string） |
+| `source_id` | — | Revit id of the source object, a group or a family instance（any） |
+| `source_name` | — | name of the source, a level, area scheme or view template（any） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

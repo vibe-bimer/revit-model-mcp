@@ -9,10 +9,10 @@ Create a straight wall for layout on a named level; model XY endpoints and heigh
 | Parameter | Default | Meaning |
 | --- | --- | --- |
 | `end_mm` ✔ | — | end point [x, y] in millimetres（array） |
-| `level` ✔ | — | Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type.（string） |
+| `level` ✔ | — | level name, as revit_list_catalog reports it（string） |
 | `start_mm` ✔ | — | start point [x, y] in millimetres（array） |
 | `wall_type` ✔ | — | Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type.（any） |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `dry_run` | `false` | rehearse: execute, return the same verification block, then roll back（boolean） |
 | `height_mm` | `3000` | wall height in millimetres (3000 by default)（number） |
 
 ??? note "Common parameters"

@@ -12,9 +12,9 @@ Create a floor from a closed boundary for layout on a named level. points_mm are
 | Parameter | Default | Meaning |
 | --- | --- | --- |
 | `floor_type` ✔ | — | points_mm are model XY polygon vertices in millimetres (at least 3; the boundary closes automatically); null floor_type chooses the first floor type.（any） |
-| `level` ✔ | — | Create a floor from a closed boundary for layout on a named level.（string） |
+| `level` ✔ | — | level name, as revit_list_catalog reports it（string） |
 | `points_mm` ✔ | — | points_mm are model XY polygon vertices in millimetres (at least 3; the boundary closes automatically); null floor_type chooses the first floor type.（array） |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `dry_run` | `false` | rehearse: execute, return the same verification block, then roll back（boolean） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

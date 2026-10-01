@@ -11,8 +11,8 @@ Write the identifier register of the drawn components to an xlsx file on the Rev
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `fields` | — | any |
-| `save_to` | — | Absolute .xlsx path on the Revit workstation, not the MCP client; an existing file causes an error. Default null writes 构件ID清单_<model>_<timestamp>.xlsx under Documents\RevitModelMcp\Exports on the workstation.（any） |
+| `fields` | — | columns to write; the defaults are category, family, type, level, component id, name and workset（any） |
+| `save_to` | — | absolute .xlsx path on the Revit workstation; an existing file is an error（any） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

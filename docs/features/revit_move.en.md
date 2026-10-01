@@ -14,7 +14,7 @@ Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets 
 | `dx_mm` ✔ | — | Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets in millimetres on model axes.（number） |
 | `dy_mm` ✔ | — | Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets in millimetres on model axes.（number） |
 | `element_ids` ✔ | — | element ids to move（array） |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `dry_run` | `false` | rehearse: execute, return the same verification block, then roll back（boolean） |
 | `dz_mm` | `0` | Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets in millimetres on model axes.（number） |
 
 ??? note "Common parameters"

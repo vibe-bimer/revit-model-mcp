@@ -8,10 +8,10 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `view` ✔ | — | Required exact, case-sensitive non-template view name from revit_list_views, or its Revit view ID as a decimal string; no default. An exact name takes precedence over interpreting a numeric string as an ID.（string） |
+| `view` ✔ | — | 视图名称（或视图 ID）（string） |
 | `categories` | — | 只列出这些类别的构件（any） |
-| `limit` | `100` | integer |
-| `offset` | `0` | integer |
+| `limit` | `100` | 每页条数（integer） |
+| `offset` | `0` | 从第几条开始（配合 limit 分页）（integer） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

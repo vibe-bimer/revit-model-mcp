@@ -15,11 +15,11 @@
 | `copies` | `1` | 一份新模型连续出多少份（1–50），每份 ID 区间互不重叠（integer） |
 | `dry_run` | `false` | 彩排：复制并给出映射后回滚，不写文件（boolean） |
 | `duplicate_names` | `"override"` | 重名处理：override 保留源类型、reuse 沿用新模型版本（批量默认）、rename 旧回退路径（string） |
-| `overwrite` | `false` | boolean |
-| `remove_template_levels` | `true` | boolean |
+| `overwrite` | `false` | 目标文件已存在时覆盖（boolean） |
+| `remove_template_levels` | `true` | 复制后删掉样板自带标高（默认删）（boolean） |
 | `seed` | `0` | 先把 ID 推进 N 个再复制，用于预留互不重叠的号段（integer） |
-| `template_path` | — | any |
-| `view` | — | Give every component new IDs by copying a 3D view's selectable elements into a new model, because Revit does not allow assigning an element ID.（any） |
+| `template_path` | — | 起始样板文件（.rte/.rvt）路径；缺省用公制样板（any） |
+| `view` | — | 视图名称（或视图 ID）（any） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

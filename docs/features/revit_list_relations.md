@@ -8,9 +8,9 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `relation` ✔ | — | string |
-| `source_id` | — | Positive integer Revit ID of the source group for group-elements or family instance for nested-family. Default null is valid for name-based relations; these two ID-based relations require a value.（any） |
-| `source_name` | — | Exact, case-insensitive source name: a level for level-rooms, area scheme for area-scheme-elements, or view template for view-template-dependents. Default null is valid for ID-based relations; name-based relations require a value from the catalog.（any） |
+| `relation` ✔ | — | 关系种类：level-rooms / area-scheme-elements / group-elements / nested-family / view-template-dependents（string） |
+| `source_id` | — | 源对象的 Revit ID（组或族实例）（any） |
+| `source_name` | — | 源对象名称（标高、面积方案或视图样板）（any） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

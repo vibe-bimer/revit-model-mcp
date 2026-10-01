@@ -11,12 +11,12 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `family` ✔ | — | Place a loaded unhosted family on a named level for layout.（string） |
-| `level` ✔ | — | Place a loaded unhosted family on a named level for layout.（string） |
-| `type_name` ✔ | — | any |
+| `family` ✔ | — | 族名称（string） |
+| `level` ✔ | — | 标高名称（用 revit_list_catalog 查到的本地化名称）（string） |
+| `type_name` ✔ | — | 类型名称（与族一起定位）（any） |
 | `x_mm` ✔ | — | 模型 X 坐标（mm）（number） |
 | `y_mm` ✔ | — | 模型 Y 坐标（mm）（number） |
-| `dry_run` | `false` | boolean |
+| `dry_run` | `false` | 彩排：执行后回滚，返回同样的校验块，不写模型（boolean） |
 | `rotation_deg` | `0` | 绕 Z 轴旋转角度（°）（number） |
 
 ??? note "通用参数"

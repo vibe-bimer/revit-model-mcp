@@ -8,7 +8,7 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `view` ✔ | — | Required exact, case-sensitive non-template view name from revit_list_views, or its Revit view ID as a decimal string; no default. An exact name takes precedence over interpreting a numeric string as an ID.（string） |
+| `view` ✔ | — | 视图名称（或视图 ID）（string） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

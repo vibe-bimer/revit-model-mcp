@@ -11,10 +11,10 @@ Set a named instance parameter, falling back to its shared type; use for edits, 
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `element_id` ✔ | — | integer |
-| `parameter` ✔ | — | Set a named instance parameter, falling back to its shared type; use for edits, with length in mm, area in m2 and other doubles in internal units.（string） |
-| `value` ✔ | — | string |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `element_id` ✔ | — | one element id（integer） |
+| `parameter` ✔ | — | parameter name as the model reports it（string） |
+| `value` ✔ | — | value to write; lengths in millimetres, areas in m², other doubles in internal units（string） |
+| `dry_run` | `false` | rehearse: execute, return the same verification block, then roll back（boolean） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

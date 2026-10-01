@@ -11,7 +11,7 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `element_id` ✔ | — | Required positive integer Revit element ID from revit_query_elements or revit_view_elements; no default. The ID must exist in the target document.（integer） |
+| `element_id` ✔ | — | 单个构件的 Revit ID（integer） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

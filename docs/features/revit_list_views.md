@@ -8,8 +8,8 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `name_contains` | — | Case-insensitive substring of the view name. Default null applies no name filter; combines with view_type and excludes templates.（any） |
-| `view_type` | — | English Revit ViewType name, such as FloorPlan or ThreeD, matched case-insensitively. Default null includes all non-template view types; combines with name_contains.（any） |
+| `name_contains` | — | 按名称子串过滤（any） |
+| `view_type` | — | 视图类型（如 FloorPlan、ThreeD）（any） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

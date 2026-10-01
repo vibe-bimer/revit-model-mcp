@@ -11,15 +11,15 @@ Give every component new IDs by copying a 3D view's selectable elements into a n
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `destination_path` ✔ | — | string |
-| `copies` | `1` | integer |
-| `dry_run` | `false` | boolean |
-| `duplicate_names` | `"override"` | string |
-| `overwrite` | `false` | boolean |
-| `remove_template_levels` | `true` | boolean |
-| `seed` | `0` | integer |
-| `template_path` | — | any |
-| `view` | — | Give every component new IDs by copying a 3D view's selectable elements into a new model, because Revit does not allow assigning an element ID.（any） |
+| `destination_path` ✔ | — | new model path (.rvt); {n} numbers the copies（string） |
+| `copies` | `1` | how many copies one new model produces (1–50), each in an id block of its own（integer） |
+| `dry_run` | `false` | rehearse: copy, report the mapping, then roll back without writing（boolean） |
+| `duplicate_names` | `"override"` | duplicate names: override keeps the source types, reuse keeps the version the new model holds (the batch default), rename is the legacy path（string） |
+| `overwrite` | `false` | replace the destination when it exists（boolean） |
+| `remove_template_levels` | `true` | drop the template levels after copying (on by default)（boolean） |
+| `seed` | `0` | push the ids N forward before copying, to reserve a block per run（integer） |
+| `template_path` | — | starting template (.rte/.rvt); the metric template is used when omitted（any） |
+| `view` | — | view name (or its Revit id)（any） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

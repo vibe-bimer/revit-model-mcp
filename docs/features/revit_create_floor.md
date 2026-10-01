@@ -12,9 +12,9 @@
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
 | `floor_type` ✔ | — | points_mm are model XY polygon vertices in millimetres (at least 3; the boundary closes automatically); null floor_type chooses the first floor type.（any） |
-| `level` ✔ | — | Create a floor from a closed boundary for layout on a named level.（string） |
+| `level` ✔ | — | 标高名称（用 revit_list_catalog 查到的本地化名称）（string） |
 | `points_mm` ✔ | — | points_mm are model XY polygon vertices in millimetres (at least 3; the boundary closes automatically); null floor_type chooses the first floor type.（array） |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `dry_run` | `false` | 彩排：执行后回滚，返回同样的校验块，不写模型（boolean） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

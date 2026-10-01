@@ -8,8 +8,8 @@ Group model warnings by description text.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `include_elements` | `false` | Whether warning groups include affected elements with ID, category and name. Default false returns counts without element rows; combine true with warning_text to inspect one group.（boolean） |
-| `warning_text` | — | Exact warning description from revit_list_warnings, matched case-insensitively. Default null includes all warning groups; an unmatched supplied text raises an error.（any） |
+| `include_elements` | `false` | include the affected elements with id, category and name（boolean） |
+| `warning_text` | — | restrict to one warning group by its text（any） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

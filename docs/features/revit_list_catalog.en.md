@@ -11,7 +11,7 @@ Discover valid model names before filtering.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `section` ✔ | — | string |
+| `section` ✔ | — | which catalogue to list: categories, family types, levels, area schemes, views, worksets, phases or parameters（string） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

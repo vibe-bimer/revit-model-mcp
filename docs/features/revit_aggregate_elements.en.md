@@ -11,16 +11,16 @@ Summarize matching elements by one or two fields after revit_list_catalog.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `group_by` ✔ | — | Required list of one or two distinct system fields (e.g. category, family, type, level) or exact localized parameter names from the catalog; no default. Each combination produces a count, with numeric totals added by sum_field.（array） |
+| `group_by` ✔ | — | one or two grouping fields: category, family, type, level or a parameter name（array） |
 | `area_scheme` | — | Exact area-scheme name from the area-schemes catalog, matched case-insensitively. Default null applies no scheme filter; selecting a scheme restricts results to its areas and combines with the other filters.（any） |
 | `categories` | — | category filter (several are combined with OR)（any） |
 | `family` | — | family name filter（any） |
-| `level` | — | any |
-| `parameter_filters` | — | AND-combined objects with an exact localized parameter name in parameter, an operator (equals, contains, greater, less, empty, not-empty, exists), and value for comparisons; default null applies no parameter filters. Numeric values use mm, m2, m3 or other document display units; contains requires text, and empty/not-empty/exists need no value.（any） |
+| `level` | — | level name, as revit_list_catalog reports it（any） |
+| `parameter_filters` | — | parameter filters: equals, contains, greater, less, empty, not-empty or exists（any） |
 | `phase` | — | phase filter（any） |
-| `sum_field` | — | Numeric system field or exact localized parameter name to sum and average within each group. Default null omits numeric aggregation; lengths use mm, areas m2, volumes m3, and other quantities use the returned unit.（any） |
-| `type_name` | — | Exact type name to match, case-insensitively, combined with the other model filters. Default null applies no type filter; discover names with the family-types catalog.（any） |
-| `view` | — | Exact non-template view name from the views catalog, matched case-insensitively, to restrict the element collector. Default null searches the document without a view filter; combines with the other model filters.（any） |
+| `sum_field` | — | numeric field or parameter to total, with sum and average（any） |
+| `type_name` | — | type name, together with the family（any） |
+| `view` | — | view name (or its Revit id)（any） |
 | `workset` | — | workset filter（any） |
 
 ??? note "Common parameters"

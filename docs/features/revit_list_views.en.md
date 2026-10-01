@@ -8,8 +8,8 @@ Find non-template views before analyzing a view.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `name_contains` | — | Case-insensitive substring of the view name. Default null applies no name filter; combines with view_type and excludes templates.（any） |
-| `view_type` | — | English Revit ViewType name, such as FloorPlan or ThreeD, matched case-insensitively. Default null includes all non-template view types; combines with name_contains.（any） |
+| `name_contains` | — | filter by a substring of the name（any） |
+| `view_type` | — | view type, for example FloorPlan or ThreeD（any） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

@@ -12,9 +12,9 @@
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
 | `created_phase` ✔ | — | 创建阶段名；空串清除、null 不变（any） |
-| `demolished_phase` ✔ | — | any |
+| `demolished_phase` ✔ | — | 拆除阶段名；空串清除该标记、null 不变（any） |
 | `element_ids` ✔ | — | 要改阶段的构件 ID（array） |
-| `dry_run` | `false` | boolean |
+| `dry_run` | `false` | 彩排：执行后回滚，返回同样的校验块，不写模型（boolean） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

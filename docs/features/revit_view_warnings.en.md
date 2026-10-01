@@ -8,7 +8,7 @@ Read warnings involving elements present in a selected view.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `view` ✔ | — | Required exact, case-sensitive non-template view name from revit_list_views, or its Revit view ID as a decimal string; no default. An exact name takes precedence over interpreting a numeric string as an ID.（string） |
+| `view` ✔ | — | view name (or its Revit id)（string） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

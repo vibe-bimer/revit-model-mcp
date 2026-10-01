@@ -9,10 +9,10 @@
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
 | `end_mm` ✔ | — | 终点坐标 [x, y]（mm）（array） |
-| `level` ✔ | — | Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type.（string） |
+| `level` ✔ | — | 标高名称（用 revit_list_catalog 查到的本地化名称）（string） |
 | `start_mm` ✔ | — | 起点坐标 [x, y]（mm）（array） |
 | `wall_type` ✔ | — | Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type.（any） |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `dry_run` | `false` | 彩排：执行后回滚，返回同样的校验块，不写模型（boolean） |
 | `height_mm` | `3000` | 墙高（mm，默认 3000）（number） |
 
 ??? note "通用参数"

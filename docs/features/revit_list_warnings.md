@@ -8,8 +8,8 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `include_elements` | `false` | Whether warning groups include affected elements with ID, category and name. Default false returns counts without element rows; combine true with warning_text to inspect one group.（boolean） |
-| `warning_text` | — | Exact warning description from revit_list_warnings, matched case-insensitively. Default null includes all warning groups; an unmatched supplied text raises an error.（any） |
+| `include_elements` | `false` | 是否返回受影响构件（ID、类别、名称）（boolean） |
+| `warning_text` | — | 只处理这一条警告文本的组（any） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

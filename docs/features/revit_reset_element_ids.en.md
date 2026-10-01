@@ -11,8 +11,8 @@ Replace elements with copies so Revit assigns new element IDs; the API cannot as
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `element_ids` ✔ | — | array |
-| `dry_run` | `false` | boolean |
+| `element_ids` ✔ | — | elements to replace; hosted, dependent, grouped or MEP system members are refused（array） |
+| `dry_run` | `false` | rehearse: replace, report the mapping, then roll back（boolean） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

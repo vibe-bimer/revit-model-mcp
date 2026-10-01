@@ -11,17 +11,17 @@ Read a page of matching element rows after revit_list_catalog.
 | `area_scheme` | — | Exact area-scheme name from the area-schemes catalog, matched case-insensitively. Default null applies no scheme filter; selecting a scheme restricts results to its areas and combines with the other filters.（any） |
 | `categories` | — | category filter (several are combined with OR)（any） |
 | `family` | — | family name filter（any） |
-| `fields` | — | any |
-| `include_geometry` | `false` | Whether each query row includes available location, boundingBox and placed-room roomCenterMm coordinates in model millimetres, rounded to one decimal. Default false omits geometry; true increases the response size.（boolean） |
+| `fields` | — | fields to return; the tool picks its usual ones by default（any） |
+| `include_geometry` | `false` | include location, bounding box and the placing room centre in model millimetres（boolean） |
 | `level` | — | level filter（any） |
-| `limit` | `100` | integer |
-| `offset` | `0` | integer |
-| `parameter_filters` | — | AND-combined objects with an exact localized parameter name in parameter, an operator (equals, contains, greater, less, empty, not-empty, exists), and value for comparisons; default null applies no parameter filters. Numeric values use mm, m2, m3 or other document display units; contains requires text, and empty/not-empty/exists need no value.（any） |
+| `limit` | `100` | rows per page（integer） |
+| `offset` | `0` | first row to return, for paging with limit（integer） |
+| `parameter_filters` | — | parameter filters: equals, contains, greater, less, empty, not-empty or exists（any） |
 | `phase` | — | phase filter（any） |
-| `sort_direction` | `"asc"` | Sort order: asc or desc, case-insensitively; default asc means ascending. Applies to sort_field before offset and limit.（string） |
-| `sort_field` | `"id"` | System field (e.g. id, category, level) or exact localized parameter name to sort before pagination; default id sorts by Revit element ID. Uses sort_direction, with element ID breaking ties for other fields.（string） |
-| `type_name` | — | Exact type name to match, case-insensitively, combined with the other model filters. Default null applies no type filter; discover names with the family-types catalog.（any） |
-| `view` | — | Exact non-template view name from the views catalog, matched case-insensitively, to restrict the element collector. Default null searches the document without a view filter; combines with the other model filters.（any） |
+| `sort_direction` | `"asc"` | sort direction: asc or desc（string） |
+| `sort_field` | `"id"` | field to sort by (element id by default)（string） |
+| `type_name` | — | type name, together with the family（any） |
+| `view` | — | view name (or its Revit id)（any） |
 | `workset` | — | workset filter（any） |
 
 ??? note "Common parameters"

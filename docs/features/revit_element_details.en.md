@@ -11,7 +11,7 @@ Read parameters and geometry of an element by Revit ID.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `element_id` ✔ | — | Required positive integer Revit element ID from revit_query_elements or revit_view_elements; no default. The ID must exist in the target document.（integer） |
+| `element_id` ✔ | — | one element id（integer） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

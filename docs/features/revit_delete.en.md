@@ -11,8 +11,8 @@ Delete elements and their Revit dependencies when removal is intended; IDs are u
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `element_ids` ✔ | — | array |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `element_ids` ✔ | — | element ids (unitless Revit ids)（array） |
+| `dry_run` | `false` | rehearse: execute, return the same verification block, then roll back（boolean） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

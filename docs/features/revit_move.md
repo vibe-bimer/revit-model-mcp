@@ -14,7 +14,7 @@
 | `dx_mm` ✔ | — | Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets in millimetres on model axes.（number） |
 | `dy_mm` ✔ | — | Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets in millimetres on model axes.（number） |
 | `element_ids` ✔ | — | 要移动的构件 ID（array） |
-| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
+| `dry_run` | `false` | 彩排：执行后回滚，返回同样的校验块，不写模型（boolean） |
 | `dz_mm` | `0` | Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets in millimetres on model axes.（number） |
 
 ??? note "通用参数"

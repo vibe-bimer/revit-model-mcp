@@ -11,12 +11,12 @@ Place a loaded unhosted family on a named level for layout.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `family` ✔ | — | Place a loaded unhosted family on a named level for layout.（string） |
-| `level` ✔ | — | Place a loaded unhosted family on a named level for layout.（string） |
-| `type_name` ✔ | — | any |
+| `family` ✔ | — | family name（string） |
+| `level` ✔ | — | level name, as revit_list_catalog reports it（string） |
+| `type_name` ✔ | — | type name, together with the family（any） |
 | `x_mm` ✔ | — | model X in millimetres（number） |
 | `y_mm` ✔ | — | model Y in millimetres（number） |
-| `dry_run` | `false` | boolean |
+| `dry_run` | `false` | rehearse: execute, return the same verification block, then roll back（boolean） |
 | `rotation_deg` | `0` | rotation about Z in degrees（number） |
 
 ??? note "Common parameters"

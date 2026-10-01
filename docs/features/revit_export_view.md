@@ -8,9 +8,9 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `view` ✔ | — | Required exact, case-sensitive non-template view name from revit_list_views, or its Revit view ID as a decimal string; no default. An exact name takes precedence over interpreting a numeric string as an ID.（string） |
-| `pixel_size` | `1600` | PNG size in pixels along the fitted image dimension, an integer from 1 to 4000. Default 1600 fits the view at that size while preserving its aspect ratio.（integer） |
-| `save_to` | — | New PNG file path on the MCP client machine, not the Revit host; an existing destination causes an error. Default null downloads to a local temporary directory and returns localPath.（any） |
+| `view` ✔ | — | 视图名称（或视图 ID）（string） |
+| `pixel_size` | `1600` | 输出图片长边像素（1–4000）（integer） |
+| `save_to` | — | 工作站上的输出路径；文件已存在会报错（any） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

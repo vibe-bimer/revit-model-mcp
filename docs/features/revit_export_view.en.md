@@ -8,9 +8,9 @@ Export a selected view to PNG when numbers do not explain geometry.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `view` ✔ | — | Required exact, case-sensitive non-template view name from revit_list_views, or its Revit view ID as a decimal string; no default. An exact name takes precedence over interpreting a numeric string as an ID.（string） |
-| `pixel_size` | `1600` | PNG size in pixels along the fitted image dimension, an integer from 1 to 4000. Default 1600 fits the view at that size while preserving its aspect ratio.（integer） |
-| `save_to` | — | New PNG file path on the MCP client machine, not the Revit host; an existing destination causes an error. Default null downloads to a local temporary directory and returns localPath.（any） |
+| `view` ✔ | — | view name (or its Revit id)（string） |
+| `pixel_size` | `1600` | pixels along the fitted image dimension (1–4000)（integer） |
+| `save_to` | — | output path on the Revit workstation; an existing file is an error（any） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

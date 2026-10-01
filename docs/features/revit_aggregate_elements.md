@@ -15,12 +15,12 @@
 | `area_scheme` | — | Exact area-scheme name from the area-schemes catalog, matched case-insensitively. Default null applies no scheme filter; selecting a scheme restricts results to its areas and combines with the other filters.（any） |
 | `categories` | — | 类别过滤（可多个，取并集）（any） |
 | `family` | — | 族名过滤（any） |
-| `level` | — | any |
+| `level` | — | 标高名称（用 revit_list_catalog 查到的本地化名称）（any） |
 | `parameter_filters` | — | 参数过滤条件（equals/contains/greater/less/empty/not-empty/exists）（any） |
 | `phase` | — | 阶段过滤（any） |
 | `sum_field` | — | 需要求和的数值字段或参数名，附带 sum/average（any） |
-| `type_name` | — | Exact type name to match, case-insensitively, combined with the other model filters. Default null applies no type filter; discover names with the family-types catalog.（any） |
-| `view` | — | Exact non-template view name from the views catalog, matched case-insensitively, to restrict the element collector. Default null searches the document without a view filter; combines with the other model filters.（any） |
+| `type_name` | — | 类型名称（与族一起定位）（any） |
+| `view` | — | 视图名称（或视图 ID）（any） |
 | `workset` | — | 工作集过滤（any） |
 
 ??? note "通用参数"

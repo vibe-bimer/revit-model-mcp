@@ -13,7 +13,7 @@ Merge one project phase into another by moving every element reference.
 | --- | --- | --- |
 | `source_phase` ✔ | — | the phase that is merged away and then deleted（string） |
 | `target_phase` ✔ | — | the phase that receives the references（string） |
-| `dry_run` | `false` | boolean |
+| `dry_run` | `false` | rehearse: execute, return the same verification block, then roll back（boolean） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |
