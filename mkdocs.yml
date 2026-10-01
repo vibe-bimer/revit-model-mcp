@@ -1,7 +1,7 @@
 site_name: Revit Model MCP
-site_url: https://sharafutdinovdi.github.io/revit-model-mcp/
-repo_url: https://github.com/sharafutdinovdi/revit-model-mcp
-repo_name: sharafutdinovdi/revit-model-mcp
+site_url: https://vibe-bimer.github.io/revit-model-mcp/
+repo_url: https://github.com/vibe-bimer/revit-model-mcp
+repo_name: vibe-bimer/revit-model-mcp
 edit_uri: edit/main/docs/
 
 theme:
@@ -13,19 +13,18 @@ theme:
       primary: custom
       toggle:
         icon: material/brightness-7
-        name: 切换到深色 / Switch to dark
+        name: 切换到深色
     - scheme: slate
       primary: custom
       toggle:
         icon: material/brightness-4
-        name: 切换到浅色 / Switch to light
+        name: 切换到浅色
   features:
     - navigation.tabs
     - navigation.sections
     - navigation.top
     - search.suggest
     - content.code.copy
-    - content.action.edit
     - toc.follow
 
 extra_css:
@@ -33,11 +32,16 @@ extra_css:
 hooks:
   - docs/hooks.py
 watch:
-  - README.md
+  - tools/site/content
+  - server/pyproject.toml
   - server/README.md
+  - server/README.zh.md
   - CONTRIBUTING.md
+  - CONTRIBUTING.zh.md
   - CHANGELOG.md
+  - CHANGELOG.zh.md
   - SECURITY.md
+  - SECURITY.zh.md
 exclude_docs: |
   requirements.txt
   hooks.py
@@ -69,7 +73,7 @@ plugins:
   - search
   - i18n:
       docs_structure: suffix
-      fallback_to_default: true
+      fallback_to_default: false
       reconfigure_material: true
       languages:
         - locale: zh
@@ -79,97 +83,136 @@ plugins:
         - locale: en
           name: English
           build: true
+          theme:
+            palette:
+              - scheme: default
+                primary: custom
+                toggle:
+                  icon: material/brightness-7
+                  name: Switch to dark
+              - scheme: slate
+                primary: custom
+                toggle:
+                  icon: material/brightness-4
+                  name: Switch to light
           nav_translations:
             首页: Home
-            指南: Guide
-            服务器（英文）: Server
-            工作原理: How it works
-            传输与接入: Transport
-            安全: Security
-            架构: Architecture
-            参考: Reference
-            读取工具: Read tools
-            动作工具: Action tools
-            实测证据: Validation
-            文件通道格式: Feed format
-            路线图: Roadmap
-            项目: Project
-            隐私: Privacy
-            贡献（英文）: Contributing
-            变更日志（英文）: Changelog
-            安全政策（英文）: Security policy
             功能: Features
-            按版本: By version
-            工具手册: Tools
-            提示词库: Prompts
+            按 Revit 年份: By Revit year
+            读取功能: Read features
+            动作功能: Action features
+            连接与文档: Connection and documents
+            查询与统计: Query and totals
+            视图与截图: Views and snapshots
+            导出与检验: Export and checks
+            选中与显示: Selection and display
+            编辑: Editing
+            阶段: Phases
+            批量与 ID: Batch and IDs
+            接入与使用: Setup and use
+            安装与配置: Installation and configuration
+            传输与接入: Transport and connection
+            工作原理: How it works
+            安全边界: Security boundaries
+            开发与参考: Development and reference
+            架构: Architecture
+            跨工具契约: Cross-tool contracts
+            读取契约: Read contracts
+            动作契约: Action contracts
+            文件通道格式: File channel format
+            工具开发: Tool development
+            新增 Revit 工具: Adding Revit tools
+            领域约定: Domain conventions
+            Issue 管理: Issue management
+            分诊标签: Triage labels
+            验证资料: Validation records
+            实测证据: Validation evidence
+            手工测试计划: Manual test plan
+            ID 重建性能记录: ID rebuild performance record
+            项目: Project
+            更新记录: Changelog
+            路线图: Roadmap
+            贡献指南: Contributing
+            隐私说明: Privacy
+            安全政策: Security policy
 
 nav:
+  - 首页: index.md
   # >>> features-nav
   - 功能:
       - features/index.md
-      - 按版本:
-          - features/v2020.md
-          - features/v2026.md
+      - 按 Revit 年份:
+          - Revit 2020: features/v2020.md
+          - Revit 2026: features/v2026.md
           - features/matrix.md
-      - 工具手册:
+      - 读取功能:
           - 连接与文档:
-              - revit_ping: features/revit_ping.md
-              - revit_document_info: features/revit_document_info.md
-              - revit_list_instances: features/revit_list_instances.md
+              - features/revit_ping.md
+              - features/revit_document_info.md
+              - features/revit_list_instances.md
           - 查询与统计:
-              - revit_list_catalog: features/revit_list_catalog.md
-              - revit_aggregate_elements: features/revit_aggregate_elements.md
-              - revit_query_elements: features/revit_query_elements.md
-              - revit_element_details: features/revit_element_details.md
-              - revit_list_relations: features/revit_list_relations.md
+              - features/revit_list_catalog.md
+              - features/revit_aggregate_elements.md
+              - features/revit_query_elements.md
+              - features/revit_element_details.md
+              - features/revit_list_relations.md
           - 视图与截图:
-              - revit_list_views: features/revit_list_views.md
-              - revit_view_summary: features/revit_view_summary.md
-              - revit_export_view: features/revit_export_view.md
-              - revit_view_elements: features/revit_view_elements.md
-              - revit_view_warnings: features/revit_view_warnings.md
+              - features/revit_list_views.md
+              - features/revit_view_summary.md
+              - features/revit_export_view.md
+              - features/revit_view_elements.md
+              - features/revit_view_warnings.md
           - 导出与检验:
-              - revit_model_health: features/revit_model_health.md
-              - revit_links_status: features/revit_links_status.md
-              - revit_shared_coordinates: features/revit_shared_coordinates.md
-              - revit_parameter_fill_check: features/revit_parameter_fill_check.md
-              - revit_export_element_ids: features/revit_export_element_ids.md
-              - revit_list_warnings: features/revit_list_warnings.md
+              - features/revit_model_health.md
+              - features/revit_links_status.md
+              - features/revit_shared_coordinates.md
+              - features/revit_parameter_fill_check.md
+              - features/revit_export_element_ids.md
+              - features/revit_list_warnings.md
+      - 动作功能:
           - 选中与显示:
-              - revit_select: features/revit_select.md
-              - revit_show: features/revit_show.md
-              - revit_isolate: features/revit_isolate.md
+              - features/revit_select.md
+              - features/revit_show.md
+              - features/revit_isolate.md
           - 编辑:
-              - revit_move: features/revit_move.md
-              - revit_place_family: features/revit_place_family.md
-              - revit_create_wall: features/revit_create_wall.md
-              - revit_create_floor: features/revit_create_floor.md
-              - revit_set_parameter: features/revit_set_parameter.md
-              - revit_delete: features/revit_delete.md
+              - features/revit_move.md
+              - features/revit_place_family.md
+              - features/revit_create_wall.md
+              - features/revit_create_floor.md
+              - features/revit_set_parameter.md
+              - features/revit_delete.md
           - 阶段:
-              - revit_set_phase: features/revit_set_phase.md
-              - revit_merge_phases: features/revit_merge_phases.md
+              - features/revit_set_phase.md
+              - features/revit_merge_phases.md
           - 批量与 ID:
-              - revit_reset_element_ids: features/revit_reset_element_ids.md
-              - revit_rebuild_model_ids: features/revit_rebuild_model_ids.md
-              - revit_batch: features/revit_batch.md
+              - features/revit_reset_element_ids.md
+              - features/revit_rebuild_model_ids.md
+              - features/revit_batch.md
       - features/prompts.md
   # <<< features-nav
-  - 首页: index.md
-  - 指南:
-      - 服务器（英文）: server.md
-      - 工作原理: how-it-works.md
+  - 接入与使用:
+      - 安装与配置: server.md
       - 传输与接入: transport.md
-      - 安全: security.md
+      - 工作原理: how-it-works.md
+      - 安全边界: security.md
+  - 开发与参考:
       - 架构: architecture.md
-  - 参考:
-      - 读取工具: tools.md
-      - 动作工具: actions.md
-      - 实测证据: validation.md
-      - 文件通道格式: feed-format.md
-      - 路线图: roadmap.md
+      - 跨工具契约:
+          - 读取契约: tools.md
+          - 动作契约: actions.md
+          - 文件通道格式: feed-format.md
+      - 工具开发:
+          - 新增 Revit 工具: agents/adding-revit-tools.md
+          - 领域约定: agents/domain.md
+          - Issue 管理: agents/issue-tracker.md
+          - 分诊标签: agents/triage-labels.md
+      - 验证资料:
+          - 实测证据: validation.md
+          - 手工测试计划: manual-test-plan.md
+          - ID 重建性能记录: rebuild-performance.md
   - 项目:
-      - 隐私: privacy.md
-      - 贡献（英文）: contributing.md
-      - 变更日志（英文）: changelog.md
-      - 安全政策（英文）: security-policy.md
+      - 更新记录: changelog.md
+      - 路线图: roadmap.md
+      - 贡献指南: contributing.md
+      - 隐私说明: privacy.md
+      - 安全政策: security-policy.md

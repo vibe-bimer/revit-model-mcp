@@ -1,0 +1,1030 @@
+# 功能文档的内容源：分组、年份状态、一句话说明与提示词。
+# 工具名、参数与只读标记来自同目录的 tools.json（由 MCP 服务器导出），这里只写需要人写的内容。
+# 参数说明的取值顺序：param_notes（按工具）→ param_defaults（按参数名）→ schema 描述 → docstring 句子 → 类型。
+
+groups:
+  connection:
+    zh: 连接与文档
+    en: Connection and documents
+  query:
+    zh: 查询与统计
+    en: Query and totals
+  views:
+    zh: 视图与截图
+    en: Views and snapshots
+  export:
+    zh: 导出与检验
+    en: Export and checks
+  display:
+    zh: 选中与显示
+    en: Selection and display
+  edit:
+    zh: 编辑
+    en: Editing
+  phases:
+    zh: 阶段
+    en: Phases
+  ids:
+    zh: 批量与 ID
+    en: Batch and ids
+tools:
+  revit_ping:
+    group: connection
+    since: 0.1.0
+    title:
+      zh: "检查连接"
+      en: "Check connection"
+    summary:
+      zh: 检查连接与插件版本
+      en: "Check whether the Revit add-in is reachable"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 看看 Revit 插件在不在线
+      en: Is the Revit add-in reachable?
+  revit_document_info:
+    group: connection
+    since: 0.1.0
+    title:
+      zh: "文档概要"
+      en: "Document overview"
+    summary:
+      zh: 当前文档概要：文件名、Revit 版本、标高、面积方案、工作集、视图数
+      en: "Read document metadata, levels, area schemes, worksets and view count"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 当前打开的是哪个模型？有哪些标高？
+      en: Which model is open, and which levels does it have?
+  revit_model_health:
+    group: export
+    since: 0.5.0
+    title:
+      zh: "模型检查"
+      en: "Model health"
+    summary:
+      zh: 交付前体检：文件大小、各类计数、单位设置、数量最多的警告
+      en: "Check file size, model counts, units and frequent warnings"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 做一次交付前体检：文件大小、各类数量、单位设置、最多的警告
+      en: 'Run a pre-handover health check: size, counts, units, top warnings'
+  revit_links_status:
+    group: export
+    since: 0.5.0
+    title:
+      zh: "链接状态"
+      en: "Link status"
+    summary:
+      zh: RVT / CAD / 图片链接的状态、路径与实例数
+      en: "Inspect RVT, CAD and image link status, paths and instance counts"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 检查所有链接是否正常
+      en: 'Check every link: RVT, CAD and images'
+  revit_shared_coordinates:
+    group: export
+    since: 0.6.0
+    title:
+      zh: "共享坐标"
+      en: "Shared coordinates"
+    summary:
+      zh: 项目基点、测量点、场地与链接的位移（mm）/旋转（°）
+      en: "Read base/survey points, sites and link offsets in mm and degrees"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 报告项目的共享坐标和链接位移
+      en: Report the shared coordinates and link offsets
+  revit_parameter_fill_check:
+    group: export
+    since: 0.6.0
+    title:
+      zh: "参数填充检查"
+      en: "Parameter fill check"
+    summary:
+      zh: 参数的填充率：有值 / 空 / 缺失，并给出抽样 ID
+      en: "Count filled, empty and missing parameter values and sample element IDs"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 检查墙的防火等级填充率，给出空值的构件 ID
+      en: How well is the fire rating filled in on walls? Give me the empty ids
+  revit_list_catalog:
+    group: query
+    since: 0.1.0
+    title:
+      zh: "名称目录"
+      en: "Name catalog"
+    summary:
+      zh: 查可用名字：类别、族类型、标高、面积方案、视图、工作集、阶段、参数
+      en: "Discover categories, family types, levels, area schemes, views, worksets, phases and parameters"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 列出这个模型里所有可用的参数名
+      en: List the parameter names this model offers
+    note:
+      zh: 查询与过滤都用这些名字
+      en: Queries and filters use these exact names
+  revit_aggregate_elements:
+    group: query
+    since: 0.1.0
+    title:
+      zh: "分组统计"
+      en: "Grouped totals"
+    summary:
+      zh: 按 1–2 个字段分组统计数量，可附加求和与平均（mm / m² / m³）
+      en: "Group by one or two fields, with counts and optional sum and average"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 统计 1F 上各种墙类型各有多少个
+      en: How many of each wall type sit on 1F?
+    - zh: 按标高统计门的数量和总宽度
+      en: Count the doors per level and their total width
+    note:
+      zh: 回答“有多少”的首选，比逐条取明细快得多
+      en: First choice for “how many” questions
+  revit_query_elements:
+    group: query
+    since: 0.1.0
+    title:
+      zh: "构件查询"
+      en: "Element query"
+    summary:
+      zh: 按类别/族/类型/标高/视图/工作集/参数过滤，分页读取构件明细
+      en: "Filter and page through individual element rows"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 列出 2F 上所有没填防火等级的门，给出 ID
+      en: List the doors on 2F whose fire rating is empty, with ids
+  revit_list_views:
+    group: views
+    since: 0.1.0
+    title:
+      zh: "视图目录"
+      en: "View catalog"
+    summary:
+      zh: 列出视图，可按视图类型与名称过滤
+      en: "List views filtered by type and name"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 列出所有平面视图
+      en: List every floor plan view
+  revit_view_summary:
+    group: views
+    since: 0.1.0
+    title:
+      zh: "视图统计"
+      en: "View summary"
+    summary:
+      zh: 视图元数据 + 类别计数（各有多少、多少种类型）
+      en: "Read view metadata, category counts and number of distinct types"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 三维视图里各类构件分别有多少个？
+      en: What does the 3D view hold, category by category?
+  revit_export_view:
+    group: views
+    since: 0.3.0
+    title:
+      zh: "导出视图图片"
+      en: "Export view image"
+    summary:
+      zh: 把视图导出成 PNG 图片（1–4000 像素）
+      en: "Export a view as a PNG, from 1 to 4000 pixels"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 把 1F 平面导出成 PNG，宽度 2000 像素
+      en: Export the 1F plan as a PNG, 2000 pixels wide
+  revit_export_element_ids:
+    group: export
+    since: 0.8.0
+    title:
+      zh: "导出构件 ID 清单"
+      en: "Export element ID register"
+    summary:
+      zh: 把模型中已绘制构件的 ID 清单写成 Excel（类别/族/类型/标高/构件ID/名称/工作集）
+      en: "Write the ID register of drawn model components to an Excel workbook"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把模型中已绘制构件的 ID 清单导出成 Excel，按类别、族、类型排序
+      en: Export the ID register of drawn model components to Excel, ordered by category, family and type
+    note:
+      zh: 文件写到 Revit 工作站上
+      en: The workbook is written on the Revit workstation
+  revit_view_elements:
+    group: views
+    since: 0.2.0
+    title:
+      zh: "视图构件明细"
+      en: "View element rows"
+    summary:
+      zh: 分页读取视图中的构件（可按类别过滤）
+      en: "Page through elements in a selected view, optionally filtered by category"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 把三维视图里的构件列表给我，每页 200 条
+      en: Page through the elements of the 3D view, 200 at a time
+  revit_element_details:
+    group: query
+    since: 0.1.0
+    title:
+      zh: "构件参数与几何"
+      en: "Element details"
+    summary:
+      zh: 单个构件的实例参数、类型参数与几何（mm）
+      en: "Read instance/type parameters and geometry for one element ID"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 把 ID 357640 的构件参数和几何都读出来
+      en: Show every parameter and the geometry of element 357640
+    note:
+      zh: 房间还会返回面积、体积与边界
+      en: Rooms also return area, volume and boundaries
+  revit_view_warnings:
+    group: views
+    since: 0.4.0
+    title:
+      zh: "视图相关警告"
+      en: "View warnings"
+    summary:
+      zh: 只读该视图相关元素的警告
+      en: "Read warnings involving elements present in a selected view"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 这个视图里有哪些警告？
+      en: Which warnings touch this view?
+  revit_list_warnings:
+    group: export
+    since: 0.4.0
+    title:
+      zh: "模型警告"
+      en: "Model warnings"
+    summary:
+      zh: 全模型警告按文本分组，可展开受影响构件
+      en: "Group model warnings by description and inspect affected elements"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 列出数量最多的警告
+      en: Group the model warnings by text
+  revit_list_relations:
+    group: query
+    since: 0.7.0
+    title:
+      zh: "构件关系"
+      en: "Element relations"
+    summary:
+      zh: 关系查询：标高的房间、面积方案成员、组内构件、嵌套族、视图样板依赖
+      en: "Read level rooms, area-scheme membership, group members, nested families and view-template dependents"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 1F 标高上都有哪些房间？
+      en: Which rooms sit on level 1F?
+  revit_list_instances:
+    group: connection
+    since: 0.6.0
+    title:
+      zh: "Revit 实例列表"
+      en: "Revit instance list"
+    summary:
+      zh: 列出在跑的 Revit 实例及其打开的文档
+      en: "List running Revit instances and their active documents"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 现在有几个 Revit 实例？各自打开什么模型？
+      en: Which Revit instances are running, and what does each hold?
+  revit_select:
+    group: display
+    since: 0.1.0
+    title:
+      zh: "选择构件"
+      en: "Select elements"
+    summary:
+      zh: 在 Revit 里选中指定构件（空列表=清除选择）
+      en: "Select elements in Revit; an empty list clears the selection"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 选中 ID 为 123456 的构件
+      en: Select element 123456
+    note:
+      zh: 不改模型
+      en: Does not change the model
+  revit_show:
+    group: display
+    since: 0.2.0
+    title:
+      zh: "定位显示构件"
+      en: "Show elements"
+    summary:
+      zh: 在视图里定位/高亮构件，必要时打开对应视图
+      en: "Locate and highlight elements, opening a suitable view when needed"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 把这几根柱子显示给我看
+      en: Show me those columns in the view
+    note:
+      zh: 不改模型
+      en: Does not change the model
+  revit_isolate:
+    group: display
+    since: 0.2.0
+    title:
+      zh: "临时隔离显示"
+      en: "Temporary isolation"
+    summary:
+      zh: 临时隔离显示（reset=true 恢复）
+      en: "Temporarily isolate selected elements or reset the active view"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 只显示这一层的窗
+      en: Isolate the windows of this level
+    note:
+      zh: 临时效果，不写模型
+      en: Temporary effect only
+  revit_move:
+    group: edit
+    since: 0.1.0
+    title:
+      zh: "移动构件"
+      en: "Move elements"
+    summary:
+      zh: 按模型轴平移构件（mm）
+      en: "Move elements by offsets along model axes in millimetres"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 把这 3 个构件沿 X 移动 500 mm，先彩排
+      en: Move these three elements 500 mm along X, dry run first
+    note:
+      zh: 支持 dry_run
+      en: Supports dry_run
+  revit_place_family:
+    group: edit
+    since: 0.2.0
+    title:
+      zh: "放置非宿主族"
+      en: "Place unhosted family"
+    summary:
+      zh: 在指定标高放置已载入的非宿主族实例，可绕 Z 旋转
+      en: "Place a loaded unhosted family on a named level with optional Z rotation"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 用已载入的非宿主家具族，在 1F 的 (3000, 4000) 放置一个实例，先彩排
+      en: Place an instance of a loaded unhosted furniture family at 3000,4000 on 1F, dry run first
+    note:
+      zh: 2026 未真机验证
+      en: Not run live on 2026
+  revit_create_wall:
+    group: edit
+    since: 0.2.0
+    title:
+      zh: "创建直墙"
+      en: "Create straight wall"
+    summary:
+      zh: 按两点建直墙（mm，指定标高、墙类型、高度）
+      en: "Create a wall from two XY points, a level, type and height"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 在 1F 从 (0,0) 到 (6000,0) 建一道 200mm 墙
+      en: Draw a 200 mm wall on 1F from 0,0 to 6000,0
+  revit_create_floor:
+    group: edit
+    since: 0.2.0
+    title:
+      zh: "创建楼板"
+      en: "Create floor"
+    summary:
+      zh: 按闭合轮廓建楼板（至少 3 个顶点，mm）
+      en: "Create a floor from a closed XY boundary with at least three vertices"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 用这四个点在 2F 建一块楼板
+      en: Create a floor on 2F from these four points
+    note:
+      zh: 2020 走 Document.Create.NewFloor，2022+ 走 Floor.Create
+      en: On 2020 it uses Document.Create.NewFloor, from 2022 Floor.Create
+  revit_set_phase:
+    group: phases
+    since: 0.3.0
+    title:
+      zh: "设置构件阶段"
+      en: "Set element phases"
+    summary:
+      zh: 赋创建阶段 / 拆除阶段（空串清除，null 不变）
+      en: "Assign created/demolished phases; an empty string clears and null leaves unchanged"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把这些构件标成在“现有”阶段拆除
+      en: Mark these elements as demolished in the Existing phase
+    note:
+      zh: 阶段顺序检查的 API 只在 2022+ ，2020 走兜底
+      en: The phase order API exists from 2022; 2020 uses a fallback
+  revit_merge_phases:
+    group: phases
+    since: 0.3.0
+    title:
+      zh: "合并项目阶段"
+      en: "Merge project phases"
+    summary:
+      zh: 把一个阶段的引用并入另一个阶段并删除空阶段
+      en: "Reassign references to another phase and attempt to delete the emptied phase"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把“阶段 1”合并进“新构造”
+      en: Merge phase 1 into New Construction
+    note:
+      zh: 不可放进 batch
+      en: Cannot run inside batch
+  revit_set_parameter:
+    group: edit
+    since: 0.1.0
+    title:
+      zh: "修改参数"
+      en: "Edit parameter"
+    summary:
+      zh: 按参数名写值（长度 mm、面积 m²，其余按内部单位）
+      en: "Set a named parameter; lengths use mm, areas m² and other doubles internal units"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 把这些墙的防火等级改成 2 小时
+      en: Set the fire rating of these walls to two hours
+    note:
+      zh: 支持 dry_run
+      en: Supports dry_run
+  revit_delete:
+    group: edit
+    since: 0.1.0
+    title:
+      zh: "删除构件"
+      en: "Delete elements"
+    summary:
+      zh: 删除构件及其依赖
+      en: "Delete selected elements and their Revit dependencies"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 删掉这两个构件，先彩排
+      en: Delete these two elements, dry run first
+    note:
+      zh: 支持 dry_run
+      en: Supports dry_run
+  revit_reset_element_ids:
+    group: ids
+    since: 0.8.0
+    title:
+      zh: "同文档替换 ID"
+      en: "Replace IDs in place"
+    summary:
+      zh: 同文档内换 ID：只对无宿主、无依赖的独立构件有效
+      en: "Replace eligible standalone elements with copies to obtain new IDs"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 给选中的这 27 个独立构件换新 ID
+      en: Give these 27 standalone components new ids
+    note:
+      zh: 先运行 dry_run；有宿主、有依赖、成组或属于 MEP 系统的构件会被拒绝
+      en: Run dry_run first; hosted, dependent, grouped and MEP-system elements are refused
+  revit_rebuild_model_ids:
+    group: ids
+    since: 0.8.0
+    title:
+      zh: "新模型重建 ID"
+      en: "Rebuild IDs in new models"
+    summary:
+      zh: 整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型
+      en: "Copy selectable 3D-view components into one or more new models with fresh IDs"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把当前三维视图里能选中的构件重建到 E:\out\copy-{n}.rvt，出 10 份，每份 ID 都不要重复
+      en: Rebuild the selectable components into E:\out\copy-{n}.rvt, ten copies, no id shared between them
+    - zh: 先彩排一次重建，告诉我多少个构件、新 ID 范围，先不要写文件
+      en: 'Rehearse the rebuild first: how many components, which new id range, write nothing yet'
+    note:
+      zh: 源模型不变；仅复制三维视图可选构件及必要基准，不是完整项目克隆；逐份检查数量与 ID 映射
+      en: The source stays unchanged; only selectable 3D-view elements and required datums are copied, not the full project; check every count and ID mapping
+  revit_batch:
+    group: ids
+    since: 0.2.0
+    title:
+      zh: "批量动作"
+      en: "Batch actions"
+    summary:
+      zh: 1–50 步动作合并成一次撤销（revit_batch）
+      en: "Execute 1–50 actions as one undo step and roll back on the first failed step"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 把这 10 个构件一起移动并改参数，做成一次撤销
+      en: Move and retag these ten elements as one undo step
+    - zh: 把这一批修改先用 dry_run 演示一遍
+      en: Show this batch of changes as a dry run first
+    note:
+      zh: 任一步首次失败都整体回滚
+      en: Rolls the whole batch back when a step fails
+year_notes:
+  '2020':
+    zh:
+    - 建楼板走 `Document.Create.NewFloor`（`Floor.Create` 从 2022 才有）
+    - 阶段赋值的顺序检查在 2020 走兜底（相关 API 只在 2022+ 暴露）
+    en:
+    - Floors are created through `Document.Create.NewFloor`; `Floor.Create` starts at 2022
+    - The phase order check falls back on 2020, because its API only appears from 2022
+  '2026':
+    zh:
+    - 建楼板走 `Floor.Create`，参数与 2020 一致
+    - 阶段直接使用 2022+ 暴露的 API，不再需要顺序检查兜底
+    en:
+    - Floors go through `Floor.Create`; parameters match 2020
+    - Phases use the API that appears from 2022, with no order-check fallback
+param_notes:
+  revit_rebuild_model_ids:
+    destination_path:
+      zh: 新模型路径（.rvt）；含 {n} 时按份编号
+      en: new model path (.rvt); {n} numbers the copies
+    copies:
+      zh: 一份新模型连续出多少份（1–50），每份 ID 区间互不重叠
+      en: how many copies one new model produces (1–50), each in an id block of its own
+    duplicate_names:
+      zh: 重名处理：override 保留源类型、reuse 沿用新模型版本（批量默认）、rename 旧回退路径
+      en: 'duplicate names: override keeps the source types, reuse keeps the version the new model holds (the batch default), rename is the legacy path'
+    seed:
+      zh: 先创建并移除 N 个临时标高以推进新文档 ID；不同运行使用不同 seed，是否重叠仍须核对映射
+      en: create and remove N temporary levels to advance new-document IDs; use different seeds across runs and verify overlap in the mappings
+    dry_run:
+      zh: 彩排：在临时新文档中复制并给出映射，不保存目标文件；源模型始终不变
+      en: 'rehearse in a temporary new document and report the mapping without saving; the source always stays unchanged'
+  revit_batch:
+    steps:
+      zh: 1–50 个动作步骤；任一步首次失败都整体回滚
+      en: one to fifty action steps; the batch rolls back when a step fails
+    dry_run:
+      zh: 彩排：执行后回滚，返回同样的校验块
+      en: 'rehearse: execute, return the same verification block, then roll back'
+  revit_aggregate_elements:
+    group_by:
+      zh: 1–2 个分组字段（category/family/type/level 或参数名）
+      en: 'one or two grouping fields: category, family, type, level or a parameter name'
+    sum_field:
+      zh: 需要求和的数值字段或参数名，附带 sum/average
+      en: numeric field or parameter to total, with sum and average
+    parameter_filters:
+      zh: 参数过滤条件（equals/contains/greater/less/empty/not-empty/exists）
+      en: 'parameter filters: equals, contains, greater, less, empty, not-empty or exists'
+    categories:
+      zh: 类别过滤（可多个，取并集）
+      en: category filter (several are combined with OR)
+    family:
+      zh: 族名过滤
+      en: family name filter
+    phase:
+      zh: 阶段过滤
+      en: phase filter
+    workset:
+      zh: 工作集过滤
+      en: workset filter
+  revit_query_elements:
+    fields:
+      zh: 要返回的字段；缺省返回常用字段
+      en: fields to return; the tool picks its usual ones by default
+    limit:
+      zh: 每页条数（配合 offset 分页）
+      en: rows per page
+    include_geometry:
+      zh: 是否返回位置、包围盒与所在房间中心（模型 mm）
+      en: include location, bounding box and the placing room centre in model millimetres
+    sort_field:
+      zh: 排序字段（默认按构件 ID）
+      en: field to sort by (element id by default)
+    categories:
+      zh: 类别过滤（可多个，取并集）
+      en: category filter (several are combined with OR)
+    family:
+      zh: 族名过滤
+      en: family name filter
+    level:
+      zh: 标高过滤
+      en: level filter
+    phase:
+      zh: 阶段过滤
+      en: phase filter
+    workset:
+      zh: 工作集过滤
+      en: workset filter
+  revit_export_view:
+    save_to:
+      zh: MCP 客户端机器上的新 PNG 文件路径，不是 Revit 工作站路径；文件已存在会报错
+      en: New PNG path on the MCP client machine, not the Revit workstation; an existing file is an error
+  revit_export_element_ids:
+    fields:
+      zh: 要写进表格的列；缺省为 类别/族/类型/标高/构件ID/名称/工作集
+      en: columns to write; the defaults are category, family, type, level, component id, name and workset
+    save_to:
+      zh: 工作站上的 xlsx 绝对路径；文件已存在会报错
+      en: absolute .xlsx path on the Revit workstation; an existing file is an error
+  revit_reset_element_ids:
+    element_ids:
+      zh: 要换 ID 的构件；有宿主、有依赖、成组或属于 MEP 系统的会被拒绝
+      en: elements to replace; hosted, dependent, grouped or MEP system members are refused
+    dry_run:
+      zh: 彩排：替换后回滚，先跑一次看哪些构件不合格
+      en: 'rehearse: replace, report the mapping, then roll back'
+  revit_parameter_fill_check:
+    include_types:
+      zh: 实例上找不到参数时，是否回退到类型参数（默认 true）；不是把类型元素额外计数
+      en: fall back to type parameters when absent on the instance (true by default); does not add type elements to the count
+    level:
+      zh: 只统计该标高上的构件
+      en: restrict to one level
+    workset:
+      zh: 只统计该工作集里的构件
+      en: restrict to one workset
+  revit_view_elements:
+    categories:
+      zh: 只列出这些类别的构件
+      en: only list these categories
+  revit_select:
+    element_ids:
+      zh: 要选中的构件 ID；传空列表清除选择
+      en: element ids to select; an empty list clears the selection
+  revit_show:
+    element_ids:
+      zh: 要在视图里显示/选中的构件 ID
+      en: element ids to show and select
+    select:
+      zh: false 时只定位不改变当前选择
+      en: false locates the elements without changing the selection
+  revit_isolate:
+    element_ids:
+      zh: 要隔离显示的构件 ID；配合 reset=true 恢复
+      en: element ids to isolate; combine with reset=true to restore
+  revit_move:
+    element_ids:
+      zh: 要移动的构件 ID
+      en: element ids to move
+  revit_place_family:
+    x_mm:
+      zh: 模型 X 坐标（mm）
+      en: model X in millimetres
+    y_mm:
+      zh: 模型 Y 坐标（mm）
+      en: model Y in millimetres
+    rotation_deg:
+      zh: 绕 Z 轴旋转角度（°）
+      en: rotation about Z in degrees
+  revit_create_wall:
+    start_mm:
+      zh: 起点坐标 [x, y]（mm）
+      en: start point [x, y] in millimetres
+    end_mm:
+      zh: 终点坐标 [x, y]（mm）
+      en: end point [x, y] in millimetres
+    height_mm:
+      zh: 墙高（mm，默认 3000）
+      en: wall height in millimetres (3000 by default)
+  revit_set_phase:
+    element_ids:
+      zh: 要改阶段的构件 ID
+      en: element ids whose phase changes
+    created_phase:
+      zh: 创建阶段名；空串清除、null 不变
+      en: created phase name; an empty string clears it, null leaves it
+    demolished_phase:
+      zh: 拆除阶段名；空串清除该标记、null 不变
+      en: demolished phase name; an empty string clears it, null leaves it unchanged
+  revit_merge_phases:
+    source_phase:
+      zh: 被合并掉的阶段名（合并后删除）
+      en: the phase that is merged away and then deleted
+    target_phase:
+      zh: 接收引用的阶段名
+      en: the phase that receives the references
+param_defaults:
+  element_ids:
+    zh: 构件 ID 列表（无单位的 Revit ID）
+    en: element ids (unitless Revit ids)
+  level:
+    zh: 标高名称（用 revit_list_catalog 查到的本地化名称）
+    en: level name, as revit_list_catalog reports it
+  workset:
+    zh: 工作集名称
+    en: workset name
+  view:
+    zh: 视图名称（或视图 ID）
+    en: view name (or its Revit id)
+  family:
+    zh: 族名称
+    en: family name
+  type_name:
+    zh: 类型名称（与族一起定位）
+    en: type name, together with the family
+  categories:
+    zh: 类别名称列表（取并集）
+    en: category names, combined with OR
+  section:
+    zh: 要列出的目录种类：类别/族类型/标高/面积方案/视图/工作集/阶段/参数
+    en: 'which catalogue to list: categories, family types, levels, area schemes, views, worksets, phases or parameters'
+  fields:
+    zh: 要返回或写入的字段；缺省用该工具的常用字段
+    en: fields to return or write; the tool picks its usual ones by default
+  limit:
+    zh: 每页条数
+    en: rows per page
+  offset:
+    zh: 从第几条开始（配合 limit 分页）
+    en: first row to return, for paging with limit
+  sort_field:
+    zh: 排序字段
+    en: field to sort by
+  sort_direction:
+    zh: 排序方向：asc / desc
+    en: 'sort direction: asc or desc'
+  steps:
+    zh: 1–50 个动作步骤；任一步首次失败都整体回滚
+    en: one to fifty action steps; the batch rolls back when a step fails
+  dry_run:
+    zh: 彩排：执行后回滚，返回同样的校验块，不写模型
+    en: 'rehearse: execute, return the same verification block, then roll back'
+  overwrite:
+    zh: 目标文件已存在时覆盖
+    en: replace the destination when it exists
+  name_contains:
+    zh: 按名称子串过滤
+    en: filter by a substring of the name
+  view_type:
+    zh: 视图类型（如 FloorPlan、ThreeD）
+    en: view type, for example FloorPlan or ThreeD
+  warning_text:
+    zh: 只处理这一条警告文本的组
+    en: restrict to one warning group by its text
+  include_elements:
+    zh: 是否返回受影响构件（ID、类别、名称）
+    en: include the affected elements with id, category and name
+  include_geometry:
+    zh: 是否返回位置、包围盒与所在房间中心（模型 mm）
+    en: include location, bounding box and the placing room centre in model millimetres
+  phase:
+    zh: 阶段名称
+    en: phase name
+  parameter_filters:
+    zh: 参数过滤条件（equals / contains / greater / less / empty / not-empty / exists）
+    en: 'parameter filters: equals, contains, greater, less, empty, not-empty or exists'
+  parameters:
+    zh: 要统计的参数名列表
+    en: parameter names to count
+  sample_limit:
+    zh: 每个参数最多返回多少个抽样 ID
+    en: how many sample ids to return per parameter
+  template_path:
+    zh: 起始样板文件（.rte/.rvt）路径；缺省用公制样板
+    en: starting template (.rte/.rvt); the metric template is used when omitted
+  remove_template_levels:
+    zh: 复制后删掉样板自带标高（默认删）
+    en: drop the template levels after copying (on by default)
+  pixel_size:
+    zh: 输出图片长边像素（1–4000）
+    en: pixels along the fitted image dimension (1–4000)
+  save_to:
+    zh: 本工具指定设备上的输出路径；文件已存在会报错
+    en: output path on the device specified by this tool; an existing file is an error
+  source_id:
+    zh: 源对象的 Revit ID（组或族实例）
+    en: Revit id of the source object, a group or a family instance
+  source_name:
+    zh: 源对象名称（标高、面积方案或视图样板）
+    en: name of the source, a level, area scheme or view template
+  relation:
+    zh: 关系种类：level-rooms / area-scheme-elements / group-elements / nested-family / view-template-dependents
+    en: 'which relation to read: level-rooms, area-scheme-elements, group-elements, nested-family or view-template-dependents'
+  element_id:
+    zh: 单个构件的 Revit ID
+    en: one element id
+  parameter:
+    zh: 参数名（本地化名称）
+    en: parameter name as the model reports it
+  value:
+    zh: 要写入的值（长度 mm、面积 m²，其余按内部单位）
+    en: value to write; lengths in millimetres, areas in m², other doubles in internal units
+  document:
+    zh: 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝
+    en: 'Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected'
+  timeout_seconds:
+    zh: 拾取任务后的结果等待预算（正整数秒，默认 120）；HTTP 使用它作为响应预算，不能覆盖插件内部执行上限。超时不代表待处理动作已取消
+    en: 'Positive result-wait budget in seconds after pickup (default 120); HTTP uses it as the response budget. Does not override add-in execution limits; a timeout does not cancel a pending job'
+  pickup_timeout_seconds:
+    zh: local / SSH 等待插件拾取任务的预算（正整数秒，默认 300）；HTTP 忽略。拾取超时后待处理任务仍可能执行
+    en: 'Positive seconds to wait for pickup over local or SSH (default 300); ignored over HTTP. A pending job may still execute after pickup times out'
+  area_scheme:
+    zh: 面积方案的精确本地化名称（由 area-schemes 目录获取）；选择后仅查询该方案的面积构件，并与其它过滤条件共同生效
+    en: 'Exact localized area-scheme name from the area-schemes catalog; restricts results to its areas and combines with the other filters'
+  reset:
+    zh: true 时恢复当前视图的临时隐藏 / 隔离；配合空 element_ids 列表使用
+    en: 'Set true with an empty element_ids list to reset temporary hide/isolate in the active view'
+  dx_mm:
+    zh: 沿模型 X 轴的位移（mm），不是最终坐标
+    en: 'Offset along model X in millimetres, not the final coordinate'
+  dy_mm:
+    zh: 沿模型 Y 轴的位移（mm），不是最终坐标
+    en: 'Offset along model Y in millimetres, not the final coordinate'
+  dz_mm:
+    zh: 沿模型 Z 轴的位移（mm，默认 0），不是最终坐标
+    en: 'Offset along model Z in millimetres (default 0), not the final coordinate'
+  wall_type:
+    zh: 基本墙类型名称；必传参数，可传 null 使用第一个基本墙类型
+    en: 'Basic wall-type name; required argument, but null selects the first basic wall type'
+  floor_type:
+    zh: 楼板类型名称；必传参数，可传 null 使用第一个楼板类型
+    en: 'Floor-type name; required argument, but null selects the first floor type'
+  points_mm:
+    zh: 至少 3 个模型 XY 顶点，每个顶点为 [x,y]（mm）；自动闭合轮廓
+    en: 'At least three model XY vertices, each [x,y] in millimetres; the boundary closes automatically'

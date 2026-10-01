@@ -49,12 +49,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install documentation dependencies
-        run: pip install -r docs/requirements.txt
+        run: pip install -r docs/requirements.txt -e ./server
       - name: Build documentation
         run: |
-          pip install pyyaml
-          python tools/site/generate_features.py --check
+          python tools/site/generate_features.py --verify-registry --check
+          python -m unittest discover -s tools/site -p 'test_*.py'
           mkdocs build --strict
+          python tools/site/check_site.py --site-dir site
       - name: Install Ruff
         run: pip install ruff==0.16.7
       - name: Check Python

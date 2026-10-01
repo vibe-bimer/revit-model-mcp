@@ -1,38 +1,58 @@
-# revit_list_relations
+# Element relations
 
-<p class="facts"><b>Group</b> Query and totals　<b>Kind</b> Read (read-only)　<b>Since</b> 0.7.0</p>
+`revit_list_relations`
 
-Read model object membership or dependencies.
+<p class="facts"><span><b>Group</b> Query and totals</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.7.0</span></p>
 
-## Parameters
+Read level rooms, area-scheme membership, group members, nested families and view-template dependents
 
-| Parameter | Default | Meaning |
-| --- | --- | --- |
-| `relation` ✔ | — | which relation to read: level-rooms, area-scheme-elements, group-elements, nested-family or view-template-dependents（string） |
-| `source_id` | — | Revit id of the source object, a group or a family instance（any） |
-| `source_name` | — | name of the source, a level, area scheme or view template（any） |
-
-??? note "Common parameters"
-    |  Parameter | Default | Meaning |
-    | --- | --- | --- |
-    | `document` | — | Case-insensitive substring of the target active document title or file name; default null leaves requests unaddressed, so any instance may respond. Use a unique substring with multiple instances; revit_list_instances instead returns all matching instances, or all instances when omitted.（any） |
-    | `pickup_timeout_seconds` | `300` | Positive integer seconds to wait for the add-in to pick up a local or SSH job (300 when omitted); ignored over HTTP. A pickup timeout raises an error but the pending job may still execute later.（integer） |
-    | `timeout_seconds` | `120` | Positive integer seconds to wait for a result after pickup (120 when omitted); HTTP uses this as its response budget. Expiry raises an error, and increasing it does not override the add-in's execution limits.（integer） |
-
-## Prompts
+## Copyable prompts {#prompts}
 
 ```text
 Which rooms sit on level 1F?
 ```
 
-## Per year
+## Parameters {#parameters}
 
-| Year | State | Note |
-| --- | --- | --- |
-| 2020 | <span class="state ok">validated</span> |  |
-| 2026 | <span class="state ok">validated</span> |  |
-| Other years | <span class="state part">build only</span> | 2022–2025 / 2027 |
+| Parameter | Required | Default | Type | Meaning |
+| --- | :--: | --- | --- | --- |
+| `relation` | Yes | — | `string` | which relation to read: level-rooms, area-scheme-elements, group-elements, nested-family or view-template-dependents |
+| `source_id` | No | `null` | `integer / null` | Revit id of the source object, a group or a family instance |
+| `source_name` | No | `null` | `string / null` | name of the source, a level, area scheme or view template |
+
+### Common parameters {#common-parameters}
+
+| Parameter | Required | Default | Type | Meaning |
+| --- | :--: | --- | --- | --- |
+| `document` | No | `null` | `string / null` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected |
+| `pickup_timeout_seconds` | No | `300` | `integer` | Positive seconds to wait for pickup over local or SSH (default 300); ignored over HTTP. A pending job may still execute after pickup times out |
+| `timeout_seconds` | No | `120` | `integer` | Positive result-wait budget in seconds after pickup (default 120); HTTP uses it as the response budget. Does not override add-in execution limits; a timeout does not cancel a pending job |
+
+## Behavior and returned data {#contract}
+
+!!! note "Usage notes"
+    The complete current tool declaration is preserved below. The file channel has an implementation exception: it may return terminal `success:false`, `partial:true` data instead of the promised error. Accept complete results only with `success:true` and `partial:false` (or no partial field); a wait timeout does not cancel the job. See the [read response contract](../tools.md).
+
+Read model object membership or dependencies.
+
+Returns data with relation, source and elements containing IDs, names, categories, families and types; no related objects return elements=[].
+relation is required: level-rooms, area-scheme-elements or view-template-dependents with source_name, or group-elements or nested-family with source_id.
+Obtain source names from revit_list_catalog and IDs from element queries.
+An invalid relation, missing or wrong source, missing document, read failure or timeout raises an error; partial data is not returned.
+
+
+If more than one Revit instance is running, document is required; otherwise any instance may respond.
+
+## Revit year support {#year-support}
+
+| Revit year | Validation |
+| --- | --- |
+| 2020 | <span class="state ok">Validated live</span> |
+| 2026 | <span class="state ok">Validated live</span> |
+| 2022–2025 / 2027 | <span class="state part">Build only, not live-tested</span> |
+
+Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.
 
 ---
 
-[All tools](index.md) · [Version matrix](matrix.md) · [Prompt library](prompts.md)
+[All features](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)

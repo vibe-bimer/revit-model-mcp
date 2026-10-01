@@ -1,45 +1,54 @@
 # Revit Model MCP
 
-<p class="facts"><b>当前版本 0.9.0</b>　支持 Revit <b>2020–2027</b>　真机实测 <b>2020 / 2026</b>　工具 <b>33 个</b>（19 读取 + 14 动作）</p>
+<p class="facts"><span><b>插件 / MCP 版本 0.9.0</b></span><span>Revit <b>2020 / 2022–2027</b></span><span>19 个读取 + 14 个动作，共 33 个工具</span></p>
 
-让 AI 客户端直接读、查、改 Revit 模型：构件的参数与几何、视图组成、交付前体检、导出清单、编辑模型，以及**整模型换新 ID**。读取默认只读，写入需要双门禁。
+面向 Revit 技术人员的功能手册：查参数与几何、统计构件、检查模型、导出清单、编辑构件，以及复制模型并换新 ID。默认只读，动作需要双门禁。**Revit 年份**与**插件发布版本**是两种不同的版本；实测覆盖以支持矩阵为准。
 
-## 从哪里开始
+## 选择查阅入口 {#entry-points}
 
 <div class="grid cards" markdown>
 
-- **按版本看功能**
-    先确认你的 Revit 年份支持什么：[Revit 2020](features/v2020.md) · [Revit 2026](features/v2026.md) · [版本支持矩阵](features/matrix.md)
-- **找某个工具**
-    33 个工具按 8 组归类，每个工具一页（用途 · 参数 · 可复制提示词 · 年份支持）：[工具手册](features/index.md)
-- **想知道能说什么**
-    按场景整理的中文提示词，直接复制：[提示词库](features/prompts.md)
-- **要接进来用**
-    传输方式与门禁：[传输与接入](transport.md) · [工作原理](how-it-works.md)
+- **确认 Revit 年份支持**
+
+    [Revit 2020](features/v2020.md) · [Revit 2026](features/v2026.md) · [支持矩阵](features/matrix.md)
+
+- **查某个功能和参数**
+
+    [功能总览](features/index.md)：按场景分类，每项都有用途、参数、返回结果与限制。
+
+- **复制提示词使用**
+
+    [提示词库](features/prompts.md)：按功能分组，复制后替换模型、标高、构件 ID 和文件路径。
+
+- **安装并连接 MCP**
+
+    [安装与配置](server.md) · [传输与接入](transport.md) · [动作门禁](actions.md#gates)
 
 </div>
 
-## 三步上手
+## 三步上手 {#get-started}
 
-1. 在 Revit 工作站安装插件（MSI），在 AI 客户端注册 MCP 服务器（stdio / SSH / HTTP 任选）
-2. 直接提需求，例如 `统计 1F 上各种墙类型各有多少个`
-3. 需要改模型时再打开写入门禁：客户端 `REVIT_MCP_ALLOW_WRITE=1` + 工作站 `%LOCALAPPDATA%\RevitModelMcp\allow-write`，并确保只有一个 Revit 实例
+1. 在 Windows Revit 工作站安装插件，在 AI 客户端配置 MCP 服务器；具体步骤见[安装与配置](server.md)。
+2. 先做只读查询，例如 `统计 1F 上各种墙类型各有多少个`。过滤名称应先从模型目录获取。
+3. 需要动作时再打开双门禁。修改前优先使用支持该参数的工具做 `dry_run`；超时后先核对模型，不要盲目重试。
 
-## 常用提示词
+## 常用提示词 {#common-prompts}
 
 | 场景 | 提示词 |
 | --- | --- |
 | 统计 | `统计 1F 上各种墙类型各有多少个` |
-| 体检 | `做一次交付前体检：文件大小、各类数量、单位设置、最多的警告` |
-| 导出 | `把三维视图里的构件导出成 Excel，按类别、族、类型排序` |
-| 改模型 | `把 ID 为 123456 的构件沿 X 移动 500 mm，先彩排` |
-| 换新 ID | `把当前三维视图里能选中的构件重建到 E:\out\copy-{n}.rvt，出 10 份，每份 ID 都不要重复` |
+| 检查 | `做一次交付前体检：文件大小、各类数量、单位设置、最多的警告` |
+| 导出 | `把模型中已绘制构件的 ID 清单导出成 Excel，按类别、族、类型排序` |
+| 移动 | `把 ID 为 123456 的构件沿 X 移动 500 mm，先彩排` |
+| 新模型 ID | `把当前三维视图里能选中的构件重建到 E:\out\copy-{n}.rvt，出 10 份，逐份检查构件数量和 ID 映射` |
 
-!!! tip "语言与主题"
-    右上角可切换**深色/浅色**与**中文/English**。英文首页是项目的 README，其余页面为对应英文原文。
+## 进一步查阅 {#further-reading}
 
-## 项目 README 的对应小节（英文原文）
-
-<a id="actions-opt-in"></a>
 <a id="tools"></a>
-这些锚点对应仓库 README 的小节；完整内容见英文首页（右上角切 **English**）或仓库根目录的 `README.md`。
+<a id="actions-opt-in"></a>
+
+- 功能用法：[功能总览](features/index.md) · [提示词库](features/prompts.md)
+- 跨工具契约：[读取契约](tools.md) · [动作契约](actions.md)
+- 项目信息：[更新记录](changelog.md) · [隐私说明](privacy.md)
+
+右上角切换中文 / English 和浅色 / 深色；同一页面切换语言后保留对应内容。

@@ -1,88 +1,91 @@
-# Overview
+# Feature overview
 
-<p class="facts">19 read + 14 action tools, 33 in total</p>
+19 read + 14 action tools, 33 in total
 
-## By version
+## Browse by Revit year {#by-version}
 
-| Year | State |
+| Revit year | Validation |
 | --- | --- |
-| [Revit 2020](v2020.md) | <span class="state ok">validated</span> |
-| [Revit 2026](v2026.md) | <span class="state ok">validated</span> <span class="state part">build only</span> |
-| 2022–2025 / 2027 | <span class="state part">build only</span> |
+| [Revit 2020](v2020.md) | 19/19 reads and 14/14 actions validated live; the rest are build-only |
+| [Revit 2026](v2026.md) | 18/19 reads and 8/14 actions validated live; the rest are build-only |
+| 2022–2025 / 2027 | Build only, not live-tested |
 
-## All tools
+Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.
 
-### Connection and documents（3）
+## All features {#all-features}
 
-| Tool | In one line | 2020 | 2026 |
-| --- | --- | :--: | :--: |
-| [revit_ping](revit_ping.md) | Check the RevitModelMcp connection without reading the model. | ✅ | ✅ |
-| [revit_document_info](revit_document_info.md) | Read general information about the active Revit model. | ✅ | ✅ |
-| [revit_list_instances](revit_list_instances.md) | List Revit processes and their active documents. | ✅ | ✅ |
+### Connection and documents (3) {#group-connection}
 
-### Query and totals（5）
+| Tool | Purpose |
+| --- | --- |
+| [Check connection](revit_ping.md)<br>`revit_ping` | Check whether the Revit add-in is reachable |
+| [Document overview](revit_document_info.md)<br>`revit_document_info` | Read document metadata, levels, area schemes, worksets and view count |
+| [Revit instance list](revit_list_instances.md)<br>`revit_list_instances` | List running Revit instances and their active documents |
 
-| Tool | In one line | 2020 | 2026 |
-| --- | --- | :--: | :--: |
-| [revit_list_catalog](revit_list_catalog.md) | Discover valid model names before filtering. | ✅ | ✅ |
-| [revit_aggregate_elements](revit_aggregate_elements.md) | Summarize matching elements by one or two fields after revit_list_catalog. | ✅ | ✅ |
-| [revit_query_elements](revit_query_elements.md) | Read a page of matching element rows after revit_list_catalog. | ✅ | ✅ |
-| [revit_element_details](revit_element_details.md) | Read parameters and geometry of an element by Revit ID. | ✅ | ✅ |
-| [revit_list_relations](revit_list_relations.md) | Read model object membership or dependencies. | ✅ | ✅ |
+### Query and totals (5) {#group-query}
 
-### Views and snapshots（5）
+| Tool | Purpose |
+| --- | --- |
+| [Name catalog](revit_list_catalog.md)<br>`revit_list_catalog` | Discover categories, family types, levels, area schemes, views, worksets, phases and parameters |
+| [Grouped totals](revit_aggregate_elements.md)<br>`revit_aggregate_elements` | Group by one or two fields, with counts and optional sum and average |
+| [Element query](revit_query_elements.md)<br>`revit_query_elements` | Filter and page through individual element rows |
+| [Element details](revit_element_details.md)<br>`revit_element_details` | Read instance/type parameters and geometry for one element ID |
+| [Element relations](revit_list_relations.md)<br>`revit_list_relations` | Read level rooms, area-scheme membership, group members, nested families and view-template dependents |
 
-| Tool | In one line | 2020 | 2026 |
-| --- | --- | :--: | :--: |
-| [revit_list_views](revit_list_views.md) | Find non-template views before analyzing a view. | ✅ | ✅ |
-| [revit_view_summary](revit_view_summary.md) | Read element categories and counts for a selected view. | ✅ | ✅ |
-| [revit_export_view](revit_export_view.md) | Export a selected view to PNG when numbers do not explain geometry. | ✅ | ✅ |
-| [revit_view_elements](revit_view_elements.md) | Read one page of elements in a selected view. | ✅ | ✅ |
-| [revit_view_warnings](revit_view_warnings.md) | Read warnings involving elements present in a selected view. | ✅ | ✅ |
+### Views and snapshots (5) {#group-views}
 
-### Export and checks（6）
+| Tool | Purpose |
+| --- | --- |
+| [View catalog](revit_list_views.md)<br>`revit_list_views` | List views filtered by type and name |
+| [View summary](revit_view_summary.md)<br>`revit_view_summary` | Read view metadata, category counts and number of distinct types |
+| [Export view image](revit_export_view.md)<br>`revit_export_view` | Export a view as a PNG, from 1 to 4000 pixels |
+| [View element rows](revit_view_elements.md)<br>`revit_view_elements` | Page through elements in a selected view, optionally filtered by category |
+| [View warnings](revit_view_warnings.md)<br>`revit_view_warnings` | Read warnings involving elements present in a selected view |
 
-| Tool | In one line | 2020 | 2026 |
-| --- | --- | :--: | :--: |
-| [revit_model_health](revit_model_health.md) | Read model quality counts before an export or hand-over. | ✅ | ✅ |
-| [revit_links_status](revit_links_status.md) | Read RVT, CAD and image link status before an export or hand-over. | ✅ | ✅ |
-| [revit_shared_coordinates](revit_shared_coordinates.md) | Read project and survey coordinates before an export or hand-over. | ✅ | ✅ |
-| [revit_parameter_fill_check](revit_parameter_fill_check.md) | Count filled, empty and missing parameters before an export or hand-over. | ✅ | ✅ |
-| [revit_export_element_ids](revit_export_element_ids.md) | Write the identifier register of the drawn components to an xlsx file on the Revit workstation. | ✅ | ✅ |
-| [revit_list_warnings](revit_list_warnings.md) | Group model warnings by description text. | ✅ | ✅ |
+### Export and checks (6) {#group-export}
 
-### Selection and display（3）
+| Tool | Purpose |
+| --- | --- |
+| [Model health](revit_model_health.md)<br>`revit_model_health` | Check file size, model counts, units and frequent warnings |
+| [Link status](revit_links_status.md)<br>`revit_links_status` | Inspect RVT, CAD and image link status, paths and instance counts |
+| [Shared coordinates](revit_shared_coordinates.md)<br>`revit_shared_coordinates` | Read base/survey points, sites and link offsets in mm and degrees |
+| [Parameter fill check](revit_parameter_fill_check.md)<br>`revit_parameter_fill_check` | Count filled, empty and missing parameter values and sample element IDs |
+| [Export element ID register](revit_export_element_ids.md)<br>`revit_export_element_ids` | Write the ID register of drawn model components to an Excel workbook |
+| [Model warnings](revit_list_warnings.md)<br>`revit_list_warnings` | Group model warnings by description and inspect affected elements |
 
-| Tool | In one line | 2020 | 2026 |
-| --- | --- | :--: | :--: |
-| [revit_select](revit_select.md) | Select element IDs for inspection in Revit; an empty list clears selection; IDs are unitless. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. | ✅ | ✅ |
-| [revit_show](revit_show.md) | Show elements, optionally selecting them; open a level plan or 3D view when needed. Returns activeView, viewOpened and dialogsSuppressed; IDs are unitless. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. | ✅ | ✅ |
-| [revit_isolate](revit_isolate.md) | Temporarily isolate IDs for visual review in the active view, or reset with an empty list; IDs are unitless. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. | ✅ | ✅ |
+### Selection and display (3) {#group-display}
 
-### Editing（6）
+| Tool | Purpose |
+| --- | --- |
+| [Select elements](revit_select.md)<br>`revit_select` | Select elements in Revit; an empty list clears the selection |
+| [Show elements](revit_show.md)<br>`revit_show` | Locate and highlight elements, opening a suitable view when needed |
+| [Temporary isolation](revit_isolate.md)<br>`revit_isolate` | Temporarily isolate selected elements or reset the active view |
 
-| Tool | In one line | 2020 | 2026 |
-| --- | --- | :--: | :--: |
-| [revit_move](revit_move.md) | Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets in millimetres on model axes. dry_run executes and rolls back, returning the same verification block without changing the model. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. | ✅ | ✅ |
-| [revit_place_family](revit_place_family.md) | Place a loaded unhosted family on a named level for layout. | ✅ | 🟡 |
-| [revit_create_wall](revit_create_wall.md) | Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type. dry_run executes and rolls back, returning the same verification block without changing the model. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. | ✅ | ✅ |
-| [revit_create_floor](revit_create_floor.md) | Create a floor from a closed boundary for layout on a named level. points_mm are model XY polygon vertices in millimetres (at least 3; the boundary closes automatically); null floor_type chooses the first floor type. dry_run executes and rolls back, returning the same verification block without changing the model. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. | ✅ | 🟡 |
-| [revit_set_parameter](revit_set_parameter.md) | Set a named instance parameter, falling back to its shared type; use for edits, with length in mm, area in m2 and other doubles in internal units. dry_run executes and rolls back, returning the same verification block without changing the model. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. | ✅ | ✅ |
-| [revit_delete](revit_delete.md) | Delete elements and their Revit dependencies when removal is intended; IDs are unitless and the returned count includes dependents. dry_run executes and rolls back, returning the same verification block without changing the model. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. | ✅ | ✅ |
+### Editing (6) {#group-edit}
 
-### Phases（2）
+| Tool | Purpose |
+| --- | --- |
+| [Move elements](revit_move.md)<br>`revit_move` | Move elements by offsets along model axes in millimetres |
+| [Place unhosted family](revit_place_family.md)<br>`revit_place_family` | Place a loaded unhosted family on a named level with optional Z rotation |
+| [Create straight wall](revit_create_wall.md)<br>`revit_create_wall` | Create a wall from two XY points, a level, type and height |
+| [Create floor](revit_create_floor.md)<br>`revit_create_floor` | Create a floor from a closed XY boundary with at least three vertices |
+| [Edit parameter](revit_set_parameter.md)<br>`revit_set_parameter` | Set a named parameter; lengths use mm, areas m² and other doubles internal units |
+| [Delete elements](revit_delete.md)<br>`revit_delete` | Delete selected elements and their Revit dependencies |
 
-| Tool | In one line | 2020 | 2026 |
-| --- | --- | :--: | :--: |
-| [revit_set_phase](revit_set_phase.md) | Assign the created or demolished project phase of elements by exact phase name. | ✅ | 🟡 |
-| [revit_merge_phases](revit_merge_phases.md) | Merge one project phase into another by moving every element reference. | ✅ | 🟡 |
+### Phases (2) {#group-phases}
 
-### Batch and ids（3）
+| Tool | Purpose |
+| --- | --- |
+| [Set element phases](revit_set_phase.md)<br>`revit_set_phase` | Assign created/demolished phases; an empty string clears and null leaves unchanged |
+| [Merge project phases](revit_merge_phases.md)<br>`revit_merge_phases` | Reassign references to another phase and attempt to delete the emptied phase |
 
-| Tool | In one line | 2020 | 2026 |
-| --- | --- | :--: | :--: |
-| [revit_reset_element_ids](revit_reset_element_ids.md) | Replace elements with copies so Revit assigns new element IDs; the API cannot assign one itself. | ✅ | 🟡 |
-| [revit_rebuild_model_ids](revit_rebuild_model_ids.md) | Give every component new IDs by copying a 3D view's selectable elements into a new model, because Revit does not allow assigning an element ID. | ✅ | 🟡 |
-| [revit_batch](revit_batch.md) | Execute up to 50 actions with one undo step; roll back the batch on its first failure. | ✅ | ✅ |
+### Batch and ids (3) {#group-ids}
 
-!!! warning "Write gate: REVIT_MCP_ALLOW_WRITE=1 in the client plus the allow-write file on the workstation, with one Revit instance"
+| Tool | Purpose |
+| --- | --- |
+| [Replace IDs in place](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | Replace eligible standalone elements with copies to obtain new IDs |
+| [Rebuild IDs in new models](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | Copy selectable 3D-view components into one or more new models with fresh IDs |
+| [Batch actions](revit_batch.md)<br>`revit_batch` | Execute 1–50 actions as one undo step and roll back on the first failed step |
+
+!!! warning "Actions require both write gates"
+    Set `REVIT_MCP_ALLOW_WRITE=1` in the client and create the workstation `allow-write` file. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.

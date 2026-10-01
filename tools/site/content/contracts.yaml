@@ -1,0 +1,326 @@
+# Chinese translations of the complete English tool descriptions in tools.json.
+# English is authoritative. source is SHA-256 of the exact description UTF-8 bytes.
+# Parameter schemas are documented separately and are not translated here.
+tools:
+  revit_ping:
+    zh: |
+      检查 RevitModelMcp 连接，不读取模型。
+
+      返回 `data="pong"` 的响应，即使没有活动文档也会返回。
+      连接失败或超时会报错；不返回部分结果。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: c5046b264798d3ce71ce1d7df763c8b2ca00cb034896273974e9ed6e4e1669a6
+  revit_document_info:
+    zh: |
+      读取活动 Revit 模型的基本信息。
+
+      返回的数据包含文件名、Revit 版本、标高（高程单位为 mm）、面积方案、工作集和视图数量。
+      不存在的集合为空；未启用工作共享的模型没有工作集。
+      要分析视图，下一步调用 `revit_list_views`。
+      没有活动文档、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 82d16de3ed522927f9cd9822e46b4bc5bf71a1a30920549653c2c27247630e64
+  revit_model_health:
+    zh: |
+      在导出或交付前读取模型质量统计。
+
+      返回的数据包含项目元数据、文件大小（单位为字节）、数量统计、单位设置，以及出现次数最多的 10 组警告。
+      不存在的对象计数为 0；无法获取的指标为 `null`，并与对应错误一起列在 `skipped` 中。
+      使用 `revit_list_warnings` 查看受影响的构件。
+      没有活动文档、整体读取失败或超时都会报错；超时不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 1f79b1381d6c2534223be3be0b0edee9b5e3df975ca922de2eff95d3c9eaa2a2
+  revit_links_status:
+    zh: |
+      在导出或交付前读取 RVT、CAD 和图像链接的状态。
+
+      返回的数据包含汇总计数，以及 `rvtLinks`、`cadLinks` 和 `images` 列表；列表条目包含状态、路径和实例数量。
+      每个列表按 ID 最多返回 100 个条目，不支持分页；汇总计数覆盖全部条目。
+      没有链接时返回空列表；单个条目的失败会记录在 `error` 中，状态为 `Other`。
+      没有活动文档、整体读取失败或超时都会报错；超时不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 8ec51fdf6786ef00fd9bc0daac2959d596cdcf6f46aa765a18b084a4843875a7
+  revit_shared_coordinates:
+    zh: |
+      在导出或交付前读取项目坐标和测量坐标。
+
+      返回的数据包含项目基点／测量点、活动场地、项目位置，以及链接的偏移量和旋转角；偏移量单位为 mm，旋转角单位为度，均四舍五入到小数点后 1 位。
+      位置和链接列表各最多返回 100 个条目，不支持分页，同时提供总数；没有链接时 `sharedSiteFromLinks` 为空列表。
+      没有活动文档、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 68b9837c21dd84e2cf5407bd950aaea83fc931e1cca5301e0dea8cd0a1cc95da
+  revit_parameter_fill_check:
+    zh: |
+      在导出或交付前统计参数的已填写、空值和缺失情况。
+
+      返回的数据包含检查范围、按参数和类别划分的数量统计、参数属于实例还是类型的信息、存储类型，以及空值／缺失参数的构件 ID 样本。
+      没有匹配构件时，计数为 0，样本为空；不存在的参数计为缺失，数值 0 计为已填写。
+      文档不存在、检查范围无效或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 2b42f82c5af8a970052a78aa5630256834f3963a5f10d5ea3bf53bcdb2baf814
+  revit_list_catalog:
+    zh: |
+      在设置筛选条件前，查找模型中可用的名称。
+
+      返回的数据包含 `section` 和 `items`；条目包含名称，以及该分区对应的 ID、类别、类型或数量；目录为空时返回 `items=[]`。
+      `section` 为必填项，可取 `categories`、`family-types`、`levels`、`area-schemes`、`views`、`worksets`、`phases` 或 `parameters`。
+      `parameters` 分区返回本地化参数名、类别和值类型。
+      通用模型查询应从本工具开始；计数和分类汇总优先使用 `revit_aggregate_elements`，仅在需要单个构件的数据行时使用 `revit_query_elements`。
+      分区未知、文档不存在、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 9b346ece1e14825b63ec160041ded96e4bd9e59c863a8470e64d2cf7f21452f6
+  revit_aggregate_elements:
+    zh: |
+      在调用 `revit_list_catalog` 后，按 1 个或 2 个字段汇总匹配的构件。
+
+      返回的数据包含 `matchedElements` 和 `groups`；每组包含分组键、`count`，以及可选的 `numericCount`、`sum`、`average` 和 `unit`。
+      长度使用 mm，面积使用 m2，体积使用 m3；没有数值的分组，其 `sum` 和 `average` 为 `null`。
+      没有匹配项时返回 `groups=[]`；即使结果为空，无效的字段名或筛选条件名也会报错。
+      先调用 `revit_list_catalog`；计数和分类汇总优先使用本工具，仅在需要单个构件的数据行时使用 `revit_query_elements`。
+      汇总面积时，按标高分组，并选择面积方案。
+      文档不存在、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 526ca2e552605ec1c48c601a9606384a4017fb9582c5b7c9692b3c3ba630a2d4
+  revit_query_elements:
+    zh: |
+      在调用 `revit_list_catalog` 后，读取一页匹配构件的数据行。
+
+      返回的数据包含 `elements`（`id` 和 `values`）、`fields`、`total`、`offset`、`limit` 和 `hasMore`；值会包含可用性、来源，以及可获取时的单位。
+      长度使用 mm，面积使用 m2，体积使用 m3；可选的几何数据使用模型坐标系中的 mm，四舍五入到小数点后 1 位；无法获取的几何数据会省略。
+      在房间内放置对象时使用 `roomCenterMm`；包围盒中心可能位于房间外。
+      没有匹配项，或偏移量超出结果范围时，返回 `elements=[]`；当 `hasMore=true` 时，增加 `offset` 继续读取。
+      先调用 `revit_list_catalog`；计数和分类汇总优先使用 `revit_aggregate_elements`。
+      字段或筛选条件无效、文档不存在、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 75aed63260b31033f8e7ea51482c14cae2404b0bbcec97af812d8d2c500f9d86
+  revit_list_views:
+    zh: |
+      在分析视图前查找非模板视图。
+
+      返回的数据包含 `views`；每个视图包含 `id`、`name`、`type`、`level`、`scale` 和 `template`，并提供已扫描非模板视图的 `total` 和 `processed` 计数。
+      没有视图匹配筛选条件时返回 `views=[]`。
+      在请求构件分页数据前，将返回的视图名称传给 `revit_view_summary`。
+      文档不存在、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 79ef41dc7de801b3a56960c74a1995731f8a82aee83eff5ce98b423f8ad9f438
+  revit_view_summary:
+    zh: |
+      读取指定视图中的构件类别及数量。
+
+      返回的数据包含视图头部元数据和 `categories`；每个类别包含 `count` 和 `differentTypes`；空视图返回 `categories=[]`。
+      视图计数优先使用本工具；先选择相关类别，再调用 `revit_view_elements` 读取单个构件的数据行。
+      文档不存在、视图未知或不受支持、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 594ce2bbe1fb482121e0ecd23bc538b01047a2758497f2dcdfebacb0c759b3a2
+  revit_export_view:
+    zh: |
+      当数字无法解释几何形状时，将指定视图导出为 PNG。
+
+      返回的数据包含 MCP 客户端上的 `localPath`、图像宽度／高度（单位为像素）、`sizeBytes` 和视图元数据，不包含 base64。
+      导出不会改变活动视图，也不会写入模型；可用于检查轮廓、区域和房间边界。
+      文档不存在、视图未知或不受支持、目标文件已存在、未生成 PNG 或下载失败都会报错。
+      使用默认的 120 秒响应等待预算和 300 秒任务领取等待预算；超时会报错，不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: e1fd1638ac9ea760cf658b52433cfa96ffc1cafde657eabf67debd4d2088f869
+  revit_export_element_ids:
+    zh: |
+      将已绘制构件的标识清单写入 Revit 工作站上的 xlsx 文件。
+
+      返回的数据包含 `path`、`fileName`、`sheetName`、`columns`、`rowCount`、`totalCandidates`、`truncated`、`sizeBytes` 和 `categoryCounts`。
+      数据行先按类别、再按族、最后按类型排序；默认列为“类别、族、类型、标高、构件ID、名称、工作集”，`fields` 可将这些列替换为内置字段或参数名称。
+      “构件ID”列记录 Revit 构件 ID，API 无法为构件指定这个 ID；本工具只列出标识，绝不会修改它们。
+      没有所属标高的构件，其标高列保持为空；大多数 MEP 管道和风管管段属于这种情况。
+      默认 `null` 会在工作站上写入 `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`；如果 `save_to` 指定的文件已存在则报错；超过 50,000 行时设置 `truncated=true`。
+      导出仅在模型外写入一个文件，绝不会写入模型；文档不存在、读取失败或超时都会报错。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 59690caf9e5f668e27b3febf68617ca4df922dbf9389b3d2a718afa61e37339e
+  revit_view_elements:
+    zh: |
+      读取指定视图中的一页构件数据。
+
+      返回的数据包含 `elements`、`total`、`offset`、`limit` 和 `hasMore`；每行包含 ID、类别、族、类型、标高，以及可获取的测量值，单位为 mm、m2 和 m3。
+      没有匹配项，或偏移量超出结果范围时，返回 `elements=[]`；当 `hasMore=true` 时，增加 `offset` 继续读取。
+      计数和查找类别优先使用 `revit_view_summary`；使用本工具读取单个构件的数据行，使用 `revit_element_details` 读取全部参数。
+      文档不存在、视图未知或不受支持、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 4c4f085ce46a604aa11606cd57bfa04d8f5efb7f42bb8d14cdc7ad417aa64e3a
+  revit_element_details:
+    zh: |
+      按 Revit ID 读取构件的参数和几何数据。
+
+      返回的数据包含 `element`、实例参数、可获取的 `typeElement` 参数，以及相关警告；没有警告时返回空列表。
+      房间数据包含标高、面积（m2）、体积（m3）和边界（mm）；参数值包含显示值／内部值，以及可获取时的公制单位。
+      `location` 和 `boundingBox` 使用模型坐标系中的 mm，四舍五入到小数点后 1 位；无法获取的几何数据会省略。
+      在房间内放置对象时使用 `roomCenterMm`；`boundingBox.centerMm` 可能位于非矩形房间外。
+      构件或文档不存在、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 434de3d148eb0e67df162c9b61e0bd71243935e53d352bd44b41d8256a276cc6
+  revit_view_warnings:
+    zh: |
+      读取涉及指定视图中构件的警告。
+
+      返回的数据包含 `view` 和 `warnings`；每条警告包含文本、严重程度，以及带 `presentOnView` 标记的构件 ID；没有相关警告时返回 `warnings=[]`。
+      一条警告也可能同时涉及视图外的构件。
+      使用 `revit_view_summary` 检查视图内容，或使用 `revit_list_warnings` 查看整个模型的警告分组。
+      文档不存在、视图未知或不受支持、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: fccedefd55d69afe27db6b7461625b785ee4182372ad7a7c94eb6c297866c88a
+  revit_list_warnings:
+    zh: |
+      按警告描述文本对模型警告分组。
+
+      返回的数据包含 `totalWarnings` 和 `groups`；每组包含 `text`、`severity`、`count`、`affectedElementCount`，以及可选的构件数据行。
+      首次调用不设置筛选条件，再使用返回的 `warning_text` 并设置 `include_elements=true`，重新调用以查看某个分组。
+      模型没有警告时返回 `groups=[]`；`warning_text` 没有匹配项时会报错。
+      文档不存在、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 1a1cf9bcbce7fb3c2a61ea5ca42b2efb6da6814e9aa60bf912b15e65edaa1371
+  revit_list_relations:
+    zh: |
+      读取模型对象的成员关系或依赖关系。
+
+      返回的数据包含 `relation`、`source` 和 `elements`；构件条目包含 ID、名称、类别、族和类型；没有相关对象时返回 `elements=[]`。
+      `relation` 为必填项：`level-rooms`、`area-scheme-elements` 或 `view-template-dependents` 需配合 `source_name`；`group-elements` 或 `nested-family` 需配合 `source_id`。
+      从 `revit_list_catalog` 获取来源对象名称，从构件查询结果获取 ID。
+      关系无效、来源对象缺失或错误、文档不存在、读取失败或超时都会报错；不返回部分数据。
+
+      如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+    source: 965fb8fc8e788de2f895352c9e9114fe83b3b42331ac5e0b140da89b12c26384
+  revit_list_instances:
+    zh: |
+      列出 Revit 进程及其活动文档。
+
+      返回一个记录列表，每条记录包含 `documentName`、`documentPath`、`revitVersion`、`pluginVersion`、`processId` 和 `pluginResponding`；没有匹配实例时返回 `[]`。
+      `pluginVersion` 标识加载项的构建版本，例如 `0.6.0+68febc5d`；由旧版加载项写入的心跳中，此字段为空。
+      本地和 SSH 模式使用加载项心跳，并在需要时回退到进程检测；回退记录中的文档为空，且 `pluginResponding=false`。
+      HTTP 模式只报告其连接的进程；传输失败会报错。
+      在为其他工具选择唯一的文档子串前，先使用本工具。
+    source: cb2d527ff0239c1285a3128f535ad951c7a6544e5a2809262602b3ee6e4610a0
+  revit_select:
+    zh: |
+      按构件 ID 在 Revit 中选择构件以供检查；空列表会清除选择；ID 没有单位。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: 3b0ea70eb5706cae092095a80ccff07ac92e834112b71da478bac88c6c8f76d1
+  revit_show:
+    zh: |
+      显示构件，并可选择是否选中它们；需要时打开标高平面视图或三维视图。返回 `activeView`、`viewOpened` 和 `dialogsSuppressed`；ID 没有单位。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: 3cdf84b8d9d12b228f7905eea532cd4963890b7cc780ffdb89737bad96c7d42a
+  revit_isolate:
+    zh: |
+      在活动视图中按 ID 临时隔离构件以供目视检查，或传入空列表来重置隔离；ID 没有单位。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: 78e5d46528a325ff035f04e34b2834b8e86980f355c41994eebfad795401b473
+  revit_move:
+    zh: |
+      通过移动构件调整其位置；`dx_mm`、`dy_mm` 和 `dz_mm` 是沿模型坐标轴的偏移量，单位为毫米。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: 0bfded33b2f7cab89dada2943831870b4fb1cfc2fa05bd6a49dfb32ebc48346b
+  revit_place_family:
+    zh: |
+      在指定标高上放置已加载、无需宿主的族，用于布局。
+
+      `family` 接受族名称或 `Family: Type` 格式，不区分大小写。
+      `type_name` 为 `null` 时，使用 `family` 中指定的类型，或第一个类型。类型指定冲突时会拒绝操作。
+      族不存在时，返回名称相近的族及其类别。
+      模型 XY 坐标单位为毫米，绕 Z 轴的旋转角单位为度。
+      在房间内放置对象时使用 `roomCenterMm`。
+
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: 6383331ec37ff72f17cd7422bc507134df729128e2178546a3aa04102977c3b4
+  revit_create_wall:
+    zh: |
+      在指定标高上创建直墙，用于布局；模型 XY 端点坐标和高度的单位为毫米；`wall_type` 为 `null` 时选择第一个基本墙类型。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: a47d1b8d9ac4c1b31effc7a45969ec3b3dfefb672529751eaf97372b890f9bcc
+  revit_create_floor:
+    zh: |
+      根据闭合边界，在指定标高上创建楼板，用于布局。
+      `points_mm` 是模型 XY 坐标系中的多边形顶点，单位为毫米（至少 3 个顶点；边界会自动闭合）；`floor_type` 为 `null` 时选择第一个楼板类型。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: 1223d02fae2181ced146152e86d9b97b29f6b8612b997136f36f152d8739f142
+  revit_set_phase:
+    zh: |
+      按准确的阶段名称，指定构件的创建阶段或拆除阶段。
+
+      每个阶段参数可以是 `revit_list_catalog(section="phases")` 返回的阶段名称，也可以是用于清除该指定的空字符串，或用于保持不变的 `null`；至少一个参数必须非 `null`。
+      创建操作的 API 无法新增阶段；请先在 Revit 界面中创建新阶段。
+      例如，`demolished_phase="现有"` 将构件标记为在该阶段拆除；`demolished_phase=""` 则清除拆除阶段。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: d554282f06195b6b0ccce4aa13e48bd18f2eb3d709bdc67ff07d8ccd83d2922e
+  revit_merge_phases:
+    zh: |
+      将一个项目阶段合并到另一个阶段，迁移所有构件的阶段引用。
+
+      在源阶段创建的构件会重新指定到目标阶段，记录在源阶段的拆除也会迁移到目标阶段，然后删除已清空的源阶段。
+      如果视图或其他对象仍然引用源阶段，Revit 可能拒绝删除它；此时响应会报告已重新指定的数量，并返回 `sourceDeleted:false`。
+      本工具绝不会创建阶段或重命名阶段。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: e15e02257c26bf3945ac15bf92e9f55e1a8bf6fd927750427e2fb8e002aba27d
+  revit_set_parameter:
+    zh: |
+      设置指定名称的实例参数；找不到时回退到该实例共用的类型上的参数。用于编辑时，长度单位为 mm，面积单位为 m2，其他双精度数值使用内部单位。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: c3f91d6b805b8adee348e8444ca0607ea6b0ecd9dc185139a95338139a72f6ae
+  revit_delete:
+    zh: |
+      需要移除时，删除构件及其 Revit 依赖对象；ID 没有单位，返回的删除数量包含依赖对象。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: 925c54f302f699f3f2d40c7f328382c7d8b090c6f639acfc9663485fc91a974a
+  revit_reset_element_ids:
+    zh: |
+      用副本替换构件，让 Revit 分配新的构件 ID；API 本身无法指定构件 ID。
+
+      返回的数据包含 `count`、`idMapping`（旧 ID 到新 ID 的映射），以及 `ineligible` 中列出的不符合条件构件和各自的原因。
+      以下情况会拒绝构件：删除它也会删除依赖对象；它依附于宿主（副本不会重新关联宿主）；它属于组；它是 MEP 曲线或 MEP 系统成员（副本不会重新加入网络，且 Revit 会重新修复管线）；或 Revit 报告该构件无法复制。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块；务必先执行试运行，因为这种替换无法撤销。
+      正式执行时，只要有任何构件不符合条件，就会拒绝整个选择范围，以防依赖构件被意外销毁。
+      本工具绝不会就地修改构件 ID，也绝不会将旧 ID 写入参数。
+    source: f77c44a94e426af38243f46a7829cad0e01a2501bdf1c4c07defd8df2cca0955
+  revit_rebuild_model_ids:
+    zh: |
+      将三维视图中可选择的构件复制到新模型，为每个构件生成新 ID，因为 Revit 不允许指定构件 ID。
+
+      绝不会修改已打开的模型：结果写入工作站上的 `destination_path`，源模型保持原样。
+      `view` 指定要读取的三维视图；不提供时使用第一个非透视三维视图，而且只复制该视图中可选择的构件。
+      标高、轴网和参照平面会一起复制，以便解析宿主关系；相机、太阳路径、剖面框、视图以及没有类别的构件不会复制，并会在 `excluded` 中报告。
+      视图、图纸、明细表、注释、阶段、工作集、MEP 系统以及未被选中的宿主都不会复制，因此结果只包含几何形状、类型和参数。
+      返回的数据包含 `destinationPath`、`saved`、`count`、`sourceView`、`sourceElementCount`、`datumCount`、`sourceCategoryCounts`、`copiedCategoryCounts`、`newIdMin`／`newIdMax`、`idMapping`（旧 ID 到新 ID 的映射，已按类别和类型验证），以及 `excluded` 中列出的被排除构件和各自的原因。
+      `overwrite` 用于替换已有文件；`template_path` 用于从指定模板开始复制，而不是使用默认公制模板；`remove_template_levels` 用于移除模板自身的标高。
+      `seed` 会在复制前向新模型添加相应数量的临时标高，再将它们移除，以使新 ID 位于独立的编号区段；否则，对相同源模型重建两次会产生相同 ID。因此，当需要各副本的 ID 互不重叠时，应为每次复制传入不同的 `seed`（例如 0、1000、2000）。
+      `duplicate_names` 决定新项目中已有与粘贴来源同名对象时如何处理：`override` 会以“确定”回答 Revit 的提示，使副本保留源模型自身的类型；`rename` 会先重命名模板中的对象，随后再移除它们，但速度较慢，并且在 Revit 拒绝删除某些对象时可能失败。
+      `copies` 指定从同一个新模型写出的文件数量：各副本包含相同构件，但各有自己的 ID，因为每个副本的 ID 都从前一个副本的 ID 区段之后开始。文件写入 `destination_path`，其中的 `{n}` 会替换为副本编号；路径不含 `{n}` 时，则在扩展名前追加编号。每个副本的映射会在 `copyResults` 中报告，各副本每个阶段的耗时会写入插件日志。
+      `dry_run` 会执行复制并报告映射，但不保存文件。
+    source: 46f38a2677ec27a78a16c599f77fd24ae855c5621b605a3feaa438b863eb802d
+  revit_batch:
+    zh: |
+      最多执行 50 个操作，并合并为一个撤销步骤；首次失败时回滚整个批次。
+
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: b18166af74371d1c64a7db759b338eb1cee664d5468be10c53972be21356affc

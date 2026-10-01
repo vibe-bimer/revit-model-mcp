@@ -1,50 +1,71 @@
-# revit_query_elements
+# 构件查询
 
-<p class="facts"><b>分组</b> 查询与统计　<b>类型</b> 读取（只读）　<b>起始版本</b> 0.1.0</p>
+`revit_query_elements`
+
+<p class="facts"><span><b>分组</b> 查询与统计</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.1.0</span></p>
 
 按类别/族/类型/标高/视图/工作集/参数过滤，分页读取构件明细
 
-## 参数
-
-| 参数 | 默认 | 说明 |
-| --- | --- | --- |
-| `area_scheme` | — | Exact area-scheme name from the area-schemes catalog, matched case-insensitively. Default null applies no scheme filter; selecting a scheme restricts results to its areas and combines with the other filters.（any） |
-| `categories` | — | 类别过滤（可多个，取并集）（any） |
-| `family` | — | 族名过滤（any） |
-| `fields` | — | 要返回的字段；缺省返回常用字段（any） |
-| `include_geometry` | `false` | 是否返回位置、包围盒与所在房间中心（模型 mm）（boolean） |
-| `level` | — | 标高过滤（any） |
-| `limit` | `100` | 每页条数（配合 offset 分页）（integer） |
-| `offset` | `0` | 从第几条开始（配合 limit 分页）（integer） |
-| `parameter_filters` | — | 参数过滤条件（equals / contains / greater / less / empty / not-empty / exists）（any） |
-| `phase` | — | 阶段过滤（any） |
-| `sort_direction` | `"asc"` | 排序方向：asc / desc（string） |
-| `sort_field` | `"id"` | 排序字段（默认按构件 ID）（string） |
-| `type_name` | — | 类型名称（与族一起定位）（any） |
-| `view` | — | 视图名称（或视图 ID）（any） |
-| `workset` | — | 工作集过滤（any） |
-
-??? note "通用参数"
-    |  参数 | 默认 | 说明 |
-    | --- | --- | --- |
-    | `document` | — | Case-insensitive substring of the target active document title or file name; default null leaves requests unaddressed, so any instance may respond. Use a unique substring with multiple instances; revit_list_instances instead returns all matching instances, or all instances when omitted.（any） |
-    | `pickup_timeout_seconds` | `300` | Positive integer seconds to wait for the add-in to pick up a local or SSH job (300 when omitted); ignored over HTTP. A pickup timeout raises an error but the pending job may still execute later.（integer） |
-    | `timeout_seconds` | `120` | Positive integer seconds to wait for a result after pickup (120 when omitted); HTTP uses this as its response budget. Expiry raises an error, and increasing it does not override the add-in's execution limits.（integer） |
-
-## 提示词
+## 可复制提示词 {#prompts}
 
 ```text
 列出 2F 上所有没填防火等级的门，给出 ID
 ```
 
-## 年份支持
+## 参数 {#parameters}
 
-| 年份 | 状态 | 备注 |
-| --- | --- | --- |
-| 2020 | <span class="state ok">已实测</span> |  |
-| 2026 | <span class="state ok">已实测</span> |  |
-| 其它年份 | <span class="state part">仅构建</span> | 2022–2025 / 2027 |
+| 参数 | 必填 | 默认值 | 类型 | 说明 |
+| --- | :--: | --- | --- | --- |
+| `area_scheme` | 否 | `null` | `string / null` | 面积方案的精确本地化名称（由 area-schemes 目录获取）；选择后仅查询该方案的面积构件，并与其它过滤条件共同生效 |
+| `categories` | 否 | `null` | `array<string> / null` | 类别过滤（可多个，取并集） |
+| `family` | 否 | `null` | `string / null` | 族名过滤 |
+| `fields` | 否 | `null` | `array<string> / null` | 要返回的字段；缺省返回常用字段 |
+| `include_geometry` | 否 | `false` | `boolean` | 是否返回位置、包围盒与所在房间中心（模型 mm） |
+| `level` | 否 | `null` | `string / null` | 标高过滤 |
+| `limit` | 否 | `100` | `integer` | 每页条数（配合 offset 分页） |
+| `offset` | 否 | `0` | `integer` | 从第几条开始（配合 limit 分页） |
+| `parameter_filters` | 否 | `null` | `array<object> / null` | 参数过滤条件（equals / contains / greater / less / empty / not-empty / exists） |
+| `phase` | 否 | `null` | `string / null` | 阶段过滤 |
+| `sort_direction` | 否 | `"asc"` | `string` | 排序方向：asc / desc |
+| `sort_field` | 否 | `"id"` | `string` | 排序字段（默认按构件 ID） |
+| `type_name` | 否 | `null` | `string / null` | 类型名称（与族一起定位） |
+| `view` | 否 | `null` | `string / null` | 视图名称（或视图 ID） |
+| `workset` | 否 | `null` | `string / null` | 工作集过滤 |
+
+### 通用参数 {#common-parameters}
+
+| 参数 | 必填 | 默认值 | 类型 | 说明 |
+| --- | :--: | --- | --- | --- |
+| `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+| `pickup_timeout_seconds` | 否 | `300` | `integer` | local / SSH 等待插件拾取任务的预算（正整数秒，默认 300）；HTTP 忽略。拾取超时后待处理任务仍可能执行 |
+| `timeout_seconds` | 否 | `120` | `integer` | 拾取任务后的结果等待预算（正整数秒，默认 120）；HTTP 使用它作为响应预算，不能覆盖插件内部执行上限。超时不代表待处理动作已取消 |
+
+## 功能说明与返回结果 {#contract}
+
+!!! note "使用提示"
+    以下保留当前工具声明的完整译文。文件通道实现仍有例外：它可能返回 `success:false`、`partial:true` 的终态部分数据，而不抛出声明中的错误。完整结果必须满足 `success:true` 且 `partial:false`（或没有该字段）；等待超时不取消任务。详见[读取响应契约](../tools.md)。
+
+在调用 `revit_list_catalog` 后，读取一页匹配构件的数据行。
+
+返回的数据包含 `elements`（`id` 和 `values`）、`fields`、`total`、`offset`、`limit` 和 `hasMore`；值会包含可用性、来源，以及可获取时的单位。
+长度使用 mm，面积使用 m2，体积使用 m3；可选的几何数据使用模型坐标系中的 mm，四舍五入到小数点后 1 位；无法获取的几何数据会省略。
+在房间内放置对象时使用 `roomCenterMm`；包围盒中心可能位于房间外。
+没有匹配项，或偏移量超出结果范围时，返回 `elements=[]`；当 `hasMore=true` 时，增加 `offset` 继续读取。
+先调用 `revit_list_catalog`；计数和分类汇总优先使用 `revit_aggregate_elements`。
+字段或筛选条件无效、文档不存在、读取失败或超时都会报错；不返回部分数据。
+
+如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+
+## Revit 年份支持 {#year-support}
+
+| Revit 年份 | 验证状态 |
+| --- | --- |
+| 2020 | <span class="state ok">已实测</span> |
+| 2026 | <span class="state ok">已实测</span> |
+| 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
+
+已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
 
 ---
 
-[全部工具](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)
+[全部功能](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)

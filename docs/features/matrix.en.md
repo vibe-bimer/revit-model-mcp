@@ -1,46 +1,46 @@
-# Version matrix
+# Version support matrix
 
-<p class="facts">✅ validated　🟡 build only</p>
+Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.
 
-## Read tools（19）
+## Read tools (19) {'#read-tools' if read_only else '#action-tools'}
 
-| Tool | 2020 | 2026 | Other years | Note |
-| --- | :--: | :--: | :--: | --- |
-| [revit_ping](revit_ping.md) | ✅ | ✅ | 🟡 | Check the RevitModelMcp connection without reading the model. |
-| [revit_document_info](revit_document_info.md) | ✅ | ✅ | 🟡 | Read general information about the active Revit model. |
-| [revit_model_health](revit_model_health.md) | ✅ | ✅ | 🟡 | Read model quality counts before an export or hand-over. |
-| [revit_links_status](revit_links_status.md) | ✅ | ✅ | 🟡 | Read RVT, CAD and image link status before an export or hand-over. |
-| [revit_shared_coordinates](revit_shared_coordinates.md) | ✅ | ✅ | 🟡 | Read project and survey coordinates before an export or hand-over. |
-| [revit_parameter_fill_check](revit_parameter_fill_check.md) | ✅ | ✅ | 🟡 | Count filled, empty and missing parameters before an export or hand-over. |
-| [revit_list_catalog](revit_list_catalog.md) | ✅ | ✅ | 🟡 | Queries and filters use these exact names |
-| [revit_aggregate_elements](revit_aggregate_elements.md) | ✅ | ✅ | 🟡 | First choice for “how many” questions |
-| [revit_query_elements](revit_query_elements.md) | ✅ | ✅ | 🟡 | Read a page of matching element rows after revit_list_catalog. |
-| [revit_list_views](revit_list_views.md) | ✅ | ✅ | 🟡 | Find non-template views before analyzing a view. |
-| [revit_view_summary](revit_view_summary.md) | ✅ | ✅ | 🟡 | Read element categories and counts for a selected view. |
-| [revit_export_view](revit_export_view.md) | ✅ | ✅ | 🟡 | Export a selected view to PNG when numbers do not explain geometry. |
-| [revit_export_element_ids](revit_export_element_ids.md) | ✅ | ✅ | 🟡 | The workbook is written on the Revit workstation |
-| [revit_view_elements](revit_view_elements.md) | ✅ | ✅ | 🟡 | Read one page of elements in a selected view. |
-| [revit_element_details](revit_element_details.md) | ✅ | ✅ | 🟡 | Rooms also return area, volume and boundaries |
-| [revit_view_warnings](revit_view_warnings.md) | ✅ | ✅ | 🟡 | Read warnings involving elements present in a selected view. |
-| [revit_list_warnings](revit_list_warnings.md) | ✅ | ✅ | 🟡 | Group model warnings by description text. |
-| [revit_list_relations](revit_list_relations.md) | ✅ | ✅ | 🟡 | Read model object membership or dependencies. |
-| [revit_list_instances](revit_list_instances.md) | ✅ | ✅ | 🟡 | List Revit processes and their active documents. |
+| Tool | 2020 | 2026 | 2022–2025 / 2027 |
+| --- | :--: | :--: | :--: |
+| [Check connection](revit_ping.md)<br>`revit_ping` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Document overview](revit_document_info.md)<br>`revit_document_info` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Model health](revit_model_health.md)<br>`revit_model_health` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Link status](revit_links_status.md)<br>`revit_links_status` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Shared coordinates](revit_shared_coordinates.md)<br>`revit_shared_coordinates` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Parameter fill check](revit_parameter_fill_check.md)<br>`revit_parameter_fill_check` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Name catalog](revit_list_catalog.md)<br>`revit_list_catalog` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Grouped totals](revit_aggregate_elements.md)<br>`revit_aggregate_elements` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Element query](revit_query_elements.md)<br>`revit_query_elements` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [View catalog](revit_list_views.md)<br>`revit_list_views` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [View summary](revit_view_summary.md)<br>`revit_view_summary` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Export view image](revit_export_view.md)<br>`revit_export_view` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Export element ID register](revit_export_element_ids.md)<br>`revit_export_element_ids` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| [View element rows](revit_view_elements.md)<br>`revit_view_elements` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Element details](revit_element_details.md)<br>`revit_element_details` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [View warnings](revit_view_warnings.md)<br>`revit_view_warnings` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Model warnings](revit_list_warnings.md)<br>`revit_list_warnings` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Element relations](revit_list_relations.md)<br>`revit_list_relations` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Revit instance list](revit_list_instances.md)<br>`revit_list_instances` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 
-## Action tools（14）
+## Action tools (14) {'#read-tools' if read_only else '#action-tools'}
 
-| Tool | 2020 | 2026 | Other years | Note |
-| --- | :--: | :--: | :--: | --- |
-| [revit_select](revit_select.md) | ✅ | ✅ | 🟡 | Does not change the model |
-| [revit_show](revit_show.md) | ✅ | ✅ | 🟡 | Does not change the model |
-| [revit_isolate](revit_isolate.md) | ✅ | ✅ | 🟡 | Temporary effect only |
-| [revit_move](revit_move.md) | ✅ | ✅ | 🟡 | Supports dry_run |
-| [revit_place_family](revit_place_family.md) | ✅ | 🟡 | 🟡 | Not run live on 2026 |
-| [revit_create_wall](revit_create_wall.md) | ✅ | ✅ | 🟡 | Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type. dry_run executes and rolls back, returning the same verification block without changing the model. Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected. |
-| [revit_create_floor](revit_create_floor.md) | ✅ | 🟡 | 🟡 | On 2020 it uses Document.Create.NewFloor, from 2022 Floor.Create |
-| [revit_set_phase](revit_set_phase.md) | ✅ | 🟡 | 🟡 | The phase order API exists from 2022; 2020 uses a fallback |
-| [revit_merge_phases](revit_merge_phases.md) | ✅ | 🟡 | 🟡 | Cannot run inside batch |
-| [revit_set_parameter](revit_set_parameter.md) | ✅ | ✅ | 🟡 | Supports dry_run |
-| [revit_delete](revit_delete.md) | ✅ | ✅ | 🟡 | Supports dry_run |
-| [revit_reset_element_ids](revit_reset_element_ids.md) | ✅ | 🟡 | 🟡 | Limited coverage: MEP 27/1089, building 373/954, structure 0% |
-| [revit_rebuild_model_ids](revit_rebuild_model_ids.md) | ✅ | 🟡 | 🟡 | The source stays read-only; 899 components a copy, no shared ids |
-| [revit_batch](revit_batch.md) | ✅ | ✅ | 🟡 | Rolls the whole batch back when a step fails |
+| Tool | 2020 | 2026 | 2022–2025 / 2027 |
+| --- | :--: | :--: | :--: |
+| [Select elements](revit_select.md)<br>`revit_select` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Show elements](revit_show.md)<br>`revit_show` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Temporary isolation](revit_isolate.md)<br>`revit_isolate` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Move elements](revit_move.md)<br>`revit_move` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Place unhosted family](revit_place_family.md)<br>`revit_place_family` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| [Create straight wall](revit_create_wall.md)<br>`revit_create_wall` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Create floor](revit_create_floor.md)<br>`revit_create_floor` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| [Set element phases](revit_set_phase.md)<br>`revit_set_phase` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| [Merge project phases](revit_merge_phases.md)<br>`revit_merge_phases` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| [Edit parameter](revit_set_parameter.md)<br>`revit_set_parameter` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Delete elements](revit_delete.md)<br>`revit_delete` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Replace IDs in place](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| [Rebuild IDs in new models](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| [Batch actions](revit_batch.md)<br>`revit_batch` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
