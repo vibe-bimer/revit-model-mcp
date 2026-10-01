@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.Serialization;
 using RevitModelMcp.Core.Models;
 
@@ -6,7 +7,7 @@ namespace RevitModelMcp.Core.Control;
 public static class ActionJobParser
 {
     public static bool IsAction(string command) => command is
-        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "reset-element-ids" or "rebuild-model-ids" or "batch";
+        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "reset-element-ids" or "rebuild-model-ids" or "set-view-lighting" or "batch";
 
     public static ControlJobParseResult Parse(string command, ControlJobContract job)
     {
@@ -47,7 +48,19 @@ public static class ActionJobParser
                 RemoveTemplateLevels = job.RemoveTemplateLevels ?? true,
                 Seed = job.Seed ?? 0,
                 Copies = job.Copies ?? 1,
-                DuplicateNames = job.DuplicateNames ?? "override"
+                DuplicateNames = job.DuplicateNames ?? "override",
+                Shadows = job.Shadows,
+                ShadowIntensity = job.ShadowIntensity,
+                SunlightIntensity = job.SunlightIntensity,
+                SunDate = job.SunDate,
+                SunTime = job.SunTime,
+                SunAzimuthDeg = job.SunAzimuthDeg,
+                SunAltitudeDeg = job.SunAltitudeDeg,
+                GroundPlane = job.GroundPlane,
+                GroundPlaneLevel = job.GroundPlaneLevel,
+                Background = job.Background,
+                BackgroundColors = job.BackgroundColors,
+                LightingScheme = job.LightingScheme
             };
             if (command == "batch")
             {
@@ -56,7 +69,7 @@ public static class ActionJobParser
                 {
                     var stepCommand = step?.Command ?? string.Empty;
                     Require(IsAction(stepCommand) && stepCommand is not ("show" or "batch" or "merge-phases" or "rebuild-model-ids"),
-                        "Batch steps must be move, place-family, create-wall, create-floor, set-phase, set-parameter, delete, select or isolate.");
+                        "Batch steps must be move, place-family, create-wall, create-floor, set-phase, set-parameter, set-view-lighting, delete, select or isolate.");
                     var parsed = Parse(stepCommand, step!);
                     Require(parsed.Error is null, $"Step {action.Steps.Count}: {parsed.Error}");
                     action.Steps.Add(parsed);
@@ -162,6 +175,58 @@ public static class ActionJobParser
                 }
                 Require(!(action.DryRun && action.Copies > 1), "copies is only available without dryRun.");
             }
+            if (command == "set-view-lighting")
+            {
+                Require(!string.IsNullOrWhiteSpace(action.View), "view is required.");
+                action.View = action.View!.Trim();
+                Require(action.Shadows.HasValue || action.ShadowIntensity.HasValue || action.SunlightIntensity.HasValue
+                        || action.SunDate is not null || action.SunTime is not null
+                        || action.SunAzimuthDeg.HasValue || action.SunAltitudeDeg.HasValue
+                        || action.GroundPlane.HasValue || action.GroundPlaneLevel is not null
+                        || action.Background is not null || action.LightingScheme is not null,
+                    "Provide at least one lighting setting to change.");
+                Require(action.ShadowIntensity is null or (>= 0 and <= 100), "shadowIntensity must be between 0 and 100.");
+                Require(action.SunlightIntensity is null or (>= 0 and <= 100), "sunlightIntensity must be between 0 and 100.");
+                if (action.SunDate is not null)
+                {
+                    action.SunDate = action.SunDate.Trim();
+                    Require(DateTime.TryParseExact(action.SunDate, "yyyy-MM-dd", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out _), "sunDate must use yyyy-MM-dd.");
+                }
+                if (action.SunTime is not null)
+                {
+                    action.SunTime = action.SunTime.Trim();
+                    Require(DateTime.TryParseExact(action.SunTime, "HH:mm", CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out _), "sunTime must use 24-hour HH:mm.");
+                }
+                Require(action.SunAzimuthDeg.HasValue == action.SunAltitudeDeg.HasValue,
+                    "sunAzimuthDeg and sunAltitudeDeg must be provided together.");
+                Require(action.SunAzimuthDeg is null or (>= 0 and <= 360), "sunAzimuthDeg must be between 0 and 360.");
+                Require(action.SunAltitudeDeg is null or (>= -90 and <= 90), "sunAltitudeDeg must be between -90 and 90.");
+                if (action.GroundPlaneLevel is not null)
+                {
+                    Require(!string.IsNullOrWhiteSpace(action.GroundPlaneLevel), "groundPlaneLevel must not be blank.");
+                    action.GroundPlaneLevel = action.GroundPlaneLevel!.Trim();
+                }
+                if (action.Background is not null)
+                {
+                    action.Background = action.Background.Trim().ToLowerInvariant();
+                    Require(action.Background is "sky" or "gradient", "background must be 'sky' or 'gradient'.");
+                }
+                if (action.BackgroundColors is not null)
+                {
+                    Require(action.Background == "gradient", "backgroundColors requires background 'gradient'.");
+                    Require(action.BackgroundColors.Count == 3 && action.BackgroundColors.All(IsHexColor),
+                        "backgroundColors must hold three '#RRGGBB' colors: sky, horizon, ground.");
+                }
+                if (action.LightingScheme is not null)
+                {
+                    action.LightingScheme = action.LightingScheme.Trim().ToLowerInvariant();
+                    Require(action.LightingScheme is "exterior-sun" or "exterior-sun-and-artificial" or "exterior-artificial"
+                            or "interior-sun" or "interior-sun-and-artificial" or "interior-artificial",
+                        "lightingScheme must be exterior-sun, exterior-sun-and-artificial, exterior-artificial, interior-sun, interior-sun-and-artificial or interior-artificial.");
+                }
+            }
             var result = ControlJobParseResult.Create(ControlJobKind.Action, command);
             result.Action = action;
             return result;
@@ -204,6 +269,9 @@ public static class ActionJobParser
     }
 
     private static bool Finite(params double[] values) => values.All(value => !double.IsNaN(value) && !double.IsInfinity(value));
+
+    private static bool IsHexColor(string? value) =>
+        value is { Length: 7 } && value[0] == '#' && value.Skip(1).All(Uri.IsHexDigit);
 
     private static void Require(bool condition, string message)
     {
@@ -276,6 +344,42 @@ public sealed class ActionJobContract
     /// the run does not need to burn ids for every copy. The destination path may carry "{n}" for the number.
     /// </summary>
     public int Copies { get; set; } = 1;
+
+    /// <summary>Graphic Display Options "Shadows" for the addressed view: cast shadows on or off.</summary>
+    public bool? Shadows { get; set; }
+
+    /// <summary>Sun and shadow intensity, 0 (no cast shadow) to 100 (black).</summary>
+    public int? ShadowIntensity { get; set; }
+
+    /// <summary>Simulated sunlight intensity, 0 (no directional light) to 100.</summary>
+    public int? SunlightIntensity { get; set; }
+
+    /// <summary>Still-image sun date as yyyy-MM-dd, read in the project time zone.</summary>
+    public string? SunDate { get; set; }
+
+    /// <summary>Still-image sun time as 24-hour HH:mm, read in the project time zone.</summary>
+    public string? SunTime { get; set; }
+
+    /// <summary>Lighting-study sun azimuth in degrees clockwise from north; requires the altitude too.</summary>
+    public double? SunAzimuthDeg { get; set; }
+
+    /// <summary>Lighting-study sun altitude in degrees above the horizon; requires the azimuth too.</summary>
+    public double? SunAltitudeDeg { get; set; }
+
+    /// <summary>Whether the sun and shadow settings use a ground plane.</summary>
+    public bool? GroundPlane { get; set; }
+
+    /// <summary>Level the ground plane sits on.</summary>
+    public string? GroundPlaneLevel { get; set; }
+
+    /// <summary>"sky" or "gradient", for the view display background.</summary>
+    public string? Background { get; set; }
+
+    /// <summary>Three "#RRGGBB" gradient colors: sky, horizon, ground.</summary>
+    public List<string>? BackgroundColors { get; set; }
+
+    /// <summary>Rendering lighting scheme: exterior or interior with sun, artificial light or both.</summary>
+    public string? LightingScheme { get; set; }
 }
 
 public sealed partial class ControlJobContract
@@ -312,6 +416,18 @@ public sealed partial class ControlJobContract
     [DataMember(Name = "seed")] public int? Seed { get; set; }
     [DataMember(Name = "duplicateNames")] public string? DuplicateNames { get; set; }
     [DataMember(Name = "copies")] public int? Copies { get; set; }
+    [DataMember(Name = "shadows")] public bool? Shadows { get; set; }
+    [DataMember(Name = "shadowIntensity")] public int? ShadowIntensity { get; set; }
+    [DataMember(Name = "sunlightIntensity")] public int? SunlightIntensity { get; set; }
+    [DataMember(Name = "sunDate")] public string? SunDate { get; set; }
+    [DataMember(Name = "sunTime")] public string? SunTime { get; set; }
+    [DataMember(Name = "sunAzimuthDeg")] public double? SunAzimuthDeg { get; set; }
+    [DataMember(Name = "sunAltitudeDeg")] public double? SunAltitudeDeg { get; set; }
+    [DataMember(Name = "groundPlane")] public bool? GroundPlane { get; set; }
+    [DataMember(Name = "groundPlaneLevel")] public string? GroundPlaneLevel { get; set; }
+    [DataMember(Name = "background")] public string? Background { get; set; }
+    [DataMember(Name = "backgroundColors")] public List<string>? BackgroundColors { get; set; }
+    [DataMember(Name = "lightingScheme")] public string? LightingScheme { get; set; }
 }
 
 [DataContract]
@@ -385,6 +501,12 @@ public sealed class ActionResultData
 
     [DataMember(Name = "count", EmitDefaultValue = false)] public int? Count { get; set; }
     [DataMember(Name = "notes", EmitDefaultValue = false)] public List<string>? Notes { get; set; }
+
+    /// <summary>
+    /// Settings one call actually changed, named the way the tool names its arguments: a view has no element id
+    /// to report in <see cref="ActionVerification.Changed"/>, so the changed settings carry that meaning instead.
+    /// </summary>
+    [DataMember(Name = "changedSettings", EmitDefaultValue = false)] public List<string>? ChangedSettings { get; set; }
     [DataMember(Name = "sourceDeleted", EmitDefaultValue = false)] public bool? SourceDeleted { get; set; }
     [DataMember(Name = "phaseDeleteError", EmitDefaultValue = false)] public string? PhaseDeleteError { get; set; }
     [DataMember(Name = "id", EmitDefaultValue = false)] public long? Id { get; set; }

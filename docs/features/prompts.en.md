@@ -1,6 +1,6 @@
 # Prompt library
 
-19 read + 14 action tools, 33 in total
+19 read + 15 action tools, 34 in total
 
 Set `REVIT_MCP_ALLOW_WRITE=1` in the client and create the workstation `allow-write` file. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
 
@@ -116,6 +116,22 @@ Page through the elements of the 3D view, 200 at a time
 
 ```text
 Which warnings touch this view?
+```
+
+### [Set view lighting](revit_set_view_lighting.md)
+
+`revit_set_view_lighting` — Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme
+
+```text
+Turn on shadows in the 3D view, set the shadow intensity to 60, use a sky background and light the rendering with exterior sun
+```
+
+```text
+Set the sun in {3D} to 2026-06-21 15:00 with a sunlight intensity of 80, and rehearse it first
+```
+
+```text
+Fix the sun in lighting mode at azimuth 135° and altitude 45°, and turn on the ground plane at level 01
 ```
 
 ## Export and checks {#group-export}

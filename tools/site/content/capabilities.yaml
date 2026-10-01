@@ -712,6 +712,32 @@ tools:
     note:
       zh: 任一步首次失败都整体回滚
       en: Rolls the whole batch back when a step fails
+  revit_set_view_lighting:
+    group: views
+    since: 0.10.0
+    title:
+      zh: "设置视图光照"
+      en: "Set view lighting"
+    summary:
+      zh: 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案
+      en: "Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把三维视图的阴影打开，阴影浓度 60，背景换成天空，渲染光源用室外阳光
+      en: Turn on shadows in the 3D view, set the shadow intensity to 60, use a sky background and light the rendering with exterior sun
+    - zh: 把 {3D} 的太阳设成 2026-06-21 15:00，阳光强度 80，先彩排一次
+      en: Set the sun in {3D} to 2026-06-21 15:00 with a sunlight intensity of 80, and rehearse it first
+    - zh: 用光照模式把太阳固定在方位角 135°、高度角 45°，并打开标高 01 的地面平面
+      en: Fix the sun in lighting mode at azimuth 135° and altitude 45°, and turn on the ground plane at level 01
+    note:
+      zh: 阳光与阴影设置属于视图；共享设置时改动会传递到共享该设置的其他视图，阴影开关在共享设置下不可用
+      en: Sun and shadow settings belong to the view; a shared setting passes the change on to every view that shares it, and the shadow switch itself is unavailable when they are shared
 year_notes:
   '2020':
     zh:
@@ -889,6 +915,49 @@ param_notes:
     target_phase:
       zh: 接收引用的阶段名
       en: the phase that receives the references
+  revit_set_view_lighting:
+    view:
+      zh: 视图名称（与 revit_list_views 一致）或十进制视图 ID；非样板视图
+      en: view name as revit_list_views reports it, or its decimal view ID; a non-template view
+    shadows:
+      zh: 视图的太阳与阴影显示开关；关闭后不画太阳路径与投影，强度设置随之失效；共享设置的视图会拒绝
+      en: the view's sun and shadow display switch; off draws neither the sun path nor cast shadows, which also mutes the intensities; a view that shares its settings refuses it
+    shadow_intensity:
+      zh: 投影浓度 0–100，0 表示没有投影
+      en: cast shadow intensity from 0 to 100, where 0 means no cast shadow
+    sunlight_intensity:
+      zh: 模拟阳光强度 0–100
+      en: simulated sunlight intensity from 0 to 100
+    sun_date:
+      zh: 静止图像的日期 yyyy-MM-dd；作为本地时间交给 Revit，读数以 UTC 与时区回读
+      en: still-image date as yyyy-MM-dd, handed to Revit as local time; the reading reports it as UTC with the time zone
+    sun_time:
+      zh: 静止图像的时间 24 小时 HH:mm；作为本地时间交给 Revit，读数以 UTC 与时区回读
+      en: still-image time as 24-hour HH:mm, handed to Revit as local time; the reading reports it as UTC with the time zone
+    sun_azimuth_deg:
+      zh: 光照模式的太阳方位角，自北顺时针；必须与高度角同时给出
+      en: lighting-mode sun azimuth clockwise from north; pass it with the altitude
+    sun_altitude_deg:
+      zh: 光照模式的太阳高度角，地平线以上，-90–90
+      en: lighting-mode sun altitude above the horizon, from -90 to 90
+    ground_plane:
+      zh: 是否使用地面平面
+      en: whether the sun and shadow settings use a ground plane
+    ground_plane_level:
+      zh: 地面平面所在标高；Revit 不认可的标高会被标记为地面平面
+      en: level the ground plane sits on; a level Revit does not accept is marked as a ground plane
+    background:
+      zh: 视图背景 sky 或 gradient，仅三维、剖切和立面视图支持
+      en: 'view background: sky or gradient, on 3D, section and elevation views only'
+    background_colors:
+      zh: "渐变三色（天顶、地平线、地面），如 #C8DEF0"
+      en: 'gradient colors (sky, horizon, ground), for example #C8DEF0'
+    lighting_scheme:
+      zh: 渲染光源方案：室外或室内，配阳光、人工光或两者
+      en: 'rendering lighting source: exterior or interior, with sun, artificial light or both'
+    dry_run:
+      zh: 彩排：改完读取并回滚，返回与真实写入相同的读数
+      en: 'rehearse: change, read, then roll back, returning the same readings as a real write'
 param_defaults:
   element_ids:
     zh: 构件 ID 列表（无单位的 Revit ID）

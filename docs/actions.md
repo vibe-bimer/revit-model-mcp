@@ -47,6 +47,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 | `revit_set_phase` | `element_ids`、`created_phase`、`demolished_phase` | 按阶段的准确名称赋值；每个阶段参数可为名称、清除赋值的 `""`，或保持不变的 null；至少一个参数非 null。这些工具不创建或重命名阶段，应先在 Revit 界面中添加新阶段。 |
 | `revit_merge_phases` | `source_phase`、`target_phase` | 将所有创建与拆除引用从源阶段移到目标阶段，再删除空源阶段；删除被拒绝时以 `sourceDeleted:false` 和 `phaseDeleteError` 报告。不支持放入批次。 |
 | `revit_set_parameter` | `element_id`、`parameter`、`value` | 按参数名传入字符串形式的值；长度使用 mm，面积使用 m2，其余 Double 使用内部单位。 |
+| `revit_set_view_lighting` | `view`、`shadows=null`、`shadow_intensity=null`、`sunlight_intensity=null`、`sun_date=null`、`sun_time=null`、`sun_azimuth_deg=null`、`sun_altitude_deg=null`、`ground_plane=null`、`ground_plane_level=null`、`background=null`、`background_colors=null`、`lighting_scheme=null`、`dry_run=false` | 按视图名称或视图 ID 设置一个非样板视图的光照：阴影开关、阳光与阴影强度、太阳日期与时间或固定光照方位角／高度角、地面平面、背景与渲染光源方案。响应在 `verification.before.lighting`／`verification.after.lighting` 给出改动前后的读数，并用 `changedSettings` 列出真正变化的项。 |
 | `revit_delete` | `element_ids` | 删除非空 ID 列表中的构件及其依赖。 |
 | `revit_reset_element_ids` | `element_ids`、`dry_run=false` | 用副本替换构件，让 Revit 分配新 ID；报告 `idMapping`。若删除会移除依赖、构件有宿主或属于组、构件是 MEP 曲线或 MEP 系统成员（副本不会重新接入网络，Revit 会在删除的原构件周围自动修复管线），或 Revit 无法复制该构件，则拒绝替换。 |
 | `revit_batch` | `steps`、`dry_run=false` | 执行 1–50 个动作，合并为名为 `revit_batch` 的一次撤销记录。 |
@@ -57,7 +58,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 <a id="dry-runs-and-id-replacement"></a>
 ## 试运行与 ID 替换
 
-`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
+`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter`、`revit_set_view_lighting` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
 试运行会执行修改、读取预期结果，然后回滚事务。
 成功的试运行包含 `data.dryRun:true`、`data.rolledBack:true`，以及与真实写入相同结构的 `verification`。
 动作抛出异常时返回错误，不带验证块；单动作工具遇到缺失族时还返回 `closestFamilies`。
@@ -65,6 +66,28 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 `revit_reset_element_ids` 也支持 `dry_run`；应先试运行，因为真实替换不可撤销。
 只要有一个构件不符合条件，它就拒绝整个选择集；它从不原地修改 ID，也不把旧 ID 写入参数。
 试运行中创建的 ID 是临时值，不能用来标识已持久化构件。
+
+<a id="view-lighting"></a>
+## 视图光照
+
+`revit_set_view_lighting` 用视图名称或十进制视图 ID 定位一个非样板视图，并且只改动传入的参数。
+`shadows` 开关该视图的太阳与阴影显示，对应 `SunAndShadowSettings.Visible`：关闭后 Revit 既不画太阳路径也不画投影，强度设置因此没有可见效果；共享太阳与阴影设置的视图无法单独开关，会被直接拒绝。
+Revit 没有为「图形显示选项」里的「阴影」复选框提供 API——`GRAPHIC_DISPLAY_OPTIONS_SHADOWS` 只是枚举成员，在视图上取不到该参数（已在 Revit 2020 实测确认），因此 `shadows` 是 API 真正提供的那个开关。
+`shadow_intensity`（0–100，0 表示没有投影）和 `sunlight_intensity`（0–100）分别控制投影浓度与模拟阳光强度。
+没有太阳与阴影设置的视图（例如明细表）会被直接拒绝，不会静默忽略。
+
+`sun_date`（`yyyy-MM-dd`）和 `sun_time`（24 小时 `HH:mm`）确定「静止图像」的太阳位置，作为本地时间交给 Revit；读数以 `sunDateAndTimeUtc` 和 `sunTimeZoneHours` 回读，因此始终可以核对 Revit 实际保存的时刻。只传其中一个时，另一半沿用视图当前值；两者都会把单日或多日日照研究切回静止图像。
+需要固定的太阳位置时改用 `sun_azimuth_deg`（自北顺时针）与 `sun_altitude_deg`（地平线以上），两者必须同时提供，会把太阳设置切到「光照」模式。
+
+`ground_plane` 开关地面平面，`ground_plane_level` 指定地面所在的标高。
+Revit 只接受它认定为地面平面的标高，因此传入其他标高时，工具会先把该标高标记为地面平面（`LEVEL_IS_GROUND_PLANE`）再重试，并在 `notes` 中说明这一步；选定地面平面标高时若地面平面仍是关闭状态，也会一并打开。
+`background` 取 `sky` 或 `gradient`，只对三维、剖切和立面视图有效；`background_colors` 依次给出渐变的天顶、地平线、地面三色（`#RRGGBB`），省略时沿用当前渐变，当前背景不是渐变时使用 `#C8DEF0`／`#F5F5F5`／`#BFBFBF`。
+Revit 的 API 只能把背景换成天空、渐变或图片，无法恢复成「无背景」，也无法清除已选定的地面平面标高；两项都是本项目记录的 API 限制，改动前应先确认视图当前状态。
+`lighting_scheme` 设置渲染光源方案：`exterior-sun`、`exterior-sun-and-artificial`、`exterior-artificial`、`interior-sun`、`interior-sun-and-artificial`、`interior-artificial`；只影响渲染，不改变着色显示。
+
+太阳与阴影设置属于视图。若该视图与其他视图共享设置，读数的 `sunSettingsShared` 为 true，改动会一并作用到共享这些设置的所有视图，响应会在 `notes` 中提示。
+`verification.before.lighting` 与 `verification.after.lighting` 给出改动前后的完整读数：视图 ID、名称、类型、阴影、两种强度、太阳类型与时间（UTC）、项目时区与夏令时、光照模式的方位角与高度角、地面平面与标高、背景类型与颜色、渲染光源方案。
+视图没有可报告的构件 ID，因此真正变化的项列在 `changedSettings`（例如 `["shadows","sun_date_time"]`）中，而不是 `verification.changed`。
 
 <a id="rebuilding-into-new-model-files"></a>
 ## 重建为新模型文件

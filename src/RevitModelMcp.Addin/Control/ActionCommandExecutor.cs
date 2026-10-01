@@ -258,6 +258,8 @@ internal static class ActionCommandExecutor
                 return ActionMutations.MergePhases(document, action);
             case "set-parameter":
                 return ActionMutations.SetParameter(document, action);
+            case "set-view-lighting":
+                return ViewLighting.Apply(document, action);
             default:
                 throw new ArgumentException($"Unknown action: {command}.");
         }

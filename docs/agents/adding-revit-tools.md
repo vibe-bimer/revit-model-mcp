@@ -115,6 +115,11 @@ python3 revit-corpus/scripts/corpus_query.py 'Floor' -k class --show
 - **无法通过 API 创建或重命名阶段。** 不存在 `NewPhase` 或 `Phase.Create`；对 `Document.Phases` 调用 `PhaseArray.Append/Insert` 不会持久化。所有重命名路径都会失败：`BuiltInParameter.PHASE_NAME` 为只读，`Element.Name` 会抛出 `"This element does not support assignment of a user-specified name"`（已在 Revit 2026 真机复现；[2025 年 Autodesk 论坛讨论](https://forums.autodesk.com/t5/revit-api-forum/is-it-possible-to-control-phases-using-the-revit-api/td-p/13631528) 和 [2021 年讨论](https://forums.autodesk.com/t5/revit-api-forum/how-to-create-project-phase-programly/td-p/9722434) 也报告了相同错误）。阶段必须在阶段对话框（Manage > Phases）中创建和命名；应在项目模板中统一阶段集合。
 - **可以合并阶段**，这也是 `revit_merge_phases` 的实现方式：重新分配所有 `CreatedPhaseId` 或 `DemolishedPhaseId` 指向源阶段的元素，再删除清空后的阶段。这与 Autodesk 支持在[阶段合并讨论](https://forums.autodesk.com/t5/revit-api-forum/merge-phases/td-p/5594567)中说明的方法一致。
 - **可以通过模拟按键驱动阶段对话框，但很脆弱**：提交 `ID_SETTINGS_PHASES` 命令并模拟按键，可以创建和重命名阶段，[Dynamo 论坛示例](https://forum.dynamobim.com/t/creating-phases-renaming-phases/114509)展示了这一点。它需要可见屏幕来校准 Tab 顺序；按键序列出错会让 Revit 被对话框阻塞，绝不可无人值守使用。
+- **「图形显示选项」里的「阴影」复选框没有 API。** 针对工作站已安装的 Revit 2020 构建并调用 `view.get_Parameter(BuiltInParameter.GRAPHIC_DISPLAY_OPTIONS_SHADOWS)`，在测试模型的三个三维视图上全部返回 null；视图的完整参数表只有无存储类型的 `ParameterTypeId.GraphicDisplayOptions`。枚举成员存在，可用参数不存在。API 真正提供的阴影控制是 `View.ShadowIntensity`（0 表示没有投影）、`View.SunlightIntensity`、`SunAndShadowSettings.Visible`、`UsesGroundPlane` 与太阳位置；显示模型、草图线、深度提示和背景分别由 `View.GetViewDisplayModel`、`GetViewDisplaySketchyLines`、`GetViewDisplayDepthCueing` 和 `GetBackground` 覆盖。Autodesk 的[图形显示选项说明](https://blog.autodesk.io/revitapi-how-to-get-graphic-display-options/)也指出 API 并未暴露该对话框的全部选项。
+- **`SunAndShadowSettings.Visible` 是按视图的太阳与阴影显示开关，不是投影开关。** 它在 Revit 2020 上为 false 时，导出的视图既没有太阳路径环，也没有投影，此时修改 `View.ShadowIntensity` 不产生可见变化；设为 true 后太阳路径环恢复。共享设置元素时该属性会抛异常，因此共享设置的视图没有按视图开关。
+- **视图背景无法通过 API 清除。** `ViewDisplayBackground` 只能创建天空、渐变和图片背景（`SetBackground(null)` 会抛异常），因此在背景为 `None` 的视图上设置 `background=sky` 后无法在同一会话内还原。
+- **已选定的地面平面标高同样无法清除。** `SunAndShadowSettings.GroundPlaneLevelId` 只接受标高，`GroundPlaneHeight` 为只读；`UsesGroundPlane=false` 只是隐藏地面平面，标高赋值仍然保留。
+- **Revit 2020 接受普通标高作为地面平面**：在测试模型上直接设置 `3F` 即成功，不需要改 `LEVEL_IS_GROUND_PLANE`；`ViewLighting` 里的标记兜底只针对 Revit 拒绝的标高。
 
 <a id="version-caveats"></a>
 ## 版本注意事项

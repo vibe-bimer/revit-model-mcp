@@ -226,7 +226,7 @@ Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `in
 
 ## 动作写入与批量
 
-文件通道和 HTTP 接受 `move`、`place-family`、`create-wall`、`create-floor`、`set-phase`、`merge-phases`、`set-parameter`、`delete` 和 `batch` 的 `dryRun`。
+文件通道和 HTTP 接受 `move`、`place-family`、`create-wall`、`create-floor`、`set-phase`、`merge-phases`、`set-parameter`、`set-view-lighting`、`delete` 和 `batch` 的 `dryRun`。
 成功的修改始终返回 `data.dryRun`。
 成功的试运行返回 `data.rolledBack:true`；预期变化的事实在回滚前读取。
 动作抛出异常时返回错误，不包含验证块。
@@ -245,6 +245,12 @@ Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `in
 | `set-phase` | `{"before":{"elements":[{"id":3,"category":"Walls","createdPhase":"新构造","demolishedPhase":""}]},"after":{"elements":[{"id":3,"category":"Walls","createdPhase":"现有","demolishedPhase":"拆除"}]},"changed":[3]}`；空字符串表示未分配阶段。 |
 | `merge-phases` | `{"before":{"sourcePhase":"临时","targetPhase":"新构造"},"after":{"reassignedCreated":12,"reassignedDemolished":3,"sourceRemaining":0}}`；`data.sourceDeleted` 和 `data.phaseDeleteError` 报告删除尝试。 |
 | `delete` | `{"before":{"requested":[1],"dependents":[2]},"after":{"stillPresent":[]},"changed":[1,2]}` |
+| `set-view-lighting` | `{"before":{"lighting":{"viewId":7,"view":"{3D}","viewType":"ThreeD","shadows":false,"shadowIntensity":50,"sunType":"OneDayStudy","sunDateAndTimeUtc":"2026-03-01T01:00:00Z","background":"None"}},"after":{"lighting":{"…":"改动后的同一组读数"}}}`；`data.changedSettings` 列出真正变化的项（如 `["shadows","sun_date_time"]`），`verification.changed` 保持为空，因为视图没有可报告的构件 ID。 |
+
+`changed` 包含四舍五入后的边界或参数值发生变化的 ID，或 `Document.Delete` 返回的全部 ID。
+`dependents` 不包含显式请求的 ID。
+`set-view-lighting` 不写 `changed`，改用顶层 `data.changedSettings` 报告视图设置的变化。
+`verification.*.lighting` 的读数为：`viewId`、`view`、`viewType`、`shadows`、`shadowIntensity`、`sunlightIntensity`、`sunType`、`sunDateAndTimeUtc`、`sunTimeZoneHours`、`sunUsesDst`、`sunAzimuthDeg`、`sunAltitudeDeg`（仅光照模式）、`sunSettingsShared`、`groundPlane`、`groundPlaneLevel`、`background`、`backgroundColors`（仅渐变）、`lightingScheme`（仅三维视图）；视图不暴露的项省略。
 
 `changed` 包含四舍五入后的边界或参数值发生变化的 ID，或 `Document.Delete` 返回的全部 ID。
 `dependents` 不包含显式请求的 ID。
@@ -262,7 +268,7 @@ Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `in
 
 步骤使用各命令正常的通道字段。
 执行前，在解析时校验所有步骤；即使后面的步骤无效，也会拒绝整个批量任务，不执行任何步骤，且不包含 `failedStep`。
-允许的命令为 `move`、`place-family`、`create-wall`、`create-floor`、`set-phase`、`set-parameter`、`delete`、`select` 和 `isolate`。
+允许的命令为 `move`、`place-family`、`create-wall`、`create-floor`、`set-phase`、`set-parameter`、`set-view-lighting`、`delete`、`select` 和 `isolate`。
 每个模型步骤使用自己的事务；整个事务组被合并为单个撤销记录 `revit_batch`。
 批量试运行会保留各步骤的修改供后续步骤使用，并在最后回滚整个事务组。
 实际执行的批量中，单个通道步骤可以包含 `dryRun:true`（MCP 中为 `dry_run:true`）；这只预览该步骤。

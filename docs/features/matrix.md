@@ -26,7 +26,7 @@
 | [构件关系](revit_list_relations.md)<br>`revit_list_relations` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
 | [Revit 实例列表](revit_list_instances.md)<br>`revit_list_instances` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
 
-## 动作工具 (14) {'#read-tools' if read_only else '#action-tools'}
+## 动作工具 (15) {'#read-tools' if read_only else '#action-tools'}
 
 | 工具 | 2020 | 2026 | 2022–2025 / 2027 |
 | --- | :--: | :--: | :--: |
@@ -40,6 +40,7 @@
 | [设置构件阶段](revit_set_phase.md)<br>`revit_set_phase` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 | [合并项目阶段](revit_merge_phases.md)<br>`revit_merge_phases` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 | [修改参数](revit_set_parameter.md)<br>`revit_set_parameter` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
+| [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 | [删除构件](revit_delete.md)<br>`revit_delete` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
 | [同文档替换 ID](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 | [新模型重建 ID](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |

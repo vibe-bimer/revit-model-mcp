@@ -127,18 +127,18 @@
 
 <a id="4-action-tools-gated-writes-9"></a>
 <a id="4-action-tools-gated-actions-14"></a>
-## 4. 动作工具 — 受门禁保护的动作（14）
+## 4. 动作工具 — 受门禁保护的动作（15）
 
 动作需要**同时满足两道门禁**：`REVIT_MCP_ALLOW_WRITE=1` **以及**工作站上的 allow-write 文件。直接 HTTP 调用者还需要 Bearer 令牌。本节只描述另行授权的人工测试，不是文档维护时执行的动作。使用一次性模型副本和独立输出路径，先备份、记录基线；真实修改前获得所有者许可。
 
 连接必须恰好发现一个 Revit 进程。`document` 用于选择该进程内已打开的模型；多个文档打开时必填。未知或歧义目标会在任何修改前被拒绝。`revit_select`、`revit_show`、`revit_isolate` 还要求目标文档处于活动状态。
 
-**安全语义因工具而异**：选择、显示／导航使用 UI 调用，不需要模型事务；隔离改变临时视图状态，没有 `dry_run`。下表八个普通模型编辑工具支持事务式 `dry_run=true`：执行、验证预期结果，再回滚。批处理支持事务组回滚。换 ID 是独立的不可逆替换流程：必须先 dry run；任一元素不合格时阻止整组选中项的真实执行。重建 ID 写入新模型文件，不修改源模型；其 dry run 执行复制但不保存文件。
+**安全语义因工具而异**：选择、显示／导航使用 UI 调用，不需要模型事务；隔离改变临时视图状态，没有 `dry_run`。下表九个普通模型编辑工具支持事务式 `dry_run=true`：执行、验证预期结果，再回滚。批处理支持事务组回滚。换 ID 是独立的不可逆替换流程：必须先 dry run；任一元素不合格时阻止整组选中项的真实执行。重建 ID 写入新模型文件，不修改源模型；其 dry run 执行复制但不保存文件。
 
 !!! warning "报错不等于回滚"
     `verification.error` 可能在 **COMMIT（提交）后**发生：编辑已经完成，但提交后的重读失败。传输或接单超时不会取消待执行任务，任务可能稍后执行。重试前检查目标模型、ID 及输出文件，不能宣称每个失败响应都保证模型不变。
 
-- [ ] **4.0 枚举**：启用服务器动作标志后，`tools/list` 恰好包含下列 **14 个具名动作**和 19 个读取（共 33 个）。保存 schema；不存在独立的“按名称打开视图”或 undo 工具。
+- [ ] **4.0 枚举**：启用服务器动作标志后，`tools/list` 恰好包含下列 **15 个具名动作**和 19 个读取（共 34 个）。保存 schema；不存在独立的“按名称打开视图”或 undo 工具。
 
 | # | 动作工具 | 测试及验证 | 清理／安全 | [ ] |
 | --- | --- | --- | --- | --- |
@@ -152,10 +152,11 @@
 | 8 | `revit_set_phase` | 先 dry run，再用目录阶段名；测试创建／拆除赋值、`""` 清除及 null 保持不变；检查阶段引用 | 恢复原赋值或丢弃副本；不创建／重命名阶段；两个参数均 null 被拒绝 | [ ] |
 | 9 | `revit_merge_phases` | 先 dry run，再将源阶段创建／拆除引用转到目标；核对数量、`sourceDeleted`；仍被引用的阶段可能保留且 `sourceDeleted=false` | 专用一次性副本；源／目标必须不同；不能加入批处理 | [ ] |
 | 10 | `revit_set_parameter` | 先 dry run，再改可写参数；核对前后值及实例／类型归属；长度 mm、面积 m²、其他 double 内部单位 | 恢复值或丢弃副本；共享类型修改影响全部实例；只读／ElementId 参数被拒绝 | [ ] |
-| 11 | `revit_delete` | 先 dry run，检查包含依赖的 ID，再仅删除已批准的测试元素；核对存活检查和返回数量 | 删除数量含依赖；丢弃副本或经授权使用 Revit UI 撤销 | [ ] |
-| 12 | `revit_reset_element_ids` | **必须先 dry run**：检查 `ineligible` 原因和 `idMapping`；合格／不合格混选时真实执行须整组拒绝。对已批准的全合格测试副本，确认旧 ID 消失、新副本及保留的类型／类别 | **不可逆，不依赖撤销。** 拒绝有宿主、属组、有依赖、MEP 曲线／系统成员及不可复制元素。丢弃副本并恢复备份；不原地赋 ID，也不把旧 ID 写入参数 | [ ] |
-| 13 | `revit_rebuild_model_ids` | Dry run 有映射但无保存文件。真实执行到新的工作站 `destination_path`；检查 `saved`、源／副本数量、排除项、每个 ID 映射。覆盖视图／模板、`seed`、重名模式、`copies`／`{n}` 路径，逐项检查 `copyResults` | 源模型不变、不保存。未经批准不覆盖；检查所有输出。只复制三维视图可选构件及基准对象，不是完整项目归档；不保留视图／图纸／明细表／注释／阶段／工作集／MEP 系统／未选宿主 | [ ] |
-| 14 | `revit_batch` | 先 dry run，再执行 1–50 个已批准步骤；核对预期验证、回滚及选择恢复。真实成功只有一个 `revit_batch` 撤销项；首个执行失败回滚事务组；检查 `committed`、从零计数的 `failedStep` 及各步结果 | 使用一次性副本；后续步骤参数无效须在任何执行前拒绝。允许名称：`move`、`place_family`、`create_wall`、`create_floor`、`set_phase`、`set_parameter`、`delete`、`select`、`isolate`；不允许 `show`、阶段合并、换 ID／重建 ID 或嵌套批处理 | [ ] |
+| 11 | `revit_set_view_lighting` | 先 dry run 读取改动前后读数；再真实设置阴影开关、`shadow_intensity`、`sunlight_intensity`、太阳日期／时间或光照模式方位角／高度角、地面平面与标高、背景与渲染光源方案。核对 `changedSettings` 与 `verification.before/after.lighting`，并用 `revit_export_view` 对比图片；在共享太阳与阴影设置的视图上确认 `shadows` 被拒绝 | 恢复可还原项（阴影、强度、太阳时间、光源方案）；**背景与地面平面标高无法通过 API 清除**，需丢弃副本。`shadows` 关闭后强度设置不再有可见效果 | [ ] |
+| 12 | `revit_delete` | 先 dry run，检查包含依赖的 ID，再仅删除已批准的测试元素；核对存活检查和返回数量 | 删除数量含依赖；丢弃副本或经授权使用 Revit UI 撤销 | [ ] |
+| 13 | `revit_reset_element_ids` | **必须先 dry run**：检查 `ineligible` 原因和 `idMapping`；合格／不合格混选时真实执行须整组拒绝。对已批准的全合格测试副本，确认旧 ID 消失、新副本及保留的类型／类别 | **不可逆，不依赖撤销。** 拒绝有宿主、属组、有依赖、MEP 曲线／系统成员及不可复制元素。丢弃副本并恢复备份；不原地赋 ID，也不把旧 ID 写入参数 | [ ] |
+| 14 | `revit_rebuild_model_ids` | Dry run 有映射但无保存文件。真实执行到新的工作站 `destination_path`；检查 `saved`、源／副本数量、排除项、每个 ID 映射。覆盖视图／模板、`seed`、重名模式、`copies`／`{n}` 路径，逐项检查 `copyResults` | 源模型不变、不保存。未经批准不覆盖；检查所有输出。只复制三维视图可选构件及基准对象，不是完整项目归档；不保留视图／图纸／明细表／注释／阶段／工作集／MEP 系统／未选宿主 | [ ] |
+| 15 | `revit_batch` | 先 dry run，再执行 1–50 个已批准步骤；核对预期验证、回滚及选择恢复。真实成功只有一个 `revit_batch` 撤销项；首个执行失败回滚事务组；检查 `committed`、从零计数的 `failedStep` 及各步结果 | 使用一次性副本；后续步骤参数无效须在任何执行前拒绝。允许名称：`move`、`place_family`、`create_wall`、`create_floor`、`set_phase`、`set_parameter`、`set_view_lighting`、`delete`、`select`、`isolate`；不允许 `show`、阶段合并、换 ID／重建 ID 或嵌套批处理 | [ ] |
 
 - [ ] **4.1 门禁反向测试**：服务器动作标志关闭时，即使有工作站门禁，动作也不在 `tools/list` 中；标志打开但无工作站门禁时，已列出的动作被拒绝。删除工作站门禁无需重启 Revit 即生效。读取仍可使用。
 - [ ] **4.2 HTTP 令牌门禁**：不带 Bearer 令牌的直接 HTTP 动作被拒绝；`/health` 无令牌也可使用。

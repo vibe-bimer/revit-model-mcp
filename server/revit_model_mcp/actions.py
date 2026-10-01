@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import re
+from datetime import datetime
 from typing import Annotated, Any, Literal
 
 from mcp.server.mcpserver.exceptions import ToolError
@@ -69,6 +71,35 @@ _BATCH_FIELDS = {
         "parameter": (Name, ...),
         "value": (str, ...),
     },
+    "set_view_lighting": {
+        "view": (Name, ...),
+        "shadows": (bool | None, None),
+        "shadow_intensity": (Annotated[int, Field(ge=0, le=100)] | None, None),
+        "sunlight_intensity": (Annotated[int, Field(ge=0, le=100)] | None, None),
+        "sun_date": (str | None, None),
+        "sun_time": (str | None, None),
+        "sun_azimuth_deg": (Number | None, None),
+        "sun_altitude_deg": (Number | None, None),
+        "ground_plane": (bool | None, None),
+        "ground_plane_level": (Name | None, None),
+        "background": (Literal["sky", "gradient"] | None, None),
+        "background_colors": (
+            Annotated[list[str], Field(min_length=3, max_length=3)] | None,
+            None,
+        ),
+        "lighting_scheme": (
+            Literal[
+                "exterior-sun",
+                "exterior-sun-and-artificial",
+                "exterior-artificial",
+                "interior-sun",
+                "interior-sun-and-artificial",
+                "interior-artificial",
+            ]
+            | None,
+            None,
+        ),
+    },
     "delete": {"element_ids": (NonEmptyIds, ...)},
 }
 for _action in (
@@ -78,6 +109,7 @@ for _action in (
     "create_floor",
     "set_phase",
     "set_parameter",
+    "set_view_lighting",
     "delete",
 ):
     _BATCH_FIELDS[_action]["dry_run"] = (bool, False)
@@ -96,6 +128,7 @@ class BatchStep(BaseModel):
         "create_floor",
         "set_phase",
         "set_parameter",
+        "set_view_lighting",
         "delete",
         "select",
         "isolate",
@@ -121,6 +154,26 @@ class BatchStep(BaseModel):
             and self.args["demolished_phase"] is None
         ):
             raise ValueError("At least one of created_phase or demolished_phase is required.")
+        if self.action == "set_view_lighting":
+            settings = (
+                "shadows",
+                "shadow_intensity",
+                "sunlight_intensity",
+                "sun_date",
+                "sun_time",
+                "sun_azimuth_deg",
+                "sun_altitude_deg",
+                "ground_plane",
+                "ground_plane_level",
+                "background",
+                "lighting_scheme",
+            )
+            if all(self.args[key] is None for key in settings):
+                raise ValueError("Provide at least one lighting setting to change.")
+            if (self.args["sun_azimuth_deg"] is None) != (self.args["sun_altitude_deg"] is None):
+                raise ValueError("sun_azimuth_deg and sun_altitude_deg must be provided together.")
+            if self.args["background_colors"] is not None and self.args["background"] != "gradient":
+                raise ValueError("background_colors requires background 'gradient'.")
         return self
 
     def payload(self) -> dict:
@@ -191,6 +244,7 @@ def register_actions(mcp, execute, host_provider) -> None:
             "revit_set_phase": "Set Element Phases",
             "revit_merge_phases": "Merge Phases",
             "revit_set_parameter": "Set Parameter",
+            "revit_set_view_lighting": "Set View Lighting",
             "revit_delete": "Delete Elements",
             "revit_reset_element_ids": "Reset Element IDs",
             "revit_rebuild_model_ids": "Rebuild Model With New IDs",
@@ -210,6 +264,7 @@ def register_actions(mcp, execute, host_provider) -> None:
                     "revit_isolate",
                     "revit_set_parameter",
                     "revit_set_phase",
+                    "revit_set_view_lighting",
                 },
             ),
         )(function)
@@ -432,6 +487,98 @@ def register_actions(mcp, execute, host_provider) -> None:
             elementId=element_id,
             parameter=parameter,
             value=value,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @action
+    async def revit_set_view_lighting(
+        view: Name,
+        shadows: bool | None = None,
+        shadow_intensity: Annotated[int, Field(ge=0, le=100)] | None = None,
+        sunlight_intensity: Annotated[int, Field(ge=0, le=100)] | None = None,
+        sun_date: str | None = None,
+        sun_time: str | None = None,
+        sun_azimuth_deg: Number | None = None,
+        sun_altitude_deg: Number | None = None,
+        ground_plane: bool | None = None,
+        ground_plane_level: Name | None = None,
+        background: Literal["sky", "gradient"] | None = None,
+        background_colors: Annotated[list[str], Field(min_length=3, max_length=3)] | None = None,
+        lighting_scheme: Literal[
+            "exterior-sun",
+            "exterior-sun-and-artificial",
+            "exterior-artificial",
+            "interior-sun",
+            "interior-sun-and-artificial",
+            "interior-artificial",
+        ]
+        | None = None,
+        dry_run: bool = False,
+        document: Document = None,
+    ) -> dict[str, Any]:
+        """Set the lighting of one view: shadows, sun position, ground plane, background and the rendering lighting scheme.
+
+        `view` is an exact non-template view name or its decimal view ID, as revit_list_views reports it; a view without sun and shadow settings is refused.
+        Every other argument is optional and only the ones you pass change; the response reports the readings before and after under verification.before.lighting and verification.after.lighting, and names what moved in changedSettings.
+        `shadows` switches the view's per-view sun and shadow display: with it off Revit draws neither the sun path nor cast shadows, so the intensity settings stop showing; Revit exposes no API for the Graphic Display Options Shadows checkbox itself, so this per-view switch is the only shadow switch the tool can write, and a view whose sun and shadow settings are shared is refused.
+        `shadow_intensity` is 0 (no cast shadow) to 100 (black) and `sunlight_intensity` is 0 to 100.
+        `sun_date` (yyyy-MM-dd) and `sun_time` (24-hour HH:mm) fix a still-image sun position and are handed to Revit as local time; the readings report the stored instant as sunDateAndTimeUtc with the project time zone, so what Revit kept is always checkable. Passing one keeps the other half of what the view already shows, and both switch a sun study back to a still image.
+        `sun_azimuth_deg` (clockwise from north) and `sun_altitude_deg` (degrees above the horizon) set a fixed lighting-study sun instead, and must be passed together.
+        `ground_plane` uses the ground plane and `ground_plane_level` names the level it sits on; Revit only accepts a level it knows as a ground plane, so a level that is not one is marked as a ground plane and the response says so.
+        `background` is `sky` or `gradient` and works on 3D, section and elevation views; `background_colors` gives the three gradient colors as #RRGGBB (sky, horizon, ground) and defaults to the current gradient or a light sky-to-ground ramp.
+        `lighting_scheme` sets the rendering lighting source: exterior-sun, exterior-sun-and-artificial, exterior-artificial, interior-sun, interior-sun-and-artificial or interior-artificial.
+        Sun and shadow settings belong to the view; a view that shares them reports sunSettingsShared true and passes the change on to every view that shares them.
+        dry_run executes and rolls back, returning the same verification block without changing the model.
+        Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected.
+        """
+        settings = {
+            "shadows": shadows,
+            "shadow_intensity": shadow_intensity,
+            "sunlight_intensity": sunlight_intensity,
+            "sun_date": sun_date,
+            "sun_time": sun_time,
+            "sun_azimuth_deg": sun_azimuth_deg,
+            "sun_altitude_deg": sun_altitude_deg,
+            "ground_plane": ground_plane,
+            "ground_plane_level": ground_plane_level,
+            "background": background,
+            "lighting_scheme": lighting_scheme,
+        }
+        if all(value is None for value in settings.values()):
+            raise ToolError("Provide at least one lighting setting to change.")
+        if (sun_azimuth_deg is None) != (sun_altitude_deg is None):
+            raise ToolError("sun_azimuth_deg and sun_altitude_deg must be provided together.")
+        if background_colors is not None and background != "gradient":
+            raise ToolError("background_colors requires background 'gradient'.")
+        for label, value, shape, pattern, expected in (
+            ("sun_date", sun_date, r"\d{4}-\d{2}-\d{2}", "%Y-%m-%d", "yyyy-MM-dd"),
+            ("sun_time", sun_time, r"\d{2}:\d{2}", "%H:%M", "24-hour HH:mm"),
+        ):
+            if value is None:
+                continue
+            # strptime accepts "2026-3-1", so the shape is checked before the calendar is.
+            if not re.fullmatch(shape, value):
+                raise ToolError(f"{label} must use {expected}.")
+            try:
+                datetime.strptime(value, pattern)
+            except ValueError as error:
+                raise ToolError(f"{label} must use {expected}.") from error
+        return await send(
+            "set-view-lighting",
+            view=view,
+            shadows=shadows,
+            shadowIntensity=shadow_intensity,
+            sunlightIntensity=sunlight_intensity,
+            sunDate=sun_date,
+            sunTime=sun_time,
+            sunAzimuthDeg=sun_azimuth_deg,
+            sunAltitudeDeg=sun_altitude_deg,
+            groundPlane=ground_plane,
+            groundPlaneLevel=ground_plane_level,
+            background=background,
+            backgroundColors=background_colors,
+            lightingScheme=lighting_scheme,
             dryRun=dry_run,
             document=document,
         )

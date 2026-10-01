@@ -170,6 +170,8 @@ nav:
               - features/revit_export_element_ids.md
               - features/revit_list_warnings.md
       - 动作功能:
+          - 视图与截图:
+              - features/revit_set_view_lighting.md
           - 选中与显示:
               - features/revit_select.md
               - features/revit_show.md

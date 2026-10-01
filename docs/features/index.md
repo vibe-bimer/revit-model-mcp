@@ -1,13 +1,13 @@
 # 功能总览
 
-19 个读取 + 14 个动作，共 33 个工具
+19 个读取 + 15 个动作，共 34 个工具
 
 ## 按 Revit 年份查阅 {#by-version}
 
 | Revit 年份 | 验证状态 |
 | --- | --- |
-| [Revit 2020](v2020.md) | 读取 19/19、动作 14/14 已实测；其余仅构建 |
-| [Revit 2026](v2026.md) | 读取 18/19、动作 8/14 已实测；其余仅构建 |
+| [Revit 2020](v2020.md) | 读取 19/19、动作 15/15 已实测；其余仅构建 |
+| [Revit 2026](v2026.md) | 读取 18/19、动作 8/15 已实测；其余仅构建 |
 | 2022–2025 / 2027 | 仅构建，未实测 |
 
 已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
@@ -32,7 +32,7 @@
 | [构件参数与几何](revit_element_details.md)<br>`revit_element_details` | 单个构件的实例参数、类型参数与几何（mm） |
 | [构件关系](revit_list_relations.md)<br>`revit_list_relations` | 关系查询：标高的房间、面积方案成员、组内构件、嵌套族、视图样板依赖 |
 
-### 视图与截图 (5) {#group-views}
+### 视图与截图 (6) {#group-views}
 
 | 工具 | 用途 |
 | --- | --- |
@@ -41,6 +41,7 @@
 | [导出视图图片](revit_export_view.md)<br>`revit_export_view` | 把视图导出成 PNG 图片（1–4000 像素） |
 | [视图构件明细](revit_view_elements.md)<br>`revit_view_elements` | 分页读取视图中的构件（可按类别过滤） |
 | [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关元素的警告 |
+| [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案 |
 
 ### 导出与检验 (6) {#group-export}
 

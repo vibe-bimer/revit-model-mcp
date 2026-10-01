@@ -2126,6 +2126,222 @@
   {
     "annotations": {
       "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false,
+      "title": "Set View Lighting"
+    },
+    "description": "Set the lighting of one view: shadows, sun position, ground plane, background and the rendering lighting scheme.\n\n        `view` is an exact non-template view name or its decimal view ID, as revit_list_views reports it; a view without sun and shadow settings is refused.\n        Every other argument is optional and only the ones you pass change; the response reports the readings before and after under verification.before.lighting and verification.after.lighting, and names what moved in changedSettings.\n        `shadows` switches the view's per-view sun and shadow display: with it off Revit draws neither the sun path nor cast shadows, so the intensity settings stop showing; Revit exposes no API for the Graphic Display Options Shadows checkbox itself, so this per-view switch is the only shadow switch the tool can write, and a view whose sun and shadow settings are shared is refused.\n        `shadow_intensity` is 0 (no cast shadow) to 100 (black) and `sunlight_intensity` is 0 to 100.\n        `sun_date` (yyyy-MM-dd) and `sun_time` (24-hour HH:mm) fix a still-image sun position and are handed to Revit as local time; the readings report the stored instant as sunDateAndTimeUtc with the project time zone, so what Revit kept is always checkable. Passing one keeps the other half of what the view already shows, and both switch a sun study back to a still image.\n        `sun_azimuth_deg` (clockwise from north) and `sun_altitude_deg` (degrees above the horizon) set a fixed lighting-study sun instead, and must be passed together.\n        `ground_plane` uses the ground plane and `ground_plane_level` names the level it sits on; Revit only accepts a level it knows as a ground plane, so a level that is not one is marked as a ground plane and the response says so.\n        `background` is `sky` or `gradient` and works on 3D, section and elevation views; `background_colors` gives the three gradient colors as #RRGGBB (sky, horizon, ground) and defaults to the current gradient or a light sky-to-ground ramp.\n        `lighting_scheme` sets the rendering lighting source: exterior-sun, exterior-sun-and-artificial, exterior-artificial, interior-sun, interior-sun-and-artificial or interior-artificial.\n        Sun and shadow settings belong to the view; a view that shares them reports sunSettingsShared true and passes the change on to every view that shares them.\n        dry_run executes and rolls back, returning the same verification block without changing the model.\n        Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected.\n        ",
+    "inputSchema": {
+      "properties": {
+        "background": {
+          "anyOf": [
+            {
+              "enum": [
+                "sky",
+                "gradient"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Background"
+        },
+        "background_colors": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Background Colors"
+        },
+        "document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change.",
+          "title": "Document"
+        },
+        "dry_run": {
+          "default": false,
+          "title": "Dry Run",
+          "type": "boolean"
+        },
+        "ground_plane": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ground Plane"
+        },
+        "ground_plane_level": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ground Plane Level"
+        },
+        "lighting_scheme": {
+          "anyOf": [
+            {
+              "enum": [
+                "exterior-sun",
+                "exterior-sun-and-artificial",
+                "exterior-artificial",
+                "interior-sun",
+                "interior-sun-and-artificial",
+                "interior-artificial"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Lighting Scheme"
+        },
+        "shadow_intensity": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Shadow Intensity"
+        },
+        "shadows": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Shadows"
+        },
+        "sun_altitude_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sun Altitude Deg"
+        },
+        "sun_azimuth_deg": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sun Azimuth Deg"
+        },
+        "sun_date": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sun Date"
+        },
+        "sun_time": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sun Time"
+        },
+        "sunlight_intensity": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sunlight Intensity"
+        },
+        "view": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "View",
+          "type": "string"
+        }
+      },
+      "required": [
+        "view"
+      ],
+      "title": "revit_set_view_lightingArguments",
+      "type": "object"
+    },
+    "name": "revit_set_view_lighting",
+    "outputSchema": {
+      "additionalProperties": true,
+      "title": "revit_set_view_lightingDictOutput",
+      "type": "object"
+    },
+    "title": "Set View Lighting"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
       "idempotentHint": false,
       "readOnlyHint": false,
       "title": "Delete Elements"
@@ -2346,6 +2562,7 @@
                 "create_floor",
                 "set_phase",
                 "set_parameter",
+                "set_view_lighting",
                 "delete",
                 "select",
                 "isolate"

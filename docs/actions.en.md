@@ -45,6 +45,7 @@ See the [feature overview](features/index.md) for each tool's full parameter tab
 | `revit_set_phase` | `element_ids`, `created_phase`, `demolished_phase` | Assign project phases by exact name; each phase argument is a name, `""` to clear that assignment, or null to leave it unchanged; at least one non-null. These tools do not create or rename phases — add new phases in the UI first. |
 | `revit_merge_phases` | `source_phase`, `target_phase` | Move every creation and demolition reference off the source phase into the target, then delete the empty source phase; a refused deletion is reported with `sourceDeleted:false` and `phaseDeleteError`. Not batchable. |
 | `revit_set_parameter` | `element_id`, `parameter`, `value` | Set a string value by parameter name; lengths use mm, areas m2, other doubles internal units. |
+| `revit_set_view_lighting` | `view`, `shadows=null`, `shadow_intensity=null`, `sunlight_intensity=null`, `sun_date=null`, `sun_time=null`, `sun_azimuth_deg=null`, `sun_altitude_deg=null`, `ground_plane=null`, `ground_plane_level=null`, `background=null`, `background_colors=null`, `lighting_scheme=null`, `dry_run=false` | Set one non-template view's lighting by view name or view ID: shadows, sun and shadow intensities, sun date and time or a fixed lighting-study azimuth and altitude, ground plane, background and rendering lighting scheme. The response reports the readings before and after under `verification.before.lighting` and `verification.after.lighting`, and names what moved in `changedSettings`. |
 | `revit_delete` | `element_ids` | Delete nonempty IDs and their dependents. |
 | `revit_reset_element_ids` | `element_ids`, `dry_run=false` | Replace elements with copies so Revit assigns new IDs; reports `idMapping` and refuses an element when deletion would remove dependents, when it is hosted or grouped, when it is an MEP curve or an MEP system member (a copy does not rejoin the network, and Revit re-heals the run around the deleted original), or when Revit cannot copy it. |
 | `revit_batch` | `steps`, `dry_run=false` | Execute 1–50 actions with a single undo entry named `revit_batch`. |
@@ -54,7 +55,7 @@ See the [feature overview](features/index.md) for each tool's full parameter tab
 
 ## Dry runs and ID replacement
 
-`revit_move`, `revit_place_family`, `revit_create_wall`, `revit_create_floor`, `revit_set_phase`, `revit_merge_phases`, `revit_set_parameter` and `revit_delete` also accept `dry_run=false`, before the common `document` argument.
+`revit_move`, `revit_place_family`, `revit_create_wall`, `revit_create_floor`, `revit_set_phase`, `revit_merge_phases`, `revit_set_parameter`, `revit_set_view_lighting` and `revit_delete` also accept `dry_run=false`, before the common `document` argument.
 A dry run executes the mutation, reads its prospective result, and rolls back the transaction.
 A successful dry run includes `data.dryRun:true`, `data.rolledBack:true` and the same `verification` shape as a real write.
 An action that throws returns an error without a verification block; a missing family also returns `closestFamilies` on the single-action tool.
@@ -62,6 +63,27 @@ An action that throws returns an error without a verification block; a missing f
 `revit_reset_element_ids` also supports `dry_run`; run it first because a real exchange cannot be undone.
 It refuses the entire selection if any element is ineligible, never changes an ID in place and never writes the old ID into a parameter.
 Created IDs in a dry run are provisional and do not identify persisted elements.
+
+## View lighting
+
+`revit_set_view_lighting` addresses one non-template view by name or decimal view ID and changes only the arguments you pass.
+`shadows` switches that view's sun and shadow display, which is `SunAndShadowSettings.Visible`: with it off Revit draws neither the sun path nor cast shadows, so the intensity settings stop showing, and a view that shares its sun and shadow settings cannot switch them alone and is refused.
+Revit offers no API for the Graphic Display Options Shadows checkbox — `GRAPHIC_DISPLAY_OPTIONS_SHADOWS` is only an enum member and the parameter cannot be read from a view (verified live on Revit 2020) — so `shadows` is the switch the API really provides.
+`shadow_intensity` (0 to 100, where 0 means no cast shadow) and `sunlight_intensity` (0 to 100) set the cast shadow density and the simulated sunlight.
+A view without sun and shadow settings, such as a schedule, is refused instead of being silently ignored.
+
+`sun_date` (`yyyy-MM-dd`) and `sun_time` (24-hour `HH:mm`) fix a still-image sun position and are handed to Revit as local time; the reading reports the result as `sunDateAndTimeUtc` with `sunTimeZoneHours`, so what Revit stored is always checkable. Passing one keeps the other half of what the view already shows, and both switch a one-day or multi-day sun study back to a still image.
+For a fixed sun position use `sun_azimuth_deg` (clockwise from north) and `sun_altitude_deg` (degrees above the horizon) instead: they must be passed together and switch the sun settings to lighting mode.
+
+`ground_plane` uses the ground plane and `ground_plane_level` names the level it sits on.
+Revit only accepts a level it knows as a ground plane, so a level that is not one is marked as a ground plane first (`LEVEL_IS_GROUND_PLANE`) and the response says so under `notes`; choosing a ground plane level while the ground plane is off also switches it on.
+`background` is `sky` or `gradient` and works on 3D, section and elevation views; `background_colors` gives the gradient's sky, horizon and ground colors as `#RRGGBB` and defaults to the current gradient, or to `#C8DEF0`/`#F5F5F5`/`#BFBFBF` when the current background is not a gradient.
+Revit's API can set a background to sky, gradient or image but cannot return it to none, and it cannot clear a chosen ground plane level; both are API limits recorded for this project, so check the view's current state before changing them.
+`lighting_scheme` sets the rendering lighting source: `exterior-sun`, `exterior-sun-and-artificial`, `exterior-artificial`, `interior-sun`, `interior-sun-and-artificial` or `interior-artificial`; it affects renderings, not the shaded display.
+
+Sun and shadow settings belong to the view. When a view shares them, the reading reports `sunSettingsShared:true`, the change reaches every view that shares them, and the response says so under `notes`.
+`verification.before.lighting` and `verification.after.lighting` carry the full readings on both sides: view ID, name and type, shadows, both intensities, sun type and time (UTC), project time zone and daylight saving, lighting-mode azimuth and altitude, ground plane and level, background type and colors, and the rendering lighting scheme.
+A view has no element ID to report, so the settings that actually moved are listed in `changedSettings` (for example `["shadows","sun_date_time"]`) instead of `verification.changed`.
 
 ## Rebuilding into new model files
 

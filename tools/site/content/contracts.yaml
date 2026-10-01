@@ -324,3 +324,20 @@ tools:
       `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
     source: b18166af74371d1c64a7db759b338eb1cee664d5468be10c53972be21356affc
+  revit_set_view_lighting:
+    zh: |
+      设置一个视图的光照：阴影、太阳位置、地面平面、背景以及渲染光源方案。
+
+      `view` 是准确的非样板视图名称，或 `revit_list_views` 报告的十进制视图 ID；没有太阳与阴影设置的视图会被拒绝。
+      其余参数都是可选的，只有传入的参数会被修改；响应在 `verification.before.lighting` 与 `verification.after.lighting` 中给出改动前后的读数，并在 `changedSettings` 中列出真正发生变化的项。
+      `shadows` 开关该视图的太阳与阴影显示：关闭后 Revit 既不画太阳路径也不画投影，强度设置随之没有可见效果；Revit 没有为「图形显示选项」的「阴影」复选框提供 API，因此这是工具能写入的唯一阴影开关，而共享太阳与阴影设置的视图会被拒绝。
+      `shadow_intensity` 取 0（没有投影）到 100（全黑），`sunlight_intensity` 取 0 到 100。
+      `sun_date`（yyyy-MM-dd）与 `sun_time`（24 小时 HH:mm）确定「静止图像」的太阳位置，并作为本地时间交给 Revit；读数以 `sunDateAndTimeUtc` 与 `sunTimeZoneHours` 回读，因此 Revit 实际保存的时刻始终可以核对。只传其中一个时，另一半沿用视图当前值，两者都会把日照研究切回静止图像。
+      需要固定太阳时改用 `sun_azimuth_deg`（自北顺时针）与 `sun_altitude_deg`（地平线以上），两者必须同时给出，会把太阳设置切到光照模式。
+      `ground_plane` 开关地面平面，`ground_plane_level` 指定地面所在的标高；Revit 只接受它认定为地面平面的标高，因此传入其他标高时该标高会被标记为地面平面，响应会说明这一点。
+      `background` 取 `sky` 或 `gradient`，对三维、剖切和立面视图有效；`background_colors` 依次给出渐变的天顶、地平线、地面三色（#RRGGBB），省略时沿用当前渐变，或使用浅天空到地面的默认渐变。
+      `lighting_scheme` 设置渲染光源：exterior-sun、exterior-sun-and-artificial、exterior-artificial、interior-sun、interior-sun-and-artificial 或 interior-artificial。
+      太阳与阴影设置属于视图；共享这些设置的视图读数为 sunSettingsShared true，改动会一并作用到共享该设置的所有视图。
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+    source: 61dd66225c75ef662230011fa8fd9946833212f6080407d0c4c095cfd44fffa9

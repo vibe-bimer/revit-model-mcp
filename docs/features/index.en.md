@@ -1,13 +1,13 @@
 # Feature overview
 
-19 read + 14 action tools, 33 in total
+19 read + 15 action tools, 34 in total
 
 ## Browse by Revit year {#by-version}
 
 | Revit year | Validation |
 | --- | --- |
-| [Revit 2020](v2020.md) | 19/19 reads and 14/14 actions validated live; the rest are build-only |
-| [Revit 2026](v2026.md) | 18/19 reads and 8/14 actions validated live; the rest are build-only |
+| [Revit 2020](v2020.md) | 19/19 reads and 15/15 actions validated live; the rest are build-only |
+| [Revit 2026](v2026.md) | 18/19 reads and 8/15 actions validated live; the rest are build-only |
 | 2022–2025 / 2027 | Build only, not live-tested |
 
 Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.
@@ -32,7 +32,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Element details](revit_element_details.md)<br>`revit_element_details` | Read instance/type parameters and geometry for one element ID |
 | [Element relations](revit_list_relations.md)<br>`revit_list_relations` | Read level rooms, area-scheme membership, group members, nested families and view-template dependents |
 
-### Views and snapshots (5) {#group-views}
+### Views and snapshots (6) {#group-views}
 
 | Tool | Purpose |
 | --- | --- |
@@ -41,6 +41,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Export view image](revit_export_view.md)<br>`revit_export_view` | Export a view as a PNG, from 1 to 4000 pixels |
 | [View element rows](revit_view_elements.md)<br>`revit_view_elements` | Page through elements in a selected view, optionally filtered by category |
 | [View warnings](revit_view_warnings.md)<br>`revit_view_warnings` | Read warnings involving elements present in a selected view |
+| [Set view lighting](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme |
 
 ### Export and checks (6) {#group-export}
 

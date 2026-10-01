@@ -29,6 +29,7 @@ ACTION_COMMANDS = frozenset(
         "set-phase",
         "merge-phases",
         "set-parameter",
+        "set-view-lighting",
         "delete",
         "reset-element-ids",
         "rebuild-model-ids",

@@ -26,7 +26,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Element relations](revit_list_relations.md)<br>`revit_list_relations` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 | [Revit instance list](revit_list_instances.md)<br>`revit_list_instances` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 
-## Action tools (14) {'#read-tools' if read_only else '#action-tools'}
+## Action tools (15) {'#read-tools' if read_only else '#action-tools'}
 
 | Tool | 2020 | 2026 | 2022–2025 / 2027 |
 | --- | :--: | :--: | :--: |
@@ -40,6 +40,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Set element phases](revit_set_phase.md)<br>`revit_set_phase` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | [Merge project phases](revit_merge_phases.md)<br>`revit_merge_phases` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | [Edit parameter](revit_set_parameter.md)<br>`revit_set_parameter` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
+| [Set view lighting](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | [Delete elements](revit_delete.md)<br>`revit_delete` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 | [Replace IDs in place](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | [Rebuild IDs in new models](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |

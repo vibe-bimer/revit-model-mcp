@@ -14,6 +14,10 @@ internal static class ActionVerifier
             "move" => new ActionFacts { Elements = ids.Select(id => Bounds(RequiredElement(targetDocument, RevitValueReader.GetId(id)))).ToList() },
             "set-phase" => new ActionFacts { Elements = ids.Select(id => PhaseFacts(targetDocument, RevitValueReader.GetId(id))).ToList() },
             "set-parameter" => ParameterFacts(targetDocument, action),
+            "set-view-lighting" => new ActionFacts
+            {
+                Lighting = ViewLighting.Read(targetDocument, ViewLighting.Resolve(targetDocument, action.View))
+            },
             "delete" => new ActionFacts { Requested = ids.Select(RevitValueReader.GetId).ToList() },
             _ => null
         };
@@ -42,6 +46,12 @@ internal static class ActionVerifier
             case "set-parameter":
                 verification.After = ParameterFacts(targetDocument, action);
                 verification.Changed = verification.Before!.Value == verification.After.Value ? [] : [action.ElementId];
+                break;
+            case "set-view-lighting":
+                var lighting = ViewLighting.Read(targetDocument, ViewLighting.Resolve(targetDocument, action.View));
+                verification.After = new ActionFacts { Lighting = lighting };
+                // A view change has no element id to report, so the settings that moved are the changed set.
+                result.ChangedSettings = ViewLightingComparison.Differences(verification.Before?.Lighting, lighting);
                 break;
             case "place-family":
             case "create-wall":

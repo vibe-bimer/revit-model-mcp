@@ -196,6 +196,38 @@ Do not re-investigate these; they are settled.
   [Dynamo forum](https://forum.dynamobim.com/t/creating-phases-renaming-phases/114509).
   It needs a visible screen to calibrate tab sequences, leaves Revit blocked
   if a sequence goes wrong, and must never be used unattended.
+- **The Graphic Display Options "Shadows" checkbox has no API.** Building for
+  the installed Revit 2020 and calling
+  `view.get_Parameter(BuiltInParameter.GRAPHIC_DISPLAY_OPTIONS_SHADOWS)`
+  returns null on all three 3D views of the test model, and the view's full
+  parameter list carries `ParameterTypeId.GraphicDisplayOptions` with no
+  storage: the enum member exists, the usable parameter does not. The shadow
+  controls the API really offers are `View.ShadowIntensity` (0 = no cast
+  shadow), `View.SunlightIntensity`, `SunAndShadowSettings.Visible`,
+  `UsesGroundPlane` and the sun position; `View.GetViewDisplayModel`,
+  `GetViewDisplaySketchyLines`, `GetViewDisplayDepthCueing` and
+  `GetBackground` cover display model, sketchy lines, depth cueing and
+  background. Autodesk's own
+  [Graphic Display Options note](https://blog.autodesk.io/revitapi-how-to-get-graphic-display-options/)
+  says the API does not expose every option in that dialog.
+- **`SunAndShadowSettings.Visible` is the per-view sun and shadow display
+  switch, not a cast-shadow toggle.** With it false, Revit 2020 exports the
+  view without the sun path ring and without cast shadows, and
+  `View.ShadowIntensity` changes have no visible effect; with it true the ring
+  returns. It throws when the settings element is shared between views, so a
+  per-view switch does not exist there.
+- **A view display background cannot be cleared through the API.**
+  `ViewDisplayBackground` only creates sky, gradient and image backgrounds
+  (`SetBackground(null)` throws), so setting `background=sky` on a view whose
+  background was `None` cannot be undone in the same session.
+- **A chosen ground plane level cannot be cleared either.**
+  `SunAndShadowSettings.GroundPlaneLevelId` only accepts a level, and
+  `GroundPlaneHeight` is read-only; `UsesGroundPlane=false` hides the plane
+  but keeps the level assignment.
+- **`SunAndShadowSettings.GroundPlaneLevelId` accepts an ordinary level in
+  Revit 2020**: `3F` was accepted on the test model without touching
+  `LEVEL_IS_GROUND_PLANE`, so the marking fallback in `ViewLighting` exists
+  only for a level Revit refuses.
 
 ## Version caveats
 
