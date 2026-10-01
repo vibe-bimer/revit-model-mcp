@@ -82,7 +82,7 @@ plugins:
           nav_translations:
             首页: Home
             指南: Guide
-            服务器: Server
+            服务器（英文）: Server
             工作原理: How it works
             传输与接入: Transport
             安全: Security
@@ -95,9 +95,9 @@ plugins:
             路线图: Roadmap
             项目: Project
             隐私: Privacy
-            贡献: Contributing
-            变更日志: Changelog
-            安全政策: Security policy
+            贡献（英文）: Contributing
+            变更日志（英文）: Changelog
+            安全政策（英文）: Security policy
             功能: Features
             按版本: By version
             工具手册: Tools
@@ -157,7 +157,7 @@ nav:
   # <<< features-nav
   - 首页: index.md
   - 指南:
-      - 服务器: server.md
+      - 服务器（英文）: server.md
       - 工作原理: how-it-works.md
       - 传输与接入: transport.md
       - 安全: security.md
@@ -170,6 +170,6 @@ nav:
       - 路线图: roadmap.md
   - 项目:
       - 隐私: privacy.md
-      - 贡献: contributing.md
-      - 变更日志: changelog.md
-      - 安全政策: security-policy.md
+      - 贡献（英文）: contributing.md
+      - 变更日志（英文）: changelog.md
+      - 安全政策（英文）: security-policy.md

@@ -8,7 +8,10 @@ from urllib.parse import urlsplit
 from markdown import Markdown
 
 SOURCES = {
+    # index.md holds the Chinese landing page of the docs, but keeps mapping to README.md so that links the
+    # English pages make to the project README still resolve; the English home includes the README itself.
     "index.md": "README.md",
+    "index.en.md": "README.md",
     "server.md": "server/README.md",
     "contributing.md": "CONTRIBUTING.md",
     "changelog.md": "CHANGELOG.md",
@@ -27,7 +30,11 @@ def on_page_markdown(markdown, page, config, files):
         },
     )
     markdown = "\n".join(processor.preprocessors["snippet"].run(markdown.splitlines()))
-    pages = {value: key for key, value in SOURCES.items()}
+    # One repository file can back more than one page (the README backs the Chinese landing page and the
+    # English home), so keep every candidate and prefer the one this language build actually has.
+    pages: dict[str, list[str]] = {}
+    for key, value in SOURCES.items():
+        pages.setdefault(value, []).append(key)
     if page.file.src_uri in SOURCES:
         page.edit_url = f"{config.repo_url}/edit/main/{source}"
 
@@ -46,7 +53,10 @@ def on_page_markdown(markdown, page, config, files):
             f"#{url.fragment}" if url.fragment else ""
         )
         if path in pages:
-            return pages[path] + suffix
+            for candidate in pages[path]:
+                if files.get_file_from_path(candidate):
+                    return candidate + suffix
+            return pages[path][0] + suffix
         if path.startswith("docs/"):
             return (
                 posixpath.relpath(path[5:], posixpath.dirname(page.file.src_uri))
