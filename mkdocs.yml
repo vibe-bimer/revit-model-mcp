@@ -20,9 +20,9 @@ theme:
         icon: material/brightness-4
         name: 切换到浅色
   features:
-    - navigation.tabs
-    - navigation.sections
+    - navigation.indexes
     - navigation.top
+    - navigation.tracking
     - search.suggest
     - content.code.copy
     - toc.follow

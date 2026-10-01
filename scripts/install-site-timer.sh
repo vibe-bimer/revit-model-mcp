@@ -19,9 +19,13 @@ elif command -v systemctl >/dev/null 2>&1 && systemctl --user show-environment >
   mkdir -p "$unit_dir"
   sed "s|@ROOT@|$ROOT|g; s|@PORT@|$PORT|g" "$ROOT/scripts/systemd/revit-model-mcp-site.service" > "$unit_dir/revit-model-mcp-site.service"
   sed "s|@INTERVAL@|$INTERVAL_SECONDS|g" "$ROOT/scripts/systemd/revit-model-mcp-site.timer" > "$unit_dir/revit-model-mcp-site.timer"
+  # The server runs as its own unit: a process started from the oneshot refresh unit dies with its cgroup.
+  sed "s|@ROOT@|$ROOT|g; s|@PORT@|$PORT|g" "$ROOT/scripts/systemd/revit-model-mcp-serve.service" > "$unit_dir/revit-model-mcp-serve.service"
   systemctl --user daemon-reload
   systemctl --user enable --now revit-model-mcp-site.timer
-  echo "scheduled with a systemd user timer every ${INTERVAL_SECONDS}s"
+  systemctl --user enable --now revit-model-mcp-serve.service
+  echo "scheduled with a systemd user timer every ${INTERVAL_SECONDS}s; serving on port $PORT"
+  echo "check it with: systemctl --user status revit-model-mcp-serve.service"
 else
   if [ -f "$STATE/supervisor.pid" ] && kill -0 "$(cat "$STATE/supervisor.pid")" 2>/dev/null; then
     echo "the supervisor is already running (pid $(cat "$STATE/supervisor.pid"))"

@@ -1,0 +1,16 @@
+[Unit]
+Description=Serve the Revit Model MCP documentation on the LAN
+Documentation=file://@ROOT@/scripts/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=@ROOT@
+ExecStartPre=/usr/bin/test -f @ROOT@/site/index.html
+ExecStart=/usr/bin/python3 -m http.server @PORT@ --bind 0.0.0.0 --directory @ROOT@/site
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

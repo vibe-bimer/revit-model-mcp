@@ -25,12 +25,16 @@ mkdir -p "$LOG_DIR"
   elif command -v ss >/dev/null 2>&1 && ss -ltn | awk '{print $4}' | grep -q ":$PORT\$"; then
     echo "port $PORT is occupied by another service; leaving it untouched"
     exit 1
-  else
-    echo "starting documentation server on free port $PORT"
-    setsid nohup python3 -m http.server "$PORT" --bind 0.0.0.0 --directory "$ROOT/site" >>"$LOG" 2>&1 &
-    sleep 1
+  elif systemctl --user list-unit-files revit-model-mcp-serve.service >/dev/null 2>&1; then
+    # The server is its own unit; a process spawned here would be killed with this unit's cgroup.
+    echo "starting revit-model-mcp-serve.service"
+    systemctl --user restart revit-model-mcp-serve.service
+    sleep 2
     page="$(curl -fsS "http://127.0.0.1:$PORT/" 2>/dev/null || true)"
     [[ "$page" == *"Revit Model MCP"* && "$page" == *"data-md-component"* ]] || { echo "documentation server verification failed"; exit 1; }
+  else
+    echo "nothing serves port $PORT; run scripts/install-site-timer.sh to install the serve unit, or scripts/serve-site.sh $PORT"
+    exit 1
   fi
   exit "$failed"
 } >>"$LOG" 2>&1
