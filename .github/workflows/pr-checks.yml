@@ -51,7 +51,10 @@ jobs:
       - name: Install documentation dependencies
         run: pip install -r docs/requirements.txt
       - name: Build documentation
-        run: mkdocs build --strict
+        run: |
+          pip install pyyaml
+          python tools/site/generate_features.py --check
+          mkdocs build --strict
       - name: Install Ruff
         run: pip install ruff==0.16.7
       - name: Check Python

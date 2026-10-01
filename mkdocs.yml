@@ -9,20 +9,17 @@ theme:
   logo: assets/logo-white.svg
   favicon: assets/favicon.svg
   palette:
-    - media: '(prefers-color-scheme: light)'
-      scheme: default
+    - scheme: default
       primary: custom
       toggle:
         icon: material/brightness-7
-        name: Switch to dark mode
-    - media: '(prefers-color-scheme: dark)'
-      scheme: slate
+        name: 切换到深色 / Switch to dark
+    - scheme: slate
       primary: custom
       toggle:
         icon: material/brightness-4
-        name: Switch to light mode
+        name: 切换到浅色 / Switch to light
   features:
-    - navigation.instant
     - navigation.tabs
     - navigation.sections
     - navigation.top
@@ -61,15 +58,27 @@ markdown_extensions:
       permalink: true
   - pymdownx.highlight
   - pymdownx.superfences
+  - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true
-  - pymdownx.details
   - pymdownx.snippets:
       base_path: ['.']
       check_paths: true
 
 plugins:
   - search
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      languages:
+        - locale: zh
+          default: true
+          name: 简体中文
+          build: true
+        - locale: en
+          name: English
+          build: true
   - llmstxt:
       full_output: llms-full.txt
       sections:
@@ -92,6 +101,57 @@ plugins:
           - security-policy.md
 
 nav:
+  # >>> features-nav
+  - 功能:
+      - features/index.md
+      - 按版本:
+          - features/v2020.md
+          - features/v2026.md
+          - features/matrix.md
+      - 工具手册:
+          - 连接与文档:
+              - revit_ping: features/revit_ping.md
+              - revit_document_info: features/revit_document_info.md
+              - revit_list_instances: features/revit_list_instances.md
+          - 查询与统计:
+              - revit_list_catalog: features/revit_list_catalog.md
+              - revit_aggregate_elements: features/revit_aggregate_elements.md
+              - revit_query_elements: features/revit_query_elements.md
+              - revit_element_details: features/revit_element_details.md
+              - revit_list_relations: features/revit_list_relations.md
+          - 视图与截图:
+              - revit_list_views: features/revit_list_views.md
+              - revit_view_summary: features/revit_view_summary.md
+              - revit_export_view: features/revit_export_view.md
+              - revit_view_elements: features/revit_view_elements.md
+              - revit_view_warnings: features/revit_view_warnings.md
+          - 导出与检验:
+              - revit_model_health: features/revit_model_health.md
+              - revit_links_status: features/revit_links_status.md
+              - revit_shared_coordinates: features/revit_shared_coordinates.md
+              - revit_parameter_fill_check: features/revit_parameter_fill_check.md
+              - revit_export_element_ids: features/revit_export_element_ids.md
+              - revit_list_warnings: features/revit_list_warnings.md
+          - 选中与显示:
+              - revit_select: features/revit_select.md
+              - revit_show: features/revit_show.md
+              - revit_isolate: features/revit_isolate.md
+          - 编辑:
+              - revit_move: features/revit_move.md
+              - revit_place_family: features/revit_place_family.md
+              - revit_create_wall: features/revit_create_wall.md
+              - revit_create_floor: features/revit_create_floor.md
+              - revit_set_parameter: features/revit_set_parameter.md
+              - revit_delete: features/revit_delete.md
+          - 阶段:
+              - revit_set_phase: features/revit_set_phase.md
+              - revit_merge_phases: features/revit_merge_phases.md
+          - 批量与 ID:
+              - revit_reset_element_ids: features/revit_reset_element_ids.md
+              - revit_rebuild_model_ids: features/revit_rebuild_model_ids.md
+              - revit_batch: features/revit_batch.md
+      - features/prompts.md
+  # <<< features-nav
   - Home: index.md
   - Guide:
       - Server: server.md
