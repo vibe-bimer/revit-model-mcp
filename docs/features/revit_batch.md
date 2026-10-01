@@ -11,13 +11,13 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `steps` ✔ | — | array |
-| `dry_run` | `false` | boolean |
+| `steps` ✔ | — | 1–50 个动作步骤，首步失败整体回滚（array） |
+| `dry_run` | `false` | 彩排：执行后回滚，返回同样的校验块（boolean） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |
     | --- | --- | --- |
-    | `document` | — | any — Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change. |
+    | `document` | — | Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change.（any） |
 
 ## 提示词
 

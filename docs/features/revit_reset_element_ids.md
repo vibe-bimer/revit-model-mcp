@@ -11,13 +11,13 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `element_ids` ✔ | — | array |
-| `dry_run` | `false` | boolean |
+| `element_ids` ✔ | — | 要换 ID 的构件；有宿主、有依赖、成组或属于 MEP 系统的会被拒绝（array） |
+| `dry_run` | `false` | 彩排：替换后回滚，先跑一次看哪些构件不合格（boolean） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |
     | --- | --- | --- |
-    | `document` | — | any — Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change. |
+    | `document` | — | Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change.（any） |
 
 ## 提示词
 

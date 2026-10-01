@@ -17,6 +17,9 @@ if [ -z "${MKDOCS:-}" ] && command -v uv >/dev/null 2>&1; then
 fi
 [ -n "${MKDOCS:-}" ] || { echo "mkdocs was not found; install docs/requirements.txt or set MKDOCS" >&2; exit 1; }
 PYTHON="${PYTHON:-python3}"
+# The LAN build points site_url at the host that serves the site, so the language switch and the absolute
+# links land on this server instead of the upstream Pages path.
+MKDOCS_CONFIG="${MKDOCS_CONFIG:-$ROOT/mkdocs-lan.yml}"
 
 echo "== pulling"
 git pull --ff-only
@@ -26,7 +29,7 @@ echo "== checking that the tool registry and the pages agree"
 
 echo "== building"
 rm -rf site.new
-eval "$MKDOCS build --strict -d site.new"
+eval "$MKDOCS build --strict -f \"$MKDOCS_CONFIG\" -d site.new"
 
 echo "== publishing"
 rm -rf site.prev

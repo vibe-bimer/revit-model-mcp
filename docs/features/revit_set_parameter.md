@@ -12,14 +12,14 @@
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
 | `element_id` ✔ | — | integer |
-| `parameter` ✔ | — | string |
+| `parameter` ✔ | — | Set a named instance parameter, falling back to its shared type; use for edits, with length in mm, area in m2 and other doubles in internal units.（string） |
 | `value` ✔ | — | string |
-| `dry_run` | `false` | boolean |
+| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |
     | --- | --- | --- |
-    | `document` | — | any — Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change. |
+    | `document` | — | Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change.（any） |
 
 ## 提示词
 

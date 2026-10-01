@@ -11,14 +11,14 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `element_id` ✔ | — | integer — Required positive integer Revit element ID from revit_query_elements or revit_view_elements; no default. The ID must exist in the target document. |
+| `element_id` ✔ | — | Required positive integer Revit element ID from revit_query_elements or revit_view_elements; no default. The ID must exist in the target document.（integer） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |
     | --- | --- | --- |
-    | `document` | — | any — Case-insensitive substring of the target active document title or file name; default null leaves requests unaddressed, so any instance may respond. Use a unique substring with multiple instances; revit_list_instances instead returns all matching instances, or all instances when omitted. |
-    | `pickup_timeout_seconds` | `300` | integer — Positive integer seconds to wait for the add-in to pick up a local or SSH job (300 when omitted); ignored over HTTP. A pickup timeout raises an error but the pending job may still execute later. |
-    | `timeout_seconds` | `120` | integer — Positive integer seconds to wait for a result after pickup (120 when omitted); HTTP uses this as its response budget. Expiry raises an error, and increasing it does not override the add-in's execution limits. |
+    | `document` | — | Case-insensitive substring of the target active document title or file name; default null leaves requests unaddressed, so any instance may respond. Use a unique substring with multiple instances; revit_list_instances instead returns all matching instances, or all instances when omitted.（any） |
+    | `pickup_timeout_seconds` | `300` | Positive integer seconds to wait for the add-in to pick up a local or SSH job (300 when omitted); ignored over HTTP. A pickup timeout raises an error but the pending job may still execute later.（integer） |
+    | `timeout_seconds` | `120` | Positive integer seconds to wait for a result after pickup (120 when omitted); HTTP uses this as its response budget. Expiry raises an error, and increasing it does not override the add-in's execution limits.（integer） |
 
 ## 提示词
 

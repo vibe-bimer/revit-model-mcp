@@ -1,6 +1,6 @@
 # 动作工具（14）
 
-<p class="facts">完整契约见英文页 <a href="../actions.en.md">actions.en.md</a>　逐工具的中文说明见 <a href="features/index.md">功能总览</a></p>
+<p class="facts">英文完整契约：把右上角语言切到 English 可看完整契约　逐工具的中文说明见 <a href="../features/">功能总览</a></p>
 
 | 工具 | 一句话 | 参数个数 | 起始版本 |
 | --- | --- | :--: | --- |

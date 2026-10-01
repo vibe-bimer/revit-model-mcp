@@ -1,0 +1,5 @@
+# Local and LAN builds: the site is served from the root of a plain file server, so links must not carry the
+# GitHub Pages project path that the upstream configuration uses.
+INHERIT: mkdocs.yml
+
+site_url: http://192.168.100.120:8099/

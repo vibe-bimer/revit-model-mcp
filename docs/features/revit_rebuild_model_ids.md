@@ -11,20 +11,20 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `destination_path` ✔ | — | string |
-| `copies` | `1` | integer |
-| `dry_run` | `false` | boolean |
-| `duplicate_names` | `"override"` | string |
+| `destination_path` ✔ | — | 新模型路径（.rvt）；含 {n} 时按份编号（string） |
+| `copies` | `1` | 一份新模型连续出多少份（1–50），每份 ID 区间互不重叠（integer） |
+| `dry_run` | `false` | 彩排：复制并给出映射后回滚，不写文件（boolean） |
+| `duplicate_names` | `"override"` | 重名处理：override 保留源类型、reuse 沿用新模型版本（批量默认）、rename 旧回退路径（string） |
 | `overwrite` | `false` | boolean |
 | `remove_template_levels` | `true` | boolean |
-| `seed` | `0` | integer |
+| `seed` | `0` | 先把 ID 推进 N 个再复制，用于预留互不重叠的号段（integer） |
 | `template_path` | — | any |
-| `view` | — | any |
+| `view` | — | Give every component new IDs by copying a 3D view's selectable elements into a new model, because Revit does not allow assigning an element ID.（any） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |
     | --- | --- | --- |
-    | `document` | — | any — Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change. |
+    | `document` | — | Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change.（any） |
 
 ## 提示词
 

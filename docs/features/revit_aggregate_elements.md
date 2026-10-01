@@ -11,24 +11,24 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `group_by` ✔ | — | array — Required list of one or two distinct system fields (e.g. category, family, type, level) or exact localized parameter names from the catalog; no default. Each combination produces a count, with numeric totals added by sum_field. |
-| `area_scheme` | — | any — Exact area-scheme name from the area-schemes catalog, matched case-insensitively. Default null applies no scheme filter; selecting a scheme restricts results to its areas and combines with the other filters. |
+| `group_by` ✔ | — | 1–2 个分组字段（category/family/type/level 或参数名）（array） |
+| `area_scheme` | — | Exact area-scheme name from the area-schemes catalog, matched case-insensitively. Default null applies no scheme filter; selecting a scheme restricts results to its areas and combines with the other filters.（any） |
 | `categories` | — | any |
 | `family` | — | any |
 | `level` | — | any |
-| `parameter_filters` | — | any — AND-combined objects with an exact localized parameter name in parameter, an operator (equals, contains, greater, less, empty, not-empty, exists), and value for comparisons; default null applies no parameter filters. Numeric values use mm, m2, m3 or other document display units; contains requires text, and empty/not-empty/exists need no value. |
+| `parameter_filters` | — | 参数过滤条件（equals/contains/greater/less/empty/not-empty/exists）（any） |
 | `phase` | — | any |
-| `sum_field` | — | any — Numeric system field or exact localized parameter name to sum and average within each group. Default null omits numeric aggregation; lengths use mm, areas m2, volumes m3, and other quantities use the returned unit. |
-| `type_name` | — | any — Exact type name to match, case-insensitively, combined with the other model filters. Default null applies no type filter; discover names with the family-types catalog. |
-| `view` | — | any — Exact non-template view name from the views catalog, matched case-insensitively, to restrict the element collector. Default null searches the document without a view filter; combines with the other model filters. |
+| `sum_field` | — | 需要求和的数值字段或参数名，附带 sum/average（any） |
+| `type_name` | — | Exact type name to match, case-insensitively, combined with the other model filters. Default null applies no type filter; discover names with the family-types catalog.（any） |
+| `view` | — | Exact non-template view name from the views catalog, matched case-insensitively, to restrict the element collector. Default null searches the document without a view filter; combines with the other model filters.（any） |
 | `workset` | — | any |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |
     | --- | --- | --- |
-    | `document` | — | any — Case-insensitive substring of the target active document title or file name; default null leaves requests unaddressed, so any instance may respond. Use a unique substring with multiple instances; revit_list_instances instead returns all matching instances, or all instances when omitted. |
-    | `pickup_timeout_seconds` | `300` | integer — Positive integer seconds to wait for the add-in to pick up a local or SSH job (300 when omitted); ignored over HTTP. A pickup timeout raises an error but the pending job may still execute later. |
-    | `timeout_seconds` | `120` | integer — Positive integer seconds to wait for a result after pickup (120 when omitted); HTTP uses this as its response budget. Expiry raises an error, and increasing it does not override the add-in's execution limits. |
+    | `document` | — | Case-insensitive substring of the target active document title or file name; default null leaves requests unaddressed, so any instance may respond. Use a unique substring with multiple instances; revit_list_instances instead returns all matching instances, or all instances when omitted.（any） |
+    | `pickup_timeout_seconds` | `300` | Positive integer seconds to wait for the add-in to pick up a local or SSH job (300 when omitted); ignored over HTTP. A pickup timeout raises an error but the pending job may still execute later.（integer） |
+    | `timeout_seconds` | `120` | Positive integer seconds to wait for a result after pickup (120 when omitted); HTTP uses this as its response budget. Expiry raises an error, and increasing it does not override the add-in's execution limits.（integer） |
 
 ## 提示词
 

@@ -8,14 +8,14 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `view` ✔ | — | string — Required exact, case-sensitive non-template view name from revit_list_views, or its Revit view ID as a decimal string; no default. An exact name takes precedence over interpreting a numeric string as an ID. |
-| `pixel_size` | `1600` | integer — PNG size in pixels along the fitted image dimension, an integer from 1 to 4000. Default 1600 fits the view at that size while preserving its aspect ratio. |
-| `save_to` | — | any — New PNG file path on the MCP client machine, not the Revit host; an existing destination causes an error. Default null downloads to a local temporary directory and returns localPath. |
+| `view` ✔ | — | Required exact, case-sensitive non-template view name from revit_list_views, or its Revit view ID as a decimal string; no default. An exact name takes precedence over interpreting a numeric string as an ID.（string） |
+| `pixel_size` | `1600` | PNG size in pixels along the fitted image dimension, an integer from 1 to 4000. Default 1600 fits the view at that size while preserving its aspect ratio.（integer） |
+| `save_to` | — | New PNG file path on the MCP client machine, not the Revit host; an existing destination causes an error. Default null downloads to a local temporary directory and returns localPath.（any） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |
     | --- | --- | --- |
-    | `document` | — | any — Case-insensitive substring of the target active document title or file name; default null leaves requests unaddressed, so any instance may respond. Use a unique substring with multiple instances; revit_list_instances instead returns all matching instances, or all instances when omitted. |
+    | `document` | — | Case-insensitive substring of the target active document title or file name; default null leaves requests unaddressed, so any instance may respond. Use a unique substring with multiple instances; revit_list_instances instead returns all matching instances, or all instances when omitted.（any） |
 
 ## 提示词
 

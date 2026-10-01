@@ -11,15 +11,15 @@ Create a floor from a closed boundary for layout on a named level. points_mm are
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `floor_type` ✔ | — | any |
-| `level` ✔ | — | string |
-| `points_mm` ✔ | — | array |
-| `dry_run` | `false` | boolean |
+| `floor_type` ✔ | — | points_mm are model XY polygon vertices in millimetres (at least 3; the boundary closes automatically); null floor_type chooses the first floor type.（any） |
+| `level` ✔ | — | Create a floor from a closed boundary for layout on a named level.（string） |
+| `points_mm` ✔ | — | points_mm are model XY polygon vertices in millimetres (at least 3; the boundary closes automatically); null floor_type chooses the first floor type.（array） |
+| `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |
     | --- | --- | --- |
-    | `document` | — | any — Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change. |
+    | `document` | — | Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change.（any） |
 
 ## Prompts
 
