@@ -11,8 +11,8 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `element_ids` ✔ | — | array |
-| `select` | `true` | boolean |
+| `element_ids` ✔ | — | 要在视图里显示/选中的构件 ID（array） |
+| `select` | `true` | false 时只定位不改变当前选择（boolean） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

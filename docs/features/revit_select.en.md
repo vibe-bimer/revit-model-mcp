@@ -11,7 +11,7 @@ Select element IDs for inspection in Revit; an empty list clears selection; IDs 
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `element_ids` ✔ | — | array |
+| `element_ids` ✔ | — | element ids to select; an empty list clears the selection（array） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

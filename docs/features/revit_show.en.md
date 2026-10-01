@@ -11,8 +11,8 @@ Show elements, optionally selecting them; open a level plan or 3D view when need
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `element_ids` ✔ | — | array |
-| `select` | `true` | boolean |
+| `element_ids` ✔ | — | element ids to show and select（array） |
+| `select` | `true` | false locates the elements without changing the selection（boolean） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

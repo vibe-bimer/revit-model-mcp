@@ -10,11 +10,11 @@ Count filled, empty and missing parameters before an export or hand-over.
 | --- | --- | --- |
 | `categories` ✔ | — | Required list of 1-20 category names from the categories catalog; no default. Matches any listed category and combines with level, workset and view filters.（array） |
 | `parameters` ✔ | — | Required list of 1-30 exact localized parameter names; no default. Each name uses the first LookupParameter match, with type fallback controlled by include_types; missing names are counted as missing.（array） |
-| `include_types` | `true` | boolean |
-| `level` | — | any |
+| `include_types` | `true` | count element types as well (true by default)（boolean） |
+| `level` | — | restrict to one level（any） |
 | `sample_limit` | `20` | Maximum element IDs sampled per parameter for each empty and missing list, an integer from 1 to 100. Default 20 limits samples only; all matching elements contribute to counts.（integer） |
 | `view` | — | Exact non-template view name from the views catalog, matched case-insensitively, to restrict the element collector. Default null searches the document without a view filter; combines with the other model filters.（any） |
-| `workset` | — | any |
+| `workset` | — | restrict to one workset（any） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

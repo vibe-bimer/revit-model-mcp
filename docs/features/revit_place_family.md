@@ -14,10 +14,10 @@
 | `family` ✔ | — | Place a loaded unhosted family on a named level for layout.（string） |
 | `level` ✔ | — | Place a loaded unhosted family on a named level for layout.（string） |
 | `type_name` ✔ | — | any |
-| `x_mm` ✔ | — | number |
-| `y_mm` ✔ | — | number |
+| `x_mm` ✔ | — | 模型 X 坐标（mm）（number） |
+| `y_mm` ✔ | — | 模型 Y 坐标（mm）（number） |
 | `dry_run` | `false` | boolean |
-| `rotation_deg` | `0` | number |
+| `rotation_deg` | `0` | 绕 Z 轴旋转角度（°）（number） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

@@ -9,20 +9,20 @@
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
 | `area_scheme` | — | Exact area-scheme name from the area-schemes catalog, matched case-insensitively. Default null applies no scheme filter; selecting a scheme restricts results to its areas and combines with the other filters.（any） |
-| `categories` | — | any |
-| `family` | — | any |
+| `categories` | — | 类别过滤（可多个，取并集）（any） |
+| `family` | — | 族名过滤（any） |
 | `fields` | — | 要返回的字段；缺省返回常用字段（any） |
 | `include_geometry` | `false` | 是否返回位置、包围盒与所在房间中心（模型 mm）（boolean） |
-| `level` | — | any |
+| `level` | — | 标高过滤（any） |
 | `limit` | `100` | 每页条数（配合 offset 分页）（integer） |
 | `offset` | `0` | integer |
 | `parameter_filters` | — | AND-combined objects with an exact localized parameter name in parameter, an operator (equals, contains, greater, less, empty, not-empty, exists), and value for comparisons; default null applies no parameter filters. Numeric values use mm, m2, m3 or other document display units; contains requires text, and empty/not-empty/exists need no value.（any） |
-| `phase` | — | any |
+| `phase` | — | 阶段过滤（any） |
 | `sort_direction` | `"asc"` | Sort order: asc or desc, case-insensitively; default asc means ascending. Applies to sort_field before offset and limit.（string） |
 | `sort_field` | `"id"` | 排序字段（默认按构件 ID）（string） |
 | `type_name` | — | Exact type name to match, case-insensitively, combined with the other model filters. Default null applies no type filter; discover names with the family-types catalog.（any） |
 | `view` | — | Exact non-template view name from the views catalog, matched case-insensitively, to restrict the element collector. Default null searches the document without a view filter; combines with the other model filters.（any） |
-| `workset` | — | any |
+| `workset` | — | 工作集过滤（any） |
 
 ??? note "通用参数"
     |  参数 | 默认 | 说明 |

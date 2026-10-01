@@ -11,7 +11,7 @@ Temporarily isolate IDs for visual review in the active view, or reset with an e
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `element_ids` ✔ | — | array |
+| `element_ids` ✔ | — | element ids to isolate; combine with reset=true to restore（array） |
 | `reset` | `false` | Temporarily isolate IDs for visual review in the active view, or reset with an empty list; IDs are unitless.（boolean） |
 
 ??? note "Common parameters"

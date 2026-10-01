@@ -1,205 +1,59 @@
-# Adding Revit tools
+# 新增 Revit 工具
 
-How to add a read tool, an action tool, or a new Revit API surface to this
-repository. Follow this document end to end before writing code.
+给这个仓库加读取工具、动作工具，或接入新的 Revit API 时，从头到尾照这份清单走。
 
-## Step 0: verify the API in the local corpus
+!!! note "中文版"
+    本页是中文说明；英文原文见本页的 English 版本（右上角切换），两者以英文为准。
 
-A local Revit 2026 API reference lives under `revit-corpus/` (28,796 CHM
-documents with an FTS5 index). It is optional machine-local data: if the
-directory is missing, skip this step silently and fall back to official docs.
+## 步骤 0：先查本地 API 库
 
-Command line, from the repository root:
+仓库里的 `revit-corpus/` 是一份本地 Revit 2026 API 参考（28,796 篇 CHM 文档 + FTS5 索引）。它是可选的、机器本地数据：目录不存在就跳过这步，改用官方文档。
 
 ```sh
-python3 revit-corpus/scripts/corpus_query.py overloads Floor.Create   # every overload page
+python3 revit-corpus/scripts/corpus_query.py overloads Floor.Create     # 所有重载页
 python3 revit-corpus/scripts/corpus_query.py members FilteredElementCollector -k method
 python3 revit-corpus/scripts/corpus_query.py 'Floor' -k class --show
 ```
 
-Or through the `revit-docs` MCP connector (`revit_docs_symbol`,
-`revit_docs_search`, `revit_docs_read`). `revit_docs_symbol` takes the bare
-dotted name and handles FTS quoting for you.
+也可以用 `revit-docs` 连接器（`revit_docs_symbol` / `revit_docs_search` / `revit_docs_read`）——`revit_docs_symbol` 直接吃带点的名字，FTS 引号它自己处理。
 
-Read the full document, not just the signature: overloads, parameters,
-return values, exceptions and remarks matter. Example: `FilteredElementCollector`
-requires at least one filter and prefers native filters over LINQ.
+**读全文，不要只看签名**：重载、参数、返回值、异常与 remarks 都可能决定实现方式。例：`FilteredElementCollector` 至少要有一个过滤器，且优先用原生过滤器而不是 LINQ。
 
-## Read tool checklist (8 sync points)
+## 读取工具清单（8 个同步点）
 
-A job-based read tool touches both sides of the channel:
+1. **Python 任务构造**：在 `server/revit_model_mcp/revit_channel.py` 加一个 `ReadJob` 类方法（参考 `list_views`）；通用过滤语义放进 `universal_jobs.py`。
+2. **MCP 注册**：在 `server.py` 加 `@addressed_tool` 函数，写清描述与参数默认值。
+3. **Core 解析**：在 `src/RevitModelMcp.Core` 加对应的任务/结果契约（不引用 Revit API，可在 Linux 上单测）。
+4. **插件执行**：在 `src/RevitModelMcp.Addin/Control` 实现，经 `ExternalEvent` 在 Revit 主线程执行。
+5. **测试**：Core 单测 + Python 测试各补一例，覆盖正常与边界。
+6. **文档**：更新 `docs/tools.md`（中文索引会自动生成）与工具契约。
+7. **一致性检查**：`docs/tools.md` 与 `bundle/manifest.json` 的工具名必须一致（CI 会校验）。
+8. **真机验证**：至少在一个年份上实跑，把证据写进 `docs/validation.md`。
 
-1. Python job construction: add a `ReadJob` classmethod in
-   `server/revit_model_mcp/revit_channel.py` (follow `list_views`); shared
-   filter semantics go into `universal_jobs.py`.
-2. MCP registration: add the `@addressed_tool` function in `server.py` and
-   its entry in the title map. A missing entry raises `KeyError`; titles are
-   at most 40 characters (test-enforced).
-3. Core contract: extend `ControlJobKind` and the `FromContract` switch in
-   `Core/Control/ControlJobParser.cs` (universal queries use
-   `UniversalJobParser.cs`).
-4. Core models: add the response data type in `Core/Models/ReadCommandModels.cs`.
-5. Addin reader: add a reader under `src/RevitModelMcp.Addin/Capture/`.
-   Revit API references may appear only in the Addin project, never in Core.
-6. Addin dispatch: add a case in `Control/ReadCommandExecutor.cs`.
-7. Long jobs: if a single ExternalEvent may exceed 60 s, follow the paged
-   session pattern in `ViewElementsSession.cs` and register the session in
-   `ControlChannel.ProcessJob`.
-8. Docs and tests: `docs/tools.md`, `README.md`, `docs/feed-format.md`;
-   `EXPECTED_TOOLS` and `EXPECTED_PARAMETERS` in `server/tests/test_server.py`;
-   parser tests under `tests/RevitModelMcp.Core.Tests/`.
+## 动作工具清单（额外 7 点）
 
-New read tools must keep `readOnlyHint=true`; never widen read-only defaults.
+1. 必须同时受 `REVIT_MCP_ALLOW_WRITE=1` 与工作站 `allow-write` 文件两道门禁约束，**不得放宽默认值**。
+2. 支持 `dry_run`：执行后回滚，返回同样的 `verification` 块。
+3. 返回 `verification`（改动前/后对照），不得把超时或失败伪装成成功。
+4. 在 `ActionJobParser` 里登记动作名与参数范围（如 `copies` 上限）。
+5. 明确是否可以放进 `revit_batch`（一次撤销），不可以的要写进 `docs/actions.md`。
+6. 要求"恰好一个 Revit 实例"的场景要显式检查，避免改错模型。
+7. 更新 `docs/actions.md`（中文索引自动生成）与工具页内容源。
 
-## Action tool checklist (7 additional points)
+## 构建与部署
 
-Action tools extend the read channel and must repeat its discipline:
+```powershell
+foreach ($year in '20','22','23','24','25','26','27') {
+    dotnet build src/RevitModelMcp.Addin -c "Release.R$year" -p:DeployAddin=false
+}
+dotnet test --project tests/RevitModelMcp.Core.Tests/RevitModelMcp.Core.Tests.csproj
+```
 
-1. `server/revit_model_mcp/actions.py`: `@action` function plus its title
-   entry; add batch-eligible arguments to `_BATCH_FIELDS`.
-2. `revit_channel.py`: add the command to `ACTION_COMMANDS` so timeout and
-   error semantics stay correct.
-3. `Core/Control/ActionJobParser.cs`: `IsAction`, argument validation and
-   the `ActionJobContract` fields.
-4. `Addin/Control/ActionCommandExecutor.cs`: dispatch case and transaction
-   policy (dry-run rollback, warning dismissal, dialog suppression).
-5. `Addin/Control/ActionMutations.cs`: the mutation itself. Convert units
-   explicitly (mm in, internal feet out) and reject read-only targets.
-6. `Addin/Control/ActionVerifier.cs`: before/after facts; document the
-   response shape in `docs/feed-format.md`.
-7. Docs and tests: `docs/actions.md`, `README.md`, `server/tests/test_actions.py`.
+Revit 2020 走 `DisplayUnitType`/`UnitType`/`Document.Create.NewFloor`，2022+ 走 `ForgeTypeId`/`Floor.Create`；兼容层在 `src/RevitModelMcp.Addin/Compatibility/`。
 
-Hard constraints:
+## 已知 API 限制与年份差异
 
-- Both write gates stay: `REVIT_MCP_ALLOW_WRITE=1` in the server environment
-  and the workstation `allow-write` file. Never weaken them.
-- Mutations support `dry_run` and return a `verification` block.
-- Actions never save the model.
-- Revit 2022–2023 accept element IDs up to 2,147,483,647 only.
-- `place_family` uses the level-based non-structural overload; hosted,
-  face-based and adaptive families are out of scope.
-- After a timeout, inspect the model before retrying; the job may have run.
-
-## Worked example: `revit_create_floor`
-
-The designated next action tool. Corpus facts (Revit 2026):
-
-- `Floor.Create(Document, IList<CurveLoop>, ElementId floorTypeId, ElementId levelId)` — the core overload.
-- `Floor.Create(Document, IList<CurveLoop>, ElementId, ElementId, Boolean, Line, Double)` — structural variant with slope.
-
-Design notes:
-
-- Accept points in model mm, build `CurveLoop` from `Line.CreateBound`
-  segments, and close the loop explicitly.
-- Resolve `floor_type` by name through `FilteredElementCollector` of
-  `FloorType` (`null` picks the first basic floor type); resolve `level` by
-  exact name.
-- Verifier: before is empty, after is the created element metadata with its
-  bounding box, mirroring `revit_place_family`.
-- Add `create_floor` to `_BATCH_FIELDS` so it composes in `revit_batch`.
-- Test matrix: dry-run rollback, real create plus verification, wrong type
-  name error, open loop rejection.
-
-## Build and deploy
-
-- Compile check on Linux works with
-  `dotnet build src/RevitModelMcp.Addin -c Release.R26 -p:DeployAddin=false -p:EnableWindowsTargeting=true`.
-  (`UseWPF=false` is not enough for `net8.0-windows` targets: the
-  WindowsDesktop reference pack resolves through `EnableWindowsTargeting`.)
-  Windows PR CI remains the oracle for full builds.
-- Run `dotnet test --project tests/RevitModelMcp.Core.Tests/RevitModelMcp.Core.Tests.csproj`
-  and `cd server && uv run --with pytest pytest -q`.
-- `dotnet format --verify-no-changes` also runs on Linux when the
-  environment sets `EnableWindowsTargeting=true` (with
-  `Configuration=Debug.R26` and `DeployAddin=false`, per AGENTS.md):
-  `env 'EnableWindowsTargeting=true' Configuration=Debug.R26
-  DeployAddin=false dotnet format RevitModelMcp.sln --verify-no-changes
-  --verbosity minimal`. Expect workspace-load warnings; exit code 0 passes.
-  Windows PR CI remains the oracle for the full build matrix and packaging.
-- Deploy to the workstation: ILRepack only runs on Windows builds, so a Linux
-  build produces separate assemblies. Copy `RevitModelMcp.dll`,
-  `RevitModelMcp.Core.dll`, `JetBrains.Annotations.dll`,
-  `Nice3point.Revit.Extensions.dll`, `Nice3point.Revit.Toolkit.dll`,
-  `RevitModelMcp.deps.json` and `RevitModelMcp.runtimeconfig.json` over SSH to
-  `%APPDATA%\Autodesk\Revit\Addins\2026\RevitModelMcp\`. Back up that folder
-  first; the loaded DLL is locked while Revit runs, so deploy only with Revit
-  closed.
-- Sign the deployed DLLs after every deploy. Revit prompts for unsigned
-  add-ins on every launch, and each rebuild changes the file hash, so
-  "Always Load" never persists. The workstation keeps a self-signed
-  code-signing certificate (`CN=RevitModelMcp Dev`, trusted in
-  LocalMachine TrustedPublisher and Root). Run the helper over SSH with Revit
-  closed:
-
-  ```sh
-  ssh revit-host 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\Users\Administrator\sign-addin.ps1'
-  ```
-
-  One-time certificate setup (already done on the workstation):
-  `New-SelfSignedCertificate -Subject "CN=RevitModelMcp Dev" -Type
-  CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My`, then add it to
-  LocalMachine TrustedPublisher and Root. See the [Autodesk guidance on the
-  always-appearing code-signing window]
-  (https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-code-signing-window-always-appears-when-launching-Revit.html).
-- Restart Revit remotely without killing it first: ask `CloseMainWindow()`,
-  fall back to `Stop-Process` only after confirming the model has no unsaved
-  changes. `revit_document_info` reports `isModified`; a forced stop discards
-  unsaved edits, which already cost a session's manual phase work once.
-  Relaunch through the interactive scheduled task `RevitMcpLaunch`
-  (`schtasks /Run /TN RevitMcpLaunch`) so the GUI lands in the console
-  session. Delete stale `instance_<pid>.json` heartbeats from
-  `%LOCALAPPDATA%\RevitModelMcp` after a forced stop, or actions report
-  "exactly one instance" violations.
-- New tools reach MCP clients only when the Python server runs from this
-  clone (`uv run --directory server revit-model-mcp`), not from the published
-  `uvx revit-model-mcp` package. Point the connector at the clone while
-  developing.
-- Live smoke test through the `revit` MCP connector: `revit_ping`, then the
-  new tool with `dry_run=true` first, then a real run plus verification and
-  cleanup.
-
-### Revit 2020 builds
-
-`Debug.R20` and `Release.R20` build the add-in against Revit 2020. Two constraints apply:
-
-- The `Nice3point.Revit.Api.RevitAPI` 2020 package matches an updated Revit 2020, while a workstation
-  may still run the original 2020 release, which is missing around ninety of those members. Keep the
-  version-specific code in `src/RevitModelMcp.Addin/Compatibility/` and check any new Revit 2020 call
-  against the `RevitAPI.xml` beside the installed `RevitAPI.dll` before relying on it. The
-  `BasePoint.GetProjectBasePoint` and `BasePoint.GetSurveyPoint` accessors are one such case.
-- Revit stops on the publisher dialog for an unsigned add-in. Sign the deployed `RevitModelMcp.dll`
-  with the `RevitModelMcp Dev` certificate after every deploy, the way `sign-addin.ps1` does for the
-  other installed years.
-
-## Known Revit API limits
-
-Do not re-investigate these; they are settled.
-
-- **Phase creation and renaming are impossible through the API.** There is no
-  `NewPhase`, no `Phase.Create`, and `PhaseArray.Append/Insert` on
-  `Document.Phases` does not persist. Renaming fails on every path:
-  `BuiltInParameter.PHASE_NAME` is read-only and `Element.Name` throws
-  "This element does not support assignment of a user-specified name"
-  (reproduced live on Revit 2026; the same errors are reported in the
-  [2025 Autodesk forum thread](https://forums.autodesk.com/t5/revit-api-forum/is-it-possible-to-control-phases-using-the-revit-api/td-p/13631528)
-  and the [2021 one](https://forums.autodesk.com/t5/revit-api-forum/how-to-create-project-phase-programly/td-p/9722434)).
-  Phases must be created and named in the phases dialog (Manage > Phases);
-  standardise the phase set in the project template instead.
-- **Merging phases is possible** and is what `revit_merge_phases` does:
-  reassign every element whose `CreatedPhaseId` or `DemolishedPhaseId` points
-  at the source phase, then delete the emptied phase. This matches the
-  method Autodesk support described in the
-  [merge phases thread](https://forums.autodesk.com/t5/revit-api-forum/merge-phases/td-p/5594567).
-- **Driving the phases dialog by keystrokes is possible but fragile**: a
-  posted `ID_SETTINGS_PHASES` command plus simulated keys can create and
-  rename phases, as demonstrated in the
-  [Dynamo forum](https://forum.dynamobim.com/t/creating-phases-renaming-phases/114509).
-  It needs a visible screen to calibrate tab sequences, leaves Revit blocked
-  if a sequence goes wrong, and must never be used unattended.
-
-## Version caveats
-
-The corpus covers Revit 2026 only. A corpus hit does not prove availability
-in 2022–2025 or 2027: check existing `REVIT20XX_OR_GREATER` conditionals
-(11 usages) and add per-year branches where the API differs. Live model
-verification is required per supported year before release claims.
+- 元素 ID 不可写、不可指定，只能通过"复制 + 删除"让 Revit 重新分配。
+- 删除会级联：有依赖、有宿主、成组或属于 MEP 系统的构件要单独处理。
+- 阶段 API 只在 2022+ 暴露；2020 走顺序检查兜底。
+- 列表型结果要分页（`offset`/`limit`），并如实返回 `hasMore`。

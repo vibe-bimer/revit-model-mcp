@@ -1,1 +1,1 @@
---8<-- "server/README.md"
+--8<-- "server/README.zh.md"

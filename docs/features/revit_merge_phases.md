@@ -11,8 +11,8 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `source_phase` ✔ | — | string |
-| `target_phase` ✔ | — | string |
+| `source_phase` ✔ | — | 被合并掉的阶段名（合并后删除）（string） |
+| `target_phase` ✔ | — | 接收引用的阶段名（string） |
 | `dry_run` | `false` | boolean |
 
 ??? note "通用参数"

@@ -31,6 +31,9 @@ echo "== building"
 rm -rf site.new
 eval "$MKDOCS build --strict -f \"$MKDOCS_CONFIG\" -d site.new"
 
+echo "== checking both languages"
+"$PYTHON" tools/site/check_site.py
+
 echo "== publishing"
 rm -rf site.prev
 [ -d site ] && mv site site.prev

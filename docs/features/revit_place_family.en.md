@@ -14,10 +14,10 @@ Place a loaded unhosted family on a named level for layout.
 | `family` ✔ | — | Place a loaded unhosted family on a named level for layout.（string） |
 | `level` ✔ | — | Place a loaded unhosted family on a named level for layout.（string） |
 | `type_name` ✔ | — | any |
-| `x_mm` ✔ | — | number |
-| `y_mm` ✔ | — | number |
+| `x_mm` ✔ | — | model X in millimetres（number） |
+| `y_mm` ✔ | — | model Y in millimetres（number） |
 | `dry_run` | `false` | boolean |
-| `rotation_deg` | `0` | number |
+| `rotation_deg` | `0` | rotation about Z in degrees（number） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

@@ -9,7 +9,7 @@
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
 | `view` ✔ | — | Required exact, case-sensitive non-template view name from revit_list_views, or its Revit view ID as a decimal string; no default. An exact name takes precedence over interpreting a numeric string as an ID.（string） |
-| `categories` | — | any |
+| `categories` | — | 只列出这些类别的构件（any） |
 | `limit` | `100` | integer |
 | `offset` | `0` | integer |
 

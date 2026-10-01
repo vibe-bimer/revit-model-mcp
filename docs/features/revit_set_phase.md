@@ -11,9 +11,9 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `created_phase` ✔ | — | any |
+| `created_phase` ✔ | — | 创建阶段名；空串清除、null 不变（any） |
 | `demolished_phase` ✔ | — | any |
-| `element_ids` ✔ | — | array |
+| `element_ids` ✔ | — | 要改阶段的构件 ID（array） |
 | `dry_run` | `false` | boolean |
 
 ??? note "通用参数"

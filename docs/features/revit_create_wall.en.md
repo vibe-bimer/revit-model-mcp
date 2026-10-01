@@ -8,12 +8,12 @@ Create a straight wall for layout on a named level; model XY endpoints and heigh
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `end_mm` ✔ | — | array |
+| `end_mm` ✔ | — | end point [x, y] in millimetres（array） |
 | `level` ✔ | — | Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type.（string） |
-| `start_mm` ✔ | — | array |
+| `start_mm` ✔ | — | start point [x, y] in millimetres（array） |
 | `wall_type` ✔ | — | Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type.（any） |
 | `dry_run` | `false` | dry_run executes and rolls back, returning the same verification block without changing the model.（boolean） |
-| `height_mm` | `3000` | number |
+| `height_mm` | `3000` | wall height in millimetres (3000 by default)（number） |
 
 ??? note "Common parameters"
     |  Parameter | Default | Meaning |

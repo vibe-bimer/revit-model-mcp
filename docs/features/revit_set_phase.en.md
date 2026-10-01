@@ -11,9 +11,9 @@ Assign the created or demolished project phase of elements by exact phase name.
 
 | Parameter | Default | Meaning |
 | --- | --- | --- |
-| `created_phase` ✔ | — | any |
+| `created_phase` ✔ | — | created phase name; an empty string clears it, null leaves it（any） |
 | `demolished_phase` ✔ | — | any |
-| `element_ids` ✔ | — | array |
+| `element_ids` ✔ | — | element ids whose phase changes（array） |
 | `dry_run` | `false` | boolean |
 
 ??? note "Common parameters"

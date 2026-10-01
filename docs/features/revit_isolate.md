@@ -11,7 +11,7 @@
 
 | 参数 | 默认 | 说明 |
 | --- | --- | --- |
-| `element_ids` ✔ | — | array |
+| `element_ids` ✔ | — | 要隔离显示的构件 ID；配合 reset=true 恢复（array） |
 | `reset` | `false` | Temporarily isolate IDs for visual review in the active view, or reset with an empty list; IDs are unitless.（boolean） |
 
 ??? note "通用参数"
