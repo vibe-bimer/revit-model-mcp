@@ -6,6 +6,33 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.9.0...v0.10.0) (2026-10-02)
+
+
+### Features
+
+* **actions:** add revit_create_level for first-batch layout ([5afcb55](https://github.com/vibe-bimer/revit-model-mcp/commit/5afcb55b4629c84135766fd567c67800b3632431))
+* **actions:** add revit_set_view_lighting for one view's lighting ([973b1ef](https://github.com/vibe-bimer/revit-model-mcp/commit/973b1efcbfde8f655faf597fcde500b29d14f980))
+* **docs:** add a generated, bilingual feature site ([382b971](https://github.com/vibe-bimer/revit-model-mcp/commit/382b971277ac9bff36f420d233893f025f40ea24))
+
+
+### Bug Fixes
+
+* **docs:** land Chinese readers on a Chinese home page ([80b03d2](https://github.com/vibe-bimer/revit-model-mcp/commit/80b03d2783bf4e73a1821dba74a5a58ed5391276))
+
+
+### Documentation
+
+* add the first-batch modeling tool specification ([0551131](https://github.com/vibe-bimer/revit-model-mcp/commit/055113102b298463bb4ba9922435aa1831a75542))
+* check both languages end to end and fix what the check found ([b6d1ad1](https://github.com/vibe-bimer/revit-model-mcp/commit/b6d1ad1b31a54a09dd2f13f8361b8d0812487dc0))
+* complete the Chinese and English coverage ([b36ad02](https://github.com/vibe-bimer/revit-model-mcp/commit/b36ad027380da371655487e35073314e2822b47c))
+* complete the Chinese translations and correct stale statements ([3859377](https://github.com/vibe-bimer/revit-model-mcp/commit/385937713f6c7f9646222e285f7c5b0a21b6002b))
+* explain every tool parameter in both languages ([0dccf58](https://github.com/vibe-bimer/revit-model-mcp/commit/0dccf58bbfd7d8eccc4378f90c848257709189e9))
+* record the ten copy rebuild benchmark ([6bbd281](https://github.com/vibe-bimer/revit-model-mcp/commit/6bbd281f6a1cf66b2fd419cf3ece7630ae01cbaf))
+* **site:** collapse the top tabs into one column of chapters ([7a8e68b](https://github.com/vibe-bimer/revit-model-mcp/commit/7a8e68b6f81b4f8acd95a548a22847cd8d5eba00))
+* **site:** make the bilingual build fail closed and regenerate paired pages ([130dfb9](https://github.com/vibe-bimer/revit-model-mcp/commit/130dfb946b9a4d780fc5e3a3b7a86e837b8e3fcb))
+* translate the reference pages and automate publishing ([e81934e](https://github.com/vibe-bimer/revit-model-mcp/commit/e81934e28c8cfd74649f9f1840a64804292e66c1))
+
 ## [0.9.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.8.1...v0.9.0) (2026-09-30)
 
 
