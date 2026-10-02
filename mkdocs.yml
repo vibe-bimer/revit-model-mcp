@@ -122,6 +122,7 @@ plugins:
             文件通道格式: File channel format
             工具开发: Tool development
             新增 Revit 工具: Adding Revit tools
+            建模工具规格: Modeling tool specification
             领域约定: Domain conventions
             Issue 管理: Issue management
             分诊标签: Triage labels
@@ -205,6 +206,7 @@ nav:
           - 文件通道格式: feed-format.md
       - 工具开发:
           - 新增 Revit 工具: agents/adding-revit-tools.md
+          - 建模工具规格: modeling-tools.md
           - 领域约定: agents/domain.md
           - Issue 管理: agents/issue-tracker.md
           - 分诊标签: agents/triage-labels.md
