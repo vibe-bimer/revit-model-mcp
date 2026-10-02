@@ -24,6 +24,7 @@ ACTION_TOOLS = {
     "revit_place_family",
     "revit_create_wall",
     "revit_create_floor",
+    "revit_create_level",
     "revit_set_phase",
     "revit_merge_phases",
     "revit_set_parameter",
@@ -120,6 +121,11 @@ def action_server():
                 "level": "Level 1",
                 "floorType": None,
             },
+        ),
+        (
+            "revit_create_level",
+            {"name": "Roof", "elevation_mm": 11400, "create_view": True},
+            {"name": "Roof", "elevationMm": 11400.0, "createView": True},
         ),
         (
             "revit_set_phase",

@@ -31,5 +31,9 @@ Revit 2020 检查于 2026-09-28 和 2026-09-29 进行，使用 Windows 工作站
 截图和 JSON 证据位于 [`validation-assets` 分支](https://github.com/sharafutdinovdi/revit-model-mcp/tree/validation-assets)。
 Revit 批处理（`revit_batch`）在撤销菜单中的标签无法通过 API 验证。
 
+`revit_create_level`（首批建模工具的第一个，2026-10-02）在 2020 与 2026 两个年份都完成了真机验收，使用 `建筑结构.rvt` 与由它升级另存而来的 `mcp-verify-2026.rvt`。
+两个年份上：`dry_run` 回滚后 `isModified` 仍为 `false`；真实写入建出标高并回报 `verification.after = { id, category: "标高", name, elevationMm }`；同名标高被拒绝并回报 `Level '1F' already exists at 0 mm.`；`create_view=true` 使视图数从 52 增到 53。
+两个年份的真实写入之后，模型文件的大小与 mtime 都没有变化——动作没有保存模型。
+
 !!! note "历史记录，不是本次新增验证"
     本页保留英文原文的日期、构建与真机检查范围。翻译工作没有执行新的 Revit 验证，也不将构建通过等同于真机行为已验证。

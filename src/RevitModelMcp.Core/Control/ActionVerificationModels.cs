@@ -23,6 +23,11 @@ public sealed class ActionFacts
     [DataMember(Name = "family", EmitDefaultValue = false)] public string? Family { get; set; }
     [DataMember(Name = "type", EmitDefaultValue = false)] public string? Type { get; set; }
     [DataMember(Name = "level", EmitDefaultValue = false)] public string? Level { get; set; }
+
+    /// <summary>A datum element has no geometry, so its name and elevation carry the facts a level reports.</summary>
+    [DataMember(Name = "name", EmitDefaultValue = false)] public string? Name { get; set; }
+
+    [DataMember(Name = "elevationMm", EmitDefaultValue = false)] public double? ElevationMm { get; set; }
     [DataMember(Name = "parameter", EmitDefaultValue = false)] public string? Parameter { get; set; }
     [DataMember(Name = "value", EmitDefaultValue = false)] public string? Value { get; set; }
     [DataMember(Name = "storageType", EmitDefaultValue = false)] public string? StorageType { get; set; }

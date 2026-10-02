@@ -1,13 +1,13 @@
 # 功能总览
 
-19 个读取 + 15 个动作，共 34 个工具
+19 个读取 + 16 个动作，共 35 个工具
 
 ## 按 Revit 年份查阅 {#by-version}
 
 | Revit 年份 | 验证状态 |
 | --- | --- |
-| [Revit 2020](v2020.md) | 读取 19/19、动作 15/15 已实测；其余仅构建 |
-| [Revit 2026](v2026.md) | 读取 18/19、动作 8/15 已实测；其余仅构建 |
+| [Revit 2020](v2020.md) | 读取 19/19、动作 16/16 已实测；其余仅构建 |
+| [Revit 2026](v2026.md) | 读取 18/19、动作 9/16 已实测；其余仅构建 |
 | 2022–2025 / 2027 | 仅构建，未实测 |
 
 已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
@@ -62,7 +62,7 @@
 | [定位显示构件](revit_show.md)<br>`revit_show` | 在视图里定位/高亮构件，必要时打开对应视图 |
 | [临时隔离显示](revit_isolate.md)<br>`revit_isolate` | 临时隔离显示（reset=true 恢复） |
 
-### 编辑 (6) {#group-edit}
+### 编辑 (7) {#group-edit}
 
 | 工具 | 用途 |
 | --- | --- |
@@ -70,6 +70,7 @@
 | [放置非宿主族](revit_place_family.md)<br>`revit_place_family` | 在指定标高放置已载入的非宿主族实例，可绕 Z 旋转 |
 | [创建直墙](revit_create_wall.md)<br>`revit_create_wall` | 按两点建直墙（mm，指定标高、墙类型、高度） |
 | [创建楼板](revit_create_floor.md)<br>`revit_create_floor` | 按闭合轮廓建楼板（至少 3 个顶点，mm） |
+| [创建标高](revit_create_level.md)<br>`revit_create_level` | 在指定高程新建标高（mm） |
 | [修改参数](revit_set_parameter.md)<br>`revit_set_parameter` | 按参数名写值（长度 mm、面积 m²，其余按内部单位） |
 | [删除构件](revit_delete.md)<br>`revit_delete` | 删除构件及其依赖 |
 

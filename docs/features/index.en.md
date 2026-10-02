@@ -1,13 +1,13 @@
 # Feature overview
 
-19 read + 15 action tools, 34 in total
+19 read + 16 action tools, 35 in total
 
 ## Browse by Revit year {#by-version}
 
 | Revit year | Validation |
 | --- | --- |
-| [Revit 2020](v2020.md) | 19/19 reads and 15/15 actions validated live; the rest are build-only |
-| [Revit 2026](v2026.md) | 18/19 reads and 8/15 actions validated live; the rest are build-only |
+| [Revit 2020](v2020.md) | 19/19 reads and 16/16 actions validated live; the rest are build-only |
+| [Revit 2026](v2026.md) | 18/19 reads and 9/16 actions validated live; the rest are build-only |
 | 2022–2025 / 2027 | Build only, not live-tested |
 
 Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.
@@ -62,7 +62,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Show elements](revit_show.md)<br>`revit_show` | Locate and highlight elements, opening a suitable view when needed |
 | [Temporary isolation](revit_isolate.md)<br>`revit_isolate` | Temporarily isolate selected elements or reset the active view |
 
-### Editing (6) {#group-edit}
+### Editing (7) {#group-edit}
 
 | Tool | Purpose |
 | --- | --- |
@@ -70,6 +70,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Place unhosted family](revit_place_family.md)<br>`revit_place_family` | Place a loaded unhosted family on a named level with optional Z rotation |
 | [Create straight wall](revit_create_wall.md)<br>`revit_create_wall` | Create a wall from two XY points, a level, type and height |
 | [Create floor](revit_create_floor.md)<br>`revit_create_floor` | Create a floor from a closed XY boundary with at least three vertices |
+| [Create level](revit_create_level.md)<br>`revit_create_level` | Create a level at a given elevation in millimetres |
 | [Edit parameter](revit_set_parameter.md)<br>`revit_set_parameter` | Set a named parameter; lengths use mm, areas m² and other doubles internal units |
 | [Delete elements](revit_delete.md)<br>`revit_delete` | Delete selected elements and their Revit dependencies |
 

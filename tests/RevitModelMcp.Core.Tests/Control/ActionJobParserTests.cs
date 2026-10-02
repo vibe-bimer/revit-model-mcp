@@ -177,6 +177,25 @@ public sealed class ActionJobParserTests
     }
 
     [Test]
+    public async Task Parse_CreateLevel_PreservesNameElevationAndViewFlag()
+    {
+        var result = ControlJobParser.Parse("""{"command":"create-level","name":" Roof ","elevationMm":11400,"createView":true}""");
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.LevelName).IsEqualTo("Roof");
+        await Assert.That(result.Action.ElevationMm).IsEqualTo(11400);
+        await Assert.That(result.Action.CreateView).IsTrue();
+    }
+
+    [Test]
+    public async Task Parse_CreateLevel_DefaultsToNoView()
+    {
+        var result = ControlJobParser.Parse("""{"command":"create-level","name":"Roof","elevationMm":0}""");
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(result.Action!.CreateView).IsFalse();
+        await Assert.That(result.Action.ElevationMm).IsEqualTo(0);
+    }
+
+    [Test]
     public async Task Parse_PlaceFamily_PreservesTypeLevelAndRotation()
     {
         var result = ControlJobParser.Parse("""{"command":"place-family","family":"Desk","typeName":"1200","xMm":100,"yMm":200,"level":"01","rotationDeg":90}""");
@@ -237,6 +256,10 @@ public sealed class ActionJobParserTests
     [Arguments("""{"command":"create-floor","pointsMm":[[0,0],[0,0],[3000,0],[3000,2000]],"level":"01"}""")]
     [Arguments("""{"command":"create-floor","pointsMm":[[0],[3000,0],[3000,2000]],"level":"01"}""")]
     [Arguments("""{"command":"create-floor","pointsMm":[[0,0],[3000,0],[3000,2000]],"level":"01","floorType":" "}""")]
+    [Arguments("""{"command":"create-level","elevationMm":3000}""")]
+    [Arguments("""{"command":"create-level","name":" ","elevationMm":3000}""")]
+    [Arguments("""{"command":"create-level","name":"Roof"}""")]
+    [Arguments("""{"command":"create-level","name":"Roof","elevationMm":"INF"}""")]
     [Arguments("""{"command":"set-parameter","elementId":1,"parameter":"Comments"}""")]
     [Arguments("""{"command":"set-parameter","elementId":0,"parameter":"Comments","value":"x"}""")]
     [Arguments("""{"command":"set-phase","elementIds":[1],"createdPhase":null,"demolishedPhase":null}""")]

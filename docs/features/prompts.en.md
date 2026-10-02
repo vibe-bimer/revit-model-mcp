@@ -1,6 +1,6 @@
 # Prompt library
 
-19 read + 15 action tools, 34 in total
+19 read + 16 action tools, 35 in total
 
 Set `REVIT_MCP_ALLOW_WRITE=1` in the client and create the workstation `allow-write` file. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
 
@@ -242,6 +242,14 @@ Draw a 200 mm wall on 1F from 0,0 to 6000,0
 
 ```text
 Create a floor on 2F from these four points
+```
+
+### [Create level](revit_create_level.md)
+
+`revit_create_level` — Create a level at a given elevation in millimetres
+
+```text
+Create a level named 4F at 15000 mm
 ```
 
 ### [Edit parameter](revit_set_parameter.md)

@@ -44,6 +44,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 | `revit_place_family` | `family`、`type_name`、`x_mm`、`y_mm`、`level`、`rotation_deg=0` | 在指定标高放置已载入的族，模型 XY 坐标单位为 mm；绕 Z 轴旋转，单位为度。 |
 | `revit_create_wall` | `start_mm`、`end_mm`、`level`、`wall_type`、`height_mm=3000` | 创建直墙；端点为模型坐标中的 `[x,y]`，单位为 mm。 |
 | `revit_create_floor` | `points_mm`、`level`、`floor_type` | 从闭合边界创建楼板；`points_mm` 是模型坐标中的 `[x,y]` 多边形顶点，单位为 mm，至少 3 个，自动闭合；`floor_type` 为 null 时选择第一个楼板类型。 |
+| `revit_create_level` | `name`、`elevation_mm`、`create_view=false` | 在指定高程新建标高，单位为 mm；已存在同名标高时被拒绝，避免后续工具解析到有歧义的标高；`create_view=true` 时同时创建对应的楼层平面视图，视图类型按视图族选择，不按名称。 |
 | `revit_set_phase` | `element_ids`、`created_phase`、`demolished_phase` | 按阶段的准确名称赋值；每个阶段参数可为名称、清除赋值的 `""`，或保持不变的 null；至少一个参数非 null。这些工具不创建或重命名阶段，应先在 Revit 界面中添加新阶段。 |
 | `revit_merge_phases` | `source_phase`、`target_phase` | 将所有创建与拆除引用从源阶段移到目标阶段，再删除空源阶段；删除被拒绝时以 `sourceDeleted:false` 和 `phaseDeleteError` 报告。不支持放入批次。 |
 | `revit_set_parameter` | `element_id`、`parameter`、`value` | 按参数名传入字符串形式的值；长度使用 mm，面积使用 m2，其余 Double 使用内部单位。 |
@@ -58,7 +59,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 <a id="dry-runs-and-id-replacement"></a>
 ## 试运行与 ID 替换
 
-`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter`、`revit_set_view_lighting` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
+`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_create_level`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter`、`revit_set_view_lighting` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
 试运行会执行修改、读取预期结果，然后回滚事务。
 成功的试运行包含 `data.dryRun:true`、`data.rolledBack:true`，以及与真实写入相同结构的 `verification`。
 动作抛出异常时返回错误，不带验证块；单动作工具遇到缺失族时还返回 `closestFamilies`。

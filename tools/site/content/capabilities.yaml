@@ -554,6 +554,28 @@ tools:
     note:
       zh: 2020 走 Document.Create.NewFloor，2022+ 走 Floor.Create
       en: On 2020 it uses Document.Create.NewFloor, from 2022 Floor.Create
+  revit_create_level:
+    group: edit
+    since: 0.10.0
+    title:
+      zh: "创建标高"
+      en: "Create level"
+    summary:
+      zh: 在指定高程新建标高（mm）
+      en: "Create a level at a given elevation in millimetres"
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 在 15000mm 处建一个叫 4F 的标高
+      en: Create a level named 4F at 15000 mm
+    note:
+      zh: 同名标高会被拒绝，避免后续工具解析到有歧义的标高
+      en: An existing level with the same name is refused, so a later tool never resolves an ambiguous level
   revit_set_phase:
     group: phases
     since: 0.3.0
@@ -898,6 +920,16 @@ param_notes:
     height_mm:
       zh: 墙高（mm，默认 3000）
       en: wall height in millimetres (3000 by default)
+  revit_create_level:
+    name:
+      zh: 标高名称
+      en: level name
+    elevation_mm:
+      zh: 高程（mm）
+      en: elevation in millimetres
+    create_view:
+      zh: 同时创建对应的楼层平面视图
+      en: also create the matching floor plan view
   revit_set_phase:
     element_ids:
       zh: 要改阶段的构件 ID

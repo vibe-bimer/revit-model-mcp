@@ -30,3 +30,7 @@ All 14 action tools ran on that year: `select`, `show` and `isolate` ran for rea
 On the 0.9.0 build, one task wrote ten copies of that model in 165 s (16.5 s a copy): every copy held 899 components with `idMappingVerified=true`, no id appeared in two copies, and the ids ran 2473–4256, 19259–21042, … 44771–46554.
 Screenshots and JSON evidence are on the [`validation-assets` branch](https://github.com/sharafutdinovdi/revit-model-mcp/tree/validation-assets).
 The Revit undo menu label for a batch (`revit_batch`) cannot be verified through the API.
+
+`revit_create_level`, the first of the first-batch modeling tools, was verified live on both 2020 and 2026 on 2026-10-02, using `建筑结构.rvt` and the `mcp-verify-2026.rvt` upgraded from it.
+On both years: after a `dry_run` rollback `isModified` was still `false`; a real write created the level and reported `verification.after = { id, category: "标高", name, elevationMm }`; a duplicate name was refused with `Level '1F' already exists at 0 mm.`; and `create_view=true` moved the view count from 52 to 53.
+After the real writes on both years the test model file kept its size and mtime — no action saved the model.

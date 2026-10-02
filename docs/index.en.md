@@ -1,6 +1,6 @@
 # Revit Model MCP
 
-<p class="facts"><span><b>Add-in / MCP version 0.9.0</b></span><span>Revit <b>2020 / 2022–2027</b></span><span>19 read + 15 action tools, 34 in total</span></p>
+<p class="facts"><span><b>Add-in / MCP version 0.9.0</b></span><span>Revit <b>2020 / 2022–2027</b></span><span>19 read + 16 action tools, 35 in total</span></p>
 
 A feature handbook for Revit technical users: inspect parameters and geometry, count elements, check models, export registers, edit elements, and copy models with new IDs. Read-only by default; actions require both gates. **Revit years** and **add-in release versions** are different version axes. See the support matrix for live validation coverage.
 

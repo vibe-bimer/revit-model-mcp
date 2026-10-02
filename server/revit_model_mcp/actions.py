@@ -61,6 +61,11 @@ _BATCH_FIELDS = {
         "level": (Name, ...),
         "floor_type": (Name | None, ...),
     },
+    "create_level": {
+        "name": (Name, ...),
+        "elevation_mm": (Number, ...),
+        "create_view": (bool, False),
+    },
     "set_phase": {
         "element_ids": (NonEmptyIds, ...),
         "created_phase": (str | None, ...),
@@ -107,6 +112,7 @@ for _action in (
     "place_family",
     "create_wall",
     "create_floor",
+    "create_level",
     "set_phase",
     "set_parameter",
     "set_view_lighting",
@@ -126,6 +132,7 @@ class BatchStep(BaseModel):
         "place_family",
         "create_wall",
         "create_floor",
+        "create_level",
         "set_phase",
         "set_parameter",
         "set_view_lighting",
@@ -241,6 +248,7 @@ def register_actions(mcp, execute, host_provider) -> None:
             "revit_place_family": "Place Family",
             "revit_create_wall": "Create Wall",
             "revit_create_floor": "Create Floor",
+            "revit_create_level": "Create Level",
             "revit_set_phase": "Set Element Phases",
             "revit_merge_phases": "Merge Phases",
             "revit_set_parameter": "Set Parameter",
@@ -404,6 +412,31 @@ def register_actions(mcp, execute, host_provider) -> None:
             pointsMm=points_mm,
             level=level,
             floorType=floor_type,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @action
+    async def revit_create_level(
+        name: Name,
+        elevation_mm: Number,
+        create_view: bool = False,
+        dry_run: bool = False,
+        document: Document = None,
+    ) -> dict[str, Any]:
+        """Create a level at a given elevation for layout.
+        name is the level name; an existing level with that exact name is refused, so a later
+        tool never resolves an ambiguous level. elevation_mm is the height in millimetres.
+        create_view also creates the matching floor plan; its view type is chosen by view
+        family, not by name. dry_run executes and rolls back, returning the same verification
+        block without changing the model.
+        Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected.
+        """
+        return await send(
+            "create-level",
+            name=name,
+            elevationMm=elevation_mm,
+            createView=create_view,
             dryRun=dry_run,
             document=document,
         )

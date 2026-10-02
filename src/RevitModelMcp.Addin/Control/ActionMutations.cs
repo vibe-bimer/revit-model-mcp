@@ -90,6 +90,29 @@ internal static class ActionMutations
         return new ActionResultData { Id = RevitValueReader.GetId(floor.Id), Category = floor.Category?.Name, Level = level.Name };
     }
 
+    internal static ActionResultData CreateLevel(Document document, ActionJobContract action)
+    {
+        var existing = FindLevelOrNull(document, action.LevelName!);
+        if (existing is not null)
+        {
+            var elevation = Math.Round(RevitUnits.InternalUnitsToMillimeters(existing.Elevation), 1);
+            throw new ArgumentException($"Level '{action.LevelName}' already exists at {elevation} mm.");
+        }
+
+        var level = Level.Create(document, Millimeters(action.ElevationMm));
+        level.Name = action.LevelName!;
+        if (action.CreateView)
+        {
+            using var viewTypes = document.CollectElements().OfClass<ViewFamilyType>();
+            // Resolve the plan type by view family: the stock templates' view type names are not stable.
+            var planType = viewTypes.Cast<ViewFamilyType>().FirstOrDefault(type => type.ViewFamily == ViewFamily.FloorPlan)
+                           ?? throw new ArgumentException("No floor plan view family type is available in this document.");
+            ViewPlan.Create(document, planType.Id, level.Id);
+        }
+
+        return new ActionResultData { Id = RevitValueReader.GetId(level.Id), Category = level.Category?.Name };
+    }
+
     internal static ActionResultData SetPhase(Document document, ActionJobContract action, List<ElementId> ids)
     {
         var created = action.CreatedPhase is null ? null : ResolvePhaseAssignment(document, action.CreatedPhase);
@@ -564,13 +587,16 @@ internal static class ActionMutations
     private static string Describe(IReadOnlyList<IneligibleElement> ineligible) =>
         string.Join("; ", ineligible.Take(5).Select(entry => $"{entry.Id}: {entry.Reason}"));
 
-    private static Level FindLevel(Document document, string name)
+    private static Level? FindLevelOrNull(Document document, string name)
     {
         using var levels = document.CollectElements().OfClass<Level>()
             .WhereParameter(BuiltInParameter.DATUM_TEXT).Equals(name);
-        return levels.FirstOrDefault() as Level
-               ?? throw new ArgumentException($"Level '{name}' was not found.");
+        return levels.FirstOrDefault() as Level;
     }
+
+    private static Level FindLevel(Document document, string name) =>
+        FindLevelOrNull(document, name)
+        ?? throw new ArgumentException($"Level '{name}' was not found.");
 
     private static ElementId CreateId(long value) => ActionCommandExecutor.CreateId(value);
     private static double Millimeters(double value) => RevitUnits.MillimetersToInternalUnits(value);

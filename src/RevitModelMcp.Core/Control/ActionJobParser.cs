@@ -7,7 +7,7 @@ namespace RevitModelMcp.Core.Control;
 public static class ActionJobParser
 {
     public static bool IsAction(string command) => command is
-        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "reset-element-ids" or "rebuild-model-ids" or "set-view-lighting" or "batch";
+        "select" or "show" or "isolate" or "move" or "place-family" or "create-wall" or "create-floor" or "create-level" or "set-phase" or "merge-phases" or "set-parameter" or "delete" or "reset-element-ids" or "rebuild-model-ids" or "set-view-lighting" or "batch";
 
     public static ControlJobParseResult Parse(string command, ControlJobContract job)
     {
@@ -34,6 +34,9 @@ public static class ActionJobParser
                 HeightMm = job.HeightMm ?? 3000,
                 PointsMm = job.PointsMm ?? [],
                 FloorType = job.FloorType,
+                LevelName = job.LevelName?.Trim(),
+                ElevationMm = job.ElevationMm ?? 0,
+                CreateView = job.CreateView ?? false,
                 CreatedPhase = job.CreatedPhase,
                 DemolishedPhase = job.DemolishedPhase,
                 SourcePhase = job.SourcePhase,
@@ -69,7 +72,7 @@ public static class ActionJobParser
                 {
                     var stepCommand = step?.Command ?? string.Empty;
                     Require(IsAction(stepCommand) && stepCommand is not ("show" or "batch" or "merge-phases" or "rebuild-model-ids"),
-                        "Batch steps must be move, place-family, create-wall, create-floor, set-phase, set-parameter, set-view-lighting, delete, select or isolate.");
+                        "Batch steps must be move, place-family, create-wall, create-floor, create-level, set-phase, set-parameter, set-view-lighting, delete, select or isolate.");
                     var parsed = Parse(stepCommand, step!);
                     Require(parsed.Error is null, $"Step {action.Steps.Count}: {parsed.Error}");
                     action.Steps.Add(parsed);
@@ -125,6 +128,12 @@ public static class ActionJobParser
                     Require(!action.PointsMm[index].SequenceEqual(action.PointsMm[(index + 1) % action.PointsMm.Count]),
                         "Floor boundary points must not repeat consecutively.");
                 Require(action.FloorType is null || !string.IsNullOrWhiteSpace(action.FloorType), "floorType must not be blank.");
+            }
+            if (command == "create-level")
+            {
+                Require(!string.IsNullOrWhiteSpace(action.LevelName), "name is required.");
+                Require(job.ElevationMm.HasValue, "elevationMm is required.");
+                Require(Finite(action.ElevationMm), "elevationMm must be finite millimetres.");
             }
             if (command == "set-phase")
             {
@@ -301,6 +310,9 @@ public sealed class ActionJobContract
     public double HeightMm { get; set; }
     public List<List<double>> PointsMm { get; set; } = [];
     public string? FloorType { get; set; }
+    public string? LevelName { get; set; }
+    public double ElevationMm { get; set; }
+    public bool CreateView { get; set; }
     public string? CreatedPhase { get; set; }
     public string? DemolishedPhase { get; set; }
     public string? SourcePhase { get; set; }
@@ -402,6 +414,9 @@ public sealed partial class ControlJobContract
     [DataMember(Name = "heightMm")] public double? HeightMm { get; set; }
     [DataMember(Name = "pointsMm")] public List<List<double>>? PointsMm { get; set; }
     [DataMember(Name = "floorType")] public string? FloorType { get; set; }
+    [DataMember(Name = "name")] public string? LevelName { get; set; }
+    [DataMember(Name = "elevationMm")] public double? ElevationMm { get; set; }
+    [DataMember(Name = "createView")] public bool? CreateView { get; set; }
     [DataMember(Name = "createdPhase")] public string? CreatedPhase { get; set; }
     [DataMember(Name = "demolishedPhase")] public string? DemolishedPhase { get; set; }
     [DataMember(Name = "sourcePhase")] public string? SourcePhase { get; set; }

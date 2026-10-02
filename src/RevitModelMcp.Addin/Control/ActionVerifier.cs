@@ -53,6 +53,18 @@ internal static class ActionVerifier
                 // A view change has no element id to report, so the settings that moved are the changed set.
                 result.ChangedSettings = ViewLightingComparison.Differences(verification.Before?.Lighting, lighting);
                 break;
+            case "create-level":
+                var level = RequiredElement(targetDocument, result.Id!.Value) as Level
+                            ?? throw new InvalidOperationException("The created element is not a level.");
+                verification.After = new ActionFacts
+                {
+                    Id = RevitValueReader.GetId(level.Id),
+                    Category = level.Category?.Name ?? string.Empty,
+                    Name = level.Name,
+                    ElevationMm = Math.Round(RevitUnits.InternalUnitsToMillimeters(level.Elevation), 1)
+                };
+                verification.WouldCreate = action.DryRun ? true : null;
+                break;
             case "place-family":
             case "create-wall":
             case "create-floor":

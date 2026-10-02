@@ -154,7 +154,7 @@
 2. `dry_run` 回滚（返回同形 `verification` 且 `wouldCreate: true`）。
 3. 一条错误路径（标高重名、宿主非法、族文件不存在）。
 
-外加一条全局断言：真实写入之后 `revit_document_info.isModified` 必须为 `false`，且测试模型文件的 mtime 不变。
+外加两条全局断言：`dry_run` 之后 `revit_document_info.isModified` 必须仍为 `false`（证明回滚真的发生）；真实写入之后，测试模型**文件**的 mtime 必须不变——动作不保存模型，所以文档在内存里会变脏（`isModified=true`），这是正常的，不是失败。
 
 | 年份 | 测试模型 |
 | --- | --- |

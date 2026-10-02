@@ -154,7 +154,7 @@ Every first-batch tool runs three cases in **both 2020 and 2026**:
 2. A `dry_run` rollback (returns the same `verification` shape with `wouldCreate: true`).
 3. One error path (a duplicate level name, an invalid host, a missing family file).
 
-Plus one global assertion: after a real write `revit_document_info.isModified` must be `false`, and the test model file's mtime must not change.
+Plus two global assertions: after a `dry_run`, `revit_document_info.isModified` must still be `false`, which proves the rollback happened; after a real write, the test model **file**'s mtime must not change. An action never saves the model, so the in-memory document does go dirty (`isModified=true`) — that is expected, not a failure.
 
 | Revit year | Test model |
 | --- | --- |

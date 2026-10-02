@@ -1932,6 +1932,65 @@
   {
     "annotations": {
       "destructiveHint": true,
+      "idempotentHint": false,
+      "readOnlyHint": false,
+      "title": "Create Level"
+    },
+    "description": "Create a level at a given elevation for layout.\n        name is the level name; an existing level with that exact name is refused, so a later\n        tool never resolves an ambiguous level. elevation_mm is the height in millimetres.\n        create_view also creates the matching floor plan; its view type is chosen by view\n        family, not by name. dry_run executes and rolls back, returning the same verification\n        block without changing the model.\n        Pass `document` to address a specific open model when several are open; an unknown or ambiguous reference is rejected.\n        ",
+    "inputSchema": {
+      "properties": {
+        "create_view": {
+          "default": false,
+          "title": "Create View",
+          "type": "boolean"
+        },
+        "document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Case-insensitive substring of the target open document's title or file name. Required to disambiguate when the Revit process has more than one document open; omit only when a single document is open (the active document is used). An unknown or ambiguous reference is rejected before any change.",
+          "title": "Document"
+        },
+        "dry_run": {
+          "default": false,
+          "title": "Dry Run",
+          "type": "boolean"
+        },
+        "elevation_mm": {
+          "title": "Elevation Mm",
+          "type": "number"
+        },
+        "name": {
+          "minLength": 1,
+          "pattern": "\\S",
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "elevation_mm"
+      ],
+      "title": "revit_create_levelArguments",
+      "type": "object"
+    },
+    "name": "revit_create_level",
+    "outputSchema": {
+      "additionalProperties": true,
+      "title": "revit_create_levelDictOutput",
+      "type": "object"
+    },
+    "title": "Create Level"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
       "idempotentHint": true,
       "readOnlyHint": false,
       "title": "Set Element Phases"
@@ -2560,6 +2619,7 @@
                 "place_family",
                 "create_wall",
                 "create_floor",
+                "create_level",
                 "set_phase",
                 "set_parameter",
                 "set_view_lighting",

@@ -26,7 +26,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Element relations](revit_list_relations.md)<br>`revit_list_relations` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 | [Revit instance list](revit_list_instances.md)<br>`revit_list_instances` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 
-## Action tools (15) {'#read-tools' if read_only else '#action-tools'}
+## Action tools (16) {'#read-tools' if read_only else '#action-tools'}
 
 | Tool | 2020 | 2026 | 2022–2025 / 2027 |
 | --- | :--: | :--: | :--: |
@@ -37,6 +37,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Place unhosted family](revit_place_family.md)<br>`revit_place_family` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | [Create straight wall](revit_create_wall.md)<br>`revit_create_wall` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 | [Create floor](revit_create_floor.md)<br>`revit_create_floor` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| [Create level](revit_create_level.md)<br>`revit_create_level` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 | [Set element phases](revit_set_phase.md)<br>`revit_set_phase` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | [Merge project phases](revit_merge_phases.md)<br>`revit_merge_phases` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | [Edit parameter](revit_set_parameter.md)<br>`revit_set_parameter` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |

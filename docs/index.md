@@ -1,6 +1,6 @@
 # Revit Model MCP
 
-<p class="facts"><span><b>插件 / MCP 版本 0.9.0</b></span><span>Revit <b>2020 / 2022–2027</b></span><span>19 个读取 + 15 个动作，共 34 个工具</span></p>
+<p class="facts"><span><b>插件 / MCP 版本 0.9.0</b></span><span>Revit <b>2020 / 2022–2027</b></span><span>19 个读取 + 16 个动作，共 35 个工具</span></p>
 
 面向 Revit 技术人员的功能手册：查参数与几何、统计构件、检查模型、导出清单、编辑构件，以及复制模型并换新 ID。默认只读，动作需要双门禁。**Revit 年份**与**插件发布版本**是两种不同的版本；实测覆盖以支持矩阵为准。
 

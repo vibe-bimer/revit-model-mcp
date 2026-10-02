@@ -1,6 +1,6 @@
 # 提示词库
 
-19 个读取 + 15 个动作，共 34 个工具
+19 个读取 + 16 个动作，共 35 个工具
 
 客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
@@ -242,6 +242,14 @@
 
 ```text
 用这四个点在 2F 建一块楼板
+```
+
+### [创建标高](revit_create_level.md)
+
+`revit_create_level` — 在指定高程新建标高（mm）
+
+```text
+在 15000mm 处建一个叫 4F 的标高
 ```
 
 ### [修改参数](revit_set_parameter.md)
