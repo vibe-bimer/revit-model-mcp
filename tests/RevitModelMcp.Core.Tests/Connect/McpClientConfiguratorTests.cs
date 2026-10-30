@@ -172,7 +172,8 @@ public sealed class McpClientConfiguratorTests
     public async Task TomlLiteralStringAndMultilineArgsAreRecognizedAsTheSameCommand()
     {
         var spec = McpServerSpec.Uvx;
-        var text = "[mcp_servers.revit-model-mcp]\ncommand = 'uvx'\nargs = [\n  \"revit-model-mcp\", # pinned by name\n]\n";
+        var arguments = string.Join(", ", McpServerSpec.Uvx.Args.Select(argument => $"\"{argument}\""));
+        var text = "[mcp_servers.revit-model-mcp]\ncommand = 'uvx'\nargs = [\n  " + arguments + ", # pinned by name\n]\n";
         await Assert.That(TomlConfigEditor.Inspect(ConnectTestSupport.Codex, text, spec).State).IsEqualTo(McpClientState.Configured);
         await Assert.That(TomlConfigEditor.Inspect(ConnectTestSupport.Codex, text, Bundled).State)
             .IsEqualTo(McpClientState.ConfiguredDifferentCommand);

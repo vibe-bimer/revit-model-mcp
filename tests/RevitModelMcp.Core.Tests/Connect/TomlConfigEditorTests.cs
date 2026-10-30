@@ -5,8 +5,12 @@ namespace RevitModelMcp.Core.Tests.Connect;
 
 public sealed class TomlConfigEditorTests
 {
-    private const string Block =
-        "[mcp_servers.revit-model-mcp]\ncommand = \"uvx\"\nargs = [\"revit-model-mcp\"]\n\n[mcp_servers.revit-model-mcp.env]\nREVIT_MCP_HOST = \"local\"\nREVIT_MCP_REDACT_PATHS = \"1\"\n";
+    private static readonly string Arguments =
+        string.Join(", ", McpServerSpec.Uvx.Args.Select(argument => $"\"{argument}\""));
+
+    private static readonly string Block =
+        ("[mcp_servers.revit-model-mcp]\ncommand = \"uvx\"\nargs = [ARGUMENTS]\n\n[mcp_servers.revit-model-mcp.env]\nREVIT_MCP_HOST = \"local\"\nREVIT_MCP_REDACT_PATHS = \"1\"\n")
+        .Replace("ARGUMENTS", Arguments);
 
     private const string Existing = "# Codex settings\nmodel = \"gpt\"\n\n[mcp_servers.other]\ncommand = \"node\" # keep\n";
 

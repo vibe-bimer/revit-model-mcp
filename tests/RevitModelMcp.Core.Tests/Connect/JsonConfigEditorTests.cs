@@ -5,6 +5,9 @@ namespace RevitModelMcp.Core.Tests.Connect;
 
 public sealed class JsonConfigEditorTests
 {
+    private static readonly string Arguments =
+        string.Join(", ", McpServerSpec.Uvx.Args.Select(argument => $"\"{argument}\""));
+
     private const string Existing = """
         {
           "mcpServers": {
@@ -27,7 +30,7 @@ public sealed class JsonConfigEditorTests
               "mcpServers": {
                 "revit-model-mcp": {
                   "command": "uvx",
-                  "args": ["revit-model-mcp"],
+                  "args": [ARGUMENTS],
                   "env": {
                     "REVIT_MCP_HOST": "local",
                     "REVIT_MCP_REDACT_PATHS": "1"
@@ -36,7 +39,7 @@ public sealed class JsonConfigEditorTests
               }
             }
 
-            """);
+            """.Replace("ARGUMENTS", Arguments));
     }
 
     [Test]
@@ -51,7 +54,7 @@ public sealed class JsonConfigEditorTests
                 },
                 "revit-model-mcp": {
                   "command": "uvx",
-                  "args": ["revit-model-mcp"],
+                  "args": [ARGUMENTS],
                   "env": {
                     "REVIT_MCP_HOST": "local",
                     "REVIT_MCP_REDACT_PATHS": "1"
@@ -60,7 +63,7 @@ public sealed class JsonConfigEditorTests
               },
               "theme": "dark"
             }
-            """);
+            """.Replace("ARGUMENTS", Arguments));
         await Assert.That(JsonConfigEditor.Inspect(Desktop, updated).State).IsEqualTo(McpClientState.Configured);
     }
 
