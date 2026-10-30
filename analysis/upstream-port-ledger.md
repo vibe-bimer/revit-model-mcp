@@ -236,6 +236,12 @@ Enumerated so the intake check stays meaningful. These change nothing local owns
 
 ---
 
+### Not followed: upstream housekeeping (continued)
+
+| Commit | What it is | Why not followed |
+| --- | --- | --- |
+| `6d19760` | docs(privacy): state cross-border processing and access rights (#324, 2026-10-30) | Upstream's privacy page, answering an Autodesk review item. The fork ships its own privacy page and own legal entity; porting upstream's wording would misattribute it. Revisit if the fork's privacy page ever needs the same statements. |
+
 ## Standing process
 
 Upstream keeps shipping. The intake list only stays useful if new commits get

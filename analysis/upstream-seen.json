@@ -1,8 +1,8 @@
 {
   "upstream": "https://github.com/sharafutdinovdi/revit-model-mcp",
   "ref": "upstream/main",
-  "last_seen": "760bb7c21337abb2a2aec21434e1d208e01e6cc0",
-  "last_seen_subject": "chore(deps): Bump uv from 0.12.22 to 0.13.4 in /.github/requirements (#308)",
+  "last_seen": "6d19760df12fafda089e0b040e2a8b25df8a96fd",
+  "last_seen_subject": "docs(privacy): state cross-border processing and access rights (#324)",
   "merge_base": "5a65afc",
   "ledger": "analysis/upstream-port-ledger.md",
   "recorded": "2026-10-30",
