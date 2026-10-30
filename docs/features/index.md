@@ -10,7 +10,7 @@ The server serves 87 tools: 35 read and 52 action. A read returns model data and
 | 2022–2025, 2027 | 87 built | [Version support matrix](matrix.md) |
 | 2026 | 87 built, not live-verified | [Revit 2026](v2026.md) |
 
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists: adr/0006 records Revit 2020 as a required follow-up with a date. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
+**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
 
 ## Read tools (35)
 

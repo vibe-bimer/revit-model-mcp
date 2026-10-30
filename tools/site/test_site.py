@@ -193,14 +193,18 @@ class FeatureGeneratorTests(unittest.TestCase):
     def test_fork_action_carries_the_gate_admonition(self):
         rendered = self.tool_page("revit_create_floor")
         self.assertIn("Runs only on a read-write workstation", rendered)
-        self.assertIn("read-only", rendered)
-        self.assertIn("**Since:** 1.0.0", rendered)
+        self.assertIn("the machine policy", rendered)
+        self.assertIn("HKLM\\Software\\Policies\\RevitModelMcp", rendered)
+        self.assertIn("%ProgramData%\\RevitModelMcp\\policy.json", rendered)
+        self.assertIn("fails closed to read-only", rendered)
+        self.assertNotIn("%LOCALAPPDATA%", rendered)
+        self.assertIn("**Since:** this fork's 1.0.0", rendered)
         self.assertIn("```text", rendered)
 
     def test_fork_read_does_not_carry_the_gate_admonition(self):
         rendered = self.tool_page("revit_export_element_ids")
         self.assertNotIn("Runs only on a read-write workstation", rendered)
-        self.assertIn("**Since:** 1.0.0", rendered)
+        self.assertIn("**Since:** this fork's 1.0.0", rendered)
 
     def test_inherited_tool_does_not_claim_fork_authorship(self):
         rendered = self.tool_page("revit_ping")
@@ -287,6 +291,9 @@ class FeatureGeneratorTests(unittest.TestCase):
         page_2020 = generate_features.year_page(self.site, "2020")
         self.assertIn("Revit 2020 is not supported yet.", page_2020)
         self.assertIn("adr/0006", page_2020)
+        self.assertIn("names no calendar date", page_2020)
+        self.assertIn("the maintainer chooses the date", page_2020)
+        self.assertNotIn("release notes", page_2020)
         page_2026 = generate_features.year_page(self.site, "2026")
         self.assertIn("verified against a running Revit 2026", page_2026)
         self.assertNotIn("Validated live", page_2020 + page_2026)

@@ -2,7 +2,7 @@
 
 Write the ID register of drawn model components to an Excel workbook.
 
-**Group:** Element registers · **Kind:** Read (read-only) · **Since:** 1.0.0
+**Group:** Element registers · **Kind:** Read (read-only) · **Since:** this fork's 1.0.0
 
 This fork adds this tool; the rest of the catalogue comes from upstream 1.0.
 
@@ -47,6 +47,6 @@ The workbook is written on the Revit workstation; nothing is downloaded.
 | 2022–2025, 2027 | Built |
 | 2026 | Built |
 
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists: adr/0006 records Revit 2020 as a required follow-up with a date. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
+**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
 
 [Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)

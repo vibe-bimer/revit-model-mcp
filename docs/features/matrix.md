@@ -99,6 +99,6 @@ Every tool against every Revit year. `Built` means the release workflow compiles
 | [Process Many Models](revit_process_models.md) | No | Built | Built | Built | Built | Built | Built |
 | [Execute C# Code](revit_execute_code.md) | No | Built | Built | Built | Built | Built | Built |
 
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists: adr/0006 records Revit 2020 as a required follow-up with a date. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
+**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
 
 [Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)
