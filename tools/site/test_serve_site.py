@@ -185,5 +185,61 @@ class RobustnessTests(ServeSiteTestCase):
         self.assertEqual(status, 200)
 
 
+class CanonicalRedirectTests(ServeSiteTestCase):
+    def test_bare_directory_redirects_with_trailing_slash(self):
+        status, headers, body = self.request("GET", "/features")
+        self.assertEqual(status, 301)
+        self.assertEqual(headers["location"], "/features/")
+        self.assertEqual(body, b"")
+
+    def test_redirect_preserves_query_string(self):
+        status, headers, _ = self.request("GET", "/features?a=1&b=%E4%B8%AD")
+        self.assertEqual(status, 301)
+        self.assertEqual(headers["location"], "/features/?a=1&b=%E4%B8%AD")
+
+    def test_explicit_index_redirects_to_directory(self):
+        status, headers, _ = self.request("GET", "/features/index.html")
+        self.assertEqual(status, 301)
+        self.assertEqual(headers["location"], "/features/")
+
+    def test_root_index_redirects_to_root(self):
+        status, headers, _ = self.request("GET", "/index.html")
+        self.assertEqual(status, 301)
+        self.assertEqual(headers["location"], "/")
+
+    def test_head_redirects_without_body(self):
+        status, headers, body = self.request("HEAD", "/features")
+        self.assertEqual(status, 301)
+        self.assertEqual(headers["location"], "/features/")
+        self.assertEqual(body, b"")
+
+    def test_canonical_directory_url_serves_without_redirect(self):
+        status, headers, body = self.request("GET", "/features/")
+        self.assertEqual(status, 200)
+        self.assertNotIn("location", headers)
+        self.assertIn("features", body.decode("utf-8"))
+
+    def test_missing_paths_stay_404_without_redirect(self):
+        for target in ("/missing", "/missing/", "/features/absent.html"):
+            with self.subTest(target=target):
+                status, headers, _ = self.request("GET", target)
+                self.assertEqual(status, 404)
+                self.assertNotIn("location", headers)
+
+    def test_directory_without_index_stays_404(self):
+        for target in ("/emptydir", "/emptydir/"):
+            with self.subTest(target=target):
+                status, headers, _ = self.request("GET", target)
+                self.assertEqual(status, 404)
+                self.assertNotIn("location", headers)
+
+    def test_redirect_chain_terminates_at_canonical_url(self):
+        status, headers, _ = self.request("GET", "/features")
+        location = headers["location"]
+        status, headers, _ = self.request("GET", location)
+        self.assertEqual(status, 200)
+        self.assertNotIn("location", headers)
+
+
 if __name__ == "__main__":
     unittest.main()

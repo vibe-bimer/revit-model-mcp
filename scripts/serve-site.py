@@ -82,8 +82,10 @@ class DocsHandler(BaseHTTPRequestHandler):
         # Name is fixed by BaseHTTPRequestHandler.
         self._respond(body=False)
 
-    def _resolve(self) -> Path | None:
-        raw = urlsplit(self.path).path
+    def _resolve(self) -> tuple[Path | None, str | None]:
+        """Map the request target to a file, a redirect target, or a 404."""
+        split = urlsplit(self.path)
+        raw = split.path
         try:
             decoded = unquote(raw, errors="strict")
         except UnicodeDecodeError:
@@ -93,9 +95,22 @@ class DocsHandler(BaseHTTPRequestHandler):
             raise _BadRequest
         parts = [part for part in decoded.split("/") if part not in ("", ".")]
         if any(part == ".." for part in parts):
-            return None
+            return None, None
         target = self.root.joinpath(*parts)
-        if raw.endswith("/") or target.is_dir():
+        is_dir = target.is_dir()
+        trailing = decoded.endswith("/")
+
+        if parts and parts[-1] == "index.html":
+            # An explicit index URL only serves content when its directory is
+            # canonical; otherwise it falls through to a plain 404.
+            if (target.parent / "index.html").is_file():
+                return None, self._canonical(parts[:-1], split.query)
+        elif is_dir and not trailing and (target / "index.html").is_file():
+            # A bare directory URL redirects to its canonical form once; a
+            # directory without an index has no canonical form to serve.
+            return None, self._canonical(parts, split.query)
+
+        if trailing or is_dir:
             target = target / "index.html"
         try:
             resolved = target.resolve()
@@ -103,8 +118,19 @@ class DocsHandler(BaseHTTPRequestHandler):
             # ValueError covers paths the filesystem layer cannot even name.
             raise _BadRequest from None
         if resolved != self.root and self.root not in resolved.parents:
-            return None
-        return resolved if resolved.is_file() else None
+            return None, None
+        return (resolved if resolved.is_file() else None), None
+
+    def _canonical(self, segments: list[str], query: str) -> str:
+        url = "/" + "/".join(segments + [""]) if segments else "/"
+        return f"{url}?{query}" if query else url
+
+    def _redirect(self, location: str) -> None:
+        self.send_response(HTTPStatus.MOVED_PERMANENTLY)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
 
     def _compressed(self, path: Path, data: bytes) -> bytes:
         stat = path.stat()
@@ -121,9 +147,12 @@ class DocsHandler(BaseHTTPRequestHandler):
 
     def _respond(self, body: bool) -> None:
         try:
-            path = self._resolve()
+            path, redirect = self._resolve()
         except _BadRequest:
             self.send_error(HTTPStatus.BAD_REQUEST, "Invalid request target")
+            return
+        if redirect is not None:
+            self._redirect(redirect)
             return
         if path is None:
             self._not_found(body)
