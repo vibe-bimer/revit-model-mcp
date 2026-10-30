@@ -43,7 +43,8 @@ public sealed class Application : ExternalApplication
         "sync-document", "activate-document", "activate-view", "close-views", "new-document",
         "set-view-visibility", "remove-links", "execute-code", "undo-last",
         "batch-supervisor-start", "batch-prepass", "batch-open", "batch-close", "model-snapshot",
-        ..Core.Fork.ForkRegistry.Commands
+        ..Core.Fork.ForkRegistry.Commands,
+        ..Core.Fork.ForkReads.Commands
     ];
     private ControlChannel _controlChannel = null!;
     private ControlExternalEventHandler? _eventHandler;

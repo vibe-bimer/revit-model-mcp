@@ -225,10 +225,6 @@ internal static class ForkRebuild
     }
 
     /// <summary>
-    /// Removes the elements of one copy so the next copy starts from the template's own content again. Revit
-    /// keeps handing out higher ids in a document, so the copy that follows lands in a block of its own.
-    /// </summary>
-    /// <summary>
     /// Copies again after Revit refused the paste. The elements the refused attempt did copy are removed first,
     /// and the repeated copy takes the names the new model already holds, so Revit asks nothing and copies all.
     /// </summary>
@@ -243,6 +239,10 @@ internal static class ForkRebuild
         return ids;
     }
 
+    /// <summary>
+    /// Removes the elements of one copy so the next copy starts from the template's own content again. Revit
+    /// keeps handing out higher ids in a document, so the copy that follows lands in a block of its own.
+    /// </summary>
     private static (int Deleted, int Left) DeleteCopied(Document destination, IReadOnlyList<ElementId> ids)
     {
         if (ids.Count == 0) return (0, 0);

@@ -43,14 +43,14 @@ internal static class ForkElementIds
 
     private static readonly int[] ColumnWidths = { 16, 22, 26, 14, 12, 26, 16, 14, 16, 12 };
 
+    /// <summary>Enum-name fragments that mark a category as infrastructure rather than a component.</summary>
+    private static readonly string[] ExcludedNameFragments = { "CenterLine", "Centerline", "Asset", "SunPath" };
+
     /// <summary>
     /// Model categories that hold datums, materials or view infrastructure rather than drawn
     /// components. Annotation and view categories never reach this list: they are excluded by
     /// <see cref="CategoryType.Model"/>, view-specific elements and element types.
     /// </summary>
-    /// <summary>Enum-name fragments that mark a category as infrastructure rather than a component.</summary>
-    private static readonly string[] ExcludedNameFragments = { "CenterLine", "Centerline", "Asset", "SunPath" };
-
     private static readonly HashSet<BuiltInCategory> ExcludedCategories = new()
     {
         BuiltInCategory.OST_Levels,
