@@ -7,6 +7,24 @@ namespace RevitModelMcp.Core.Fork;
 /// </summary>
 public static class ForkRegistry
 {
+    /// <summary>
+    /// Every fork action's wire command and activity phrases. They live beside the registry rather than in
+    /// the add-in, because the parser asks this registry whether a command is a fork action before any
+    /// add-in type is loaded. The behaviour for each command stays in <c>Addin/Fork</c>.
+    /// </summary>
+    static ForkRegistry()
+    {
+        Register(
+            "set-view-lighting",
+            "Changed view lighting",
+            "Changing view lighting",
+            null,
+            null,
+            (documentTitle, viewName, dryRun) => string.IsNullOrWhiteSpace(viewName)
+                ? $"{(dryRun ? "Would change" : "Changed")} the view lighting in {documentTitle}."
+                : $"{(dryRun ? "Would change" : "Changed")} the lighting of {viewName} in {documentTitle}.");
+    }
+
     private static readonly List<string> Commands_ = [];
     private static readonly List<(string Command, string Past, string Process, string? NounOne, string? NounMany)> Phrases_ = [];
     private static readonly Dictionary<string, Func<string, string, bool, string>> Summarizers = new(StringComparer.Ordinal);

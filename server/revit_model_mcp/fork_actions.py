@@ -71,18 +71,18 @@ def register_fork_actions(mcp, send) -> None:
         dry_run executes and rolls back, returning the same verification block without changing the model.
         `document` addresses one specific open model when several are open; an unknown or ambiguous reference is rejected.
         """
-        settings = {
+        settings: dict[str, Any] = {
             "shadows": shadows,
-            "shadow_intensity": shadow_intensity,
-            "sunlight_intensity": sunlight_intensity,
-            "sun_date": sun_date,
-            "sun_time": sun_time,
-            "sun_azimuth_deg": sun_azimuth_deg,
-            "sun_altitude_deg": sun_altitude_deg,
-            "ground_plane": ground_plane,
-            "ground_plane_level": ground_plane_level,
+            "shadowIntensity": shadow_intensity,
+            "sunlightIntensity": sunlight_intensity,
+            "sunDate": sun_date,
+            "sunTime": sun_time,
+            "sunAzimuthDeg": sun_azimuth_deg,
+            "sunAltitudeDeg": sun_altitude_deg,
+            "groundPlane": ground_plane,
+            "groundPlaneLevel": ground_plane_level,
             "background": background,
-            "lighting_scheme": lighting_scheme,
+            "lightingScheme": lighting_scheme,
         }
         if all(value is None for value in settings.values()):
             raise ToolError("Provide at least one lighting setting to change.")
@@ -90,21 +90,10 @@ def register_fork_actions(mcp, send) -> None:
             raise ToolError("sun_azimuth_deg and sun_altitude_deg must be provided together.")
         if background_colors is not None and background != "gradient":
             raise ToolError("background_colors requires background 'gradient'.")
+        settings["backgroundColors"] = background_colors
+        # Only what the caller passed travels: the add-in reads a sparse bag, so an absent key means
+        # "leave this setting alone" rather than "set it to null" (adr/0005).
+        fork = {name: value for name, value in settings.items() if value is not None}
         return await send(
-            "set-view-lighting",
-            view=view,
-            shadows=shadows,
-            shadowIntensity=shadow_intensity,
-            sunlightIntensity=sunlight_intensity,
-            sunDate=sun_date,
-            sunTime=sun_time,
-            sunAzimuthDeg=sun_azimuth_deg,
-            sunAltitudeDeg=sun_altitude_deg,
-            groundPlane=ground_plane,
-            groundPlaneLevel=ground_plane_level,
-            background=background,
-            backgroundColors=background_colors,
-            lightingScheme=lighting_scheme,
-            dryRun=dry_run,
-            document=document,
+            "set-view-lighting", view=view, fork=fork, dryRun=dry_run, document=document
         )

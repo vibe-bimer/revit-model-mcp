@@ -563,6 +563,9 @@ public sealed partial class ControlJobContract
     public int? TargetProcessId { get; set; }
     [DataMember(Name = "includeLinked")]
     public bool? IncludeLinked { get; set; }
+    // The fork's own action inputs travel in one bag, so a fork action adds inputs without an upstream field (adr/0005).
+    [DataMember(Name = "fork")]
+    public Dictionary<string, object>? Fork { get; set; }
 }
 
 [DataContract]

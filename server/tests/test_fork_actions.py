@@ -42,7 +42,7 @@ async def test_set_view_lighting_requires_paired_sun_angles():
 
 
 @pytest.mark.anyio
-async def test_set_view_lighting_sends_camel_cased_payload():
+async def test_set_view_lighting_sends_a_sparse_fork_bag():
     seen: dict = {}
 
     async def send(command: str, **payload):
@@ -63,11 +63,9 @@ async def test_set_view_lighting_sends_camel_cased_payload():
     assert result == {"ok": True}
     assert seen["command"] == "set-view-lighting"
     assert seen["view"] == "Level 1"
-    assert seen["shadows"] is True
-    assert seen["shadowIntensity"] is None
-    assert seen["sunDate"] == "2026-03-01"
-    assert seen["sunTime"] == "10:30"
     assert seen["dryRun"] is True
+    # Only the settings the caller passed reach the add-in, so an absent key means "leave it alone".
+    assert seen["fork"] == {"shadows": True, "sunDate": "2026-03-01", "sunTime": "10:30"}
 
 
 @pytest.mark.anyio

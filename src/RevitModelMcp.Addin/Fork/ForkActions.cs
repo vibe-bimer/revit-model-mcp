@@ -5,26 +5,14 @@ using RevitModelMcp.Core.Fork;
 namespace RevitModelMcp.Control.Fork;
 
 /// <summary>
-/// Execution side of the fork's action registry. Each fork action registers itself here and in
-/// <see cref="ForkRegistry"/>; upstream dispatch falls through to this runner only at its default
-/// points. Fork actions implement the Revit-facing parts here because the capture and mutation
-/// helpers they build on are internal to the add-in assembly. See adr/0005.
+/// Execution side of the fork's action registry. Each fork action declares its command and phrases in
+/// <see cref="ForkRegistry"/> (it lives in Core, because parsing asks it before any add-in type loads) and
+/// adds its behaviour here; upstream dispatch falls through to this runner only at its default points.
+/// Fork actions implement the Revit-facing parts here because the capture and mutation helpers they build
+/// on are internal to the add-in assembly. See adr/0005.
 /// </summary>
 internal static class ForkActions
 {
-    static ForkActions()
-    {
-        ForkRegistry.Register(
-            "set-view-lighting",
-            "Changed view lighting",
-            "Changing view lighting",
-            null,
-            null,
-            (documentTitle, viewName, dryRun) => string.IsNullOrWhiteSpace(viewName)
-                ? $"{(dryRun ? "Would change" : "Changed")} the view lighting in {documentTitle}."
-                : $"{(dryRun ? "Would change" : "Changed")} the lighting of {viewName} in {documentTitle}.");
-    }
-
     /// <summary>Attempts to run one fork action inside the caller's transaction scope.</summary>
     internal static bool TryRun(
         Document document,

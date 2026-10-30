@@ -169,6 +169,7 @@ public static class ActionJobParser
                 OffsetMm = job.OffsetMm,
                 ConnectTo = job.ConnectTo
             };
+            Fork.ForkInputs.Read(action, command, job.Fork);
             if (command == "process-models")
             {
                 action.ProcessModels = job.ProcessModels ?? throw new ArgumentException("process is required.");

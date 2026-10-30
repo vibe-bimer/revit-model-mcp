@@ -32,7 +32,7 @@ public static class ActivityTitleBuilder
         ["save-document"] = new("Saved the document", "Saving the document", null),
         ["sync-document"] = new("Synchronized with central", "Synchronizing with central", null),
         ["set-view-visibility"] = new("Changed view visibility", "Changing view visibility", null)
-    };
+    });
 
     /// <summary>
     /// Title of a recorded activity row. Uses the action's own target count when the entry has one, so a
