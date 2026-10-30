@@ -1,3 +1,7 @@
+---
+description: "Read level rooms, area-scheme membership, group members, nested families and view-template dependents"
+---
+
 # Element relations
 
 `revit_list_relations`

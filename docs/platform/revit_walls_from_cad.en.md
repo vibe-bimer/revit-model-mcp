@@ -1,3 +1,7 @@
+---
+description: "Bridge openings, pair parallel CAD lines and join basic walls in one undo entry. Dimensions are mm. Joins Revit rejects are left out and reported as unjoinedEnds with unjoinedReasons; dry_run reports the same join numbers."
+---
+
 # Build Walls from CAD
 
 `revit_walls_from_cad`

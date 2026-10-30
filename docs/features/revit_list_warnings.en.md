@@ -1,3 +1,7 @@
+---
+description: "Group model warnings by description and inspect affected elements"
+---
+
 # Model warnings
 
 `revit_list_warnings`

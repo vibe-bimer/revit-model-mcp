@@ -1,3 +1,7 @@
+---
+description: "分页读取选定视图中的构件，含 ID、类目、族、类型、标高与长度面积体积。"
+---
+
 # 视图构件
 
 `revit_view_elements`

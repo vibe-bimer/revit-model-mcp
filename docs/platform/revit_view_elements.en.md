@@ -1,3 +1,7 @@
+---
+description: "Read one page of elements in a selected view, with IDs, category, family, type, level and measurements (mm, m2, m3). A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # View Elements
 
 `revit_view_elements`

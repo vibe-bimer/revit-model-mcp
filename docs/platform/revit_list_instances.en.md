@@ -1,3 +1,7 @@
+---
+description: "List Revit processes with documentName, documentPath, revitVersion, processId and pluginResponding. Busy or unresponsive processes stay listed with pluginResponding=false. HTTP mode reports only its connected process."
+---
+
 # List Instances
 
 `revit_list_instances`

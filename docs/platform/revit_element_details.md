@@ -1,3 +1,7 @@
+---
+description: "按 Revit ID 读取构件的参数与几何，含类型参数与相关警告；几何用模型毫米。"
+---
+
 # 构件详情
 
 `revit_element_details`

@@ -1,3 +1,7 @@
+---
+description: "Close open UI views in the active document."
+---
+
 # Close Views
 
 `revit_close_views`

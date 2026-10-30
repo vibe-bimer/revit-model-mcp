@@ -1,3 +1,7 @@
+---
+description: "渲染带高亮的 PNG，标记 1 到 500 个构件作为问题证据，临时视图在结束后回滚。"
+---
+
 # 截取构件画面
 
 `revit_capture_elements`

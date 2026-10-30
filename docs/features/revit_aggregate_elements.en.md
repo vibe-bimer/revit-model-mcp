@@ -1,3 +1,7 @@
+---
+description: "Group by one or two fields, with counts and optional sum and average"
+---
+
 # Grouped totals
 
 `revit_aggregate_elements`

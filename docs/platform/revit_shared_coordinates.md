@@ -1,3 +1,7 @@
+---
+description: "读取项目与测量坐标：基点、测量点、活动场地、项目位置与链接偏移，单位毫米与度。"
+---
+
 # 共享坐标
 
 `revit_shared_coordinates`

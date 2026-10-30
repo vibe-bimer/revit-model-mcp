@@ -1,3 +1,7 @@
+---
+description: "设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案"
+---
+
 # 设置视图光照
 
 `revit_set_view_lighting`

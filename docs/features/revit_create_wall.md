@@ -1,3 +1,7 @@
+---
+description: "按两点建直墙（mm，指定标高、墙类型、高度）"
+---
+
 # 创建直墙
 
 `revit_create_wall`

@@ -1,3 +1,7 @@
+---
+description: "在 Revit 工作站把 DWG 链接或导入平面视图，返回 CAD 图层与范围。"
+---
+
 # 链接 CAD
 
 `revit_link_cad`

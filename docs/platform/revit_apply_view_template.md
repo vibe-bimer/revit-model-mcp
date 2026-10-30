@@ -1,3 +1,7 @@
+---
+description: "把匹配的视图样板应用到一个或多个视图。"
+---
+
 # 应用视图样板
 
 `revit_apply_view_template`

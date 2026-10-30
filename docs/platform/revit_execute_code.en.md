@@ -1,3 +1,7 @@
+---
+description: "Compile and run C# against the live Revit API on the Revit thread. Accepts a method body or a public static Script class with Execute(ScriptContext ctx). Auto mode owns one transaction and undo entry; transaction=\"none\" is refused by default. Needs confirm_token from a first call, which runs nothing; dry_run needs none and forces transaction=\"auto\". A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action."
+---
+
 # Execute C# Code
 
 `revit_execute_code`

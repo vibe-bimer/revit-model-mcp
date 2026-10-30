@@ -1,3 +1,7 @@
+---
+description: "参数的填充率：有值 / 空 / 缺失，并给出抽样 ID"
+---
+
 # 参数填充检查
 
 `revit_parameter_fill_check`

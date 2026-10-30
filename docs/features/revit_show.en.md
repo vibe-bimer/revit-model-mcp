@@ -1,3 +1,7 @@
+---
+description: "Locate and highlight elements, opening a suitable view when needed"
+---
+
 # Show elements
 
 `revit_show`

@@ -1,3 +1,7 @@
+---
+description: "Delete elements and their Revit dependencies; the count includes dependents. dry_run returns the count. Above 500 elements including dependents a confirm_token from a first call is needed; revit_run_actions refuses such deletions."
+---
+
 # Delete Elements
 
 `revit_delete`

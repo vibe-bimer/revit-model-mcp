@@ -1,3 +1,7 @@
+---
+description: "Audit an open family or named project families without saving or loading changes. Project mode takes exact family names or [\"*\"]; family mode takes none. detail=\"summary\" returns parameter counts and up to 20 unused parameter names; detail=\"full\" returns all parameter metadata with group IDs and groupName labels. The wildcard audits the first 200 editable families sorted by name; data.skipped lists each remaining name and reason, with skippedCount. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Audit Families
 
 `revit_family_audit`

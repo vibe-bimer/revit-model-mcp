@@ -1,3 +1,7 @@
+---
+description: "Mirror across a model X or Y parallel line through point_mm; copy keeps originals. dry_run rolls back. Group members, pinned, hosted and constrained elements are reported in skipped.inGroup, skipped.pinned, skipped.hosted and skipped.constrained and are not changed; the call is refused if every element is a group member."
+---
+
 # Mirror Elements
 
 `revit_mirror`

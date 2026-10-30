@@ -1,3 +1,7 @@
+---
+description: "List catalog names for one section: categories, family-types, levels, area-schemes, views, worksets, phases or parameters. name_contains filters names case-insensitively; limit bounds results (default 200, maximum 2000). Returns total before the limit and hasMore. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # List Catalog
 
 `revit_list_catalog`

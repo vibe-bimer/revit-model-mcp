@@ -1,3 +1,7 @@
+---
+description: "Read displayed schedule header and body cell text, with paging. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Read Schedule Data
 
 `revit_schedule_data`

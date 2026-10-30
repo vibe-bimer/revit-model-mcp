@@ -1,3 +1,7 @@
+---
+description: "Read parameters and geometry of an element by Revit ID, with its type parameters and related warnings. Geometry is in model mm; roomCenterMm is a point inside the room. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Element Details
 
 `revit_element_details`

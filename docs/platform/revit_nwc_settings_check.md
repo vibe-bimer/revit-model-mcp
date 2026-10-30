@@ -1,3 +1,7 @@
+---
+description: "只解析 Navisworks 导出器 XML，不执行导出。"
+---
+
 # 检查 NWC 设置
 
 `revit_nwc_settings_check`

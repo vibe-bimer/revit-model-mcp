@@ -1,3 +1,7 @@
+---
+description: "分页读取符合条件的构件行，长度用毫米、面积用平方米、体积用立方米；`hasMore` 表示还有下一页。"
+---
+
 # 查询构件
 
 `revit_query_elements`

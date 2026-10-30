@@ -456,6 +456,8 @@ LABELS = {
         "group_index": "按分组浏览",
         "fork_status": "移植状态",
         "count_line": "共 {total} 个工具：基座 {base} 个，自研 {fork} 个；读取 {read} 个，动作 {action} 个。",
+        "index_desc": "集成分支（上游 1.0 基座加本仓库自研工具）的完整工具清单，按分组列出用途、参数与契约差异。",
+        "fork_desc": "本仓库自研 {total} 个工具的移植状态：{grafted} 个已接到新版底座，{pending} 个仍在待移植队列。",
     },
     "en": {
         "title": "Platform tool catalog",
@@ -520,8 +522,18 @@ LABELS = {
         "group_index": "Browse by group",
         "fork_status": "Migration status",
         "count_line": "{total} tools: {base} base and {fork} fork; {read} read and {action} action.",
+        "index_desc": "Complete tool list of the integration branch (the upstream 1.0 base plus this repository's fork tools), grouped with purpose, parameters and contract differences.",
+        "fork_desc": "Migration status of this repository's {total} fork tools: {grafted} attached to the new base and {pending} still queued.",
     },
 }
+
+
+def frontmatter(description: str) -> str:
+    """Emit the page description so MkDocs renders meta and social tags."""
+    return (
+        "---\ndescription: " + json.dumps(description, ensure_ascii=False) + "\n---\n\n"
+    )
+
 
 COMMON_PARAMETERS = {
     "document",
@@ -746,7 +758,7 @@ def tool_page(tool: dict, released, lang: str) -> str:
         f"[{labels['back']}](index.md) · [{labels['fork_page']}](fork-tools.md)",
         "",
     ]
-    return "\n".join(out)
+    return frontmatter(summary) + "\n".join(out)
 
 
 def _contract_diff_section(changes: list[dict], lang: str) -> list[str]:
@@ -834,7 +846,7 @@ def index_page(tools: list[dict], released: list[dict], lang: str) -> str:
         out.append("")
     out += [f"## {labels['status']} {{#status}}", "", labels["status_body"], ""]
     assert totals
-    return "\n".join(out)
+    return frontmatter(labels["index_desc"]) + "\n".join(out)
 
 
 def fork_page(tools: list[dict], lang: str) -> str:
@@ -882,7 +894,12 @@ def fork_page(tools: list[dict], lang: str) -> str:
             "",
         ]
     out += ["---", "", f"[{labels['back']}](index.md)", ""]
-    return "\n".join(out)
+    description = labels["fork_desc"].format(
+        total=len(FORK_TOOLS),
+        grafted=grafted,
+        pending=len(FORK_TOOLS) - grafted,
+    )
+    return frontmatter(description) + "\n".join(out)
 
 
 def nav_block(tools: list[dict]) -> str:

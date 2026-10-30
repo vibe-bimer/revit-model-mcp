@@ -1,3 +1,7 @@
+---
+description: "Display elements in Revit, optionally selecting them; opens a level plan or 3D view when needed."
+---
+
 # Show Elements
 
 `revit_show`

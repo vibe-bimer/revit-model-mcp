@@ -1,3 +1,7 @@
+---
+description: "把工作共享文档与中心文件同步；需要先取得确认令牌。"
+---
+
 # 同步文档
 
 `revit_sync_document`

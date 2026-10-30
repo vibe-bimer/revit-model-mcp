@@ -1,3 +1,7 @@
+---
+description: "Read element categories and counts for a selected view. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # View Summary
 
 `revit_view_summary`

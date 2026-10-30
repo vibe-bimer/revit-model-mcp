@@ -1,3 +1,7 @@
+---
+description: "Read warnings involving elements present in a selected view. A warning may also involve elements outside the view. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # View Warnings
 
 `revit_view_warnings`

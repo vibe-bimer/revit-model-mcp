@@ -1,3 +1,7 @@
+---
+description: "Temporarily isolate selected elements or reset the active view"
+---
+
 # Temporary isolation
 
 `revit_isolate`

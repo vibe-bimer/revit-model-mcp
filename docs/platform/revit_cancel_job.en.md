@@ -1,3 +1,7 @@
+---
+description: "Request cancellation of an action jobId. Process-models stops before the next model and marks unstarted models cancelled; a single running Revit operation finishes, and completed changes stay committed."
+---
+
 # Cancel Action Job
 
 `revit_cancel_job`

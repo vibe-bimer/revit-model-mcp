@@ -1,3 +1,7 @@
+---
+description: "Delete selected link types and their instances; dry_run previews. Cannot be undone in Revit. Needs confirm_token from a first call, which changes nothing."
+---
+
 # Remove Links
 
 `revit_remove_links`

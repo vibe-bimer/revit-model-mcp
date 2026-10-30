@@ -1,3 +1,7 @@
+---
+description: "Change each element to one compatible type; family resolves duplicate type names. dry_run rolls back. Group members are reported in skipped.inGroup; the call is refused if every element is a group member."
+---
+
 # Change Element Type
 
 `revit_change_type`

@@ -1,3 +1,7 @@
+---
+description: "关闭活动文档中已打开的界面视图。"
+---
+
 # 关闭视图
 
 `revit_close_views`

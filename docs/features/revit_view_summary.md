@@ -1,3 +1,7 @@
+---
+description: "视图元数据 + 类别计数（各有多少、多少种类型）"
+---
+
 # 视图统计
 
 `revit_view_summary`

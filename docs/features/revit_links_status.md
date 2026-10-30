@@ -1,3 +1,7 @@
+---
+description: "RVT / CAD / 图片链接的状态、路径与实例数"
+---
+
 # 链接状态
 
 `revit_links_status`

@@ -1,3 +1,7 @@
+---
+description: "在 Revit 中选择指定构件 ID 以便查看；空列表即清除选择。"
+---
+
 # 选择构件
 
 `revit_select`

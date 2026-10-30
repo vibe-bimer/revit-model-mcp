@@ -1,3 +1,7 @@
+---
+description: "Read project and survey coordinates: base and survey points, active site, project locations and link offsets (mm, degrees). Lists are capped at 100 with total counts. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Shared Coordinates
 
 `revit_shared_coordinates`

@@ -1,3 +1,7 @@
+---
+description: "Export a view as a PNG, from 1 to 4000 pixels"
+---
+
 # Export view image
 
 `revit_export_view`

@@ -1,3 +1,7 @@
+---
+description: "在一个视图中更改类目、工作集与过滤器可见性；`dry_run` 只预览。"
+---
+
 # 设置视图可见性
 
 `revit_set_view_visibility`

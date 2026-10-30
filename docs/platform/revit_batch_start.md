@@ -1,3 +1,7 @@
+---
+description: "对本地、UNC 或 RSN 模型启动持久化的只读批量运行；`open_timeout_minutes` 是单个模型的打开时限。"
+---
+
 # 开始批量收集
 
 `revit_batch_start`

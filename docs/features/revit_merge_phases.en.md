@@ -1,3 +1,7 @@
+---
+description: "Reassign references to another phase and attempt to delete the emptied phase"
+---
+
 # Merge project phases
 
 `revit_merge_phases`

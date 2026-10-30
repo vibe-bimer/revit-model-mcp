@@ -1,3 +1,7 @@
+---
+description: "Read document metadata, levels, area schemes, worksets and view count"
+---
+
 # Document overview
 
 `revit_document_info`

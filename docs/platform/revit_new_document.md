@@ -1,3 +1,7 @@
+---
+description: "在 Revit 工作站上用样板创建项目或族文件。"
+---
+
 # 新建文档
 
 `revit_new_document`

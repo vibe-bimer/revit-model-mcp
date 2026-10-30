@@ -1,3 +1,7 @@
+---
+description: "Tag elements in a view, chosen by category names or by element IDs (exactly one of the two). Returns created tag IDs in createdElementIds; already tagged elements are skipped unless skip_tagged is false, and untaggable inputs are listed in skipped. tag_type matches a tag type name, a family name or \"Family: Type\"; the default tag type is used otherwise. Room tags need a plan view. dry_run rolls back and returns the tags that would be created."
+---
+
 # Tag Elements
 
 `revit_tag_elements`

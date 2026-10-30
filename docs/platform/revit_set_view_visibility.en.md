@@ -1,3 +1,7 @@
+---
+description: "Change category, workset and filter visibility in one view; dry_run previews. Categories accept the Revit UI name, the BuiltInCategory name (OST_StructuralColumns), the English name or an ID."
+---
+
 # Set View Visibility
 
 `revit_set_view_visibility`

@@ -1,3 +1,7 @@
+---
+description: "把主体的轴网与标高和一个已载入的 Revit 链接比较，不改动模型。"
+---
+
 # 比较链接基准
 
 `revit_compare_link_datums`

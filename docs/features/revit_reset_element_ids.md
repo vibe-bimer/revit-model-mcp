@@ -1,3 +1,7 @@
+---
+description: "同文档内换 ID：只对无宿主、无依赖的独立构件有效"
+---
+
 # 同文档替换 ID
 
 `revit_reset_element_ids`

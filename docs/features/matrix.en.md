@@ -1,3 +1,7 @@
+---
+description: "Validation status matrix for read and action tools across Revit 2020, 2026 and 2022–2027."
+---
+
 # Version support matrix
 
 Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.

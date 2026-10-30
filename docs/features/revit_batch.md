@@ -1,3 +1,7 @@
+---
+description: "1–50 步动作合并成一次撤销（revit_batch）"
+---
+
 # 批量动作
 
 `revit_batch`

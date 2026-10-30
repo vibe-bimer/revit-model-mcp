@@ -8,7 +8,23 @@ from unittest.mock import patch
 
 import check_site
 import generate_features
+import landing
 import platform_catalog
+import yaml
+
+BASE = "https://docs.example/"
+REPO = "https://github.com/vibe-bimer/revit-model-mcp"
+
+
+def _default_edit(relative):
+    rel = relative.removeprefix("en/")
+    if rel == "index.html":
+        return f"{REPO}/blob/main/tools/site/landing.py"
+    if rel.startswith("features/"):
+        return f"{REPO}/blob/main/tools/site/generate_features.py"
+    if rel.startswith("platform/"):
+        return f"{REPO}/blob/main/tools/site/platform_catalog.py"
+    return f"{REPO}/edit/main/docs/{rel.removesuffix('index.html')}index.md"
 
 
 class SiteAuditTests(unittest.TestCase):
@@ -19,19 +35,49 @@ class SiteAuditTests(unittest.TestCase):
         self.make_page("index.html", "zh")
         self.make_page("en/index.html", "en")
 
-    def make_page(self, relative, lang, extra="", zh=None, en=None, text=None):
+    def make_page(
+        self,
+        relative,
+        lang,
+        extra="",
+        zh=None,
+        en=None,
+        text=None,
+        edit=None,
+        base=None,
+    ):
+        base = BASE if base is None else base
         sibling = relative.removeprefix("en/").removesuffix("index.html")
-        zh = "/" + sibling if zh is None else zh
-        en = "/en/" + sibling if en is None else en
+        origin = base + relative.removesuffix("index.html")
+        zh = base + sibling if zh is None else zh
+        en = base + "en/" + sibling if en is None else en
+        canonical = origin
+        description = (
+            "完整的中文功能说明与参数使用指南。"
+            if lang == "zh"
+            else "Complete feature documentation and parameter guidance."
+        )
+        locale = "zh_CN" if lang == "zh" else "en_US"
         text = text or (
             "完整的中文功能说明与参数使用指南。"
             if lang == "zh"
             else "Complete feature documentation and parameter guidance."
         )
+        edit = _default_edit(relative) if edit is None else edit
+        edit_html = f'<a rel="edit" href="{edit}">Edit</a>' if edit else ""
         destination = self.site / relative
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(
-            f'<html lang="{lang}"><head><link rel="canonical" href="https://docs.example/{relative.removesuffix("index.html")}"><link rel="alternate" hreflang="zh" href="{zh}"><link rel="alternate" hreflang="en" href="{en}"></head><body><article><h1 id="heading">{text}</h1>{extra}</article></body></html>',
+            f'<html lang="{lang}"><head>'
+            f'<meta name="description" content="{description}">'
+            f'<meta property="og:locale" content="{locale}">'
+            f'<meta property="og:url" content="{canonical}">'
+            f'<meta property="og:description" content="{description}">'
+            f'<meta name="twitter:description" content="{description}">'
+            f'<link rel="canonical" href="{canonical}">'
+            f'<link rel="alternate" hreflang="zh" href="{zh}">'
+            f'<link rel="alternate" hreflang="en" href="{en}">'
+            f'</head><body><article><h1 id="heading">{text}</h1>{extra}</article>{edit_html}</body></html>',
             encoding="utf-8",
         )
         return destination
@@ -97,12 +143,9 @@ class SiteAuditTests(unittest.TestCase):
         self.assertEqual(self.errors(), [])
 
     def test_github_pages_prefix(self):
-        self.make_page(
-            "index.html", "zh", zh="/revit-model-mcp/", en="/revit-model-mcp/en/"
-        )
-        self.make_page(
-            "en/index.html", "en", zh="/revit-model-mcp/", en="/revit-model-mcp/en/"
-        )
+        base = "https://docs.example/revit-model-mcp/"
+        self.make_page("index.html", "zh", base=base)
+        self.make_page("en/index.html", "en", base=base)
         errors, _ = check_site.audit_site(
             self.site, "https://docs.example/revit-model-mcp/"
         )
@@ -268,6 +311,67 @@ class FeatureGeneratorTests(unittest.TestCase):
             self.assertRaisesRegex(SystemExit, "stale Chinese contract"),
         ):
             generate_features.load()
+
+
+def _frontmatter(page):
+    if not page.startswith("---\n"):
+        raise AssertionError(f"page does not start with frontmatter: {page[:60]!r}")
+    end = page.find("\n---\n", 4)
+    if end < 0:
+        raise AssertionError("frontmatter is not closed")
+    return yaml.safe_load(page[4:end])
+
+
+class FrontmatterDescriptionTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tools, cls.capabilities, cls.contracts = generate_features.load()
+
+    def test_tool_pages_carry_the_localised_summary_description(self):
+        for tool in self.tools:
+            cap = self.capabilities["tools"][tool["name"]]
+            for lang in ("zh", "en"):
+                with self.subTest(tool=tool["name"], lang=lang):
+                    page = generate_features.tool_page(
+                        tool, cap, lang, self.capabilities, self.contracts
+                    )
+                    data = _frontmatter(page)
+                    self.assertEqual(data["description"], cap["summary"][lang])
+
+    def test_section_pages_carry_a_frontmatter_description(self):
+        for lang in ("zh", "en"):
+            pages = {
+                "index": generate_features.index_page(
+                    self.tools, self.capabilities, lang
+                ),
+                "matrix": generate_features.matrix_page(
+                    self.tools, self.capabilities, lang
+                ),
+                "prompts": generate_features.prompts_page(
+                    self.tools, self.capabilities, lang
+                ),
+                "v2020": generate_features.version_page(
+                    self.tools, self.capabilities, lang, "2020"
+                ),
+                "v2026": generate_features.version_page(
+                    self.tools, self.capabilities, lang, "2026"
+                ),
+            }
+            for name, page in pages.items():
+                with self.subTest(lang=lang, page=name):
+                    description = _frontmatter(page)["description"]
+                    self.assertTrue(description)
+                    has_cjk = any("\u4e00" <= char <= "\u9fff" for char in description)
+                    self.assertEqual(has_cjk, lang == "zh")
+
+    def test_home_page_carries_a_frontmatter_description(self):
+        for lang in ("zh", "en"):
+            with self.subTest(lang=lang):
+                page = landing.home_page(self.tools, self.capabilities, "9.9.9", lang)
+                description = _frontmatter(page)["description"]
+                self.assertTrue(description)
+                has_cjk = any("\u4e00" <= char <= "\u9fff" for char in description)
+                self.assertEqual(has_cjk, lang == "zh")
 
 
 if __name__ == "__main__":

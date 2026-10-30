@@ -1,3 +1,7 @@
+---
+description: "Update a parameter on elements matching the same filters as revit_query_elements. Group members are reported in skipped.inGroup instead of failing the call; dry_run predicts this."
+---
+
 # Update Parameters
 
 `revit_update_parameters`

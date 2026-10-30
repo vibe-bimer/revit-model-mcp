@@ -1,3 +1,7 @@
+---
+description: "Execute up to 50 actions with one undo step; the whole batch rolls back on its first failure. dry_run rolls back and returns the verification block."
+---
+
 # Run Actions
 
 `revit_run_actions`

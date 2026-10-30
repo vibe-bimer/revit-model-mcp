@@ -1,3 +1,7 @@
+---
+description: "把模型中已绘制构件的 ID 清单写成 Excel（类别/族/类型/标高/构件ID/名称/工作集）"
+---
+
 # 导出构件 ID 清单
 
 `revit_export_element_ids`

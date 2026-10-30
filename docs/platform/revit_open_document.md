@@ -1,3 +1,7 @@
+---
+description: "打开本地、UNC 或 RSN 模型；中心模型默认以分离方式打开，云路径不支持。"
+---
+
 # 打开文档
 
 `revit_open_document`

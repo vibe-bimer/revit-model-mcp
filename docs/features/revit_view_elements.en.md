@@ -1,3 +1,7 @@
+---
+description: "Page through elements in a selected view, optionally filtered by category"
+---
+
 # View element rows
 
 `revit_view_elements`

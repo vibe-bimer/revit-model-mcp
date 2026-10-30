@@ -1,3 +1,7 @@
+---
+description: "读取 schema 版本 1 的项目快照，供批量审计使用；关闭的工作集会让结果不完整。"
+---
+
 # 模型快照
 
 `revit_model_snapshot`

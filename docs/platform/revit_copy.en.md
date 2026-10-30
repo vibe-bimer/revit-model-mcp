@@ -1,3 +1,7 @@
+---
+description: "Create 1 to 100 successive copies at multiples of the model-axis offset in mm. dry_run rolls back. Group members are reported in skipped.inGroup; the call is refused if every element is a group member."
+---
+
 # Copy Elements
 
 `revit_copy`

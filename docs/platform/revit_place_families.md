@@ -1,3 +1,7 @@
+---
+description: "载入可选族并在同一事务、同一次撤销内放置多个实例。"
+---
+
 # 批量放置族
 
 `revit_place_families`

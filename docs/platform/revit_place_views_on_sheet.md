@@ -1,3 +1,7 @@
+---
+description: "把视图与明细表放到图纸上，坐标用图纸毫米。"
+---
+
 # 在图纸上布置视图
 
 `revit_place_views_on_sheet`

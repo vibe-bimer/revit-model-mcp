@@ -1,3 +1,7 @@
+---
+description: "激活一个非样板视图，可缩放适配、保持当前缩放或框选指定构件。"
+---
+
 # 激活视图
 
 `revit_activate_view`

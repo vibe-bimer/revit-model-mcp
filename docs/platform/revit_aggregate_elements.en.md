@@ -1,3 +1,7 @@
+---
+description: "Summarize matching elements by one or two fields, with optional sum and average. Lengths use mm, areas m2, volumes m3. For area totals, group by level and select the area scheme. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Aggregate Elements
 
 `revit_aggregate_elements`

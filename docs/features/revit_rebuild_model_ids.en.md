@@ -1,3 +1,7 @@
+---
+description: "Copy selectable 3D-view components into one or more new models with fresh IDs"
+---
+
 # Rebuild IDs in new models
 
 `revit_rebuild_model_ids`

@@ -1,3 +1,7 @@
+---
+description: "Copyable prompt library with a sample prompt and purpose summary for every tool."
+---
+
 # Prompt library
 
 19 read + 16 action tools, 35 in total

@@ -1,3 +1,7 @@
+---
+description: "在指定标高放置已载入的非宿主族实例，可绕 Z 旋转"
+---
+
 # 放置非宿主族
 
 `revit_place_family`

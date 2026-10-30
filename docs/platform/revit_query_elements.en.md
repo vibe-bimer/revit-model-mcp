@@ -1,3 +1,7 @@
+---
+description: "Read a page of matching element rows. Lengths use mm, areas m2, volumes m3; optional geometry is in model mm. roomCenterMm is a point inside the room, a bounding-box centre can lie outside it. hasMore=true means further pages exist. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Query Elements
 
 `revit_query_elements`

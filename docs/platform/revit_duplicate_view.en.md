@@ -1,3 +1,7 @@
+---
+description: "Duplicate a view, optionally with detailing or as a dependent view."
+---
+
 # Duplicate View
 
 `revit_duplicate_view`

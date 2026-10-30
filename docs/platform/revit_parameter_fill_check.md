@@ -1,3 +1,7 @@
+---
+description: "按参数与类目统计已填、空值与缺失数量，并给出空值和缺失构件的示例 ID。"
+---
+
 # 参数填充检查
 
 `revit_parameter_fill_check`

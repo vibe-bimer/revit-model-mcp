@@ -1,3 +1,7 @@
+---
+description: "单个构件的实例参数、类型参数与几何（mm）"
+---
+
 # 构件参数与几何
 
 `revit_element_details`

@@ -1,3 +1,7 @@
+---
+description: "Select elements in Revit; an empty list clears the selection"
+---
+
 # Select elements
 
 `revit_select`

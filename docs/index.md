@@ -1,5 +1,6 @@
 ---
 title: Revit Model MCP
+description: "把 Autodesk Revit 模型接到 AI 助手：查询参数与几何、统计构件、检查模型、导出清单并编辑构件，默认只读。"
 hide:
   - toc
 ---

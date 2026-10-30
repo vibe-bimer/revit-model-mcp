@@ -1,3 +1,7 @@
+---
+description: "读取项目元数据、文件大小、计数、单位与十类最常见警告；`output_path` 另写 xlsx 报告。"
+---
+
 # 模型健康检查
 
 `revit_model_health`

@@ -1,3 +1,7 @@
+---
+description: "Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme"
+---
+
 # Set view lighting
 
 `revit_set_view_lighting`

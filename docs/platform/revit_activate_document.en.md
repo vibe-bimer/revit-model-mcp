@@ -1,3 +1,7 @@
+---
+description: "Activate an already open document by title or path reference."
+---
+
 # Activate Document
 
 `revit_activate_document`

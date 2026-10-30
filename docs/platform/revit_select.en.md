@@ -1,3 +1,7 @@
+---
+description: "Select element IDs for inspection in Revit; an empty list clears the selection."
+---
+
 # Select Elements
 
 `revit_select`

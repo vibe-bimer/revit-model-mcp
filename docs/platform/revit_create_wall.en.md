@@ -1,3 +1,7 @@
+---
+description: "Create a straight wall on a named level. XY endpoints and height are in mm; a null wall_type uses the first basic type."
+---
+
 # Create Wall
 
 `revit_create_wall`

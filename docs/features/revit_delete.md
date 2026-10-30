@@ -1,3 +1,7 @@
+---
+description: "删除构件及其依赖"
+---
+
 # 删除构件
 
 `revit_delete`

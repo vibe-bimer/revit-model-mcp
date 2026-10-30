@@ -1,3 +1,7 @@
+---
+description: "Rotate elements about a vertical axis through center_mm, or through their combined bounding box center. dry_run rolls back. Group members, pinned, hosted and constrained elements are reported in skipped.inGroup, skipped.pinned, skipped.hosted and skipped.constrained and are not changed; the call is refused if every element is a group member."
+---
+
 # Rotate Elements
 
 `revit_rotate`

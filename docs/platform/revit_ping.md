@@ -1,3 +1,7 @@
+---
+description: "不读模型，仅检查与 Revit 的连接；没有活动文档时也返回 `data=\"pong\"`。"
+---
+
 # 连接检查
 
 `revit_ping`

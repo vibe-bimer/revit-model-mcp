@@ -1,3 +1,7 @@
+---
+description: "Execute 1–50 actions as one undo step and roll back on the first failed step"
+---
+
 # Batch actions
 
 `revit_batch`

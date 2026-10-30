@@ -1,3 +1,7 @@
+---
+description: "把一个阶段的引用并入另一个阶段并删除空阶段"
+---
+
 # 合并项目阶段
 
 `revit_merge_phases`

@@ -1,3 +1,7 @@
+---
+description: "按类别/族/类型/标高/视图/工作集/参数过滤，分页读取构件明细"
+---
+
 # 构件查询
 
 `revit_query_elements`

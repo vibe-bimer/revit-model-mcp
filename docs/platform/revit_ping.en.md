@@ -1,3 +1,7 @@
+---
+description: "Check the connection to Revit without reading the model. Returns data=\"pong\", even when no document is active. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Check Revit Connection
 
 `revit_ping`

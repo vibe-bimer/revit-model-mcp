@@ -1,3 +1,7 @@
+---
+description: "按描述文本分组列出模型警告；指定文本并开启 `include_elements` 可展开该组的构件。"
+---
+
 # 警告列表
 
 `revit_list_warnings`

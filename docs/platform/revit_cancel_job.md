@@ -1,3 +1,7 @@
+---
+description: "请求取消某个 `jobId`；批处理在下一个模型前停止，已经完成的改动保留。"
+---
+
 # 取消动作任务
 
 `revit_cancel_job`

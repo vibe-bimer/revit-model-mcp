@@ -1,3 +1,7 @@
+---
+description: "Complete tool list of the integration branch (the upstream 1.0 base plus this repository's fork tools), grouped with purpose, parameters and contract differences."
+---
+
 # Platform tool catalog
 
 This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and 7 fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.

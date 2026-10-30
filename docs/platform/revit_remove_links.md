@@ -1,3 +1,7 @@
+---
+description: "删除选定的链接类型及其全部实例；`dry_run` 只预览，Revit 中无法撤销。"
+---
+
 # 移除链接
 
 `revit_remove_links`

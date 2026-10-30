@@ -1,3 +1,7 @@
+---
+description: "按给定字段顺序为一个类目创建明细表，字段用 Revit 界面名称；`filters`、`sort` 与分组控制行列。"
+---
+
 # 创建明细表
 
 `revit_create_schedule`

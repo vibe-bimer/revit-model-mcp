@@ -1,3 +1,7 @@
+---
+description: "列出非样板视图的 ID、名称、类型、标高、比例与样板。"
+---
+
 # 视图列表
 
 `revit_list_views`
