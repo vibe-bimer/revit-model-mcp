@@ -35,10 +35,10 @@ Dependency updates and release pull requests from automation run the same checks
 ## How a release is signed
 
 1. The maintainer pushes a release tag.
-2. The [release workflow](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/.github/workflows/release.yml) builds the add-in, the installers and the bundle on GitHub-hosted runners.
+2. The [release workflow](https://github.com/vibe-bimer/revit-model-mcp/blob/main/.github/workflows/release.yml) builds the add-in, the installers and the bundle on GitHub-hosted runners.
 3. The workflow uploads the unsigned installers and archives as a workflow artifact and submits them to SignPath. SignPath checks that the build ran in this repository on GitHub.
 4. The approver reviews the signing request and approves it. Every release needs manual approval.
-5. SignPath signs the files listed above. The artifact configuration is kept in [`.signpath/artifact-configuration.xml`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/.signpath/artifact-configuration.xml). It restricts the product name to Model MCP and the product version to the release build.
+5. SignPath signs the files listed above. The artifact configuration is kept in [`.signpath/artifact-configuration.xml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/.signpath/artifact-configuration.xml). It restricts the product name to Model MCP and the product version to the release build.
 6. The workflow downloads the signed files, checks every signature, computes `SHA256SUMS.txt`, attests the assets and publishes the release.
 
 ## Privacy policy
@@ -62,4 +62,4 @@ Organizations that deploy their own code-signing certificate can sign the instal
 
 ## Reporting a problem
 
-If you think a signed file violates this policy, report it through the process in [SECURITY.md](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/SECURITY.md).
+If you think a signed file violates this policy, report it through the process in [SECURITY.md](https://github.com/vibe-bimer/revit-model-mcp/blob/main/SECURITY.md).

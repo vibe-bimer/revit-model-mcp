@@ -621,7 +621,7 @@ The server requires Python 3.11 or later, [uv](https://docs.astral.sh/uv/getting
 Clone on each machine that will build or run a component:
 
 ```sh
-git clone https://github.com/sharafutdinovdi/revit-model-mcp.git
+git clone https://github.com/vibe-bimer/revit-model-mcp.git
 cd revit-model-mcp
 ```
 

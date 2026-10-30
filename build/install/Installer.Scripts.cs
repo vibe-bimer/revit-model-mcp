@@ -11,6 +11,8 @@ static class InstallerScripts
     /// <summary>PowerShell exit codes of <see cref="CheckProgramDataFolderScript"/>.</summary>
     public const int FolderOk = 0, FolderIsLink = 20, FolderWrongOwner = 21, FolderUnchecked = 22;
 
+    const string ProductName = "Revit Model MCP (vibe-bimer)";
+
     const string UncheckedPrefix = @"%ProgramData%\RevitModelMcp could not be checked (";
     const string UncheckedSuffix = "). Make sure the folder is readable by Administrators and run the installer again.";
 
@@ -25,7 +27,7 @@ static class InstallerScripts
         "foreach ($subKey in 'Software\\Policies\\RevitModelMcp', 'Software\\RevitModelMcp\\MsiPolicy') { " +
         "$key = $hklm.OpenSubKey($subKey, $true); " +
         "if ($key) { try { $key.DeleteValue('ReadOnly', $false) } finally { $key.Dispose() } } } } " +
-        "catch { Write-Output ('Model MCP: could not clear the ReadOnly policy value: ' + $_.Exception.Message); exit 1 }; ";
+        "catch { Write-Output ('" + ProductName + ": could not clear the ReadOnly policy value: ' + $_.Exception.Message); exit 1 }; ";
 
     /// <summary>The MSI condition of the ReadOnly clearing action: maintenance or repair, READONLY=0, value owned by the installer.</summary>
     public const string ClearMsiReadOnlyCondition =
@@ -66,7 +68,7 @@ static class InstallerScripts
 
     /// <summary>
     ///     Check only, no change: the same test the elevated ensure script applies. A good or missing folder exits 0.
-    ///     A refusal prints "Model MCP: &lt;reason&gt;" and exits with its own code (20 link, 21 wrong owner, 22 not checkable),
+    ///     A refusal prints "&lt;product name&gt;: &lt;reason&gt;" and exits with its own code (20 link, 21 wrong owner, 22 not checkable),
     ///     so WixQuietExec copies the sentence to the MSI log. With <paramref name="showMessage"/> the same text also goes
     ///     to a message box, for the interactive install that runs in the user's session.
     /// </summary>
@@ -74,9 +76,9 @@ static class InstallerScripts
     {
         static string Quoted(string text) => "'" + text.Replace("'", "''") + "'";
         string Refuse(string reasonExpression, int exitCode) =>
-            $"$reason = {reasonExpression}; Write-Output ('Model MCP: ' + $reason); " +
+            $"$reason = {reasonExpression}; Write-Output ('" + ProductName + ": ' + $reason); " +
             (showMessage
-                ? "Add-Type -AssemblyName System.Windows.Forms; [void][System.Windows.Forms.MessageBox]::Show($reason, 'Model MCP installer', 'OK', 'Error'); "
+                ? "Add-Type -AssemblyName System.Windows.Forms; [void][System.Windows.Forms.MessageBox]::Show($reason, '" + ProductName + " installer', 'OK', 'Error'); "
                 : string.Empty) +
             $"exit {exitCode}";
         return

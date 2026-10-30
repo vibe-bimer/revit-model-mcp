@@ -10,6 +10,9 @@ namespace RevitModelMcp.Updater;
 
 internal static class Program
 {
+    /// <summary>Install folder of the bundled server. It must match the MSI product name.</summary>
+    private const string ProductFolder = "Revit Model MCP (vibe-bimer)";
+
     private static int Main(string[] arguments)
     {
         if (arguments.Length != 4) return 2;
@@ -66,13 +69,13 @@ internal static class Program
         new DataContractJsonSerializer(typeof(UpdateResult)).WriteObject(resultFile, result);
     }
 
-    // The bundled server (<root>\Model MCP\server) is in use while an AI app runs it; the MSI cannot replace it then.
+    // The bundled server (<root>\Revit Model MCP (vibe-bimer)\server) is in use while an AI app runs it; the MSI cannot replace it then.
     private static bool BundledServerRunning()
     {
         var roots = new[]
         {
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Model MCP", "server"),
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Model MCP", "server")
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", ProductFolder, "server"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), ProductFolder, "server")
         }.Select(root => root.TrimEnd('\\') + "\\").ToArray();
         var servers = Process.GetProcessesByName("revit-model-mcp");
         try

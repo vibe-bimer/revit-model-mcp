@@ -76,11 +76,18 @@ def test_valid_zip(tmp_path: Path) -> None:
     assert validate(write_zip(tmp_path, bundle_files()), YEARS) == []
 
 
+def managed_readme(version: str) -> str:
+    source = (
+        "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/"
+        f"v{version}.tar.gz#subdirectory=server"
+    )
+    return f"uvx --from {source} revit-model-mcp\n"
+
+
 @pytest.mark.parametrize("version", ["0.9.1", "0.9.1-rc.1"])
 def test_valid_managed_zip(tmp_path: Path, version: str) -> None:
     files = bundle_files()
-    launcher = "uvx --prerelease=allow" if "-" in version else "uvx"
-    files["RevitModelMcp.bundle/README.txt"] = f"{launcher} revit-model-mcp=={version}\n"
+    files["RevitModelMcp.bundle/README.txt"] = managed_readme(version)
     assert validate(write_zip(tmp_path, files), YEARS, managed_version=version) == []
 
 
@@ -91,9 +98,19 @@ def test_managed_zip_needs_readme(tmp_path: Path) -> None:
 
 def test_managed_zip_needs_matching_server_version(tmp_path: Path) -> None:
     files = bundle_files()
-    files["RevitModelMcp.bundle/README.txt"] = "uvx revit-model-mcp==0.9.0\n"
+    files["RevitModelMcp.bundle/README.txt"] = managed_readme("0.9.0")
     errors = validate(write_zip(tmp_path, files), YEARS, managed_version="0.9.1")
-    assert errors == ["README.txt does not pin revit-model-mcp==0.9.1"]
+    assert errors == ["README.txt does not install the server from this fork's v0.9.1 release"]
+
+
+def test_managed_zip_refuses_pypi_launcher(tmp_path: Path) -> None:
+    files = bundle_files()
+    files["RevitModelMcp.bundle/README.txt"] = "uvx revit-model-mcp==0.9.1\n"
+    errors = validate(write_zip(tmp_path, files), YEARS, managed_version="0.9.1")
+    assert errors == [
+        "README.txt does not install the server from this fork's v0.9.1 release",
+        "README.txt resolves revit-model-mcp from PyPI, which installs upstream's server",
+    ]
 
 
 def store_files() -> dict[str, str]:
@@ -120,7 +137,7 @@ def test_store_zip_must_not_ship_updater(tmp_path: Path) -> None:
 
 def test_store_and_managed_are_exclusive(tmp_path: Path) -> None:
     files = store_files()
-    files["RevitModelMcp.bundle/README.txt"] = "uvx revit-model-mcp==0.9.1\n"
+    files["RevitModelMcp.bundle/README.txt"] = managed_readme("0.9.1")
     errors = validate(write_zip(tmp_path, files), YEARS, managed_version="0.9.1", store=True)
     assert errors == ["A bundle is either managed or store, not both"]
 
@@ -251,7 +268,7 @@ def test_main_failure(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Non
 
 def test_main_managed_success(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     files = bundle_files()
-    files["RevitModelMcp.bundle/README.txt"] = "uvx revit-model-mcp==0.9.1\n"
+    files["RevitModelMcp.bundle/README.txt"] = managed_readme("0.9.1")
     archive = write_zip(tmp_path, files)
     with patch("sys.argv", ["validate_bundle.py", str(archive), "--managed-version", "0.9.1"]):
         with pytest.raises(SystemExit) as exit_info:

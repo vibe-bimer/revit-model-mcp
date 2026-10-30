@@ -2,7 +2,8 @@ namespace RevitModelMcp.Core.Connect;
 
 /// <summary>
 ///     The one server entry the add-in writes into AI app configurations: the launcher program and its arguments.
-///     The bundled executable of the MSI needs neither uv nor Python; <c>uvx revit-model-mcp</c> is the fallback.
+///     The bundled executable of the MSI needs neither uv nor Python; a uvx launch from this fork's own source is
+///     the fallback.
 /// </summary>
 public sealed record McpServerSpec(string Command, IReadOnlyList<string> Args)
 {
@@ -12,8 +13,19 @@ public sealed record McpServerSpec(string Command, IReadOnlyList<string> Args)
     /// <summary>The file name of the bundled server executable.</summary>
     public const string ExecutableName = "revit-model-mcp.exe";
 
-    /// <summary>The documented local registration through uv.</summary>
-    public static McpServerSpec Uvx { get; } = new("uvx", [Name]);
+    /// <summary>The install folder the MSI creates; a different UpgradeCode with the same folder would collide.</summary>
+    public const string ProductFolder = "Revit Model MCP (vibe-bimer)";
+
+    /// <summary>
+    ///     The source this fork's server is installed from when no bundled executable exists. A bare
+    ///     <c>uvx revit-model-mcp</c> would fetch upstream's package from PyPI, and both projects publish the same
+    ///     version numbers, so that form would install upstream's server while appearing to work.
+    /// </summary>
+    public const string ForkSource =
+        "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/heads/main.tar.gz#subdirectory=server";
+
+    /// <summary>The documented local registration through uv, resolved from this fork's own source.</summary>
+    public static McpServerSpec Uvx { get; } = new("uvx", ["--from", ForkSource, Name]);
 
     /// <summary>The environment the server needs to talk to the Revit on this workstation.</summary>
     public static IReadOnlyList<KeyValuePair<string, string>> Env { get; } =
@@ -54,9 +66,9 @@ public sealed record McpServerSpec(string Command, IReadOnlyList<string> Args)
         if (contents is not null)
             candidates.Add(Combine(contents, "server", ExecutableName));
         if (!string.IsNullOrWhiteSpace(programFiles))
-            candidates.Add(Combine(programFiles, "Model MCP", "server", ExecutableName));
+            candidates.Add(Combine(programFiles, ProductFolder, "server", ExecutableName));
         if (!string.IsNullOrWhiteSpace(localAppData))
-            candidates.Add(Combine(localAppData, "Programs", "Model MCP", "server", ExecutableName));
+            candidates.Add(Combine(localAppData, "Programs", ProductFolder, "server", ExecutableName));
         return candidates;
     }
 

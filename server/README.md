@@ -54,7 +54,7 @@ uv run --directory server revit-model-mcp
 claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -- uv run --directory /absolute/path/to/revit-model-mcp/server revit-model-mcp
 ```
 
-mcp-name: io.github.sharafutdinovdi/revit-model-mcp
+mcp-name: io.github.vibe-bimer/revit-model-mcp
 
 ## Configuration
 

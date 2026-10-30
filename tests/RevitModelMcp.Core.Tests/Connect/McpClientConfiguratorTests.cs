@@ -99,7 +99,7 @@ public sealed class McpClientConfiguratorTests
         await Assert.That(configurator.Inspect(target).State).IsEqualTo(McpClientState.Configured);
     }
 
-    private const string BundledPath = @"C:\Program Files\Model MCP\server\revit-model-mcp.exe";
+    private const string BundledPath = @"C:\Program Files\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe";
 
     private static readonly McpServerSpec Bundled = McpServerSpec.ForExecutable(BundledPath);
 

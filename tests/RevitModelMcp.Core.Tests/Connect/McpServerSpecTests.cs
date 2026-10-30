@@ -5,12 +5,12 @@ namespace RevitModelMcp.Core.Tests.Connect;
 
 public sealed class McpServerSpecTests
 {
-    private const string BundledPath = @"C:\Program Files\Model MCP\server\revit-model-mcp.exe";
+    private const string BundledPath = @"C:\Program Files\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe";
 
     [Test]
     public async Task ClaudeCodeCommandMatchesTheDocumentedLocalRegistration() =>
         await Assert.That(McpServerSpec.Uvx.ClaudeCodeCommand)
-            .IsEqualTo("claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx revit-model-mcp");
+            .IsEqualTo("claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from " + McpServerSpec.ForkSource + " revit-model-mcp");
 
     [Test]
     public async Task ClaudeCodeCommandQuotesTheBundledPathWithSpaces() =>
@@ -47,8 +47,8 @@ public sealed class McpServerSpecTests
         await Assert.That(candidates).IsEquivalentTo(
         [
             @"C:\Users\Ann\AppData\Roaming\Autodesk\ApplicationPlugins\Model MCP.bundle\Contents\server\revit-model-mcp.exe",
-            @"C:\Program Files\Model MCP\server\revit-model-mcp.exe",
-            @"C:\Users\Ann\AppData\Local\Programs\Model MCP\server\revit-model-mcp.exe"
+            @"C:\Program Files\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe",
+            @"C:\Users\Ann\AppData\Local\Programs\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe"
         ]);
     }
 
@@ -65,8 +65,8 @@ public sealed class McpServerSpecTests
     [Test]
     public async Task MsiInstallFoldersResolve()
     {
-        const string machine = @"C:\Program Files\Model MCP\server\revit-model-mcp.exe";
-        const string user = @"C:\Users\Ann\AppData\Local\Programs\Model MCP\server\revit-model-mcp.exe";
+        const string machine = @"C:\Program Files\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe";
+        const string user = @"C:\Users\Ann\AppData\Local\Programs\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe";
         var candidates = McpServerSpec.BundledCandidates(@"C:\ProgramData\Autodesk\Revit\Addins\2025\RevitModelMcp", @"C:\Program Files", @"C:\Users\Ann\AppData\Local");
         await Assert.That(McpServerSpec.Resolve(candidates, path => path == machine, storeChannel: true)!.Command).IsEqualTo(machine);
         await Assert.That(McpServerSpec.Resolve(candidates, path => path == user, storeChannel: true)!.Command).IsEqualTo(user);
@@ -97,7 +97,7 @@ public sealed class McpServerSpecTests
     public async Task JsonEntryUsesTheBundledExecutableWithEscapedWindowsPath()
     {
         var text = JsonConfigEditor.Add(Desktop, "", McpServerSpec.ForExecutable(BundledPath))!;
-        await Assert.That(text).Contains(@"""command"": ""C:\\Program Files\\Model MCP\\server\\revit-model-mcp.exe""");
+        await Assert.That(text).Contains(@"""command"": ""C:\\Program Files\\Revit Model MCP (vibe-bimer)\\server\\revit-model-mcp.exe""");
         await Assert.That(text).Contains(@"""args"": []");
         await Assert.That(text).Contains(@"""REVIT_MCP_HOST"": ""local""");
         await Assert.That(JsonConfigEditor.Inspect(Desktop, text).State).IsEqualTo(McpClientState.Configured);
@@ -108,7 +108,7 @@ public sealed class McpServerSpecTests
     {
         var text = TomlConfigEditor.Add("", McpServerSpec.ForExecutable(BundledPath))!;
         await Assert.That(text).IsEqualTo(
-            "[mcp_servers.revit-model-mcp]\ncommand = \"C:\\\\Program Files\\\\Model MCP\\\\server\\\\revit-model-mcp.exe\"\nargs = []\n\n" +
+            "[mcp_servers.revit-model-mcp]\ncommand = \"C:\\\\Program Files\\\\Revit Model MCP (vibe-bimer)\\\\server\\\\revit-model-mcp.exe\"\nargs = []\n\n" +
             "[mcp_servers.revit-model-mcp.env]\nREVIT_MCP_HOST = \"local\"\nREVIT_MCP_REDACT_PATHS = \"1\"\n");
         await Assert.That(TomlConfigEditor.Inspect(Codex, text).State).IsEqualTo(McpClientState.Configured);
     }
@@ -122,7 +122,7 @@ public sealed class McpServerSpecTests
             McpConfigFormat.Json);
         var configurator = new McpClientConfigurator(spec: McpServerSpec.ForExecutable(BundledPath));
         await Assert.That(configurator.Add(target).Changed).IsTrue();
-        await Assert.That(File.ReadAllText(target.ConfigPath)).Contains(@"C:\\Program Files\\Model MCP\\server\\revit-model-mcp.exe");
+        await Assert.That(File.ReadAllText(target.ConfigPath)).Contains(@"C:\\Program Files\\Revit Model MCP (vibe-bimer)\\server\\revit-model-mcp.exe");
         await Assert.That(configurator.Remove(target).Changed).IsTrue();
         await Assert.That(configurator.Inspect(target).State).IsEqualTo(McpClientState.NotConfigured);
     }

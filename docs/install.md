@@ -16,7 +16,7 @@ The add-in changes nothing in a model on its own. The MCP client asks for data o
 
 ## Downloads
 
-Download the installers, add-in archives, bundles and the Claude Desktop bundle from the [releases page](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest).
+Download the installers, add-in archives, bundles and the Claude Desktop bundle from the [releases page](https://github.com/vibe-bimer/revit-model-mcp/releases/latest).
 The server package is on [PyPI](https://pypi.org/project/revit-model-mcp/).
 
 Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
@@ -37,7 +37,7 @@ Signing starts with the first release after the project's application is approve
    claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx revit-model-mcp
    ```
 
-   For Claude Desktop, add this to its MCP configuration file, or use the `.mcpb` bundle from the [latest release](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest):
+   For Claude Desktop, add this to its MCP configuration file, or use the `.mcpb` bundle from the [latest release](https://github.com/vibe-bimer/revit-model-mcp/releases/latest):
 
    ```json
    {
@@ -89,7 +89,7 @@ The **Claude Code** row has a **Copy command** button for the `claude mcp add` c
 
 ### Managed installs
 
-Managed installs do not check for updates. If your organization delivers add-in updates itself, use `revit-model-mcp-<version>-managed.bundle.zip` from the [latest release](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest). It is the same bundle, built with `ManagedInstall=true`; see [automatic updates](updates.md#channels). You can also build it yourself with that property.
+Managed installs do not check for updates. If your organization delivers add-in updates itself, use `revit-model-mcp-<version>-managed.bundle.zip` from the [latest release](https://github.com/vibe-bimer/revit-model-mcp/releases/latest). It is the same bundle, built with `ManagedInstall=true`; see [automatic updates](updates.md#channels). You can also build it yourself with that property.
 
 The bundle does not contain the server. Pin the server launcher to the exact release version and turn off its daily check for a newer package on PyPI:
 
@@ -110,7 +110,7 @@ The store build is the same add-in with the update channel `store`, packaged wit
 
 ## Install from the MSI or WinGet
 
-The installers published on the [releases page](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest) install the same add-in with their own update path.
+The installers published on the [releases page](https://github.com/vibe-bimer/revit-model-mcp/releases/latest) install the same add-in with their own update path.
 `RevitModelMcp-<version>-SingleUser.msi` installs for the current user, and `RevitModelMcp-<version>-MultiUser.msi` installs for all users.
 The two installers are alternatives: install only one.
 Each refuses to install while the other is present, so uninstall the other first (**Apps > Installed apps**), then install.
@@ -133,14 +133,14 @@ Then register the server as in step 6 of [Install the add-in bundle](#install-th
 
 ## Claude Desktop bundle
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) on the client's PATH, download `revit-model-mcp-<version>.mcpb` from the [latest release](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest), and open it in Claude Desktop.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) on the client's PATH, download `revit-model-mcp-<version>.mcpb` from the [latest release](https://github.com/vibe-bimer/revit-model-mcp/releases/latest), and open it in Claude Desktop.
 The bundle starts from the local uv cache. The server checks for a newer stable release in the background once per day.
 The next client start uses the refreshed version. Set `REVIT_MCP_NO_UPDATE_CHECK=1` to opt out.
 The settings form configures the workstation host, path redaction, read-only mode and the HTTP bearer token without editing JSON.
 Use `local` on the Windows Revit workstation, or configure a [remote workstation](transport.md) for macOS and Linux clients.
 Path redaction starts enabled and actions start enabled. Check "Read-only mode" to refuse actions.
 The Windows workstation still needs the add-in.
-See the [bundle guide](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/bundle/README.md) for build details and prerequisites.
+See the [bundle guide](https://github.com/vibe-bimer/revit-model-mcp/blob/main/bundle/README.md) for build details and prerequisites.
 Release assets include GitHub build provenance attestations. Follow [download verification](security.md#verify-downloads) before installing.
 
 ## Uninstall
@@ -149,4 +149,4 @@ Close Revit, then remove the add-in from **Apps > Installed apps** (or delete th
 
 ## Get help
 
-Report problems in [GitHub issues](https://github.com/sharafutdinovdi/revit-model-mcp/issues/new/choose) and ask usage questions in [Discussions](https://github.com/sharafutdinovdi/revit-model-mcp/discussions). Remove model names and paths from logs and screenshots first.
+Report problems in [GitHub issues](https://github.com/vibe-bimer/revit-model-mcp/issues/new/choose) and ask usage questions in [Discussions](https://github.com/vibe-bimer/revit-model-mcp/discussions). Remove model names and paths from logs and screenshots first.

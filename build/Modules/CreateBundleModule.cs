@@ -25,7 +25,7 @@ namespace Build.Modules;
 public sealed partial class CreateBundleModule(IOptions<BuildOptions> buildOptions, IOptions<BundleOptions> bundleOptions) : Module
 {
     private const string BundleName = "RevitModelMcp";
-    private const string ProductName = "Model MCP";
+    private const string ProductName = "Revit Model MCP (vibe-bimer)";
     private const string ProductDescription = "Read live Revit models from AI clients through MCP. Actions can be turned off with read-only mode.";
 
     protected override async Task ExecuteModuleAsync(IModuleContext context, CancellationToken cancellationToken)
@@ -57,16 +57,19 @@ public sealed partial class CreateBundleModule(IOptions<BuildOptions> buildOptio
 
         if (bundleOptions.Value.Managed)
         {
-            var serverLauncher = versioning.Version.Contains('-')
-                ? $"uvx --prerelease=allow revit-model-mcp=={versioning.Version}"
-                : $"uvx revit-model-mcp=={versioning.Version}";
+            // This fork publishes the server on GitHub Releases and not to PyPI. Upstream publishes the
+            // same version numbers, so `uvx revit-model-mcp==<version>` would install upstream's server.
+            var serverSource = $"https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v{versioning.Version}.tar.gz#subdirectory=server";
+            var serverLauncher = $"uvx --from {serverSource} revit-model-mcp";
             var readme = $"""
-                Model MCP {versioning.Version}, managed install
+                Revit Model MCP (vibe-bimer) {versioning.Version}, managed install
 
                 This package was built for managed deployment. The add-in does not check for updates.
                 Update it by deploying a newer package.
 
-                The server is not part of this package. Pin the server launcher to the same release:
+                The server is not part of this package. Pin the server launcher to the same release.
+                This fork publishes no PyPI package, so a bare `uvx revit-model-mcp` would install
+                upstream's server instead:
 
                     {serverLauncher}
 

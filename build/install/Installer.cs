@@ -5,7 +5,7 @@ using WixSharp.CommonTasks;
 using WixSharp.Controls;
 
 const string outputName = "RevitModelMcp";
-const string productName = "Model MCP";
+const string productName = "Revit Model MCP (vibe-bimer)";
 const string serverSourceFolder = @"output\server-exe\revit-model-mcp";
 
 var versioning = Versioning.CreateFromVersionString(args[0]);
@@ -32,14 +32,18 @@ Project CreateProject(InstallScope scope)
             AllowSameVersionUpgrades = true,
             DowngradeErrorMessage = "A newer version of [ProductName] is already installed."
         },
-        GUID = new Guid("75e1b812-23a4-45ce-9e7c-84d7d43b8c70"),
+        // Own upgrade code. Never reuse the upstream one: Windows Installer groups products by upgrade
+        // code, so sharing it makes an upstream MSI a major upgrade that silently removes this install
+        // and with it every local action. The upstream code is 75e1b812-23a4-45ce-9e7c-84d7d43b8c70.
+        // tools/check_fork_identity.py fails if the two ever match again.
+        GUID = new Guid("8F2D710A-B967-4180-AB08-1678A02BA350"),
         ProductId = Guid.NewGuid(),
         BannerImage = @"build\install\Resources\Icons\BannerImage.png",
         BackgroundImage = @"build\install\Resources\Icons\BackgroundImage.png",
         Version = versioning.VersionPrefix,
         ControlPanelInfo =
         {
-            Manufacturer = "Dinar Sharafutdinov",
+            Manufacturer = "vibe-bimer",
             ProductIcon = @"build\install\Resources\Icons\ShellIcon.ico"
         }
     };
@@ -64,7 +68,7 @@ void BuildSingleUserMsi()
     project.LaunchConditions =
     [
         OtherScopeLaunchCondition(
-            "The Model MCP MultiUser (all users) installer is already installed on this computer. " +
+            $"The {productName} MultiUser (all users) installer is already installed on this computer. " +
             "Uninstall it from Apps > Installed apps, then run this SingleUser installer again.")
     ];
     project.RegValues = [];
@@ -84,7 +88,7 @@ void BuildMultiUserMsi()
     project.LaunchConditions =
     [
         OtherScopeLaunchCondition(
-            "The Model MCP SingleUser (current user) installer is already installed for this user. " +
+            $"The {productName} SingleUser (current user) installer is already installed for this user. " +
             "Uninstall it from Apps > Installed apps, then run this MultiUser installer again.")
     ];
     project.Properties =
@@ -155,7 +159,7 @@ void BuildMultiUserMsi()
 
 // The self-contained server (PyInstaller onedir, built by build/server-exe/build.py): one copy per machine or user,
 // shared by every Revit year, so the 228 files are not repeated six times. The Connect AI dialog finds it at
-// <root>\Model MCP\server\revit-model-mcp.exe. It needs neither uv nor Python.
+// <root>\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe. It needs neither uv nor Python.
 Dir ServerDir(string root)
 {
     if (!Directory.Exists(serverSourceFolder) || !System.IO.File.Exists(Path.Combine(serverSourceFolder, "revit-model-mcp.exe")))
@@ -163,7 +167,7 @@ Dir ServerDir(string root)
     var feature = new Feature
     {
         Name = "Bundled MCP server",
-        Description = "The Model MCP server (no Python or uv needed) that AI apps start",
+        Description = $"The {productName} server (no Python or uv needed) that AI apps start",
         AllowChange = false
     };
     return new Dir($@"{root}\{productName}\server", new Files(feature, $@"{serverSourceFolder}\*.*"));

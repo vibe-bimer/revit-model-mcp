@@ -8,5 +8,5 @@ public static class HelpLinks
     /// <summary>
     ///     The help URL for the MCP ribbon panel.
     /// </summary>
-    public const string AddinHelpUrl = "https://sharafutdinovdi.github.io/revit-model-mcp/install/#the-mcp-ribbon-panel";
+    public const string AddinHelpUrl = "https://vibe-bimer.github.io/revit-model-mcp/install/#the-mcp-ribbon-panel";
 }

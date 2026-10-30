@@ -374,18 +374,12 @@ jobs:
           manifest = json.loads(path.read_text())
           manifest['version'] = version
           config = manifest['server']['mcp_config']
-          if '-' in version:
-              wheel, = Path('server/dist').glob('*.whl')
-              package = f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/releases/download/{os.environ["RELEASE_TAG"]}/{wheel.name}'
-              launcher = f'uvx --from {package} revit-model-mcp'
-              win32_launcher = launcher
-          else:
-              package = f'"revit-model-mcp>={version}"'
-              launcher = f'uvx --offline --prerelease=disallow {package} || uvx --prerelease=disallow {package}'
-              win32_package = f'revit-model-mcp^>={version}'
-              win32_launcher = f'uvx --offline --prerelease=disallow {win32_package} || uvx --prerelease=disallow {win32_package}'
-          config['args'] = ['-c', launcher]
-          config['platform_overrides']['win32']['args'] = ['/c', win32_launcher]
+          # Always this fork's own wheel, for stable and prerelease tags alike. Both projects
+          # publish the same version numbers, so a PyPI spec here would install upstream's
+          # server on every client while appearing to work.
+          wheel, = Path('server/dist').glob('*.whl')
+          package = f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/releases/download/{os.environ["RELEASE_TAG"]}/{wheel.name}'
+          config['args'] = ['--from', package, 'revit-model-mcp']
           path.write_text(json.dumps(manifest, indent=2) + '\n')
       - name: Validate and pack Claude Desktop bundle
         shell: pwsh
@@ -488,16 +482,16 @@ jobs:
             echo "- [Python wheel]($base/$wheel)"
             echo "- Autodesk App Store build (no updater, bundled server, C# code execution off by default): [store MSI]($base/RevitModelMcp-$version-SingleUser-store.msi), [store bundle]($base/revit-model-mcp-$version-store.bundle.zip), [MCP tool manifest]($base/revit-model-mcp-$version-store.mcp-manifest.json)."
             echo "- [SHA256SUMS.txt]($base/SHA256SUMS.txt) covers every release asset, including the CycloneDX SBOMs (\`*.cdx.json\`)."
-            echo "- [Code signing policy](https://sharafutdinovdi.github.io/revit-model-mcp/code-signing/)"
+            echo "- [Code signing policy](https://vibe-bimer.github.io/revit-model-mcp/code-signing/)"
             echo
             echo 'Close Revit before installing, then start Revit and open a model.'
-            echo 'On the MCP client, run the published Python package:'
+            echo 'On the MCP client, install the wheel above. This fork publishes wheels on GitHub Releases and not to PyPI, so `uvx revit-model-mcp` would install the upstream server instead:'
             echo
             echo '```sh'
-            echo 'uvx revit-model-mcp'
+            echo "uvx --from $base/$wheel revit-model-mcp"
             echo '```'
             echo
-            echo 'Prereleases are not published to PyPI; install the wheel above instead.'
+            echo 'Download the wheel above and point uvx at that path, or install it with `uv tool install <wheel>`.'
           } > install-notes.md
           cat install-notes.md
       - name: Publish GitHub Release
@@ -528,115 +522,14 @@ jobs:
             gh release create "$RELEASE_TAG" artifacts/release/* --verify-tag --notes-file install-notes.md --generate-notes "${options[@]}"
           fi
 
-
-  # PyPI pending publisher:
-  # Project: revit-model-mcp
-  # Owner: sharafutdinovdi
-  # Repository: revit-model-mcp
-  # Workflow: release.yml
-  # Environment: pypi
-  # Prerelease tags skip PyPI and MCP Registry publishing.
-  pypi:
-    needs: build
-    if: ${{ !contains(inputs.tag || github.ref_name, '-') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment: pypi
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: python-dist
-          path: dist
-      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
-
-  mcp-registry:
-    needs: pypi
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    continue-on-error: true
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ inputs.tag || github.ref_name }}
-      - name: Set registry package version
-        env:
-          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-        run: |
-          python - <<'PYTHON'
-          import json
-          import os
-          import pathlib
-          import tomllib
-
-          version = tomllib.loads(pathlib.Path('server/pyproject.toml').read_text())['project']['version']
-          assert version == os.environ['RELEASE_TAG'][1:], 'Tag and package version differ'
-          path = pathlib.Path('server/server.json')
-          manifest = json.loads(path.read_text())
-          manifest['version'] = version
-          manifest['packages'][0]['version'] = version
-          path.write_text(json.dumps(manifest, indent=2) + '\n')
-          PYTHON
-      - name: Install mcp-publisher
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          tag=v1.8.1
-          archive=mcp-publisher_linux_amd64.tar.gz
-          gh release download "$tag" --repo modelcontextprotocol/registry --pattern "$archive"
-          echo "a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  $archive" | sha256sum --check
-          tar -xzf "$archive" mcp-publisher
-      - name: Publish to MCP Registry
-        run: |
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish server/server.json 2>&1 | tee mcp-publish-response.txt
-
-  # Releases created with GITHUB_TOKEN do not trigger release workflows.
-  smithery:
-    needs: [build, publish, pypi]
-    if: ${{ !contains(inputs.tag || github.ref_name, '-') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
-    steps:
-      - name: Skip without Smithery API key
-        if: ${{ env.SMITHERY_API_KEY == '' }}
-        run: echo '::notice::SMITHERY_API_KEY is empty; skipping Smithery publishing.'
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        if: ${{ env.SMITHERY_API_KEY != '' }}
-        with:
-          name: release-assets
-          path: artifacts/release
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: ${{ env.SMITHERY_API_KEY != '' }}
-        with:
-          ref: ${{ inputs.tag || github.ref_name }}
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        if: ${{ env.SMITHERY_API_KEY != '' }}
-        with:
-          python-version: '3.12'
-      - name: Install uv
-        if: ${{ env.SMITHERY_API_KEY != '' }}
-        run: pip install --require-hashes -r .github/requirements/uv.txt
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        if: ${{ env.SMITHERY_API_KEY != '' }}
-        with:
-          node-version: '22'
-      - name: Build and publish Smithery bundle
-        if: ${{ env.SMITHERY_API_KEY != '' }}
-        run: |
-          set -euo pipefail
-          bundles=(artifacts/release/*.mcpb)
-          if [[ ${#bundles[@]} -ne 1 || ! -f "${bundles[0]}" ]]; then
-            echo 'Expected exactly one MCPB release asset' >&2
-            exit 1
-          fi
-          bundle="$(realpath "${bundles[0]}")"
-          uv run --frozen --directory server python ../build/bundle_manifest.py --smithery "$RUNNER_TEMP/revit-model-mcp-smithery.mcpb" --from "$bundle"
-          npx --yes smithery@1.2.0 mcp publish "$RUNNER_TEMP/revit-model-mcp-smithery.mcpb" -n sharafutdinovdi/revit-model-mcp
+  # This fork does not publish to PyPI or the MCP Registry.
+  #
+  # Upstream owns the `revit-model-mcp` project on PyPI and the registry entry
+  # published under its own GitHub owner. Trusted publishing is bound to that
+  # owner and repository, so a release from this fork cannot publish under
+  # either name, and claiming them would impersonate another project. The jobs
+  # were removed rather than left to fail.
+  #
+  # Install the wheel attached to the release instead. To publish this fork
+  # under its own names, register a pending publisher for a fork-owned project,
+  # point server/server.json at the fork namespace, and add the jobs back.

@@ -8,7 +8,7 @@ The workstation host defaults to `local` for a Windows client under the Revit us
 macOS and Linux clients use `ssh:<alias>`, `http://host:port` or `https://host:port` to reach Windows.
 Use a loopback tunnel or TLS proxy for remote HTTP access.
 The optional HTTP bearer token field is sensitive and maps to `REVIT_MCP_TOKEN`.
-See [transport setup](https://sharafutdinovdi.github.io/revit-model-mcp/transport/) for workstation configuration.
+See [transport setup](https://vibe-bimer.github.io/revit-model-mcp/transport/) for workstation configuration.
 
 Path redaction defaults to enabled.
 Actions run by default; check Read-only mode to disable them without hiding the action tools.
@@ -18,7 +18,7 @@ Redaction leaves model names, parameter values, errors and exported image `local
 
 Model MCP returns requested model data to the selected MCP client.
 The bundle enables response path redaction by default.
-The [privacy policy](https://sharafutdinovdi.github.io/revit-model-mcp/privacy/) covers collection, storage, sharing, retention and contact information.
+The [privacy policy](https://vibe-bimer.github.io/revit-model-mcp/privacy/) covers collection, storage, sharing, retention and contact information.
 
 ## Build
 
@@ -52,7 +52,7 @@ The release workflow replaces both the manifest version and the package pin with
 Prerelease bundles reference the release wheel URL because prereleases are not published to PyPI.
 Stable bundles require the corresponding PyPI publishing job to finish before first launch.
 The workflow includes the bundle in `SHA256SUMS.txt` and attests all staged release assets.
-For stable releases, the Smithery job copies the released desktop bundle into a separate ZIP archive with full tool input schemas, then publishes it as `sharafutdinovdi/revit-model-mcp` after the GitHub Release is published.
+For stable releases, the Smithery job copies the released desktop bundle into a separate ZIP archive with full tool input schemas, then publishes it as `vibe-bimer/revit-model-mcp` after the GitHub Release is published.
 The Smithery archive is built with `build/bundle_manifest.py --smithery <output.mcpb> --from <desktop.mcpb>`.
 Add the `SMITHERY_API_KEY` repository secret to enable publishing; an empty secret produces a notice and skips it.
 
@@ -67,10 +67,10 @@ uv run build/render_brand_assets.py
 After downloading a release bundle:
 
 ```sh
-gh attestation verify revit-model-mcp-<version>.mcpb --owner sharafutdinovdi
+gh attestation verify revit-model-mcp-<version>.mcpb --owner vibe-bimer
 ```
 
-Confirm that the verified repository is `sharafutdinovdi/revit-model-mcp` and the signer workflow is `.github/workflows/release.yml`.
+Confirm that the verified repository is `vibe-bimer/revit-model-mcp` and the signer workflow is `.github/workflows/release.yml`.
 The attestation covers the bundle file, not dependencies downloaded by uv at runtime.
 This is GitHub build provenance, not an MCPB certificate signature.
-See [download verification](https://sharafutdinovdi.github.io/revit-model-mcp/security/#verify-downloads) for provenance boundaries and MSI verification.
+See [download verification](https://vibe-bimer.github.io/revit-model-mcp/security/#verify-downloads) for provenance boundaries and MSI verification.

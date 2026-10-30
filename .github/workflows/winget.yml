@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   manifests:
-    if: github.repository == 'sharafutdinovdi/revit-model-mcp'
+    if: github.repository == 'vibe-bimer/revit-model-mcp'
     runs-on: windows-latest
     timeout-minutes: 30
     concurrency:

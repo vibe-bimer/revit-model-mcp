@@ -21,10 +21,10 @@ internal static class UpdateService
         internal static readonly DataContractJsonSerializer Instance = new(typeof(T));
     }
 
-    private const string ReleasePath = "/repos/sharafutdinovdi/revit-model-mcp/releases/latest";
+    private const string ReleasePath = "/repos/vibe-bimer/revit-model-mcp/releases/latest";
     private static readonly string LocalDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "RevitModelMcp");
-    private static readonly string ReleasePage = "https://github.com/sharafutdinovdi/revit-model-mcp/releases";
+    private static readonly string ReleasePage = "https://github.com/vibe-bimer/revit-model-mcp/releases";
 
     public static void Start() => _ = Task.Run(Run);
 

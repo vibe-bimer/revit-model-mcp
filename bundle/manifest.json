@@ -1,19 +1,19 @@
 {
   "manifest_version": "0.3",
   "name": "revit-model-mcp",
-  "display_name": "Model MCP",
+  "display_name": "Revit Model MCP (vibe-bimer)",
   "version": "0.0.0",
-  "description": "For people reviewing or automating Revit models with an AI client: read a live Revit model through MCP, and change it with undoable actions. Actions run by default. Saving, syncing, closing, removing links, overwriting exports and running C# code need a confirmation token that you approve in chat. Requires uv on the client PATH: https://docs.astral.sh/uv/getting-started/installation/.",
-  "long_description": "Actions run by default, and each committed change is one named, undoable Revit change. Check Read-only mode to refuse actions without hiding the tools. The Revit add-in must be installed separately on Windows. macOS and Linux clients connect to a remote Windows workstation.",
+  "description": "For people reviewing or automating Revit models with an AI client: read a live Revit model through MCP, read-only by default, and act in it only when you clear read-only mode. Requires uv on the client PATH: https://docs.astral.sh/uv/getting-started/installation/.",
+  "long_description": "Actions are off by default and this bundle installs the server from this fork's own release wheel, never from PyPI. Saving, syncing, closing, removing links, overwriting exports and running C# code also need a confirmation token that you approve in chat. The Revit add-in must be installed separately on Windows. macOS and Linux clients connect to a remote Windows workstation.",
   "author": {
-    "name": "Dinar Sharafutdinov"
+    "name": "vibe-bimer"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sharafutdinovdi/revit-model-mcp"
+    "url": "https://github.com/vibe-bimer/revit-model-mcp"
   },
-  "homepage": "https://sharafutdinovdi.github.io/revit-model-mcp/",
-  "documentation": "https://sharafutdinovdi.github.io/revit-model-mcp/transport/",
+  "homepage": "https://vibe-bimer.github.io/revit-model-mcp/",
+  "documentation": "https://vibe-bimer.github.io/revit-model-mcp/transport/",
   "license": "MIT",
   "keywords": [
     "revit",
@@ -24,27 +24,19 @@
   "icon": "icon.png",
   "server": {
     "type": "binary",
-    "entry_point": "sh",
+    "entry_point": "uvx",
     "mcp_config": {
-      "command": "sh",
+      "command": "uvx",
       "args": [
-        "-c",
-        "uvx --offline --prerelease=disallow \"revit-model-mcp>=0.7.0\" || uvx --prerelease=disallow \"revit-model-mcp>=0.7.0\""
+        "--from",
+        "https://github.com/vibe-bimer/revit-model-mcp/releases/download/v0.0.0/revit_model_mcp-0.0.0-py3-none-any.whl",
+        "revit-model-mcp"
       ],
       "env": {
         "REVIT_MCP_HOST": "${user_config.REVIT_MCP_HOST}",
         "REVIT_MCP_REDACT_PATHS": "${user_config.REVIT_MCP_REDACT_PATHS}",
         "REVIT_MCP_READ_ONLY": "${user_config.REVIT_MCP_READ_ONLY}",
         "REVIT_MCP_TOKEN": "${user_config.REVIT_MCP_TOKEN}"
-      },
-      "platform_overrides": {
-        "win32": {
-          "command": "cmd",
-          "args": [
-            "/c",
-            "uvx --offline --prerelease=disallow revit-model-mcp^>=0.7.0 || uvx --prerelease=disallow revit-model-mcp^>=0.7.0"
-          ]
-        }
       }
     }
   },
@@ -424,8 +416,8 @@
     "REVIT_MCP_READ_ONLY": {
       "type": "boolean",
       "title": "Read-only mode",
-      "description": "Disable actions that can change the Revit model without hiding the action tools; calls return read-only mode instead of running. Actions run by default when this is off.",
-      "default": false
+      "description": "Refuse actions that can change the Revit model without hiding the action tools; calls return read-only mode instead of running. On by default; clear it to let actions run.",
+      "default": true
     },
     "REVIT_MCP_TOKEN": {
       "type": "string",
@@ -437,6 +429,6 @@
     }
   },
   "privacy_policies": [
-    "https://sharafutdinovdi.github.io/revit-model-mcp/privacy/"
+    "https://vibe-bimer.github.io/revit-model-mcp/privacy/"
   ]
 }

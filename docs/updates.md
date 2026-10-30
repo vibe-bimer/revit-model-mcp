@@ -49,7 +49,7 @@ A published prerelease such as `0.9.1-rc.1` is replaced by the stable release `0
 - Set `UpdateMode` in the machine policy (`HKLM\Software\Policies\RevitModelMcp` or `%ProgramData%\RevitModelMcp\policy.json`) to lock the mode for every user. Users cannot raise it.
 - Use the `managed` channel when your deployment tool owns updates. No update request leaves the machine.
 - Per-machine installs only ever notify, whatever the mode.
-- To check an internal mirror instead of GitHub, set `REVIT_MCP_UPDATE_FEED` to an HTTPS base URL (loopback HTTP is allowed for tests). The mirror must serve the same `/repos/sharafutdinovdi/revit-model-mcp/releases/latest` JSON as the GitHub API.
+- To check an internal mirror instead of GitHub, set `REVIT_MCP_UPDATE_FEED` to an HTTPS base URL (loopback HTTP is allowed for tests). The mirror must serve the same `/repos/vibe-bimer/revit-model-mcp/releases/latest` JSON as the GitHub API.
 
 ## Download safety
 

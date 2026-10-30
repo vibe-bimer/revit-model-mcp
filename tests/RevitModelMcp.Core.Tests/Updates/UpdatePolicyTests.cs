@@ -9,7 +9,7 @@ public sealed class UpdatePolicyTests
     [Test]
     public async Task BuildsReleaseUrlFromTagWithVersionFallback()
     {
-        const string releasePage = "https://github.com/sharafutdinovdi/revit-model-mcp/releases";
+        const string releasePage = "https://github.com/vibe-bimer/revit-model-mcp/releases";
         await Assert.That(UpdatePolicy.BuildReleaseUrl(releasePage, "v0.6.98", "0.6.98"))
             .IsEqualTo($"{releasePage}/tag/v0.6.98");
         await Assert.That(UpdatePolicy.BuildReleaseUrl(releasePage, null, "0.6.98"))

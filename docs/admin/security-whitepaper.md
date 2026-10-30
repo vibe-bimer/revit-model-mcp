@@ -92,7 +92,7 @@ Every network call in the shipped code is in this table. The project has no tele
 
 | Component | Destination | When | Data sent | How to turn off |
 | --- | --- | --- | --- | --- |
-| Add-in update check | `api.github.com` (`/repos/sharafutdinovdi/revit-model-mcp/releases/latest`) | At most every 24 hours after Revit starts | A plain HTTPS request with the user agent `RevitModelMcp updater` | `UPDATECHECK=0`, `updateCheck:false`, `REVIT_MCP_NO_UPDATE_CHECK=1`, managed bundle, `UpdateMode=off` |
+| Add-in update check | `api.github.com` (`/repos/vibe-bimer/revit-model-mcp/releases/latest`) | At most every 24 hours after Revit starts | A plain HTTPS request with the user agent `RevitModelMcp updater` | `UPDATECHECK=0`, `updateCheck:false`, `REVIT_MCP_NO_UPDATE_CHECK=1`, managed bundle, `UpdateMode=off` |
 | Add-in update download (per-user installs only) | `github.com` and `release-assets.githubusercontent.com` | When a newer stable release exists | A plain HTTPS request for the MSI and `SHA256SUMS.txt` | Same as above |
 | Server update check | `pypi.org` | At most every 24 hours at server start | A plain HTTPS request | `REVIT_MCP_NO_UPDATE_CHECK=1` |
 | Server package download | `pypi.org`, `files.pythonhosted.org` | When uv installs or refreshes the package, and at first launcher start | A plain HTTPS request | Pin the version and install from a wheelhouse |
@@ -136,7 +136,7 @@ With the `LogDir`, `LogRetentionDays` and `RedactPaths` policy values an adminis
 | Code signing | **Not in place.** Release MSI, DLL and EXE files are not Authenticode-signed. Signing through SignPath is prepared and starts after the application is approved; see [code signing](../code-signing.md). The Claude Desktop bundle has no MCPB signature. |
 | SBOM | Every release attaches two CycloneDX files, `revit-model-mcp-addin-<version>.cdx.json` (NuGet dependencies) and `revit-model-mcp-python-<version>.cdx.json` (Python dependencies). Lock files exist too (NuGet lock files, `server/uv.lock`, hash-pinned requirements for the container image). |
 | Dependency scanning gates | Dependabot only. No vulnerability scan blocks a release today. |
-| Third-party licenses | [Third-party notices](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/THIRD-PARTY-NOTICES.md) list direct dependencies. Transitive Python dependencies are not listed. |
+| Third-party licenses | [Third-party notices](https://github.com/vibe-bimer/revit-model-mcp/blob/main/THIRD-PARTY-NOTICES.md) list direct dependencies. Transitive Python dependencies are not listed. |
 | Autodesk code | No Autodesk binaries are shipped; Revit API assemblies are referenced only. |
 
 Because the binaries are unsigned, application allow-listing that needs a publisher rule (AppLocker, WDAC) has to use a path or hash rule until signing starts. The per-user updater runs from a user-writable folder, which is one reason to use the per-machine MSI.

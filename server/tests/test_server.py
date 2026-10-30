@@ -697,11 +697,22 @@ class ServerTests(unittest.IsolatedAsyncioTestCase):
             config["project"]["scripts"]["revit-model-mcp"], "revit_model_mcp.server:main"
         )
 
-    def test_bundle_win32_launcher_escapes_version_floor(self) -> None:
+    def test_bundle_launcher_installs_this_fork_and_never_pypi(self) -> None:
         manifest = json.loads((REPOSITORY_ROOT / "bundle/manifest.json").read_text())
-        command = manifest["server"]["mcp_config"]["platform_overrides"]["win32"]["args"][1]
-        self.assertEqual(command.count("revit-model-mcp^>="), 2)
-        self.assertNotIn('"', command)
+        config = manifest["server"]["mcp_config"]
+        version = manifest["version"]
+        wheel = (
+            "https://github.com/vibe-bimer/revit-model-mcp/releases/download/"
+            f"v{version}/revit_model_mcp-{version}-py3-none-any.whl"
+        )
+        self.assertEqual(config["command"], "uvx")
+        self.assertEqual(config["args"], ["--from", wheel, "revit-model-mcp"])
+        self.assertNotIn("platform_overrides", manifest["server"])
+        self.assertNotRegex(
+            json.dumps(manifest["server"]),
+            r"revit-model-mcp\s*(?:[=<>^~!]=?|[<>])",
+        )
+        self.assertTrue(manifest["user_config"]["REVIT_MCP_READ_ONLY"]["default"])
 
     def test_host_configuration(self) -> None:
         local = revit_server.create_host("local")

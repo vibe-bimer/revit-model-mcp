@@ -17,7 +17,7 @@ internal static class ConnectText
             ? "The apps start the server with uv, so uv must be installed."
             : "The apps start the server installed with this add-in, so neither uv nor Python is needed.");
 
-    public const string BundledServerMissing = "The bundled server was not found. Reinstall Model MCP.";
+    public const string BundledServerMissing = "The bundled server was not found. Reinstall Revit Model MCP (vibe-bimer).";
 
     public const string ClaudeCode = "Claude Code";
     public const string ClaudeCodeHint = "Run this in a terminal.";

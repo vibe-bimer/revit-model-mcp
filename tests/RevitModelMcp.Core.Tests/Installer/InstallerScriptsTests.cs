@@ -21,7 +21,7 @@ public sealed class InstallerScriptsTests
         await Assert.That(script).Contains("OpenBaseKey('LocalMachine', 'Registry64')");
         await Assert.That(script).Contains("$ErrorActionPreference = 'Stop'");
         await Assert.That(script).DoesNotContain("SilentlyContinue");
-        await Assert.That(script).Contains("Model MCP: ");
+        await Assert.That(script).Contains("Revit Model MCP (vibe-bimer): ");
         await Assert.That(script).Contains("exit 1");
     }
 
@@ -61,7 +61,7 @@ public sealed class InstallerScriptsTests
         await Assert.That(script).Contains($"exit {InstallerScripts.FolderIsLink}");
         await Assert.That(script).Contains($"exit {InstallerScripts.FolderWrongOwner}");
         await Assert.That(script).Contains($"exit {InstallerScripts.FolderUnchecked}");
-        await Assert.That(script).Contains("Write-Output ('Model MCP: ' + $reason)");
+        await Assert.That(script).Contains("Write-Output ('Revit Model MCP (vibe-bimer): ' + $reason)");
         await Assert.That(script).Contains("link or not a folder");
         await Assert.That(script).Contains("owned by an account other than Administrators or SYSTEM");
         await Assert.That(script).Contains("takeown /a /f \"%ProgramData%\\RevitModelMcp\"");

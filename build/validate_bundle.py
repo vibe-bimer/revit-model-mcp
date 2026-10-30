@@ -17,6 +17,13 @@ GUID_PATTERN = re.compile(r"^\{[0-9A-F]{8}(-[0-9A-F]{4}){3}-[0-9A-F]{12}\}$")
 FORBIDDEN_PATTERN = re.compile(
     r"^(AdWindows|UIFramework|RevitAPI|RevitNET).*\.dll$", re.IGNORECASE
 )
+# A managed bundle installs the server itself. This fork publishes no PyPI package, and upstream
+# publishes the same version numbers, so any PyPI spec here would install upstream's server.
+SERVER_SOURCE_TEMPLATE = (
+    "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v{version}.tar.gz"
+    "#subdirectory=server"
+)
+PYPI_SPEC_PATTERN = re.compile(r"\brevit-model-mcp\s*(?:==|>=|<=|~=|!=|>|<|\^>=)")
 
 
 def parse_years(text: str) -> list[int]:
@@ -233,9 +240,15 @@ def validate(
             readme = read_member(path, contents, readme_name).decode(
                 "utf-8", errors="replace"
             )
-            if f"revit-model-mcp=={managed_version}" not in readme:
+            if SERVER_SOURCE_TEMPLATE.format(version=managed_version) not in readme:
                 errors.append(
-                    f"README.txt does not pin revit-model-mcp=={managed_version}"
+                    "README.txt does not install the server from this fork's "
+                    f"v{managed_version} release"
+                )
+            if PYPI_SPEC_PATTERN.search(readme):
+                errors.append(
+                    "README.txt resolves revit-model-mcp from PyPI, which installs "
+                    "upstream's server"
                 )
     root = parse_xml(read_member(path, contents, base + MANIFEST_NAME))
     if root is None:
