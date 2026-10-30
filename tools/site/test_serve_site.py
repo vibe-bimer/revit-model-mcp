@@ -58,6 +58,14 @@ def build_site(root: Path) -> None:
     (root / "404.html").write_text(
         "<html><body>missing page 未找到</body></html>", encoding="utf-8"
     )
+    (root / "en").mkdir()
+    (root / "en" / "404.html").write_text(
+        "<html><body>Page not found · 页面不存在</body></html>", encoding="utf-8"
+    )
+    # A deployment that asks crawlers to stay out still serves its own pages: robots is a hint,
+    # not access control, and the error surface below does not consult it.
+    (root / "robots.txt").write_text("User-agent: *\nDisallow: /\n", encoding="utf-8")
+    (root / "favicon.ico").write_bytes(b"\x00\x00\x01\x00" + b"0" * 60)
     (root / "emptydir").mkdir()
 
 
@@ -67,10 +75,15 @@ class ServeSiteTestCase(unittest.TestCase):
     site_root: Path
 
     @classmethod
+    def prepare(cls, root: Path) -> None:
+        """Create the site this class serves; subclasses may reshape the tree."""
+        build_site(root)
+
+    @classmethod
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory()
         cls.site_root = Path(cls.temp.name)
-        build_site(cls.site_root)
+        cls.prepare(cls.site_root)
         serve_site.DocsHandler.root = cls.site_root
         cls.server = serve_site.Server(("127.0.0.1", 0), serve_site.DocsHandler)
         cls.port = cls.server.server_address[1]
@@ -505,6 +518,119 @@ class RootSwitchTests(unittest.TestCase):
         status, body = self._get_root()
         self.assertEqual(status, 200)
         self.assertIn(b"late", body)
+
+
+class AssetErrorTests(ServeSiteTestCase):
+    """A missing asset gets a small plain-text error, not the whole error page."""
+
+    ASSET_PATHS = (
+        "/missing.png",
+        "/screenshots/revit-model-mcp_gone.gif",
+        "/assets/nope.js",
+        "/stylesheets/gone.css",
+        "/javascripts/gone.js",
+        "/fonts/missing.woff2",
+        "/nothing.txt",
+        "/data.json",
+    )
+
+    def test_missing_assets_answer_404_with_a_light_body(self):
+        for target in self.ASSET_PATHS:
+            with self.subTest(target=target):
+                status, headers, body = self.request("GET", target)
+                self.assertEqual(status, 404)
+                self.assertEqual(headers["content-type"], "text/plain; charset=utf-8")
+                self.assertLess(len(body), 2048)
+                self.assertNotIn(b"<html", body)
+                self.assertEqual(headers["cache-control"], "no-store")
+
+    def test_the_root_icon_serves_a_pinned_content_type(self):
+        status, headers, _ = self.request("GET", "/favicon.ico")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["content-type"], "image/vnd.microsoft.icon")
+
+    def test_a_document_path_still_gets_the_readable_error_page(self):
+        for target in ("/missing", "/does-not-exist/", "/features/gone/"):
+            with self.subTest(target=target):
+                status, headers, body = self.request("GET", target)
+                self.assertEqual(status, 404)
+                self.assertTrue(headers["content-type"].startswith("text/html"))
+                self.assertIn("未找到", body.decode("utf-8"))
+                self.assertEqual(headers["cache-control"], "no-cache")
+
+    def test_head_reports_the_same_length_as_get_for_asset_errors(self):
+        get_status, get_headers, get_body = self.request("GET", "/missing.png")
+        head_status, head_headers, head_body = self.request("HEAD", "/missing.png")
+        self.assertEqual(get_status, head_status)
+        self.assertEqual(head_body, b"")
+        self.assertEqual(head_headers["content-length"], get_headers["content-length"])
+        self.assertEqual(int(head_headers["content-length"]), len(get_body))
+
+    def test_head_reports_the_same_length_as_get_for_document_errors(self):
+        get_status, _, get_body = self.request("GET", "/missing/")
+        head_status, head_headers, head_body = self.request("HEAD", "/missing/")
+        self.assertEqual(get_status, head_status)
+        self.assertEqual(head_body, b"")
+        self.assertEqual(int(head_headers["content-length"]), len(get_body))
+        self.assertGreater(len(get_body), 0)
+
+
+class ErrorPageLanguageTests(ServeSiteTestCase):
+    """English paths get the English error page; everything else gets the root one."""
+
+    def test_english_path_gets_the_english_error_page(self):
+        status, _, body = self.request("GET", "/en/does-not-exist/")
+        self.assertEqual(status, 404)
+        self.assertIn("Page not found", body.decode("utf-8"))
+        self.assertNotIn("未找到", body.decode("utf-8"))
+
+    def test_chinese_path_gets_the_root_error_page(self):
+        status, _, body = self.request("GET", "/does-not-exist/")
+        self.assertEqual(status, 404)
+        self.assertIn("未找到", body.decode("utf-8"))
+        self.assertNotIn("Page not found", body.decode("utf-8"))
+
+    def test_english_asset_error_stays_light(self):
+        status, headers, body = self.request("GET", "/en/missing.png")
+        self.assertEqual(status, 404)
+        self.assertEqual(headers["content-type"], "text/plain; charset=utf-8")
+        self.assertLess(len(body), 2048)
+
+
+class ErrorPageFallbackTests(ServeSiteTestCase):
+    """A site built without the English variant falls back to the root page."""
+
+    @classmethod
+    def prepare(cls, root: Path) -> None:
+        build_site(root)
+        (root / "en" / "404.html").unlink()
+
+    def test_english_path_falls_back_to_the_root_error_page(self):
+        status, _, body = self.request("GET", "/en/does-not-exist/")
+        self.assertEqual(status, 404)
+        self.assertIn("未找到", body.decode("utf-8"))
+
+
+class RobotsHintTests(ServeSiteTestCase):
+    """robots.txt is served as a file and never gates a response."""
+
+    def test_robots_is_served_as_plain_text(self):
+        status, headers, body = self.request("GET", "/robots.txt")
+        self.assertEqual(status, 200)
+        self.assertTrue(headers["content-type"].startswith("text/plain"))
+        self.assertIn(b"Disallow: /", body)
+
+    def test_a_disallow_all_robots_does_not_gate_pages(self):
+        status, _, _ = self.request("GET", "/")
+        self.assertEqual(status, 200)
+
+    def test_a_disallow_all_robots_does_not_change_error_surfaces(self):
+        status, headers, _ = self.request("GET", "/missing.png")
+        self.assertEqual(status, 404)
+        self.assertEqual(headers["content-type"], "text/plain; charset=utf-8")
+        status, headers, _ = self.request("GET", "/missing/")
+        self.assertEqual(status, 404)
+        self.assertTrue(headers["content-type"].startswith("text/html"))
 
 
 if __name__ == "__main__":

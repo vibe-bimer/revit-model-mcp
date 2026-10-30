@@ -265,3 +265,145 @@ class TerminologyTests(unittest.TestCase):
     def test_the_repository_prose_agrees(self):
         root = Path(__file__).resolve().parents[2]
         self.assertEqual(check_site.audit_terminology(root), [])
+
+
+class ShippedAssetTests(unittest.TestCase):
+    """A shipped file is referenced, conventional, or an error naming the file."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.site = Path(self.temp.name)
+
+    def _write(self, name, payload, encoding="utf-8"):
+        target = self.site / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if isinstance(payload, bytes):
+            target.write_bytes(payload)
+        else:
+            target.write_text(payload, encoding=encoding)
+
+    def _conventional(self):
+        self._write("404.html", "<html></html>")
+        self._write("en/404.html", "<html></html>")
+        self._write("robots.txt", "User-agent: *\nDisallow: /\n")
+        self._write("favicon.ico", b"\x00\x00\x01\x00")
+        self._write("sitemap.xml", "<urlset></urlset>")
+        self._write("features/sitemap.xml", "<urlset></urlset>")
+        self._write("search/search_index.json", "{}")
+        self._write("assets/javascripts/lunr/min/lunr.zh.min.js", "x")
+        self._write("overrides/404.html", "<html></html>")
+
+    def test_a_referenced_image_passes(self):
+        self._conventional()
+        self._write("index.html", '<html><img src="assets/mark.png"></html>')
+        self._write("assets/mark.png", b"png")
+        errors, stats = check_site.audit_assets(self.site)
+        self.assertEqual(errors, [])
+        self.assertEqual(stats["files"], 10)
+        self.assertEqual(stats["referenced"], 1)
+
+    def test_an_unreferenced_asset_is_named(self):
+        self._conventional()
+        self._write("index.html", "<html></html>")
+        self._write("screenshots/unused.gif", b"gif")
+        errors, _ = check_site.audit_assets(self.site)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("screenshots/unused.gif", errors[0])
+
+    def test_social_metadata_counts_as_a_reference(self):
+        self._conventional()
+        self._write(
+            "index.html",
+            '<html><meta property="og:image" content="https://example.com/assets/card.png"></html>',
+        )
+        self._write("assets/card.png", b"png")
+        errors, _ = check_site.audit_assets(self.site)
+        self.assertEqual(errors, [])
+
+    def test_a_stylesheet_reference_counts(self):
+        self._conventional()
+        self._write(
+            "index.html", '<html><link rel="stylesheet" href="assets/site.css"></html>'
+        )
+        self._write("assets/site.css", "body{background:url(../assets/bg.png)}")
+        self._write("assets/bg.png", b"png")
+        errors, _ = check_site.audit_assets(self.site)
+        self.assertEqual(errors, [])
+
+    def test_a_srcset_reference_counts(self):
+        self._conventional()
+        self._write(
+            "index.html",
+            '<html><img src="a.png" srcset="a.png 1x, assets/b.png 2x"></html>',
+        )
+        self._write("a.png", b"png")
+        self._write("assets/b.png", b"png")
+        errors, _ = check_site.audit_assets(self.site)
+        self.assertEqual(errors, [])
+
+    def test_a_deployment_base_path_is_tolerated(self):
+        self._conventional()
+        self._write(
+            "index.html",
+            '<html><img src="https://example.com/revit-model-mcp/assets/mark.png"></html>',
+        )
+        self._write("assets/mark.png", b"png")
+        errors, _ = check_site.audit_assets(self.site)
+        self.assertEqual(errors, [])
+
+    def test_theme_files_shipped_for_their_own_reason_pass(self):
+        self._conventional()
+        self._write("index.html", "<html></html>")
+        self._write("assets/logo-white.svg", "<svg></svg>")
+        errors, _ = check_site.audit_assets(self.site)
+        self.assertEqual(errors, [])
+
+
+class DeploymentFileTests(unittest.TestCase):
+    """robots.txt, the favicon alias and the two error pages are part of every build."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.site = Path(self.temp.name)
+
+    def _write(self, name, payload):
+        target = self.site / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(payload, encoding="utf-8")
+
+    def _complete(self, robots):
+        self._write("robots.txt", robots)
+        self._write("favicon.ico", "")
+        self._write("404.html", "<html></html>")
+        self._write("en/404.html", "<html></html>")
+
+    def test_a_private_origin_must_not_name_a_sitemap(self):
+        self._complete("User-agent: *\nDisallow: /\n")
+        self.assertEqual(check_site.audit_deployment(self.site), [])
+
+    def test_a_public_origin_must_name_its_sitemap(self):
+        self._complete(
+            "User-agent: *\nAllow: /\nSitemap: https://example.com/sitemap.xml\n"
+        )
+        self.assertEqual(check_site.audit_deployment(self.site), [])
+
+    def test_a_public_origin_without_a_sitemap_is_an_error(self):
+        self._complete("User-agent: *\nAllow: /\n")
+        errors = check_site.audit_deployment(self.site)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("names no sitemap", errors[0])
+
+    def test_a_private_origin_naming_a_sitemap_is_an_error(self):
+        self._complete(
+            "User-agent: *\nDisallow: /\nSitemap: https://example.com/sitemap.xml\n"
+        )
+        errors = check_site.audit_deployment(self.site)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("still names a sitemap", errors[0])
+
+    def test_missing_deployment_files_are_named(self):
+        errors = check_site.audit_deployment(self.site)
+        self.assertEqual(len(errors), 4)
+        self.assertIn("robots.txt: missing from the build", errors[0])

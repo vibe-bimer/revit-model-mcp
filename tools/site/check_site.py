@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import posixpath
 import re
 import sys
 from dataclasses import dataclass, field
@@ -751,6 +752,187 @@ def audit_migration_table(site: Path) -> list[str]:
     return errors
 
 
+# -- shipped assets ---------------------------------------------------------
+#
+# The build ships whatever lands in the tree, so an asset nobody references reaches every visitor
+# as a download nobody asked for. A page, a stylesheet or a metadata block must reference each
+# shipped file; the entries below are the exceptions, and each says why.
+
+# The build writes these itself, and a browser or crawler asks for them by convention rather than
+# through a link in a page, so no page can reference them.
+CONVENTIONAL_FILES = frozenset(
+    {
+        "404.html",
+        "en/404.html",
+        "robots.txt",
+        "favicon.ico",
+        "sitemap.xml",
+        "sitemap.xml.gz",
+    }
+)
+# Per-directory sitemaps, plus the search machinery the theme's bundle loads at runtime.
+CONVENTIONAL_NAMES = frozenset({"sitemap.xml", "sitemap.xml.gz"})
+CONVENTIONAL_PREFIXES = (
+    "search/",
+    "assets/javascripts/lunr/",
+    "assets/javascripts/workers/",
+    "overrides/",
+)
+# Shipped for a reason other than a page link, named one by one so the list stays reviewable.
+CONVENTIONAL_SOURCES = {
+    "assets/images/favicon.png": "Material's default icon, replaced by theme.favicon",
+    "assets/logo.svg": "the mark README.md embeds",
+    "assets/logo-white.svg": "declared as theme.logo in mkdocs.yml",
+}
+REFERENCE_ATTRIBUTES = ("href", "src", "poster", "data")
+IMAGE_META = (
+    "og:image",
+    "og:image:url",
+    "og:image:secure_url",
+    "twitter:image",
+    "twitter:image:src",
+)
+CSS_URL = re.compile(r"""url\(\s*['"]?([^'")]+)['"]?\s*\)""")
+
+
+class _ReferenceParser(HTMLParser):
+    """Collects every URL a browser would fetch for a page, including social metadata."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.urls: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        values = dict(attrs)
+        for key in REFERENCE_ATTRIBUTES:
+            if values.get(key):
+                self.urls.append(values[key])
+        if values.get("srcset"):
+            self.urls.extend(
+                item.strip().split()[0]
+                for item in values["srcset"].split(",")
+                if item.strip()
+            )
+        if tag == "meta":
+            key = values.get("property") or values.get("name") or ""
+            if key in IMAGE_META and values.get("content"):
+                self.urls.append(values["content"])
+
+
+def _reference_paths(url: str, source: str) -> list[str]:
+    """Site-relative paths a URL may name, tolerating a deployment base path."""
+    split = urlsplit(url.strip())
+    if split.scheme or split.netloc:
+        # Absolute URLs are only read for their path: the origin is the deployment's own.
+        path = split.path
+    else:
+        path = split.path
+        if path and not path.startswith("/"):
+            path = posixpath.normpath(posixpath.join(posixpath.dirname(source), path))
+    path = path.lstrip("/")
+    if not path or path.startswith(".."):
+        return []
+    candidates = [path]
+    parts = path.split("/")
+    for index in range(1, len(parts)):
+        candidates.append("/".join(parts[index:]))
+    resolved = []
+    for candidate in candidates:
+        if candidate.endswith("/"):
+            resolved.append(candidate + "index.html")
+        else:
+            resolved.append(candidate)
+            if candidate.endswith("index.html") and "/" in candidate:
+                resolved.append(candidate[: -len("index.html")])
+    return resolved
+
+
+def collect_references(site: Path) -> set[str]:
+    """Every site-relative path a page, stylesheet or metadata block asks for."""
+    references: set[str] = set()
+    for page in sorted(site.rglob("*.html")):
+        relative = page.relative_to(site).as_posix()
+        parser = _ReferenceParser()
+        parser.feed(page.read_text(encoding="utf-8"))
+        for url in parser.urls:
+            references.update(_reference_paths(url, relative))
+    for sheet in sorted(site.rglob("*.css")):
+        relative = sheet.relative_to(site).as_posix()
+        text = sheet.read_text(encoding="utf-8", errors="replace")
+        for url in CSS_URL.findall(text):
+            references.update(_reference_paths(url, relative))
+    return references
+
+
+def is_conventional(relative: str) -> bool:
+    """Whether a shipped file is expected to have no referencing page."""
+    if relative in CONVENTIONAL_FILES or relative in CONVENTIONAL_SOURCES:
+        return True
+    if relative.rsplit("/", 1)[-1] in CONVENTIONAL_NAMES:
+        return True
+    return any(relative.startswith(prefix) for prefix in CONVENTIONAL_PREFIXES)
+
+
+def audit_assets(site: Path) -> tuple[list[str], dict[str, int]]:
+    """Every shipped file is referenced by a page or named in the conventional list."""
+    references = collect_references(site)
+    errors: list[str] = []
+    files = referenced = conventional = 0
+    for path in sorted(site.rglob("*")):
+        if not path.is_file() or path.name == "index.html":
+            # Pages are audited as pages; this gate is about what they pull in.
+            continue
+        relative = path.relative_to(site).as_posix()
+        files += 1
+        if relative in references:
+            referenced += 1
+        elif is_conventional(relative):
+            conventional += 1
+        else:
+            errors.append(
+                f"{relative}: shipped but no page, stylesheet or metadata block references it"
+            )
+    return errors, {
+        "files": files,
+        "referenced": referenced,
+        "conventional": conventional,
+    }
+
+
+def audit_deployment(site: Path) -> list[str]:
+    """The files that follow the deployment origin exist and agree with each other."""
+    errors: list[str] = []
+    robots = site / "robots.txt"
+    if not robots.is_file():
+        errors.append("robots.txt: missing from the build")
+    else:
+        text = robots.read_text(encoding="utf-8")
+        disallow_all = "Disallow: /\n" in text
+        sitemap = [
+            line for line in text.splitlines() if line.lower().startswith("sitemap:")
+        ]
+        if disallow_all and sitemap:
+            errors.append(
+                "robots.txt: a private origin asks crawlers out but still names a sitemap"
+            )
+        if not disallow_all and not sitemap:
+            errors.append(
+                "robots.txt: a public origin allows crawlers but names no sitemap"
+            )
+        if (
+            not disallow_all
+            and sitemap
+            and not sitemap[0].strip().endswith("/sitemap.xml")
+        ):
+            errors.append(
+                f"robots.txt: {sitemap[0].strip()} does not name the site sitemap"
+            )
+    for relative in ("favicon.ico", "404.html", "en/404.html"):
+        if not (site / relative).is_file():
+            errors.append(f"{relative}: missing from the build")
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--site-dir", type=Path, default=Path("site"))
@@ -763,8 +945,15 @@ def main() -> int:
     errors += audit_terminology(Path(__file__).resolve().parents[2])
     errors += audit_search_index(args.site_dir)
     errors += audit_migration_table(args.site_dir)
+    asset_errors, asset_stats = audit_assets(args.site_dir)
+    errors += asset_errors
+    errors += audit_deployment(args.site_dir)
     print(
         f"Pages: {stats['pages']} (zh {stats['zh']} / en {stats['en']}); checked internal references: {stats['links']}"
+    )
+    print(
+        f"Assets: {asset_stats['files']} shipped; referenced {asset_stats['referenced']}, "
+        f"conventional {asset_stats['conventional']}"
     )
     print(f"Site/source errors: {len(errors)}")
     for error in errors[:80]:
