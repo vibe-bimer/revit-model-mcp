@@ -9,34 +9,62 @@
 {% extends "base.html" %}
 
 {% block site_meta %}
-  {{ super() }}
-  {% set page_description = page.meta.description if page.meta and page.meta.description
-    else config.site_description %}
-  {% set social_image = config.site_url ~ "assets/social-card.png" %}
-  {% if page_description %}
-    <meta name="description" content="{{ page_description }}">
+  {#- Own the whole metadata block instead of calling super(): the i18n plugin rewrites
+      config.extra.alternate to page-relative links after every hook has run, so the only reliable
+      source for absolute language-switch links is page.file.alternates, which lists exactly the
+      translations that exist for this page. -#}
+  {% set page_lang = config.theme.language or "zh" %}
+  {% set page_locale = "en_US" if page_lang == "en" else "zh_CN" %}
+  {% set page_description = page.meta.description if page and page.meta and page.meta.description
+    else (config.site_description or config.site_name) %}
+  {% set site_base = config.site_url or "/" %}
+  {% set translations = (page.file.alternates if page and page.file else {}) or {} %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="{{ page_description | e }}">
+  {% if page and page.meta and page.meta.author %}
+    <meta name="author" content="{{ page.meta.author }}">
+  {% elif config.site_author %}
+    <meta name="author" content="{{ config.site_author }}">
   {% endif %}
+  {% if page and page.canonical_url %}
+    <link rel="canonical" href="{{ page.canonical_url }}">
+  {% endif %}
+  {% if page and page.previous_page %}
+    <link rel="prev" href="{{ page.previous_page.url | url }}">
+  {% endif %}
+  {% if page and page.next_page %}
+    <link rel="next" href="{{ page.next_page.url | url }}">
+  {% endif %}
+  {% for lang in translations | sort %}
+    {% set alt_path = translations[lang].url %}
+    {% if alt_path in ('.', './') %}{% set alt_path = '' %}{% endif %}
+    <link rel="alternate" href="{{ (site_base ~ alt_path) | url }}" hreflang="{{ lang }}">
+  {% endfor %}
+  <link rel="icon" href="{{ config.theme.favicon | url }}">
+  <meta name="generator" content="mkdocs-{{ mkdocs_version }}">
+  {% set social_image = site_base ~ "assets/social-card.png" %}
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#070d18" media="(prefers-color-scheme: dark)">
   <meta name="color-scheme" content="light dark">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="{{ config.site_name }}">
-  <meta property="og:title" content="{{ page.title | striptags | e if page.title else config.site_name }}">
-  {% if page_description %}
-    <meta property="og:description" content="{{ page_description }}">
-  {% endif %}
-  <meta property="og:url" content="{{ page.canonical_url }}">
+  <meta property="og:title" content="{{ page.title | striptags | e if page and page.title else config.site_name }}">
+  <meta property="og:description" content="{{ page_description | e }}">
+  <meta property="og:url" content="{{ page.canonical_url if page and page.canonical_url else site_base }}">
   <meta property="og:image" content="{{ social_image }}">
   <meta property="og:image:width" content="1280">
   <meta property="og:image:height" content="640">
   <meta property="og:image:alt" content="{{ config.site_name }}">
-  <meta property="og:locale" content="zh_CN">
-  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:locale" content="{{ page_locale }}">
+  {% for lang in translations | sort %}
+    {% if lang != page_lang %}
+      <meta property="og:locale:alternate" content="{{ 'en_US' if lang == 'en' else 'zh_CN' }}">
+    {% endif %}
+  {% endfor %}
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ page.title | striptags | e if page.title else config.site_name }}">
-  {% if page_description %}
-    <meta name="twitter:description" content="{{ page_description }}">
-  {% endif %}
+  <meta name="twitter:title" content="{{ page.title | striptags | e if page and page.title else config.site_name }}">
+  <meta name="twitter:description" content="{{ page_description | e }}">
   <meta name="twitter:image" content="{{ social_image }}">
 {% endblock %}
 
