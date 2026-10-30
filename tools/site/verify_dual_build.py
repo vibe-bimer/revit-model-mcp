@@ -20,14 +20,13 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
-import os
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
 import yaml
+from mkdocs_command import builder_command
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -54,24 +53,10 @@ def load_site_url(config_path: Path) -> str:
     return url
 
 
-def builder_command() -> list[str]:
-    """Find the mkdocs executable the same way publish_site.py does."""
+def builder_command_for_site() -> list[str]:
+    """The shared lookup, rooted at this checkout with its own requirements fallback."""
 
-    configured = os.environ.get("MKDOCS", "").strip()
-    if configured:
-        return configured.split()
-    for candidate in (
-        ROOT / ".venv-docs" / "bin" / "mkdocs",
-        Path.home() / ".venv-docs" / "bin" / "mkdocs",
-    ):
-        if candidate.is_file():
-            return [str(candidate)]
-    found = shutil.which("mkdocs")
-    if found:
-        return [found]
-    raise SystemExit(
-        "mkdocs was not found; install docs/requirements.txt or set MKDOCS"
-    )
+    return builder_command(ROOT, ROOT)
 
 
 def normalize_text(text: str, base_url: str) -> str:
@@ -225,7 +210,7 @@ def main() -> int:
     lan_base = load_site_url(lan_config)
 
     if not args.skip_build:
-        mkdocs = builder_command()
+        mkdocs = builder_command_for_site()
         run(
             mkdocs + ["build", "--strict", "-f", str(gh_config), "-d", str(gh_dir)],
             cwd=ROOT,
