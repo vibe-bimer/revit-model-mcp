@@ -95,6 +95,16 @@ class PageTests(unittest.TestCase):
         self.tools, self.released = platform_catalog.load_platform()
         self.released_names = {tool["name"] for tool in self.released}
 
+    def test_a_bare_set_of_names_is_rejected(self):
+        tool = self.tools[0]
+        with self.assertRaises(TypeError):
+            platform_catalog.tool_page(tool, {tool["name"]}, "zh")
+
+    def test_a_dict_without_a_name_is_rejected(self):
+        tool = self.tools[0]
+        with self.assertRaises(TypeError):
+            platform_catalog.tool_page(tool, [{"inputSchema": {}}], "zh")
+
     def test_generate_covers_every_tool_in_both_languages(self):
         files = platform_catalog.generate()
         self.assertEqual(len(files), 2 * (len(self.tools) + 2))

@@ -721,17 +721,24 @@ def parameter_table(lang: str, rows: list[str]) -> list[str]:
     ]
 
 
-def _release_view(released) -> tuple[set[str], dict[str, dict]]:
-    """Accept a list of released tools (for schema diffs) or a bare set of names."""
-    items = list(released)
-    if items and isinstance(items[0], dict):
-        names = {tool["name"] for tool in items}
-        schemas = {tool["name"]: tool.get("inputSchema", {}) for tool in items}
-        return names, schemas
-    return set(items), {}
+def _release_view(released: list[dict]) -> tuple[set[str], dict[str, dict]]:
+    """Split the released tools into their names and input schemas for a twin diff.
+
+    The released catalog is always the list of tool dicts the registry dumps, so each entry
+    carries a name and an inputSchema. A bare set of names cannot answer a schema diff and
+    would make the caller index a schema that does not exist; reject it instead.
+    """
+    for tool in released:
+        if not isinstance(tool, dict) or "name" not in tool:
+            raise TypeError(
+                "released tools must be the catalog's list of tool dicts with inputSchema"
+            )
+    names = {tool["name"] for tool in released}
+    schemas = {tool["name"]: tool.get("inputSchema", {}) for tool in released}
+    return names, schemas
 
 
-def tool_page(tool: dict, released, lang: str) -> str:
+def tool_page(tool: dict, released: list[dict], lang: str) -> str:
     labels = LABELS[lang]
     name = tool["name"]
     origin = origin_of(name)
