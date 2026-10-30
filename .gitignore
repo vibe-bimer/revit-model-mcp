@@ -40,8 +40,11 @@ uv.lock
 *.log
 docs/screenshots/raw/
 
-# Documentation site
-site/
+# Documentation build output (tools/site is tracked source).
+/site/
+/site.new/
+/site.prev/
+/.site-build.lock
 
 # MCP bundle output
 *.mcpb

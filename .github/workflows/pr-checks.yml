@@ -44,8 +44,20 @@ jobs:
             .github/requirements/ruff.txt
       - name: Install documentation dependencies
         run: pip install --require-hashes -r docs/requirements.txt
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.22'
+          enable-cache: true
+          cache-dependency-glob: server/uv.lock
+      - name: Install the server for the registry check
+        working-directory: server
+        run: uv sync --frozen --no-dev
       - name: Build documentation
-        run: mkdocs build --strict
+        run: |
+          python tools/site/generate_features.py --verify-registry --check
+          python -m unittest discover -s tools/site -p 'test_*.py'
+          mkdocs build --strict
+          python tools/site/check_site.py --site-dir site
       - name: Install Ruff
         run: pip install --require-hashes -r .github/requirements/ruff.txt
       - name: Check Python
@@ -110,7 +122,8 @@ jobs:
           "Check workflows with actionlint": "actionlint",
           "Verify C# formatting": "$env:Configuration = 'Debug.R26'; $env:DeployAddin = 'false'; dotnet restore RevitModelMcp.sln --locked-mode; dotnet format RevitModelMcp.sln --no-restore --verify-no-changes --verbosity minimal",
           "Install documentation dependencies": "pip install --require-hashes -r docs/requirements.txt",
-          "Build documentation": "mkdocs build --strict",
+          "Install the server for the registry check": "cd server; uv sync --frozen --no-dev",
+          "Build documentation": "python tools/site/generate_features.py --verify-registry --check; python -m unittest discover -s tools/site -p 'test_*.py'; mkdocs build --strict; python tools/site/check_site.py --site-dir site",
           "Install Ruff": "pip install --require-hashes -r .github/requirements/ruff.txt",
           "Check Python": "cd server; uvx ruff==0.16.10 check .",
           "Verify Python formatting": "cd server; uvx ruff==0.16.10 format --check ."

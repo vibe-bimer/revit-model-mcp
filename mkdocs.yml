@@ -1,4 +1,4 @@
-site_name: Model MCP
+site_name: Revit Model MCP (vibe-bimer)
 copyright: Autodesk and Revit are registered trademarks or trademarks of Autodesk, Inc., and/or its subsidiaries and/or affiliates in the USA and/or other countries. Model MCP is an independent project and is not affiliated with or endorsed by Autodesk.
 site_url: https://vibe-bimer.github.io/revit-model-mcp/
 repo_url: https://github.com/vibe-bimer/revit-model-mcp
@@ -119,6 +119,123 @@ nav:
       - Security: security.md
       - Architecture: architecture.md
       - Automatic updates: updates.md
+  # >>> features-nav
+  - Features:
+      - Feature overview: features/index.md
+      - Version support matrix: features/matrix.md
+      - Revit 2020 support: features/v2020.md
+      - Revit 2026 support: features/v2026.md
+      - Prompt library: features/prompts.md
+      - Read tools — Element registers:
+          - Export element ID register: features/revit_export_element_ids.md
+      - Read tools — Connection and core:
+          - List Revit Jobs: features/revit_jobs.md
+          - Check Revit Connection: features/revit_ping.md
+          - Document Info: features/revit_document_info.md
+          - Open Documents: features/revit_documents.md
+          - Revit UI State: features/revit_ui_state.md
+          - List Instances: features/revit_list_instances.md
+      - Read tools — Model queries:
+          - Model Snapshot: features/revit_model_snapshot.md
+          - Model Health Check: features/revit_model_health.md
+          - Links Status: features/revit_links_status.md
+          - Shared Coordinates: features/revit_shared_coordinates.md
+          - Parameter Fill Check: features/revit_parameter_fill_check.md
+          - List Catalog: features/revit_list_catalog.md
+          - Aggregate Elements: features/revit_aggregate_elements.md
+          - Query Elements: features/revit_query_elements.md
+          - Read Schedule Data: features/revit_schedule_data.md
+          - Element Details: features/revit_element_details.md
+          - List Warnings: features/revit_list_warnings.md
+          - List Relations: features/revit_list_relations.md
+      - Read tools — Views and sheets:
+          - List Views: features/revit_list_views.md
+          - View Info: features/revit_view_info.md
+          - View Summary: features/revit_view_summary.md
+          - Capture Elements: features/revit_capture_elements.md
+          - Export View to PNG: features/revit_export_view.md
+          - View Elements: features/revit_view_elements.md
+          - View Warnings: features/revit_view_warnings.md
+      - Read tools — Families:
+          - Audit Families: features/revit_family_audit.md
+      - Read tools — Links:
+          - Compare Link Datums: features/revit_compare_link_datums.md
+      - Read tools — Export:
+          - Check NWC Settings: features/revit_nwc_settings_check.md
+          - Issue Register: features/revit_issue_register.md
+      - Read tools — Batch processing:
+          - Start batch collection: features/revit_batch_start.md
+          - Batch collection status: features/revit_batch_status.md
+          - Cancel batch collection: features/revit_batch_cancel.md
+          - Fetch batch snapshots: features/revit_batch_fetch.md
+          - Build Snapshot Report: features/revit_build_report.md
+      - Action tools — Model editing:
+          - Create level: features/revit_create_level.md
+          - Create floor: features/revit_create_floor.md
+      - Action tools — Phases:
+          - Set element phases: features/revit_set_phase.md
+          - Merge project phases: features/revit_merge_phases.md
+      - Action tools — Id management:
+          - Replace IDs in place: features/revit_reset_element_ids.md
+          - Rebuild IDs in new models: features/revit_rebuild_model_ids.md
+      - Action tools — View settings:
+          - Set view lighting: features/revit_set_view_lighting.md
+      - Action tools — Connection and core:
+          - Undo Last Action: features/revit_undo_last.md
+          - Cancel Action Job: features/revit_cancel_job.md
+      - Action tools — Model actions:
+          - Move Elements: features/revit_move.md
+          - Rotate Elements: features/revit_rotate.md
+          - Copy Elements: features/revit_copy.md
+          - Mirror Elements: features/revit_mirror.md
+          - Change Element Type: features/revit_change_type.md
+          - Update Parameters: features/revit_update_parameters.md
+          - Set Parameter: features/revit_set_parameter.md
+          - Delete Elements: features/revit_delete.md
+          - Run Actions: features/revit_run_actions.md
+      - Action tools — Documents:
+          - Open Document: features/revit_open_document.md
+          - Activate Document: features/revit_activate_document.md
+          - New Document: features/revit_new_document.md
+          - Close Document: features/revit_close_document.md
+          - Save Document: features/revit_save_document.md
+          - Synchronize Document: features/revit_sync_document.md
+      - Action tools — Views and sheets:
+          - Activate View: features/revit_activate_view.md
+          - Close Views: features/revit_close_views.md
+          - Set View Visibility: features/revit_set_view_visibility.md
+          - Select Elements: features/revit_select.md
+          - Show Elements: features/revit_show.md
+          - Isolate Elements: features/revit_isolate.md
+          - Highlight Elements: features/revit_override_graphics.md
+          - Create View: features/revit_create_view.md
+          - Duplicate View: features/revit_duplicate_view.md
+          - Apply View Template: features/revit_apply_view_template.md
+          - Create Sheet: features/revit_create_sheet.md
+          - Place Views on Sheet: features/revit_place_views_on_sheet.md
+          - Tag Elements: features/revit_tag_elements.md
+          - Create Schedule: features/revit_create_schedule.md
+      - Action tools — Families:
+          - Place Family: features/revit_place_family.md
+          - Load Families: features/revit_load_family.md
+          - Place Families: features/revit_place_families.md
+          - Edit Families: features/revit_edit_families.md
+      - Action tools — Links:
+          - Remove Links: features/revit_remove_links.md
+          - Align Link Datums: features/revit_align_link_datums.md
+      - Action tools — CAD and MEP:
+          - Create Wall: features/revit_create_wall.md
+          - Create MEP Run: features/revit_create_mep_run.md
+          - Link CAD Drawing: features/revit_link_cad.md
+          - Build Walls from CAD: features/revit_walls_from_cad.md
+      - Action tools — Export:
+          - Export Model Files: features/revit_export.md
+          - Export Navisworks NWC: features/revit_export_nwc.md
+      - Action tools — Batch processing:
+          - Process Many Models: features/revit_process_models.md
+      - Action tools — Code execution:
+          - "Execute C# Code": features/revit_execute_code.md
+  # <<< features-nav
   - Administrators:
       - Deployment: admin/deployment.md
       - Policy reference: admin/policy-reference.md

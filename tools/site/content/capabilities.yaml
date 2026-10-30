@@ -1,0 +1,191 @@
+# Prose for the tools this fork adds.
+#
+# The generator renders every tool the server serves. Only these eight carry
+# hand-written prose: a group, a title, a summary, copyable prompts, usage
+# notes and per-parameter meanings. The other tools are rendered from the
+# registry description and input schema alone, so this file never restates
+# upstream's words.
+#
+# Edit here, then run: python3 tools/site/generate_features.py --write
+
+groups:
+  edit:
+    title: Model editing
+  phases:
+    title: Phases
+  ids:
+    title: Id management
+  registers:
+    title: Element registers
+  view-settings:
+    title: View settings
+
+tools:
+  revit_create_floor:
+    group: edit
+    since: 1.0.0
+    title: Create floor
+    summary: Create a floor from a closed XY boundary with at least three vertices.
+    years:
+      "2020": unsupported
+      "2026": built
+      other: built
+    prompts:
+      - Create a floor on 2F from these four points
+    note: The floor goes through `Floor.Create`, which needs Revit 2022 or later.
+
+  revit_create_level:
+    group: edit
+    since: 1.0.0
+    title: Create level
+    summary: Create a level at a given elevation in millimetres.
+    years:
+      "2020": unsupported
+      "2026": built
+      other: built
+    prompts:
+      - Create a level named 4F at 15000 mm
+    note: An existing level with the same name is refused, so a later tool never resolves an ambiguous level.
+
+  revit_export_element_ids:
+    group: registers
+    since: 1.0.0
+    title: Export element ID register
+    summary: Write the ID register of drawn model components to an Excel workbook.
+    years:
+      "2020": unsupported
+      "2026": built
+      other: built
+    prompts:
+      - Export the ID register of drawn model components to Excel, ordered by category, family and type
+    note: The workbook is written on the Revit workstation.
+
+  revit_merge_phases:
+    group: phases
+    since: 1.0.0
+    title: Merge project phases
+    summary: Reassign references to another phase and attempt to delete the emptied phase.
+    years:
+      "2020": unsupported
+      "2026": built
+      other: built
+    prompts:
+      - Merge phase 1 into New Construction
+    note: A batch call refuses it.
+
+  revit_rebuild_model_ids:
+    group: ids
+    since: 1.0.0
+    title: Rebuild IDs in new models
+    summary: Copy selectable 3D-view components into one or more new models with fresh IDs.
+    years:
+      "2020": unsupported
+      "2026": built
+      other: built
+    prompts:
+      - Rebuild the selectable components into E:\out\copy-{n}.rvt, ten copies, no id shared between them
+      - 'Rehearse the rebuild first: how many components, which new id range, write nothing yet'
+    note: The source stays unchanged; only selectable 3D-view elements and required datums are copied, not the full project; check every count and ID mapping.
+
+  revit_reset_element_ids:
+    group: ids
+    since: 1.0.0
+    title: Replace IDs in place
+    summary: Replace eligible standalone elements with copies to obtain new IDs.
+    years:
+      "2020": unsupported
+      "2026": built
+      other: built
+    prompts:
+      - Give these 27 standalone components new ids
+    note: Run `dry_run` first; hosted, dependent, grouped and MEP-system elements are refused.
+
+  revit_set_phase:
+    group: phases
+    since: 1.0.0
+    title: Set element phases
+    summary: 'Assign created and demolished phases; an empty string clears one and null leaves it unchanged.'
+    years:
+      "2020": unsupported
+      "2026": built
+      other: built
+    prompts:
+      - Mark these elements as demolished in the Existing phase
+    note: The phase order check uses the API that appears from Revit 2022.
+
+  revit_set_view_lighting:
+    group: view-settings
+    since: 1.0.0
+    title: Set view lighting
+    summary: Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme.
+    years:
+      "2020": unsupported
+      "2026": built
+      other: built
+    prompts:
+      - Turn on shadows in the 3D view, set the shadow intensity to 60, use a sky background and light the rendering with exterior sun
+      - Set the sun in {3D} to 2026-06-21 15:00 with a sunlight intensity of 80, and rehearse it first
+      - Fix the sun in lighting mode at azimuth 135° and altitude 45°, and turn on the ground plane at level 01
+    note: Sun and shadow settings belong to the view; a shared setting passes the change on to every view that shares it, and the shadow switch itself is unavailable when they are shared.
+
+year_notes:
+  "2020":
+    - The release workflow builds Revit 2022 to 2027; no configuration targets Revit 2020.
+    - adr/0006 records Revit 2020 as a required follow-up with a date, and the release notes state the gap until it lands.
+  "2026":
+    - The release workflow builds the Revit 2026 configuration alongside 2022 to 2025 and 2027.
+    - Every page reports 2026 as build-only until a workstation verification lands.
+
+param_notes:
+  revit_create_level:
+    name: level name
+    elevation_mm: elevation in millimetres
+    create_view: also create the matching floor plan view
+  revit_export_element_ids:
+    fields: columns to write; the defaults are category, family, type, level, component id, name and workset
+    path: absolute .xlsx path on the Revit workstation; an existing file is an error
+  revit_merge_phases:
+    source_phase: the phase that is merged away and then deleted
+    target_phase: the phase that receives the references
+  revit_rebuild_model_ids:
+    destination_path: new model path (.rvt); {n} numbers the copies
+    copies: how many copies one new model produces (1-50), each in an id block of its own
+    duplicate_names: 'duplicate names: override keeps the source types, reuse keeps the version the new model holds (the batch default), rename is the legacy path'
+    seed: create and remove N temporary levels to advance new-document ids; use different seeds across runs and verify overlap in the mappings
+    dry_run: rehearse in a temporary new document and report the mapping without saving; the source always stays unchanged
+  revit_reset_element_ids:
+    element_ids: elements to replace; hosted, dependent, grouped or MEP system members are refused
+    dry_run: 'rehearse: replace, report the mapping, then roll back'
+  revit_set_phase:
+    element_ids: element ids whose phase changes
+    created_phase: 'created phase name; an empty string clears it, null leaves it'
+    demolished_phase: 'demolished phase name; an empty string clears it, null leaves it unchanged'
+  revit_set_view_lighting:
+    view: view name as revit_list_views reports it, or its decimal view id; a non-template view
+    shadows: the view's sun and shadow display switch; off draws neither the sun path nor cast shadows, which also mutes the intensities; a view that shares its settings refuses it
+    shadow_intensity: cast shadow intensity from 0 to 100, where 0 means no cast shadow
+    sunlight_intensity: simulated sunlight intensity from 0 to 100
+    sun_date: still-image date as yyyy-MM-dd, handed to Revit as local time; the reading reports it as UTC with the time zone
+    sun_time: still-image time as 24-hour HH:mm, handed to Revit as local time; the reading reports it as UTC with the time zone
+    sun_azimuth_deg: lighting-mode sun azimuth clockwise from north; pass it with the altitude
+    sun_altitude_deg: lighting-mode sun altitude above the horizon, from -90 to 90
+    ground_plane: whether the sun and shadow settings use a ground plane
+    ground_plane_level: level the ground plane sits on; a level Revit does not accept is marked as a ground plane
+    background: 'view background: sky or gradient, on 3D, section and elevation views only'
+    background_colors: 'gradient colors (sky, horizon, ground), for example #C8DEF0'
+    lighting_scheme: 'rendering lighting source: exterior or interior, with sun, artificial light or both'
+    dry_run: 'rehearse: change, read, then roll back, returning the same readings as a real write'
+
+param_defaults:
+  document: Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected.
+  timeout_seconds: Positive result-wait budget in seconds after pickup (default 120); HTTP uses it as the response budget. Does not override add-in execution limits; a timeout does not cancel a pending job.
+  dry_run: 'rehearse: execute, return the same verification block, then roll back'
+  element_ids: element ids (unitless Revit ids)
+  view: view name (or its Revit id)
+  level: level name, as revit_list_catalog reports it
+  fields: fields to return or write; the tool picks its usual ones by default
+  overwrite: replace the destination when it exists
+  template_path: starting template (.rte/.rvt); the metric template is used when omitted
+  remove_template_levels: drop the template levels after copying (on by default)
+  floor_type: 'floor-type name; required argument, but null selects the first floor type'
+  points_mm: 'at least three model XY vertices, each [x,y] in millimetres; the boundary closes automatically'
