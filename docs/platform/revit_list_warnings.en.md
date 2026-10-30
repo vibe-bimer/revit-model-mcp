@@ -21,18 +21,26 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `include_elements` | No | `false` | boolean | Include affected elements (ID, category, name) per group. Default false returns counts only. |
 | `warning_text` | No | `null` | any | Exact warning description from revit_list_warnings, case-insensitive; an unmatched text is an error. |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
 | `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
 | `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

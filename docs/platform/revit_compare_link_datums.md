@@ -12,7 +12,9 @@ description: "把主体的轴网与标高和一个已载入的 Revit 链接比�
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `kinds` | 否 | `null` | any |  |
 | `level_offset_mm` | 否 | `0` | number |  |
@@ -23,13 +25,19 @@ description: "把主体的轴网与标高和一个已载入的 Revit 链接比�
 | `suffix` | 否 | `""` | string |  |
 | `tolerance_mm` | 否 | `0.5` | number |  |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 | `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 | `timeout_seconds` | 否 | `120` | integer | 本次调用的等待上限（秒）。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

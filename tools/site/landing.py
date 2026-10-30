@@ -515,7 +515,7 @@ hide:
   - toc
 ---
 
-<div class="rmc-landing">
+<div class="rmc-landing" id="rmc-main" tabindex="-1">
 
 {body}
 

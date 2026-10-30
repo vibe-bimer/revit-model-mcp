@@ -10,7 +10,9 @@ description: "Mirror across a model X or Y parallel line through point_mm; copy 
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `axis` | Yes | — | string |  |
 | `copy` | No | `true` | boolean |  |
@@ -18,11 +20,17 @@ description: "Mirror across a model X or Y parallel line through point_mm; copy 
 | `element_ids` | Yes | — | array |  |
 | `point_mm` | Yes | — | array |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

@@ -21,19 +21,27 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `relation` | Yes | — | string |  |
 | `source_id` | No | `null` | any | Revit ID of the source group (group-elements) or family instance (nested-family). |
 | `source_name` | No | `null` | any | Source name, case-insensitive: a level (level-rooms), area scheme (area-scheme-elements) or view template (view-template-dependents). |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
 | `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
 | `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

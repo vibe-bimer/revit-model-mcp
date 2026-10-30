@@ -10,19 +10,27 @@ description: "Compile and run C# against the live Revit API on the Revit thread.
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `code` | Yes | — | string |  |
 | `confirm_token` | No | `null` | any |  |
 | `dry_run` | No | `false` | boolean |  |
 | `transaction` | No | `"auto"` | string |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 | `timeout_seconds` | No | `600` | integer |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

@@ -12,9 +12,13 @@ description: "在发起客户端退出后仍可读取运行与模型状态。"
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `run_id` | 是 | — | string |  |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

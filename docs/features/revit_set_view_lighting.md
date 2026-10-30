@@ -42,7 +42,9 @@ description: "设置视图的阴影、太阳位置与强度、地面平面、背
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `view` | 是 | — | `string` | 视图名称（与 revit_list_views 一致）或十进制视图 ID；非样板视图 |
 | `background` | 否 | `null` | `string / null` | 视图背景 sky 或 gradient，仅三维、剖切和立面视图支持 |
@@ -59,11 +61,17 @@ description: "设置视图的阴影、太阳位置与强度、地面平面、背
 | `sun_time` | 否 | `null` | `string / null` | 静止图像的时间 24 小时 HH:mm；作为本地时间交给 Revit，读数以 UTC 与时区回读 |
 | `sunlight_intensity` | 否 | `null` | `integer / null` | 模拟阳光强度 0–100 |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+
+</div>
 
 ## 功能说明与返回结果 {#contract}
 

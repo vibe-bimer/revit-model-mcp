@@ -12,7 +12,9 @@ description: "在 Revit 工作站导出 Navisworks NWC，需要安装导出器�
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
 | `convert_element_properties` | 否 | `null` | any |  |
@@ -37,12 +39,18 @@ description: "在 Revit 工作站导出 Navisworks NWC，需要安装导出器�
 | `settings_xml` | 否 | `null` | any |  |
 | `view` | 否 | `null` | any | 视图的准确名称或十进制视图 ID。 |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 | `timeout_seconds` | 否 | `1800` | integer | 本次调用的等待上限（秒）。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

@@ -235,6 +235,110 @@
         if (text) label.setAttribute("aria-label", text);
       }
     });
+
+    /* The theme's skip link points at the first heading of the page, and a heading only takes
+       focus when it is told to. Without this the browser scrolls to the heading but leaves focus
+       on the body, so the next Tab starts again from the top of the page. */
+    document.querySelectorAll(".md-content :is(h1, h2, h3)[id]").forEach(function (heading) {
+      if (!heading.hasAttribute("tabindex")) heading.setAttribute("tabindex", "-1");
+    });
+  }
+
+  /* Wide tables ------------------------------------------------------------
+   *
+   * Three things the markup cannot do on its own:
+   *   1. Hand-written tables arrive without header scopes, so a screen reader
+   *      cannot say which column a cell belongs to.
+   *   2. A table wider than its column scrolls; a scroll container is only
+   *      reachable with the keyboard once it is focusable, so it becomes a
+   *      labelled region while it overflows and a plain block when it fits.
+   *   3. On a phone a five-column reference table is unreadable even when it
+   *      fits, so each row becomes a block and every cell shows its header.
+   */
+
+  var STACK_QUERY = "(max-width: 30em)";
+  var SCROLL_LABEL = root.lang === "en" ? "Table, scrolls sideways" : "表格，可横向滚动";
+  var stackQuery = window.matchMedia(STACK_QUERY);
+
+  function tableWrap(table) {
+    /* Material's own script may already have wrapped the table in its scroller, so walk up the
+       ancestors instead of inspecting the parent alone: a second wrapper would nest a second
+       scroll container. */
+    var existing = table.closest(".rmc-tablewrap");
+    if (existing) return existing;
+    var host = table.parentElement;
+    var wrap = document.createElement("div");
+    wrap.className = "rmc-tablewrap";
+    host.insertBefore(wrap, table);
+    wrap.appendChild(table);
+    return wrap;
+  }
+
+  function labelTable(table) {
+    var head = table.tHead && table.tHead.rows[0];
+    if (!head) return;
+    var labels = [];
+    Array.prototype.forEach.call(head.cells, function (cell) {
+      if (cell.tagName === "TH" && !cell.getAttribute("scope")) {
+        cell.setAttribute("scope", "col");
+      }
+      labels.push((cell.textContent || "").trim());
+    });
+    // Print needs a column count to lay a table out to the sheet width without guessing.
+    table.setAttribute("data-rmc-cols", String(labels.length));
+    Array.prototype.forEach.call(table.tBodies, function (body) {
+      Array.prototype.forEach.call(body.rows, function (row) {
+        Array.prototype.forEach.call(row.cells, function (cell, index) {
+          if (cell.hasAttribute("data-rmc-label")) return;
+          cell.setAttribute("data-rmc-label", labels[index] || "");
+        });
+      });
+    });
+  }
+
+  function syncTable(wrap) {
+    var table = wrap.querySelector("table");
+    if (!table) return;
+    var head = table.tHead && table.tHead.rows[0];
+    var columns = head ? head.cells.length : 0;
+    if (stackQuery.matches && columns >= 5) wrap.setAttribute("data-rmc-stack", "");
+    else wrap.removeAttribute("data-rmc-stack");
+    if (wrap.scrollWidth - wrap.clientWidth > 1) {
+      wrap.setAttribute("data-rmc-scrollable", "");
+      wrap.setAttribute("tabindex", "0");
+      wrap.setAttribute("role", "region");
+      wrap.setAttribute("aria-label", SCROLL_LABEL);
+    } else {
+      wrap.removeAttribute("data-rmc-scrollable");
+      wrap.removeAttribute("tabindex");
+      wrap.removeAttribute("role");
+      wrap.removeAttribute("aria-label");
+    }
+  }
+
+  function initTables() {
+    var wraps = [];
+    document.querySelectorAll(".md-typeset table").forEach(function (table) {
+      var wrap = tableWrap(table);
+      labelTable(table);
+      wraps.push(wrap);
+    });
+    if (!wraps.length) return;
+
+    var sync = function () {
+      wraps.forEach(syncTable);
+    };
+    sync();
+    /* Cell widths follow the webfonts, so a table can start overflowing after the first measure. */
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(sync);
+    stackQuery.addEventListener("change", sync);
+    addEventListener(
+      "resize",
+      function () {
+        requestAnimationFrame(sync);
+      },
+      { passive: true }
+    );
   }
 
   function boot() {
@@ -244,6 +348,7 @@
     initHero();
     initHeader();
     initA11y();
+    initTables();
   }
 
   if (document.readyState === "loading") {

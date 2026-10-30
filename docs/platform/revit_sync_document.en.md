@@ -10,7 +10,9 @@ description: "Synchronize a workshared document with central. Needs confirm_toke
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `comment` | Yes | — | string |  |
 | `compact` | No | `false` | boolean |  |
@@ -19,12 +21,18 @@ description: "Synchronize a workshared document with central. Needs confirm_toke
 | `save_local_after` | No | `true` | boolean |  |
 | `save_local_before` | No | `true` | boolean |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | Yes | — | string |  |
 | `process_id` | No | `null` | any |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

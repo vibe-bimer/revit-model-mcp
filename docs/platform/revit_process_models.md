@@ -12,7 +12,9 @@ description: "在同一会话中逐个打开模型，执行步骤与 C# 代码�
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `code` | 否 | `null` | any |  |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
@@ -27,12 +29,18 @@ description: "在同一会话中逐个打开模型，执行步骤与 C# 代码�
 | `steps` | 否 | `null` | any |  |
 | `stop_on_error` | 否 | `false` | boolean |  |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 | `timeout_seconds` | 否 | `14400` | integer | 本次调用的等待上限（秒）。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

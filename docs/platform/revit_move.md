@@ -18,7 +18,9 @@ description: "按 `dx_mm`、`dy_mm`、`dz_mm` 沿模型轴移动构件；`dry_ru
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `dx_mm` | 是 | — | number |  |
@@ -26,11 +28,17 @@ description: "按 `dx_mm`、`dy_mm`、`dz_mm` 沿模型轴移动构件；`dry_ru
 | `dz_mm` | 否 | `0` | number |  |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

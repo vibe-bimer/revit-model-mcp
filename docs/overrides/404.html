@@ -8,7 +8,9 @@
 {% extends "main.html" %}
 
 {% block content %}
-  <div class="rmc-404">
+  {#- The skip link in the layout targets this root: the page has no table of contents, so the
+      theme's own skip link never renders here. -#}
+  <div class="rmc-404" id="rmc-main" tabindex="-1">
     <p class="rmc-404__code" aria-hidden="true">404</p>
     <h1 class="rmc-404__title">页面不存在 · Page not found</h1>
     <p class="rmc-404__lede">

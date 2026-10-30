@@ -25,7 +25,9 @@ description: "设置一个视图的阴影、太阳位置、地平面、背景与
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `background` | 否 | `null` | any |  |
 | `background_colors` | 否 | `null` | any |  |
@@ -42,11 +44,17 @@ description: "设置一个视图的阴影、太阳位置、地平面、背景与
 | `sunlight_intensity` | 否 | `null` | any |  |
 | `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

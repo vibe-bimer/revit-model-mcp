@@ -89,6 +89,12 @@
 {% endblock %}
 
 {% block header %}
+  {#- The theme only emits its skip link when the page has a table of contents, so the landing pages
+      and the 404 page would open without a way past the navigation. Those pages own a
+      `#rmc-main` content root, which this link reaches with the keyboard. -#}
+  {% if page.toc | first is not defined %}
+    <a class="md-skip" href="#rmc-main">{{ lang.t("action.skip") }}</a>
+  {% endif %}
   {% include "partials/header.html" %}
   <div class="rmc-progress" aria-hidden="true"><span class="rmc-progress__bar"></span></div>
 {% endblock %}

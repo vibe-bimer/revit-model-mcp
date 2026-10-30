@@ -26,7 +26,9 @@ description: "在指定标高放置已载入的非宿主族实例，可绕 Z 旋
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `family` | 是 | — | `string` | 族名称 |
 | `level` | 是 | — | `string` | 标高名称（用 revit_list_catalog 查到的本地化名称） |
@@ -36,11 +38,17 @@ description: "在指定标高放置已载入的非宿主族实例，可绕 Z 旋
 | `dry_run` | 否 | `false` | `boolean` | 彩排：执行后回滚，返回同样的校验块，不写模型 |
 | `rotation_deg` | 否 | `0` | `number` | 绕 Z 轴旋转角度（°） |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+
+</div>
 
 ## 功能说明与返回结果 {#contract}
 

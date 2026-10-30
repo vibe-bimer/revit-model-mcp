@@ -207,6 +207,12 @@
   color: #ffffff !important;
 }
 
+/* The dark palette turns the brand into a light blue, and white on it measures 2.6:1. Dark ink on
+   the same fill measures 7.5:1, so the label flips with the scheme instead. */
+[data-md-color-scheme="slate"] .rmc-btn--primary {
+  color: var(--rmc-paper) !important;
+}
+
 .rmc-btn--primary:hover {
   background: var(--rmc-brand-ink);
   border-color: var(--rmc-brand-ink);
@@ -473,7 +479,8 @@
 }
 
 .rmc-prompt__mark {
-  color: var(--rmc-rule-strong);
+  /* A rule colour on a text glyph measured 1.6:1; ink-3 keeps the mark quiet at 5:1. */
+  color: var(--rmc-ink-3);
   font-family: var(--rmc-display);
   font-size: 2.4rem;
   line-height: 0.6;
@@ -607,7 +614,8 @@
 }
 
 .rmc-cap__num {
-  color: var(--rmc-rule-strong);
+  /* Small caps numerals are text, so they hold the AA floor rather than the rule colour. */
+  color: var(--rmc-ink-3);
   font-family: var(--rmc-mono);
   font-size: 0.58rem;
   font-weight: 700;
@@ -707,6 +715,11 @@
 
 .md-typeset .rmc-flow__step::before {
   display: none;
+}
+
+/* White on the dark brand measured 2.63:1, so the badge flips to paper ink on slate. */
+[data-md-color-scheme="slate"] .rmc-flow__num {
+  color: var(--rmc-paper);
 }
 
 .rmc-flow__num {
@@ -1083,4 +1096,25 @@
 
 .md-typeset .rmc-404__links a:hover {
   color: var(--rmc-brand);
+}
+
+@media print {
+  /* A sheet has no sideways scroll, and the band's two tracks collapsed to a zero-width
+     second column, which pushed the prompt's copy past the margin. One column instead. */
+  .rmc-band,
+  .md-typeset .rmc-band .rmc-prompt {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rmc-band .rmc-copy,
+  .md-typeset .rmc-band .rmc-prompt__foot,
+  .md-typeset .rmc-band .rmc-prompt__kind {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .rmc-prompt__go {
+    flex: 1 1 auto;
+    max-width: none;
+  }
 }

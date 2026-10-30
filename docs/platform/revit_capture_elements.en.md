@@ -10,7 +10,9 @@ description: "Render a highlighted PNG that marks 1 to 500 elements, for issue e
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `element_ids` | Yes | — | array |  |
 | `mode` | No | `"3d"` | string |  |
@@ -18,12 +20,18 @@ description: "Render a highlighted PNG that marks 1 to 500 elements, for issue e
 | `padding_mm` | No | `1500` | number |  |
 | `pixel_size` | No | `1600` | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
 | `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

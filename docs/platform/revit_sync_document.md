@@ -12,7 +12,9 @@ description: "把工作共享文档与中心文件同步；需要先取得确认
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `comment` | 是 | — | string |  |
 | `compact` | 否 | `false` | boolean |  |
@@ -21,12 +23,18 @@ description: "把工作共享文档与中心文件同步；需要先取得确认
 | `save_local_after` | 否 | `true` | boolean |  |
 | `save_local_before` | 否 | `true` | boolean |  |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 是 | — | string | 打开多个模型时，用标题或路径指定目标文档。 |
 | `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

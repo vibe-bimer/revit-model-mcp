@@ -10,7 +10,9 @@ description: "Align host grids and levels to a loaded link, with optional creati
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `create_missing` | No | `true` | boolean |  |
 | `create_plan_views` | No | `false` | boolean |  |
@@ -28,12 +30,18 @@ description: "Align host grids and levels to a loaded link, with optional creati
 | `suffix` | No | `""` | string |  |
 | `tolerance_mm` | No | `0.5` | number |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 | `timeout_seconds` | No | `600` | integer |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

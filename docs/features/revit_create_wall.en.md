@@ -23,7 +23,9 @@ Draw a 200 mm wall on 1F from 0,0 to 6000,0
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `end_mm` | Yes | — | `array<number>` | end point [x, y] in millimetres |
 | `level` | Yes | — | `string` | level name, as revit_list_catalog reports it |
@@ -32,11 +34,17 @@ Draw a 200 mm wall on 1F from 0,0 to 6000,0
 | `dry_run` | No | `false` | `boolean` | rehearse: execute, return the same verification block, then roll back |
 | `height_mm` | No | `3000` | `number` | wall height in millimetres (3000 by default) |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | `string / null` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected |
+
+</div>
 
 ## Behavior and returned data {#contract}
 

@@ -12,12 +12,16 @@ description: "不连接 Revit，直接从快照生成本地 Excel 报告。"
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `findings` | 否 | `null` | any | Optional findings with model, severity, rule, element_ids (or elementIds), and recommendation. |
 | `output_path` | 是 | — | string | New .xlsx file path, resolved on the machine running this server; existing files are never replaced. |
 | `previous_dir` | 否 | `null` | any | Optional directory of earlier snapshots matched by model title for the Changes sheet. |
 | `snapshots_dir` | 是 | — | string | Directory of schema-version-1 JSON snapshots on the MCP client machine. |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

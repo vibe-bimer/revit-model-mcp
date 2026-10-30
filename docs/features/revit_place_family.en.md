@@ -26,7 +26,9 @@ Place an instance of a loaded unhosted furniture family at 3000,4000 on 1F, dry 
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `family` | Yes | — | `string` | family name |
 | `level` | Yes | — | `string` | level name, as revit_list_catalog reports it |
@@ -36,11 +38,17 @@ Place an instance of a loaded unhosted furniture family at 3000,4000 on 1F, dry 
 | `dry_run` | No | `false` | `boolean` | rehearse: execute, return the same verification block, then roll back |
 | `rotation_deg` | No | `0` | `number` | rotation about Z in degrees |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | `string / null` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected |
+
+</div>
 
 ## Behavior and returned data {#contract}
 

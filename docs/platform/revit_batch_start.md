@@ -12,7 +12,9 @@ description: "对本地、UNC 或 RSN 模型启动持久化的只读批量运行
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `folder` | 否 | `null` | any |  |
 | `open_timeout_minutes` | 否 | `null` | any |  |
@@ -20,6 +22,8 @@ description: "对本地、UNC 或 RSN 模型启动持久化的只读批量运行
 | `paths` | 否 | `null` | any |  |
 | `recursive` | 否 | `false` | boolean |  |
 | `years` | 否 | `null` | any |  |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

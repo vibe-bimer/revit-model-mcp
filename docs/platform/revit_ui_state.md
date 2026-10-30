@@ -16,9 +16,13 @@ description: "读取活动文档、打开的视图、当前选择集与打开的
 
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

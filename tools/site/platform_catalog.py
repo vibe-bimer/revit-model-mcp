@@ -22,6 +22,9 @@ import catalogs
 import contract_diff
 
 ROOT = Path(__file__).resolve().parents[2]
+
+# Wide tables sit in this wrapper so only the table scrolls, never the page.
+WRAPPER_CLASS = "rmc-tablewrap"
 CONTENT = ROOT / "tools/site/content"
 PLATFORM_JSON = CONTENT / "platform-tools.json"
 TOOLS_JSON = CONTENT / "tools.json"
@@ -695,8 +698,26 @@ def parameter_rows(tool: dict, common: bool, lang: str) -> list[str]:
 def table_heading(lang: str) -> list[str]:
     labels = LABELS[lang]
     return [
-        f"| {labels['name']} | {labels['required']} | {labels['default']} | {labels['type']} | {labels['meaning']} |",
+        (
+            f"| {labels['name']} {{scope=col}} | {labels['required']} {{scope=col}} | "
+            f"{labels['default']} {{scope=col}} | {labels['type']} {{scope=col}} | "
+            f"{labels['meaning']} {{scope=col}} |"
+        ),
         "| --- | :--: | --- | --- | --- |",
+    ]
+
+
+def parameter_table(lang: str, rows: list[str]) -> list[str]:
+    """A parameter table inside the wrapper that may scroll sideways on a phone."""
+    if not rows:
+        return [LABELS[lang]["no_specific"]]
+    return [
+        f'<div class="{WRAPPER_CLASS}" markdown="1">',
+        "",
+        *table_heading(lang),
+        *rows,
+        "",
+        "</div>",
     ]
 
 
@@ -762,14 +783,11 @@ def tool_page(tool: dict, released, lang: str) -> str:
         out += _contract_diff_section(changes, lang)
     out += [f"## {labels['parameters']} {{#parameters}}", ""]
     rows = parameter_rows(tool, False, lang)
-    out += (table_heading(lang) + rows) if rows else [labels["no_specific"]]
+    out += parameter_table(lang, rows)
     common = parameter_rows(tool, True, lang)
     if common:
-        out += (
-            ["", f"### {labels['common']} {{#common-parameters}}", ""]
-            + table_heading(lang)
-            + common
-        )
+        out += ["", f"### {labels['common']} {{#common-parameters}}", ""]
+        out += parameter_table(lang, common)
     out += ["", f"## {labels['behavior']} {{#behavior}}", ""]
     if lang == "zh":
         out += [labels["behavior_note"], ""]

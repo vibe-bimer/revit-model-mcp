@@ -10,10 +10,14 @@ description: "Download completed snapshots to new local files without overwritin
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `output_dir` | Yes | — | string |  |
 | `run_id` | Yes | — | string |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

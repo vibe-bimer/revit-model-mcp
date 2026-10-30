@@ -33,6 +33,11 @@ class MetadataAuditTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.site = Path(self.temp.name)
         self.root = None
+        (self.site / "404.html").write_text(
+            '<html lang="zh"><body><a class="md-skip" href="#rmc-main">跳转至内容</a>'
+            '<div id="rmc-main" tabindex="-1">页面不存在</div></body></html>',
+            encoding="utf-8",
+        )
 
     def page(
         self,
@@ -74,6 +79,11 @@ class MetadataAuditTests(unittest.TestCase):
             for lang_code, href in alternates.items()
         )
         edit_html = f'<a rel="edit" href="{edit}">Edit</a>' if edit else ""
+        skip = (
+            '<a class="md-skip" href="#rmc-main">Skip to content</a>'
+            if lang == "en"
+            else '<a class="md-skip" href="#rmc-main">跳转至内容</a>'
+        )
         body_text = text or (
             "完整的中文功能说明与参数使用指南。"
             if lang == "zh"
@@ -90,13 +100,19 @@ class MetadataAuditTests(unittest.TestCase):
             f'<meta name="twitter:description" content="{desc}">'
             f'<link rel="canonical" href="{canonical}">'
             f"{links}</head>"
-            f'<body><article><h1 id="heading">{body_text}</h1></article>{edit_html}</body></html>',
+            f"{skip}"
+            f'<body><article id="rmc-main" tabindex="-1"><h1 id="heading">{body_text}</h1></article>{edit_html}</body></html>',
             encoding="utf-8",
         )
 
     def home(self):
         self.page("index.html", "zh")
         self.page("en/index.html", "en")
+        (self.site / "404.html").write_text(
+            '<html lang="zh"><body><a class="md-skip" href="#rmc-main">跳转至内容</a>'
+            '<div id="rmc-main" tabindex="-1">页面不存在</div></body></html>',
+            encoding="utf-8",
+        )
 
     def errors(self):
         return check_site.audit_site(self.site, root=self.root)[0]

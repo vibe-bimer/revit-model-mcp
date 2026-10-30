@@ -620,9 +620,10 @@ body {
   text-transform: uppercase;
 }
 
-/* The heading anchor is a drafting tick, not a paragraph mark. */
+/* The heading anchor is a drafting tick, not a paragraph mark. It answers the text contrast
+   floor when a heading reveals it, so it reads as ink-3 rather than as a hairline rule. */
 [dir] .md-typeset .headerlink {
-  color: var(--rmc-rule-strong);
+  color: var(--rmc-ink-3);
   margin-left: 0.35rem;
   opacity: 0;
   transition: opacity 0.15s var(--rmc-ease), color 0.15s var(--rmc-ease);
@@ -686,16 +687,40 @@ body {
 
 /* 8. Tables ---------------------------------------------------------------- */
 
-/* Material wraps tables in an inline-block that shrink-wraps to the widest cell, so a two-column
-   table renders at half the column width and the page looks broken. Block-level with a scroll
-   container makes every table span the measure and keeps a wide one scrollable. */
-.md-typeset__table {
-  display: block;
+/* Material shrink-wraps tables in an inline-block sized to the widest cell, so a two-column table
+   renders at half the measure. Block-level tables span the column instead. Wide tables sit in the
+   wrapper the generators emit; the wrapper — never the page — is what scrolls, and the script turns
+   it into a keyboard-reachable region only while it actually overflows. */
+.rmc-tablewrap {
   margin: 0 0 1em;
   max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+/* A shade on the right edge says the table continues sideways. It is painted on the container, so
+   it stays put while the table scrolls under it. */
+.rmc-tablewrap[data-rmc-scrollable] {
+  box-shadow: inset -0.9rem 0 0.9rem -0.75rem var(--rmc-rule-strong);
+}
+
+.rmc-tablewrap:focus-visible {
+  outline: 2px solid var(--rmc-brand);
+  outline-offset: 2px;
+}
+
+/* Material's script re-wraps every table in its own scroller with a negative margin, which would
+   nest a second scroll container inside ours and bleed the table 15px past both edges. Inside the
+   wrapper ours is the only scroller: the theme's two layers become plain blocks. */
+.rmc-tablewrap .md-typeset__scrollwrap {
+  margin: 0;
+  overflow: visible;
+}
+
+.rmc-tablewrap .md-typeset__table {
+  display: block;
+  margin: 0;
   padding: 0;
-  width: 100%;
 }
 
 .md-typeset table:not([class]) {
@@ -734,8 +759,68 @@ body {
   vertical-align: top;
 }
 
-.md-typeset__table {
-  max-width: 100%;
+/* Narrow screens ---------------------------------------------------------- */
+
+/* A phone has no room for five columns of reference data. Below 30em the cells wrap instead of
+   scrolling, and a table the script marks as stacked lays each row out as a small block so every
+   field keeps its label and stays readable at the body size — nothing is hidden, nothing shrinks. */
+@media screen and (max-width: 30em) {
+  .md-typeset table:not([class]) th {
+    white-space: normal;
+  }
+
+  .md-typeset table:not([class]) td,
+  .md-typeset table:not([class]) th {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  /* Tool names may break here: a two-line name beats a table that scrolls. */
+  .md-typeset table:not([class]) td:first-child code {
+    white-space: normal;
+  }
+
+  .rmc-tablewrap[data-rmc-stack] table,
+  .rmc-tablewrap[data-rmc-stack] tbody,
+  .rmc-tablewrap[data-rmc-stack] tr,
+  .rmc-tablewrap[data-rmc-stack] td {
+    display: block;
+    width: auto;
+  }
+
+  /* The header row stays in the accessibility tree; each cell repeats its label instead. */
+  .rmc-tablewrap[data-rmc-stack] thead {
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .rmc-tablewrap[data-rmc-stack] tr {
+    border-top: 1px solid var(--rmc-rule);
+    padding: 0.5rem 0.7rem;
+  }
+
+  .rmc-tablewrap[data-rmc-stack] tr:first-child {
+    border-top: 0;
+  }
+
+  .rmc-tablewrap[data-rmc-stack] td {
+    border: 0;
+    padding: 0.15rem 0;
+  }
+
+  .rmc-tablewrap[data-rmc-stack] td::before {
+    color: var(--rmc-ink-3);
+    content: attr(data-rmc-label);
+    display: block;
+    font-family: var(--rmc-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
 }
 
 /* Tool and argument names never break mid-word in reference tables. */
@@ -1144,6 +1229,70 @@ body {
   .md-typeset h2 {
     border-top: 0;
     padding-top: 0;
+  }
+
+  /* Paper has no sideways scroll, so a table that cannot fit wraps instead of running off the
+     sheet. Nothing is hidden and the type size is unchanged. */
+  .rmc-tablewrap,
+  .md-typeset__scrollwrap {
+    margin: 0;
+    overflow: visible;
+  }
+
+  .md-typeset table:not([class]) th {
+    white-space: normal;
+  }
+
+  .md-typeset table:not([class]) td,
+  .md-typeset table:not([class]) th {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .md-typeset table:not([class]) td:first-child code,
+  .md-typeset table:not([class]) th code {
+    white-space: normal;
+  }
+
+  /* `break-word` never shrinks a box's min-content width, so a long token in a cell kept the
+     table wider than the sheet. `anywhere` does count, and the table then fits the page. */
+  .md-typeset table:not([class]) code {
+    overflow-wrap: anywhere;
+  }
+
+  /* A sheet has no sideways scroll. Fixed layout is the only setting that ignores a cell's
+     min-content width, so the table always fits the page instead of running off it. */
+  .md-typeset table:not([class]) {
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  /* A badge holds its label on one line on screen; in a narrow printed cell it has to wrap,
+     or the cell's text runs past the column edge. */
+  .state,
+  .rmm-search-badge {
+    white-space: normal;
+  }
+
+  /* Parameter tables carry five columns; the prose column takes the room the others spare. */
+  .md-typeset table[data-rmc-cols="5"] th:nth-child(1) {
+    width: 20%;
+  }
+
+  .md-typeset table[data-rmc-cols="5"] th:nth-child(2) {
+    width: 9%;
+  }
+
+  .md-typeset table[data-rmc-cols="5"] th:nth-child(3) {
+    width: 17%;
+  }
+
+  .md-typeset table[data-rmc-cols="5"] th:nth-child(4) {
+    width: 13%;
+  }
+
+  .md-typeset table[data-rmc-cols="5"] th:nth-child(5) {
+    width: 41%;
   }
 }
 
