@@ -178,6 +178,9 @@ public sealed class ForkInputTests
             "set-view-lighting", "create-level", "create-floor", "set-phase", "merge-phases",
             "reset-element-ids", "rebuild-model-ids"
         ]);
+        // The add-in advertises both lists in its handshake, so the register's command has to be in one of
+        // them or a client is told the add-in cannot answer a read it does answer.
+        await Assert.That(Core.Fork.ForkReads.Commands).IsEquivalentTo(["export-element-ids"]);
     }
 
     // An upstream action keeps parsing exactly as it did: the fork adds a bag reader that returns for a
