@@ -3,6 +3,7 @@
 # 传输
 
 `REVIT_MCP_HOST` 用于选择 `local`、`ssh:<alias>`、`http://host:port` 或 `https://host:port`。
+该变量可选，未设置时默认 `local`。
 `--host` 会覆盖该设置。
 HTTP 直接连接插件，无需 SSH 服务器或远程文件传输。
 MCP 客户端仍通过 stdio 与 Python 服务器通信。
@@ -30,6 +31,7 @@ MCP 客户端仍通过 stdio 与 Python 服务器通信。
 不要把令牌放入 URL、仓库或共享的 shell 历史记录。
 
 Revit 环境变量会在启动时覆盖设置：`REVIT_MCP_HTTP_ENABLED=0|1`、`REVIT_MCP_HTTP_BIND`、`REVIT_MCP_HTTP_PORT` 和 `REVIT_MCP_TOKEN`。
+插件还读取 `REVIT_MCP_ANSWER_DIALOGS=1`，让该 Revit 实例自动应答所有对话框；它同样必须在实例启动前设置，见[自动应答对话框](actions.md#answer-dialogs)。
 覆盖值不会写回设置文件。
 设置 `httpEnabled=false` 或 `REVIT_MCP_HTTP_ENABLED=0` 可彻底关闭监听器。
 修改监听器设置后需要重启 Revit。
