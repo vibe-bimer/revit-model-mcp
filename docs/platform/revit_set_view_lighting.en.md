@@ -17,6 +17,7 @@ description: "Set the lighting of one view: shadows, sun position, ground plane,
 
 The table below is computed from the registry inputSchema; it is not a hand-written list.
 
+- Parameter ground_plane_level (anyOf[0]) pattern: release \S / integration —
 - Parameter view pattern: release \S / integration —
 
 This contract belongs to the integration branch, not to release 0.9.0; copying the branch parameters fails on the release.

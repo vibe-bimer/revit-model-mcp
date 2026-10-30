@@ -22,6 +22,7 @@ Set a view's shadows, sun position and intensities, ground plane, background and
 
 The list below is computed from the registry inputSchema; it is not a hand-written list.
 
+- Parameter ground_plane_level (anyOf[0]) pattern: release \S / integration —
 - Parameter view pattern: release \S / integration —
 
 This page is the contract of release 0.9.0; the same-name tool on the integration branch takes different parameters, so do not mix them.
