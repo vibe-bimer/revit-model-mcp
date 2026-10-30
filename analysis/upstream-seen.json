@@ -1,0 +1,10 @@
+{
+  "upstream": "https://github.com/sharafutdinovdi/revit-model-mcp",
+  "ref": "upstream/main",
+  "last_seen": "760bb7c21337abb2a2aec21434e1d208e01e6cc0",
+  "last_seen_subject": "chore(deps): Bump uv from 0.12.22 to 0.13.4 in /.github/requirements (#308)",
+  "merge_base": "5a65afc",
+  "ledger": "analysis/upstream-port-ledger.md",
+  "recorded": "2026-10-30",
+  "note": "Move last_seen only after every commit in the range is classified in the ledger. tools/check_upstream_intake.py --update-seen does it, and refuses while anything is unclassified."
+}
