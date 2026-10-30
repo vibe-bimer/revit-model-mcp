@@ -4,7 +4,10 @@
   "forkPaths": [
     "src/RevitModelMcp.Core/Fork/",
     "src/RevitModelMcp.Addin/Fork/",
-    "server/revit_model_mcp/fork_actions.py"
+    "server/revit_model_mcp/fork_actions.py",
+    "tools/site/",
+    "docs/features/",
+    "adr/"
   ],
   "hooks": [
     "src/RevitModelMcp.Core/Control/ActionJobParser.cs",
@@ -18,13 +21,14 @@
   "reads": {
     ".github/ISSUE_TEMPLATE/config.yml": "the fork's own issue links",
     ".github/workflows/ci.yml": "the bundle launcher check",
+    ".github/workflows/pr-checks.yml": "the documentation gate",
     ".github/workflows/release.yml": "the fork's release: wheel-only, no PyPI and no registry",
     ".github/workflows/winget.yml": "the fork's repository gate",
+    ".gitignore": "the documentation build output ignores",
     "AGENTS.md": "the read-only default",
     "CONTRIBUTING.md": "lists the fork gates under local checks",
     "README.md": "the fork's own install and release identity",
     "SECURITY.md": "the fork's own install and release identity",
-    "adr/0008-bounded-fork-layer-as-built.md": "the record this file describes",
     "build/Modules/CreateBundleModule.cs": "the bundle's launcher and display name",
     "build/appsettings.json": "the fork's vendor identity",
     "build/check_fork_budget.py": "the budget check",
@@ -49,7 +53,7 @@
     "docs/transport.md": "the fork's own URLs in the shipped page",
     "docs/updates.md": "the fork's own URLs in the shipped page",
     "glama.json": "the fork's maintainer entry",
-    "mkdocs.yml": "the fork's site name and URL",
+    "mkdocs.yml": "the fork's site name and the generated features navigation",
     "server/README.md": "the fork's own install and release identity",
     "server/pyproject.toml": "the fork's project URLs",
     "server/revit_model_mcp/actions.py": "one registration call, one import and the step union",

@@ -1,0 +1,89 @@
+# 0005. Attach fork actions through an external registry reached from seven fallback hooks
+
+- Status: Accepted
+- Date: 2026-10-30
+
+## Context
+
+Adding one action to upstream 1.0 by following upstream's own shape touches eleven files: the action vocabulary, the dispatch switch, the two verification switches, the summary builder, the activity title dictionary, the supported-command list, the Python action step union, the Python registration list, the channel command list, the toolkit grouping, and the bundle manifest. Eight fork actions at eleven points is roughly ninety edits, and every upstream release re-conflicts at all of them.
+
+The fork cannot keep its actions in a separate assembly. The verification helpers are `internal`: `ActionVerifier.CaptureBefore` and `CaptureAfter`, and the mutation helpers. A separate assembly cannot reach them. The contracts themselves are public, so logic that only touches contract types can live in Core; anything that captures or mutates must live in the Addin assembly.
+
+Upstream already solves the naming half of this problem: `policy.py` maps a tool name to a differing command name through `_COMMAND_ALIASES`. So "the tool name is not the command name" is an established concept, not a fork invention.
+
+## Decision
+
+Fork actions live in a registry. Upstream code reaches the registry only from branches that today mean "I do not know this command."
+
+Registry:
+
+- `src/RevitModelMcp.Core/Fork/` holds the action definitions and any logic that touches only contract types.
+- `src/RevitModelMcp.Addin/Fork/` holds anything that needs the Revit API or the internal helpers.
+- `ForkActions` is the single registration point. It exposes the action names, the command list, and per-command lookup.
+- `server/revit_model_mcp/fork_actions.py` registers the Python tools and builds its own send path from the existing `_send_action` and `policy_gate`; it does not require a line inside the upstream registration function beyond the import.
+
+The seven hooks, all in fallback branches:
+
+| # | File | Anchor | What the hook does |
+| --- | --- | --- | --- |
+| 1 | `src/RevitModelMcp.Core/Control/ActionJobParser.cs` | `IsAction` at line 21 | Or the registry predicate onto the literal list |
+| 2 | `src/RevitModelMcp.Addin/Control/ActionCommandExecutor.cs` | the `Unknown action` arm at line 1309 | Ask the registry before throwing |
+| 3 | `src/RevitModelMcp.Addin/Control/ActionVerifier.cs` | `CaptureBefore` at line 10 | Ask the registry before returning null |
+| 4 | `src/RevitModelMcp.Addin/Control/ActionVerifier.cs` | `CaptureAfter` at line 19 | Same, on the after path |
+| 5 | `src/RevitModelMcp.Core/Activity/ActionSummaryBuilder.cs` | the `_ =>` arm at line 99 | Ask the registry for a summary line |
+| 6 | `src/RevitModelMcp.Core/Activity/ActivityTitleBuilder.cs` | the `Phrases` dictionary at line 14 | Merge fork phrases at construction |
+| 7 | `src/RevitModelMcp.Addin/Application.cs` | `SupportedCommands` at line 33 | Spread the registry command list |
+
+Budget: at most 80 changed lines across those hooks. The prototype measured the anchor set at 35.
+
+## Consequences
+
+Upstream keeps its own code path for its own commands. Nothing in the fork sits in front of an upstream action's dispatch, so an upstream fix reaches its action without passing through fork code.
+
+A new fork action costs one file in `Fork/` plus one Python tool. It does not touch the seven hooks again, and it does not touch the manifest by hand once the drift check derives the manifest from the registry.
+
+The registry must shadow two things upstream owns: the step vocabulary union, and the manifest tool list. Both are generated or asserted from the registry rather than hand-edited.
+
+Hook 5 and hook 6 duplicate a concept: one builds a summary sentence, one builds an activity title. They are separate files in upstream, so the fork needs two hooks for one idea. This is accepted as the cost of not refactoring upstream code.
+
+## Tracer report: set view lighting
+
+The first fork action landed in `integration/upstream-1.0` as `304534e` (the seven hooks, empty registry, no behaviour change) and `55d6ea5` (the action). Measured against base `760bb7c`:
+
+| What | Lines | Where |
+| --- | --- | --- |
+| Seven hooks | 26 | the fallback anchors below |
+| Contract fields on class tails | 22 | `ActionJobContract`, `ActionResultData`, `ActionFacts` |
+| Governance lists | 6 | `toolsets.py`, `test_actions.py`, `test_server.py`, `actions.py` |
+| Generated artifacts | 204 | `bundle/manifest.json`, `docs/tool-manifest.json`, `tests/golden/tools.schema.json` |
+| Fork-owned code | ~760 | `Addin/Fork/ForkLighting.cs`, `Core/Fork/ForkLightingContracts.cs`, `Addin/Fork/ForkActions.cs`, `Core/Fork/ForkRegistry.cs`, `server/revit_model_mcp/fork_actions.py`, `server/tests/test_fork_actions.py` |
+
+Hand-written upstream footprint is 54 lines, 32% under the 80-line budget. The generated three are regenerated by `build/bundle_manifest.py`, `build/tool_manifest.py` and `UPDATE_TOOL_SCHEMAS=1`, never edited.
+
+Confirmed anchors (line numbers as of `760bb7c`, all shifted by the hooks themselves afterwards):
+
+| # | File | Anchor | Line |
+| --- | --- | --- | --- |
+| 1 | `src/RevitModelMcp.Core/Control/ActionJobParser.cs` | end of the `IsAction` pattern list | 22 |
+| 2 | `src/RevitModelMcp.Addin/Control/ActionCommandExecutor.cs` | the `Unknown action` arm of `Mutate` | 1309 |
+| 3 | `src/RevitModelMcp.Addin/Control/ActionVerifier.cs` | `_ =>` arm of `CaptureBefore` | 16 |
+| 4 | `src/RevitModelMcp.Addin/Control/ActionVerifier.cs` | `default:` arm of `CaptureAfter` | 54 |
+| 5 | `src/RevitModelMcp.Core/Activity/ActionSummaryBuilder.cs` | `_ =>` arm of the count switch | 99 |
+| 6 | `src/RevitModelMcp.Core/Activity/ActivityTitleBuilder.cs` | the `Phrases` initialiser, wrapped in `MergeFork` | 14 |
+| 7 | `src/RevitModelMcp.Addin/Application.cs` | end of `SupportedCommands` | 46 |
+
+Two findings changed the plan:
+
+**A fork action runs from the `Mutate` default arm, not from an early-dispatch branch.** Upstream routes `set-view-visibility` by returning before `Mutate` and owning its own transaction. That shape needs an eighth hook per such action. Routing through `Mutate` instead reuses the transaction wrapper, the dry-run rollback, the before-facts capture, the count and the summary, and `ResolveIds` tolerates an empty element list, `ActionPreflight` ignores unknown commands, and `NoChangeGuardPolicy` treats unknown commands as ordinary undo-counting work. So the decision is: fork actions whose change is not element-scoped still go through `Mutate`.
+
+**Upstream enforces the tool surface with tests, and they are part of the DoD.** Adding one action tool failed 17 tests and 8 errors until these were updated: `toolsets.py` (every tool belongs to exactly one toolset), `tests/test_actions.py` `ACTION_TOOLS`, `tests/test_server.py` expected tools, `tests/test_tool_manifest.py` (derives from the committed `docs/tool-manifest.json`), `tests/test_tool_schemas.py` (golden schema snapshot), `tests/test_toolsets.py` (`tools/list` must stay under 105,000 bytes), `tests/test_tool_descriptions.py` (descriptions must not give the model instructions — the words `Pass`, `Use`, `Call`, `Always` and friends are rejected). The generated manifests and the schema snapshot are committed files, so a new tool means regenerating three artifacts in the same change.
+
+The `tools/list` budget is the binding constraint on description length: the 80 tools sit 75 bytes over the budget with a first draft of the description, so every fork tool's docstring has to stay terse. Raising the budget is not an option — it is upstream's guard on context cost.
+
+## Alternatives rejected
+
+**Insert at all eleven points per action, following upstream's shape.** Ninety edits, each a fresh conflict site, and the count grows with every action.
+
+**Rewrite upstream's dispatch into a registry.** Cleaner long term, and it would remove the eleven-point cost entirely. Rejected: it changes the shape of six upstream files, so every upstream release conflicts inside the code the fork rewrote, and the fork becomes responsible for the dispatch of tools it does not own.
+
+**Generate the dispatch code with a source generator.** Solves the edit count without changing runtime shape. Rejected for now: it still requires the anchor edits to call the generated code, so the saving is smaller than it looks, and a generator adds a build step the Windows CI must carry.
