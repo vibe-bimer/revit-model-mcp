@@ -2,8 +2,7 @@
 
 The current channel protocol uses UTF-8 JSON and case-sensitive field names.
 It has no `schemaVersion` field; the package version identifies the documented contract.
-The standalone add-in does not write a feed under `%LOCALAPPDATA%\RevitDevLoader`.
-Its default channel is `%LOCALAPPDATA%\RevitModelMcp`.
+The standalone add-in's default channel is `%LOCALAPPDATA%\RevitModelMcp`.
 
 ## Files and directories
 

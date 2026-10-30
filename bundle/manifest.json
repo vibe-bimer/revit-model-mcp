@@ -6,14 +6,14 @@
   "description": "For people reviewing or automating Revit models with an AI client: read a live Revit model through MCP, read-only by default, and act in it only when two explicit gates are on. Requires uv on the client PATH: https://docs.astral.sh/uv/getting-started/installation/.",
   "long_description": "Actions are opt-in and require both the client setting and the workstation allow-write file. The Revit add-in must be installed separately on Windows. macOS and Linux clients connect to a remote Windows workstation.",
   "author": {
-    "name": "Dinar Sharafutdinov"
+    "name": "vibe-bimer"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/sharafutdinovdi/revit-model-mcp"
+    "url": "https://github.com/vibe-bimer/revit-model-mcp"
   },
-  "homepage": "https://sharafutdinovdi.github.io/revit-model-mcp/",
-  "documentation": "https://sharafutdinovdi.github.io/revit-model-mcp/transport/",
+  "homepage": "https://vibe-bimer.github.io/revit-model-mcp/",
+  "documentation": "https://vibe-bimer.github.io/revit-model-mcp/transport/",
   "license": "MIT",
   "keywords": [
     "revit",
@@ -28,7 +28,9 @@
     "mcp_config": {
       "command": "uvx",
       "args": [
-        "revit-model-mcp==0.0.0"
+        "--from",
+        "https://github.com/vibe-bimer/revit-model-mcp/releases/download/v0.0.0/revit_model_mcp-0.0.0-py3-none-any.whl",
+        "revit-model-mcp"
       ],
       "env": {
         "REVIT_MCP_HOST": "${user_config.REVIT_MCP_HOST}",
@@ -41,79 +43,143 @@
   "tools": [
     {
       "name": "revit_ping",
-      "description": "Check connectivity; returns data:\"pong\"."
+      "description": "Check the RevitModelMcp connection without reading the model."
     },
     {
       "name": "revit_document_info",
-      "description": "Read document, levels, area schemes and worksets."
-    },
-    {
-      "name": "revit_list_catalog",
-      "description": "Discover valid category, family, view and parameter names."
-    },
-    {
-      "name": "revit_aggregate_elements",
-      "description": "Group by one or two fields; return counts and optional sum/average."
-    },
-    {
-      "name": "revit_query_elements",
-      "description": "Read a page of matching elements."
-    },
-    {
-      "name": "revit_list_views",
-      "description": "Find views in the active document."
-    },
-    {
-      "name": "revit_view_summary",
-      "description": "Read view metadata and category counts."
-    },
-    {
-      "name": "revit_export_view",
-      "description": "Download a PNG; pixel_size is 1-4000 pixels on the fitted image dimension."
-    },
-    {
-      "name": "revit_export_element_ids",
-      "description": "Write the identifier register of the drawn components to an xlsx workbook on the Revit workstation."
-    },
-    {
-      "name": "revit_view_elements",
-      "description": "Read a page of elements in a view."
-    },
-    {
-      "name": "revit_element_details",
-      "description": "Read instance/type parameters and geometry by unitless Revit ID."
-    },
-    {
-      "name": "revit_view_warnings",
-      "description": "Read warnings involving elements in a view."
-    },
-    {
-      "name": "revit_list_warnings",
-      "description": "Group warnings or inspect a specific warning group."
-    },
-    {
-      "name": "revit_list_relations",
-      "description": "Read membership or dependencies."
-    },
-    {
-      "name": "revit_list_instances",
-      "description": "List endpoint or heartbeat information."
+      "description": "Read general information about the active Revit model."
     },
     {
       "name": "revit_model_health",
-      "description": "Read model quality counts and top warnings before hand-over."
+      "description": "Read model quality counts before an export or hand-over."
     },
     {
       "name": "revit_links_status",
-      "description": "Read RVT, CAD and image status, paths and instance counts."
+      "description": "Read RVT, CAD and image link status before an export or hand-over."
     },
     {
       "name": "revit_shared_coordinates",
-      "description": "Read base/survey points, sites and link transforms in mm and degrees."
+      "description": "Read project and survey coordinates before an export or hand-over."
     },
     {
       "name": "revit_parameter_fill_check",
-      "description": "Count filled, empty and missing values; sample unitless element IDs."
+      "description": "Count filled, empty and missing parameters before an export or hand-over."
+    },
+    {
+      "name": "revit_list_catalog",
+      "description": "Discover valid model names before filtering."
+    },
+    {
+      "name": "revit_aggregate_elements",
+      "description": "Summarize matching elements by one or two fields after revit_list_catalog."
+    },
+    {
+      "name": "revit_query_elements",
+      "description": "Read a page of matching element rows after revit_list_catalog."
+    },
+    {
+      "name": "revit_list_views",
+      "description": "Find non-template views before analyzing a view."
+    },
+    {
+      "name": "revit_view_summary",
+      "description": "Read element categories and counts for a selected view."
+    },
+    {
+      "name": "revit_export_view",
+      "description": "Export a selected view to PNG when numbers do not explain geometry."
+    },
+    {
+      "name": "revit_export_element_ids",
+      "description": "Write the identifier register of the drawn components to an xlsx file on the Revit workstation."
+    },
+    {
+      "name": "revit_view_elements",
+      "description": "Read one page of elements in a selected view."
+    },
+    {
+      "name": "revit_element_details",
+      "description": "Read parameters and geometry of an element by Revit ID."
+    },
+    {
+      "name": "revit_view_warnings",
+      "description": "Read warnings involving elements present in a selected view."
+    },
+    {
+      "name": "revit_list_warnings",
+      "description": "Group model warnings by description text."
+    },
+    {
+      "name": "revit_list_relations",
+      "description": "Read model object membership or dependencies."
+    },
+    {
+      "name": "revit_list_instances",
+      "description": "List Revit processes and their active documents."
+    },
+    {
+      "name": "revit_select",
+      "description": "Select element IDs for inspection in Revit; an empty list clears selection; IDs are unitless."
+    },
+    {
+      "name": "revit_show",
+      "description": "Show elements, optionally selecting them; open a level plan or 3D view when needed. Returns activeView, viewOpened and dialogsSuppressed; IDs are unitless."
+    },
+    {
+      "name": "revit_isolate",
+      "description": "Temporarily isolate IDs for visual review in the active view, or reset with an empty list; IDs are unitless."
+    },
+    {
+      "name": "revit_move",
+      "description": "Move elements when adjusting their position; dx_mm, dy_mm and dz_mm are offsets in millimetres on model axes."
+    },
+    {
+      "name": "revit_place_family",
+      "description": "Place a loaded unhosted family on a named level for layout."
+    },
+    {
+      "name": "revit_create_wall",
+      "description": "Create a straight wall for layout on a named level; model XY endpoints and height are millimetres; null wall_type chooses the first basic type."
+    },
+    {
+      "name": "revit_create_floor",
+      "description": "Create a floor from a closed boundary for layout on a named level."
+    },
+    {
+      "name": "revit_create_level",
+      "description": "Create a level at a given elevation for layout."
+    },
+    {
+      "name": "revit_set_phase",
+      "description": "Assign the created or demolished project phase of elements by exact phase name."
+    },
+    {
+      "name": "revit_merge_phases",
+      "description": "Merge one project phase into another by moving every element reference."
+    },
+    {
+      "name": "revit_set_parameter",
+      "description": "Set a named instance parameter, falling back to its shared type; use for edits, with length in mm, area in m2 and other doubles in internal units."
+    },
+    {
+      "name": "revit_set_view_lighting",
+      "description": "Set the lighting of one view: shadows, sun position, ground plane, background and the rendering lighting scheme."
+    },
+    {
+      "name": "revit_delete",
+      "description": "Delete elements and their Revit dependencies when removal is intended; IDs are unitless and the returned count includes dependents."
+    },
+    {
+      "name": "revit_reset_element_ids",
+      "description": "Replace elements with copies so Revit assigns new element IDs; the API cannot assign one itself."
+    },
+    {
+      "name": "revit_rebuild_model_ids",
+      "description": "Give every component new IDs by copying a 3D view's selectable elements into a new model, because Revit does not allow assigning an element ID."
+    },
+    {
+      "name": "revit_batch",
+      "description": "Execute up to 50 actions with one undo step; roll back the batch on its first failure."
     }
   ],
   "tools_generated": true,
@@ -155,6 +221,6 @@
     }
   },
   "privacy_policies": [
-    "https://sharafutdinovdi.github.io/revit-model-mcp/privacy/"
+    "https://vibe-bimer.github.io/revit-model-mcp/privacy/"
   ]
 }

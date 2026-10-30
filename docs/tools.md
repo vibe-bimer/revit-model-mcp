@@ -14,8 +14,8 @@ HTTP 模式下，`revit_list_instances` 报告所连接的 Revit 进程。
 ## 通用参数与工具目录
 
 除 `revit_export_view` 和 `revit_list_instances` 外，每个只读工具都接受 `timeout_seconds=120`、`pickup_timeout_seconds=300` 和 `document=null`。
-超时以正整数秒计；接单超时只适用于本地和 SSH 传输，在 HTTP 模式下忽略。
-`revit_export_view` 使用默认的 120 秒响应等待和 300 秒接单等待预算，不提供超时参数。
+超时以正整数秒计；拾取超时只适用于本地和 SSH 传输，在 HTTP 模式下忽略。
+`revit_export_view` 使用默认的 120 秒响应等待和 300 秒拾取等待预算，不提供超时参数。
 有多个 Revit 实例运行时，应通过活动文档标题或文件名中唯一的子串指定 `document`；否则任意实例都可能响应。
 `revit_list_instances(document=null)` 列出所有实例；文档筛选返回所有匹配实例，而不是从中选择一个。
 表中未列出默认值的参数是必填参数。

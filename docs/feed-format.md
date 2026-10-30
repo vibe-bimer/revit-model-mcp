@@ -4,8 +4,7 @@
 
 当前通道协议使用 UTF-8 JSON，字段名区分大小写。
 协议没有 `schemaVersion` 字段；程序包版本标识本文档描述的契约。
-独立插件不会在 `%LOCALAPPDATA%\RevitDevLoader` 下写入数据流。
-其默认通道为 `%LOCALAPPDATA%\RevitModelMcp`。
+独立插件的默认通道为 `%LOCALAPPDATA%\RevitModelMcp`。
 
 <a id="files-and-directories"></a>
 

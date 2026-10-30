@@ -144,7 +144,7 @@ Results include zero-based `index`, `command`, `success` and `data` or `error` p
 A batch dry run executes every step against preceding steps' changes, then rolls back the group and restores the original selection.
 A per-step `dry_run:true` inside a real batch is accepted and previews only that step.
 Verification describes each step's immediate result; subsequent steps may change those elements again.
-Batches accept 1–50 steps; `select` and `isolate` are allowed, while `show`, nested batches and unknown argument keys are rejected.
+Batches accept 1–50 steps and take their step actions from the `revit_batch` `action` enum, which includes the two UI tools `select` and `isolate`; `show`, nested batches and unknown argument keys are rejected.
 
 ## Navigation, dialogs and family names
 

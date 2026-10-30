@@ -16,7 +16,7 @@ The add-in targets the lowest stable Revit API build of each supported year for 
 4. An ExternalEvent invokes the shared command handler on Revit's API thread.
 5. The handler returns `success:true` with `data:"pong"`; the server delivers the JSON result over MCP.
 
-The channel directory defaults to `%LOCALAPPDATA%\RevitModelMcp`, not `%LOCALAPPDATA%\RevitDevLoader`.
+The channel directory defaults to `%LOCALAPPDATA%\RevitModelMcp`.
 The add-in loads directly through its manifest and does not require a separate loader.
 The [feed format](feed-format.md) documents paths and response fields.
 

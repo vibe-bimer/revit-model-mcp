@@ -22,7 +22,7 @@ Python 服务器运行在 MCP 客户端所在的机器上，通过 stdio 与客�
 4. ExternalEvent 在 Revit API 线程上调用共用的命令处理器。
 5. 处理器返回 `success:true` 和 `data:"pong"`；服务器通过 MCP 交付 JSON 结果。
 
-通道目录默认为 `%LOCALAPPDATA%\RevitModelMcp`，而非 `%LOCALAPPDATA%\RevitDevLoader`。
+通道目录默认为 `%LOCALAPPDATA%\RevitModelMcp`。
 插件通过其清单直接加载，不需要单独的加载器。
 [数据格式](feed-format.md)说明了路径和响应字段。
 
