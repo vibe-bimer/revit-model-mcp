@@ -15,6 +15,7 @@ import unittest
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+SCRIPT_DIR = Path(__file__).resolve().parent.parent.parent / "scripts"
 PUBLISH_SCRIPT = REPO_ROOT / "scripts" / "publish_site.py"
 
 # The publisher runs this suite as a build gate; skip to avoid recursion.
@@ -38,9 +39,10 @@ if [ "${FAKE_FAIL:-0}" = "1" ]; then
 fi
 mkdir -p "$d"
 {
-  echo "<html><body>"
+  # Markers a real mkdocs page carries, so the serving check in site-cron.sh passes.
+  echo '<html><body><div data-md-component="announce"><a class="md-logo" href="/">Docs</a></div>'
   if [ "${FAKE_PROBE_BAD:-0}" = "1" ]; then
-    echo "broken build without the marker"
+    echo "broken build without the site marker"
   else
     cat docs/index.md 2>/dev/null || echo "Revit Model MCP"
   fi
@@ -387,3 +389,117 @@ class NoOpTests(PublishHarness):
         self.assertEqual(status["last_attempt"]["outcome"], "noop")
         self.assertTrue(status["last_success"]["noop"])
         self.assertNotIn("last_failure", status)
+
+
+class CronTests(PublishHarness):
+    """site-cron.sh must tell a skip apart from a failure in both log and exit code."""
+
+    def setUp(self):
+        super().setUp()
+        self.commit("v1")
+        self.assertEqual(self.publish().returncode, 0)
+        self.server = None
+
+    def tearDown(self):
+        if self.server is not None:
+            self.server.terminate()
+            self.server.wait(timeout=10)
+        super().tearDown()
+
+    def start_server(self):
+        import socket
+        import time
+        import urllib.request
+
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            self.port = probe.getsockname()[1]
+        self.server = subprocess.Popen(
+            [
+                sys.executable,
+                str(SCRIPT_DIR / "serve-site.py"),
+                str(self.port),
+                str(self.publish_root),
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        deadline = time.time() + 15
+        while time.time() < deadline:
+            try:
+                with urllib.request.urlopen(
+                    f"http://127.0.0.1:{self.port}/", timeout=1
+                ) as page:
+                    if page.status == 200:
+                        return
+            except OSError:
+                time.sleep(0.1)
+        self.fail("the site server never became ready")
+
+    def run_cron(self, **overrides):
+        env = {
+            **os.environ,
+            "SITE_PORT": str(self.port),
+            "SITE_REPO": str(self.repo),
+            "SITE_STATE_DIR": str(self.state),
+            "SITE_PUBLISH_ROOT": str(self.publish_root),
+            "SITE_SKIP_PULL": "1",
+            "MKDOCS": str(self.builder),
+            "PYTHON": sys.executable,
+        }
+        env.update({key: str(value) for key, value in overrides.items()})
+        return subprocess.run(
+            ["bash", str(SCRIPT_DIR / "site-cron.sh")],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=180,
+            check=False,
+        )
+
+    def log_text(self):
+        return (self.state / "site-update.log").read_text()
+
+    def test_a_clean_round_publishes_and_verifies(self):
+        self.start_server()
+        result = self.run_cron()
+        self.assertEqual(result.returncode, 0)
+        log = self.log_text()
+        self.assertIn("publish ok", log)
+        self.assertIn("already serving", log)
+
+    def test_a_dirty_tree_warns_but_does_not_skip(self):
+        self.start_server()
+        self.write_source("uncommitted work in progress")
+        result = self.run_cron()
+        self.assertEqual(result.returncode, 0)
+        log = self.log_text()
+        self.assertIn("working tree is dirty", log)
+        self.assertIn("publish ok", log)
+        self.assertNotIn("skipping pull AND publish", log)
+
+    def test_a_lock_holder_makes_the_round_a_logged_skip(self):
+        import fcntl
+
+        self.start_server()
+        with (self.state / "publish.lock").open("a+") as held:
+            fcntl.flock(held.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            try:
+                result = self.run_cron()
+            finally:
+                fcntl.flock(held.fileno(), fcntl.LOCK_UN)
+        self.assertEqual(result.returncode, 0)
+        log = self.log_text()
+        self.assertIn("publish skipped: another publish is in progress", log)
+        self.assertNotIn("run failed", log)
+
+    def test_a_build_failure_makes_the_round_fail(self):
+        self.start_server()
+        self.write_source("v2")
+        self.commit("v2")
+        result = self.run_cron(FAKE_FAIL="1")
+        self.assertEqual(result.returncode, 1)
+        log = self.log_text()
+        self.assertIn("publish failed (exit 1)", log)
+        self.assertIn("run failed", log)
+        self.assertNotIn("publish ok", log)
