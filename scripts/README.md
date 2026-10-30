@@ -13,6 +13,10 @@ Linux 主机在 **8099** 端口提供已审核的双语构建，根目录是中�
 
 The documentation server runs as `revit-model-mcp-serve.service`, never as a child of the refresh job: a process started from the oneshot refresh unit is killed with its cgroup when that unit exits.
 
+`serve-site.py` answers over HTTP/1.1: an existing directory reached without a trailing slash, and an explicit `index.html` URL, redirect (301) to the canonical directory URL while keeping the query string; gzip is negotiated from `Accept-Encoding` and a fully excluded set answers 406; responses carry per-encoding strong ETags, `Vary: Accept-Encoding` and a 304 that repeats both. Stored `*.xml.gz` archives download as `application/gzip` and are never recompressed. Only filenames carrying a content hash cache for a year; everything else revalidates.
+
+`serve-site.py` 以 HTTP/1.1 提供构建产物：已存在的目录在缺少尾斜杠或使用显式 `index.html` 地址时以 301 跳转到规范目录地址并保留查询串；按 `Accept-Encoding` 协商 gzip，全部表示被排除时返回 406；响应带按编码区分的强 ETag、`Vary: Accept-Encoding`，304 同样重复这两项；存储的 `*.xml.gz` 以 `application/gzip` 下载且不二次压缩；仅文件名含内容哈希的资源缓存一年，其余走重新验证。
+
 文档服务由 `revit-model-mcp-serve.service` 常驻提供，而不是刷新任务的子进程：从 oneshot 刷新单元启动的进程会随该单元的 cgroup 一起被回收。
 
 ```bash

@@ -449,5 +449,63 @@ class CachePolicyTests(ServeSiteTestCase):
                 self.assertEqual(headers["cache-control"], "no-cache")
 
 
+class RootSwitchTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        base = Path(self.tmp.name)
+        self.site_a = base / "site-a"
+        self.site_b = base / "site-b"
+        for site, label in ((self.site_a, "site A"), (self.site_b, "site B")):
+            site.mkdir()
+            (site / "index.html").write_text(f"<html>{label}</html>", encoding="utf-8")
+        self.link = base / "current"
+        self.link.symlink_to(self.site_a)
+        serve_site.DocsHandler.root = self.link
+        self.server = serve_site.Server(("127.0.0.1", 0), serve_site.DocsHandler)
+        self.port = self.server.server_address[1]
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+
+    def tearDown(self):
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join(timeout=10)
+        self.tmp.cleanup()
+
+    def _get_root(self):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        try:
+            conn.request("GET", "/")
+            response = conn.getresponse()
+            return response.status, response.read()
+        finally:
+            conn.close()
+
+    def test_symlinked_root_follows_retargeting_without_restart(self):
+        status, body = self._get_root()
+        self.assertEqual(status, 200)
+        self.assertIn(b"site A", body)
+
+        self.link.unlink()
+        self.link.symlink_to(self.site_b)
+
+        status, body = self._get_root()
+        self.assertEqual(status, 200)
+        self.assertIn(b"site B", body)
+
+    def test_index_absent_in_configured_root_still_serves_after_target_gains_one(self):
+        empty = Path(self.tmp.name) / "empty"
+        empty.mkdir()
+        self.link.unlink()
+        self.link.symlink_to(empty)
+        status, _ = self._get_root()
+        self.assertEqual(status, 404)
+
+        (empty / "index.html").write_text("<html>late</html>", encoding="utf-8")
+        status, body = self._get_root()
+        self.assertEqual(status, 200)
+        self.assertIn(b"late", body)
+
+
 if __name__ == "__main__":
     unittest.main()

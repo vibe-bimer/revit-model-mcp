@@ -155,6 +155,9 @@ class DocsHandler(BaseHTTPRequestHandler):
 
     def _resolve(self) -> tuple[Path | None, str | None]:
         """Map the request target to a file, a redirect target, or a 404."""
+        # Resolve the root on every request so swapping the served symlink
+        # takes effect without a restart.
+        root = self.root.resolve()
         split = urlsplit(self.path)
         raw = split.path
         try:
@@ -167,7 +170,7 @@ class DocsHandler(BaseHTTPRequestHandler):
         parts = [part for part in decoded.split("/") if part not in ("", ".")]
         if any(part == ".." for part in parts):
             return None, None
-        target = self.root.joinpath(*parts)
+        target = root.joinpath(*parts)
         is_dir = target.is_dir()
         trailing = decoded.endswith("/")
 
@@ -188,7 +191,7 @@ class DocsHandler(BaseHTTPRequestHandler):
         except (OSError, ValueError):
             # ValueError covers paths the filesystem layer cannot even name.
             raise _BadRequest from None
-        if resolved != self.root and self.root not in resolved.parents:
+        if resolved != root and root not in resolved.parents:
             return None, None
         return (resolved if resolved.is_file() else None), None
 
@@ -311,7 +314,7 @@ class DocsHandler(BaseHTTPRequestHandler):
         return guessed
 
     def _not_found(self, body: bool) -> None:
-        page = self.root / "404.html"
+        page = self.root.resolve() / "404.html"
         if not page.is_file():
             self.send_error(HTTPStatus.NOT_FOUND, "File not found")
             return
@@ -332,13 +335,15 @@ class Server(ThreadingHTTPServer):
 
 def main() -> int:
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8099
-    root = Path(sys.argv[2] if len(sys.argv) > 2 else "site").resolve()
+    root = Path(sys.argv[2] if len(sys.argv) > 2 else "site")
     if not (root / "index.html").is_file():
         print(f"{root} holds no index.html; build the site first", file=sys.stderr)
         return 1
+    # Keep the configured path; each request resolves it so a symlinked root
+    # can be retargeted while the server keeps running.
     DocsHandler.root = root
     server = Server(("0.0.0.0", port), DocsHandler)
-    print(f"serving {root} on http://0.0.0.0:{port}/", file=sys.stderr)
+    print(f"serving {root.resolve()} on http://0.0.0.0:{port}/", file=sys.stderr)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
