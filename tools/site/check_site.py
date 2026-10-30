@@ -25,6 +25,12 @@ class PageInfo:
     article_text: list[str] = field(default_factory=list)
     canonical: str = ""
     language: str = ""
+    description: str = ""
+    og_locale: str = ""
+    og_url: str = ""
+    og_description: str = ""
+    twitter_description: str = ""
+    edit_url: str = ""
 
 
 class PageParser(HTMLParser):
@@ -51,6 +57,21 @@ class PageParser(HTMLParser):
                 for item in attrs["srcset"].split(",")
                 if item.strip()
             )
+        if tag == "meta":
+            key = attrs.get("name") or attrs.get("property") or ""
+            content = attrs.get("content", "")
+            if key == "description":
+                self.info.description = content
+            elif key == "og:locale":
+                self.info.og_locale = content
+            elif key == "og:url":
+                self.info.og_url = content
+            elif key == "og:description":
+                self.info.og_description = content
+            elif key == "twitter:description":
+                self.info.twitter_description = content
+        if tag == "a" and "edit" in attrs.get("rel", "").split():
+            self.info.edit_url = attrs.get("href", "")
         if tag == "link":
             rel = attrs.get("rel", "").split()
             if "alternate" in rel and "hreflang" in attrs:
@@ -101,7 +122,15 @@ def local_target(site: Path, url: str, base_url: str) -> tuple[Path, str] | None
     return candidate, unquote(parts.fragment)
 
 
-def audit_site(site: Path, base_url: str | None = None) -> tuple[list[str], dict]:
+def repo_file(href: str) -> str | None:
+    """Return the repository path an edit or blob URL points at."""
+    match = re.search(r"/(?:edit|blob)/[^/]+/(.+)$", href)
+    return match.group(1) if match else None
+
+
+def audit_site(
+    site: Path, base_url: str | None = None, root: Path | None = None
+) -> tuple[list[str], dict]:
     site = site.resolve()
     files = sorted(site.rglob("index.html"))
     if not files or not (site / "index.html").is_file():
@@ -126,18 +155,98 @@ def audit_site(site: Path, base_url: str | None = None) -> tuple[list[str], dict
             errors.append(
                 f"{relative}: html language is {info.language!r}, expected {expected_lang}"
             )
-        if set(info.alternates) != {"zh", "en"}:
+        sibling = relative.removeprefix("en/")
+        wanted_locale = "en_US" if english else "zh_CN"
+        if info.og_locale != wanted_locale:
             errors.append(
-                f"{relative}: expected zh/en alternates, found {sorted(info.alternates)}"
+                f"{relative}: og:locale is {info.og_locale!r}, expected {wanted_locale}"
+            )
+        description = " ".join(info.description.split())
+        if not description:
+            errors.append(f"{relative}: missing meta description")
+        else:
+            has_chinese = any("\u4e00" <= char <= "\u9fff" for char in description)
+            if english and has_chinese:
+                errors.append(
+                    f"{relative}: description is not English: {description[:40]!r}"
+                )
+            elif not english and not has_chinese:
+                errors.append(
+                    f"{relative}: description is not Chinese: {description[:40]!r}"
+                )
+        for label, value in (
+            ("og:description", info.og_description),
+            ("twitter:description", info.twitter_description),
+        ):
+            summary = " ".join(value.split())
+            if not summary:
+                errors.append(f"{relative}: missing {label}")
+            elif english and any("\u4e00" <= char <= "\u9fff" for char in summary):
+                errors.append(f"{relative}: {label} is not English")
+        parts = urlsplit(info.canonical)
+        if not info.canonical or not parts.scheme or not parts.netloc:
+            errors.append(f"{relative}: canonical {info.canonical!r} is not absolute")
+        elif info.canonical != origin:
+            errors.append(
+                f"{relative}: canonical {info.canonical!r} does not match build base {origin!r}"
+            )
+        if info.og_url != info.canonical:
+            errors.append(
+                f"{relative}: og:url {info.og_url!r} does not match canonical {info.canonical!r}"
+            )
+        translations = {"zh": sibling, "en": f"en/{sibling}"}
+        expected_langs = {
+            lang for lang, path in translations.items() if (site / path).is_file()
+        }
+        if set(info.alternates) != expected_langs:
+            errors.append(
+                f"{relative}: language-switch alternates are {sorted(info.alternates)}, "
+                f"expected {sorted(expected_langs)}"
             )
         for lang, href in info.alternates.items():
-            sibling = relative.removeprefix("en/")
-            expected = site / (f"en/{sibling}" if lang == "en" else sibling)
+            expected = site / translations.get(lang, "__unknown__")
+            parts = urlsplit(href)
             target = local_target(site, urljoin(origin, href), base_url)
-            if target is None or target[0] != expected or not expected.is_file():
+            if (
+                not parts.scheme
+                or not parts.netloc
+                or target is None
+                or target[0] != expected
+                or not expected.is_file()
+            ):
                 errors.append(
                     f"{relative}: wrong {lang} language-switch target {href!r}"
                 )
+        href = info.edit_url
+        generated = {
+            "index.html": "tools/site/landing.py",
+            "features/": "tools/site/generate_features.py",
+            "platform/": "tools/site/platform_catalog.py",
+        }
+        expected_edit = next(
+            (
+                path
+                for prefix, path in generated.items()
+                if sibling == prefix
+                or (prefix.endswith("/") and sibling.startswith(prefix))
+            ),
+            None,
+        )
+        if not href:
+            errors.append(f"{relative}: missing edit link")
+        elif expected_edit is not None:
+            if not href.endswith(expected_edit):
+                errors.append(
+                    f"{relative}: edit link {href!r} must point at {expected_edit}"
+                )
+        else:
+            path = repo_file(href)
+            if path is None:
+                errors.append(
+                    f"{relative}: edit link {href!r} is not a repository file"
+                )
+            elif root is not None and not (Path(root) / path).exists():
+                errors.append(f"{relative}: edit target {path} does not exist")
         for href in info.links:
             target = local_target(site, urljoin(origin, href), base_url)
             if target is None:
@@ -322,7 +431,9 @@ def main() -> int:
     parser.add_argument("--site-dir", type=Path, default=Path("site"))
     parser.add_argument("--base-url")
     args = parser.parse_args()
-    errors, stats = audit_site(args.site_dir, args.base_url)
+    errors, stats = audit_site(
+        args.site_dir, args.base_url, Path(__file__).resolve().parents[2]
+    )
     errors += audit_sources(Path(__file__).resolve().parents[2])
     print(
         f"Pages: {stats['pages']} (zh {stats['zh']} / en {stats['en']}); checked internal references: {stats['links']}"
