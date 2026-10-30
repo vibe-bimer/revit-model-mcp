@@ -147,6 +147,8 @@ class DeploymentFilesTests(unittest.TestCase):
         (self.site / "404.html").write_text(
             ErrorPageVariantTests.HTML, encoding="utf-8"
         )
+        hooks._ERROR_RENDERS.clear()
+        self.addCleanup(hooks._ERROR_RENDERS.clear)
 
     def test_writes_robots_for_the_configured_origin(self):
         hooks.write_deployment_files(self.site, "http://192.168.100.120:8099/")
@@ -161,13 +163,37 @@ class DeploymentFilesTests(unittest.TestCase):
         self.assertEqual((self.site / "favicon.ico").read_bytes(), expected)
         self.assertEqual((self.site / "assets" / "favicon.ico").read_bytes(), expected)
 
-    def test_writes_the_english_error_page(self):
-        self.assertTrue(hooks.write_english_error_page(self.site))
-        text = (self.site / "en" / "404.html").read_text(encoding="utf-8")
-        self.assertLess(text.index("English entries"), text.index("中文入口"))
+    def test_each_language_pass_renders_its_own_page(self):
+        # Each pass overwrites the same file, so both renders are captured instead.
+        hooks.remember_error_page(self.site, "zh")
+        (self.site / "404.html").write_text(
+            hooks.english_error_variant(ErrorPageVariantTests.HTML), encoding="utf-8"
+        )
+        hooks.remember_error_page(self.site, "en")
+        written = hooks.write_error_pages(self.site, "zh")
+        self.assertEqual(sorted(written), ["404.html", "en/404.html"])
+        english = (self.site / "en" / "404.html").read_text(encoding="utf-8")
+        self.assertLess(english.index("English entries"), english.index("中文入口"))
+        chinese = (self.site / "404.html").read_text(encoding="utf-8")
+        self.assertLess(chinese.index("中文入口"), chinese.index("English entries"))
+
+    def test_the_primary_language_wins_regardless_of_render_order(self):
+        hooks.remember_error_page(self.site, "en")
+        (self.site / "404.html").write_text(
+            ErrorPageVariantTests.HTML, encoding="utf-8"
+        )
+        hooks.remember_error_page(self.site, "zh")
+        hooks.write_error_pages(self.site, "zh")
+        chinese = (self.site / "404.html").read_text(encoding="utf-8")
+        self.assertLess(chinese.index("中文入口"), chinese.index("English entries"))
 
     def test_shipped_error_pages_carry_no_build_markers(self):
-        hooks.write_english_error_page(self.site)
+        hooks.remember_error_page(self.site, "zh")
+        (self.site / "404.html").write_text(
+            hooks.english_error_variant(ErrorPageVariantTests.HTML), encoding="utf-8"
+        )
+        hooks.remember_error_page(self.site, "en")
+        hooks.write_error_pages(self.site, "zh")
         for name in ("404.html", "en/404.html"):
             with self.subTest(name=name):
                 text = (self.site / name).read_text(encoding="utf-8")
@@ -175,8 +201,70 @@ class DeploymentFilesTests(unittest.TestCase):
 
     def test_missing_error_page_is_reported_not_crashed(self):
         (self.site / "404.html").unlink()
-        self.assertFalse(hooks.write_english_error_page(self.site))
-        self.assertFalse((self.site / "en" / "404.html").exists())
+        self.assertEqual(hooks.write_error_pages(self.site, "zh"), [])
+
+    def test_a_single_language_build_ships_the_rendered_copy(self):
+        written = hooks.write_error_pages(self.site, "zh")
+        self.assertEqual(written, ["404.html"])
+        self.assertNotIn(
+            "rmc:404", (self.site / "404.html").read_text(encoding="utf-8")
+        )
+
+
+class _Extra(dict):
+    """Stand-in for mkdocs' LegacyConfig: a dict that also carries instance attributes."""
+
+
+class _I18n:
+    def __init__(self):
+        self.config = {
+            "languages": [
+                {"locale": "zh", "default": True},
+                {"locale": "en", "default": False},
+            ]
+        }
+
+
+class _Plugins:
+    def get(self, name):
+        return _I18n() if name == "i18n" else None
+
+
+class ErrorPageContextTests(unittest.TestCase):
+    """The error page's switcher points at the language home pages, not a tool page."""
+
+    class Config:
+        site_url = "https://example.com/revit-model-mcp/"
+
+        def __init__(self):
+            self.extra = _Extra({"alternate": []})
+            self.plugins = _Plugins()
+
+    def test_entries_become_the_language_home_pages(self):
+        config = self.Config()
+        stale = [
+            {"lang": "zh", "link": "platform/revit_walls_from_cad/"},
+            {"lang": "en", "link": "en/platform/revit_walls_from_cad/"},
+        ]
+        config.extra["alternate"] = stale
+        config.extra.alternate = stale
+        hooks.on_template_context({}, "404.html", config)
+        homes = {entry["lang"]: entry["link"] for entry in config.extra["alternate"]}
+        self.assertEqual(
+            homes, {"zh": "/revit-model-mcp/", "en": "/revit-model-mcp/en/"}
+        )
+        # Jinja reads the attribute before the key, so both must carry the same pages.
+        self.assertEqual(config.extra.alternate, config.extra["alternate"])
+
+    def test_other_templates_are_untouched(self):
+        config = self.Config()
+        stale = [{"lang": "zh", "link": "features/"}]
+        config.extra["alternate"] = stale
+        hooks.on_template_context({}, "main.html", config)
+        self.assertEqual(config.extra["alternate"], stale)
+
+    def test_primary_language_reads_the_i18n_configuration(self):
+        self.assertEqual(hooks.primary_language(self.Config()), "zh")
 
 
 class SourceReferenceTests(unittest.TestCase):

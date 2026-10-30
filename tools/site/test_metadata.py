@@ -27,17 +27,31 @@ def default_edit(relative):
     return f"{REPO}/edit/main/docs/{rel.removesuffix('index.html')}index.md"
 
 
+def write_error_pages(site, prefix=""):
+    for relative, lang, skip in (
+        ("404.html", "zh", "跳转至内容"),
+        ("en/404.html", "en", "Skip to content"),
+    ):
+        target = site / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            f'<html lang="{lang}"><head><meta name="robots" content="noindex"></head>'
+            f'<body><a class="md-skip" href="#rmc-main">{skip}</a>'
+            '<div id="rmc-main" tabindex="-1">页面不存在</div>'
+            f'<a href="{prefix}/" hreflang="zh" class="md-select__link">中文</a>'
+            f'<a href="{prefix}/en/" hreflang="en" class="md-select__link">English</a>'
+            "</body></html>",
+            encoding="utf-8",
+        )
+
+
 class MetadataAuditTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.site = Path(self.temp.name)
         self.root = None
-        (self.site / "404.html").write_text(
-            '<html lang="zh"><body><a class="md-skip" href="#rmc-main">跳转至内容</a>'
-            '<div id="rmc-main" tabindex="-1">页面不存在</div></body></html>',
-            encoding="utf-8",
-        )
+        write_error_pages(self.site)
 
     def page(
         self,
@@ -108,11 +122,7 @@ class MetadataAuditTests(unittest.TestCase):
     def home(self):
         self.page("index.html", "zh")
         self.page("en/index.html", "en")
-        (self.site / "404.html").write_text(
-            '<html lang="zh"><body><a class="md-skip" href="#rmc-main">跳转至内容</a>'
-            '<div id="rmc-main" tabindex="-1">页面不存在</div></body></html>',
-            encoding="utf-8",
-        )
+        write_error_pages(self.site)
 
     def errors(self):
         return check_site.audit_site(self.site, root=self.root)[0]

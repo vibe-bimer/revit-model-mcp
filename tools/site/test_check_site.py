@@ -407,3 +407,115 @@ class DeploymentFileTests(unittest.TestCase):
         errors = check_site.audit_deployment(self.site)
         self.assertEqual(len(errors), 4)
         self.assertIn("robots.txt: missing from the build", errors[0])
+
+
+class ErrorPageAuditTests(unittest.TestCase):
+    """The 404 page speaks its own language, stays out of the index and links the home pages."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.site = Path(self.temp.name)
+        (self.site / "en").mkdir()
+        (self.site / "index.html").write_text(
+            '<html lang="zh"></html>', encoding="utf-8"
+        )
+        (self.site / "en" / "index.html").write_text(
+            '<html lang="en"></html>', encoding="utf-8"
+        )
+
+    def _error_page(self, language, skip_text, links=None, robots=True, canonical=""):
+        lang = "zh" if language == "zh" else "en"
+        links = links if links is not None else [("zh", "/"), ("en", "/en/")]
+        select = "".join(
+            f'<a href="{href}" hreflang="{tag}" class="md-select__link">{tag}</a>'
+            for tag, href in links
+        )
+        meta = '<meta name="robots" content="noindex">' if robots else ""
+        canon = f'<link rel="canonical" href="{canonical}">' if canonical else ""
+        return (
+            f'<html lang="{lang}"><head>{meta}{canon}</head><body>'
+            f'<a class="md-skip" href="#rmc-main">{skip_text}</a>'
+            f'<div id="rmc-main" tabindex="-1"></div>{select}</body></html>'
+        )
+
+    def _write(self, relative, text):
+        path = self.site / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+    def test_a_consistent_pair_passes(self):
+        self._write("404.html", self._error_page("zh", "跳到正文"))
+        self._write("en/404.html", self._error_page("en", "Skip to content"))
+        self.assertEqual(
+            check_site.audit_error_pages(self.site, "https://example.com/"), []
+        )
+
+    def test_the_root_page_must_speak_chinese(self):
+        self._write("404.html", self._error_page("en", "Skip to content"))
+        self._write("en/404.html", self._error_page("en", "Skip to content"))
+        errors = check_site.audit_error_pages(self.site, "https://example.com/")
+        self.assertTrue(any("404.html: html language" in e for e in errors), errors)
+
+    def test_the_english_page_must_speak_english(self):
+        self._write("404.html", self._error_page("zh", "跳到正文"))
+        self._write("en/404.html", self._error_page("zh", "跳到正文"))
+        errors = check_site.audit_error_pages(self.site, "https://example.com/")
+        self.assertTrue(any("en/404.html: html language" in e for e in errors), errors)
+
+    def test_both_pages_must_be_noindex(self):
+        self._write("404.html", self._error_page("zh", "跳到正文", robots=False))
+        self._write("en/404.html", self._error_page("en", "Skip to content"))
+        errors = check_site.audit_error_pages(self.site, "https://example.com/")
+        self.assertTrue(any("noindex" in e for e in errors), errors)
+
+    def test_an_error_page_takes_no_canonical(self):
+        self._write(
+            "404.html",
+            self._error_page(
+                "zh", "跳到正文", canonical="https://example.com/404.html"
+            ),
+        )
+        self._write("en/404.html", self._error_page("en", "Skip to content"))
+        errors = check_site.audit_error_pages(self.site, "https://example.com/")
+        self.assertTrue(any("canonical" in e for e in errors), errors)
+
+    def test_entry_pointing_at_a_tool_page_is_an_error(self):
+        self._write(
+            "404.html",
+            self._error_page(
+                "zh",
+                "跳到正文",
+                links=[("zh", "/platform/revit_walls_from_cad/"), ("en", "/en/")],
+            ),
+        )
+        self._write("en/404.html", self._error_page("en", "Skip to content"))
+        errors = check_site.audit_error_pages(self.site, "https://example.com/")
+        self.assertTrue(any("language entry" in e for e in errors), errors)
+
+    def test_a_missing_english_page_is_reported(self):
+        self._write("404.html", self._error_page("zh", "跳到正文"))
+        errors = check_site.audit_error_pages(self.site, "https://example.com/")
+        self.assertTrue(
+            any("en/404.html: missing error page" in e for e in errors), errors
+        )
+
+    def test_a_subpath_deployment_resolves_the_home_pages(self):
+        base = "https://example.com/revit-model-mcp/"
+        self._write(
+            "404.html",
+            self._error_page(
+                "zh",
+                "跳到正文",
+                links=[("zh", "/revit-model-mcp/"), ("en", "/revit-model-mcp/en/")],
+            ),
+        )
+        self._write(
+            "en/404.html",
+            self._error_page(
+                "en",
+                "Skip to content",
+                links=[("zh", "/revit-model-mcp/"), ("en", "/revit-model-mcp/en/")],
+            ),
+        )
+        self.assertEqual(check_site.audit_error_pages(self.site, base), [])

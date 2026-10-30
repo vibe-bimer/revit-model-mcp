@@ -32,12 +32,22 @@ def _skip_link(lang):
     return f'<body><a class="md-skip" href="#rmc-main">{text}</a>'
 
 
-def _write_error_page(site):
-    (site / "404.html").write_text(
-        '<html lang="zh"><body><a class="md-skip" href="#rmc-main">跳转至内容</a>'
-        '<div id="rmc-main" tabindex="-1">页面不存在</div></body></html>',
-        encoding="utf-8",
-    )
+def _write_error_page(site, prefix=""):
+    for relative, lang, skip in (
+        ("404.html", "zh", "跳转至内容"),
+        ("en/404.html", "en", "Skip to content"),
+    ):
+        target = site / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            f'<html lang="{lang}"><head><meta name="robots" content="noindex"></head>'
+            f'<body><a class="md-skip" href="#rmc-main">{skip}</a>'
+            '<div id="rmc-main" tabindex="-1">页面不存在</div>'
+            f'<a href="{prefix}/" hreflang="zh" class="md-select__link">中文</a>'
+            f'<a href="{prefix}/en/" hreflang="en" class="md-select__link">English</a>'
+            "</body></html>",
+            encoding="utf-8",
+        )
 
 
 class SiteAuditTests(unittest.TestCase):
@@ -161,6 +171,7 @@ class SiteAuditTests(unittest.TestCase):
         base = "https://docs.example/revit-model-mcp/"
         self.make_page("index.html", "zh", base=base)
         self.make_page("en/index.html", "en", base=base)
+        _write_error_page(self.site, "/revit-model-mcp")
         errors, _ = check_site.audit_site(
             self.site, "https://docs.example/revit-model-mcp/"
         )
