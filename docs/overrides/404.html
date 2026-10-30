@@ -12,6 +12,11 @@
 -#}
 {% extends "main.html" %}
 
+{% block extrahead %}
+  {#- An error page is not content: keep it out of the index and give it no canonical URL. -#}
+  <meta name="robots" content="noindex">
+{% endblock %}
+
 {% block content %}
   {#- The skip link in the layout targets this root: the page has no table of contents, so the
       theme's own skip link never renders here. -#}

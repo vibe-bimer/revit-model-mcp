@@ -354,23 +354,97 @@ def strip_error_markers(html: str) -> str:
     return _ERROR_MARKER.sub("", html)
 
 
-def write_english_error_page(site: Path) -> bool:
-    """Write the English variant of the error page and clean both copies.
+def error_page_for(html: str, language: str) -> str:
+    """Order an error page's entry groups so the page's own language comes first."""
+    return english_error_variant(html) if language == "en" else html
 
-    The markers only exist so the variant can be derived here; the shipped pages do not need
-    them, and the root page is rewritten in place to keep the two copies consistent.
+
+def primary_language(config) -> str:
+    """The language the site serves at its root, taken from the i18n configuration."""
+    plugin = config.plugins.get("i18n")
+    entries = plugin.config.get("languages") if plugin is not None else None
+    for entry in entries or []:
+        if entry.get("default"):
+            return entry.get("locale", "zh")
+    return "zh"
+
+
+def language_home(language: str, config) -> str:
+    """The home page of one language, as a path from the deployment root.
+
+    The error page answers a missing path, so its language entries leave the page tree and point
+    at the site roots: the deployment root for the primary language and a directory per other
+    language, which is `/` and `/en/` for a site served from the domain root.
     """
+    base = urlsplit(config.site_url or "/").path or "/"
+    if not base.endswith("/"):
+        base += "/"
+    if not language or language == primary_language(config):
+        return base
+    return f"{base}{language}/"
+
+
+def on_template_context(context, template_name, config):
+    """Point the error page's language switcher at the two home pages.
+
+    static-i18n rewrites ``extra.alternate`` after each page so the switcher offers the same
+    page in another language, and leaves the last page's list on the config. The error page is
+    not in the page tree, so those links would send a visitor who mistyped a URL to whichever
+    tool page rendered last. The plugin stores that list as an attribute, which Jinja reads
+    before a key, so both spellings have to carry the home pages.
+    """
+    if template_name != "404.html":
+        return context
+    entries = config.extra.get("alternate") or []
+    if not entries:
+        return context
+    homes = [
+        {**entry, "link": language_home(entry.get("lang", ""), config)}
+        for entry in entries
+    ]
+    config.extra["alternate"] = homes
+    config.extra.alternate = homes
+    return context
+
+
+#: The error page every language pass rendered, keyed by language. Each pass writes the same file,
+#: so a later pass would replace an earlier one; the renders are kept apart and published together.
+_ERROR_RENDERS: dict[str, str] = {}
+
+
+def remember_error_page(site: Path, language: str) -> bool:
+    """Keep the error page the current language pass rendered, before the next pass overwrites it."""
     page = site / "404.html"
     if not page.is_file():
         return False
-    source = page.read_text(encoding="utf-8")
-    target = site / "en" / "404.html"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(
-        strip_error_markers(english_error_variant(source)), encoding="utf-8"
-    )
-    page.write_text(strip_error_markers(source), encoding="utf-8")
+    _ERROR_RENDERS[language] = page.read_text(encoding="utf-8")
     return True
+
+
+def write_error_pages(site: Path, primary: str = "zh") -> list[str]:
+    """Ship one error page per rendered language, with the primary language at the root.
+
+    A single-language build renders one copy, which already sits at the root; every other
+    language is written under its own directory. The shipped copies drop the build markers.
+    """
+    pages = dict(_ERROR_RENDERS)
+    root = site / "404.html"
+    if not pages:
+        if not root.is_file():
+            return []
+        pages[primary] = root.read_text(encoding="utf-8")
+    if primary not in pages:
+        primary = next(iter(pages))
+    written = []
+    for language, html in pages.items():
+        relative = "404.html" if language == primary else f"{language}/404.html"
+        target = site / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(
+            strip_error_markers(error_page_for(html, language)), encoding="utf-8"
+        )
+        written.append(relative)
+    return written
 
 
 def _catalog_module():
@@ -464,11 +538,14 @@ def on_shutdown() -> None:
 
 def on_post_build(config) -> None:
     site = Path(config.site_dir)
+    # The build renders the error page once per language pass into the same file, so this pass
+    # keeps its own copy before the next one overwrites it.
+    remember_error_page(site, config.theme.get("language") or primary_language(config))
     _write_directory_sitemaps(site, config.site_url or "")
-    # The deployment surface and the English error page follow the build configuration, not any
-    # page, so they are written here rather than rendered from a template.
+    # The deployment surface and the error pages follow the build configuration, not any page, so
+    # they are written here rather than rendered from a template.
     write_deployment_files(site, config.site_url or "")
-    write_english_error_page(site)
+    write_error_pages(site, primary_language(config))
     # Source maps are a debugging aid for the theme bundle, not site content: shipping them adds
     # 1.2 MB to every deploy for files no visitor requests.
     for source_map in site.rglob("*.map"):

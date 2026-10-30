@@ -81,6 +81,100 @@ class DiffDetectionTests(unittest.TestCase):
         self.assertEqual(contract_diff.diff_schemas(release, integration), [])
 
 
+class TypedValueTests(unittest.TestCase):
+    """A value's JSON type is part of it, so the rendered string cannot decide a difference."""
+
+    def test_null_and_the_string_null_differ(self):
+        release = schema({"x": {"type": "string", "default": None}})
+        integration = schema({"x": {"type": "string", "default": "null"}})
+        changes = contract_diff.diff_schemas(release, integration)
+        self.assertEqual([c["kind"] for c in changes], ["default"])
+
+    def test_false_and_the_string_false_differ(self):
+        release = schema({"x": {"type": "boolean", "default": False}})
+        integration = schema({"x": {"type": "boolean", "default": "false"}})
+        changes = contract_diff.diff_schemas(release, integration)
+        self.assertEqual([c["kind"] for c in changes], ["default"])
+
+    def test_a_number_and_its_string_differ(self):
+        release = schema({"x": {"type": "integer", "default": 1}})
+        integration = schema({"x": {"type": "integer", "default": "1"}})
+        changes = contract_diff.diff_schemas(release, integration)
+        self.assertEqual([c["kind"] for c in changes], ["default"])
+
+    def test_a_missing_default_and_null_differ(self):
+        release = schema({"x": {"type": "string"}})
+        integration = schema({"x": {"type": "string", "default": None}})
+        changes = contract_diff.diff_schemas(release, integration)
+        self.assertEqual([c["kind"] for c in changes], ["default"])
+
+    def test_identical_typed_values_stay_equal(self):
+        release = schema({"x": {"type": "boolean", "default": False}})
+        integration = schema({"x": {"type": "boolean", "default": False}})
+        self.assertEqual(contract_diff.diff_schemas(release, integration), [])
+
+
+class NestedConstraintTests(unittest.TestCase):
+    """Constraints and defaults inside a composite member or items are part of the contract."""
+
+    def test_a_pattern_inside_an_anyof_member_is_reported(self):
+        release = schema(
+            {
+                "ground_plane_level": {
+                    "anyOf": [
+                        {"type": "string", "minLength": 1, "pattern": "\\S"},
+                        {"type": "null"},
+                    ],
+                    "default": None,
+                }
+            }
+        )
+        integration = schema(
+            {
+                "ground_plane_level": {
+                    "anyOf": [{"type": "string", "minLength": 1}, {"type": "null"}],
+                    "default": None,
+                }
+            }
+        )
+        changes = contract_diff.diff_schemas(release, integration)
+        patterns = [
+            c for c in changes if c["kind"] == "constraint" and c["key"] == "pattern"
+        ]
+        self.assertEqual(len(patterns), 1)
+        self.assertEqual(patterns[0]["where"], "anyOf[0]")
+        self.assertEqual(patterns[0]["release"], "\\S")
+
+    def test_a_default_inside_an_anyof_member_is_reported(self):
+        release = schema({"x": {"anyOf": [{"type": "string", "default": "a"}]}})
+        integration = schema({"x": {"anyOf": [{"type": "string", "default": "b"}]}})
+        changes = contract_diff.diff_schemas(release, integration)
+        defaults = [c for c in changes if c["kind"] == "default"]
+        self.assertEqual(len(defaults), 1)
+        self.assertEqual(defaults[0]["where"], "anyOf[0]")
+
+    def test_a_constraint_inside_items_is_reported(self):
+        release = schema(
+            {"tags": {"type": "array", "items": {"type": "string", "maxLength": 8}}}
+        )
+        integration = schema(
+            {"tags": {"type": "array", "items": {"type": "string", "maxLength": 16}}}
+        )
+        changes = contract_diff.diff_schemas(release, integration)
+        lengths = [
+            c for c in changes if c["kind"] == "constraint" and c["key"] == "maxLength"
+        ]
+        self.assertEqual(len(lengths), 1)
+        self.assertEqual(lengths[0]["where"], "items")
+
+    def test_a_root_change_carries_no_where(self):
+        release = schema({"pixel_size": {"type": "integer", "minimum": 1}})
+        integration = schema({"pixel_size": {"type": "integer", "minimum": 32}})
+        changes = contract_diff.diff_schemas(release, integration)
+        minimum = next(c for c in changes if c["key"] == "minimum")
+        self.assertNotIn("where", minimum)
+
+
 class RenderTests(unittest.TestCase):
     def setUp(self):
         self.release = schema(

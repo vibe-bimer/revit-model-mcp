@@ -4,7 +4,9 @@
 Twin pages (a released tool and a same-named integration tool) must tell readers exactly how
 the contracts differ. That hint is computed here from the registry inputSchema objects, so it
 can never fall out of step with the contracts. The diff covers parameter presence, required,
-type, default and constraints such as enum, minimum, maximum and length bounds.
+type, default and constraints such as enum, minimum, maximum and length bounds, including the
+constraints an ``anyOf``/``oneOf``/``allOf`` member or an ``items`` schema declares, because a
+default or a bound nested there is still part of the contract.
 """
 
 from __future__ import annotations
@@ -24,6 +26,9 @@ CONSTRAINTS = (
     "minItems",
     "maxItems",
 )
+
+# Keywords whose members carry their own schemas and therefore their own constraints.
+COMPOSITES = ("anyOf", "oneOf", "allOf")
 
 MISSING = object()
 
@@ -47,8 +52,32 @@ def _default(spec: dict):
     return spec.get("default", MISSING)
 
 
+def _same(release_value, integration_value) -> bool:
+    """Semantic equality that keeps JSON types apart.
+
+    The rendered form cannot decide this: ``None`` and the string ``"null"`` render alike, and
+    so do ``False`` and ``"false"``. A missing default is its own value, not null. Types must
+    match exactly, so a boolean never equals a number that compares equal in Python.
+    """
+    if release_value is MISSING or integration_value is MISSING:
+        return release_value is MISSING and integration_value is MISSING
+    if type(release_value) is not type(integration_value):
+        return False
+    if isinstance(release_value, dict):
+        if release_value.keys() != integration_value.keys():
+            return False
+        return all(
+            _same(release_value[key], integration_value[key]) for key in release_value
+        )
+    if isinstance(release_value, list):
+        return len(release_value) == len(integration_value) and all(
+            _same(left, right) for left, right in zip(release_value, integration_value)
+        )
+    return release_value == integration_value
+
+
 def _show(value) -> str:
-    """Render a JSON value for the hint; distinguish an absent default from null."""
+    """Render a JSON value for the hint; distinguish an absent value from null."""
     if value is MISSING:
         return "—"
     if value is None:
@@ -60,6 +89,86 @@ def _show(value) -> str:
     if isinstance(value, str):
         return value
     return json.dumps(value, ensure_ascii=False, sort_keys=True)
+
+
+def _join_where(where: str, step: str) -> str:
+    return f"{where}.{step}" if where else step
+
+
+def _level_changes(
+    release_spec: dict, integration_spec: dict, name: str, where: str
+) -> list[dict]:
+    """Compare the default and the constraints declared at one schema level."""
+    changes: list[dict] = []
+
+    def location(change: dict) -> dict:
+        if where:
+            change["where"] = where
+        return change
+
+    release_default = _default(release_spec)
+    integration_default = _default(integration_spec)
+    if not _same(release_default, integration_default):
+        changes.append(
+            location(
+                {
+                    "kind": "default",
+                    "param": name,
+                    "release": _show(release_default),
+                    "integration": _show(integration_default),
+                }
+            )
+        )
+    for key in CONSTRAINTS:
+        release_value = release_spec.get(key, MISSING)
+        integration_value = integration_spec.get(key, MISSING)
+        if not _same(release_value, integration_value):
+            changes.append(
+                location(
+                    {
+                        "kind": "constraint",
+                        "param": name,
+                        "key": key,
+                        "release": _show(release_value),
+                        "integration": _show(integration_value),
+                    }
+                )
+            )
+    return changes
+
+
+def _schema_changes(
+    release_spec: dict, integration_spec: dict, name: str, where: str = ""
+) -> list[dict]:
+    """Compare one schema, then the schemas its composite members and items declare."""
+    changes = _level_changes(release_spec, integration_spec, name, where)
+    for keyword in COMPOSITES:
+        release_members = release_spec.get(keyword)
+        integration_members = integration_spec.get(keyword)
+        if not isinstance(release_members, list) or not isinstance(
+            integration_members, list
+        ):
+            continue
+        for index, (release_member, integration_member) in enumerate(
+            zip(release_members, integration_members)
+        ):
+            changes.extend(
+                _schema_changes(
+                    release_member,
+                    integration_member,
+                    name,
+                    _join_where(where, f"{keyword}[{index}]"),
+                )
+            )
+    release_items = release_spec.get("items")
+    integration_items = integration_spec.get("items")
+    if isinstance(release_items, dict) and isinstance(integration_items, dict):
+        changes.extend(
+            _schema_changes(
+                release_items, integration_items, name, _join_where(where, "items")
+            )
+        )
+    return changes
 
 
 def diff_schemas(release_schema: dict, integration_schema: dict) -> list[dict]:
@@ -106,31 +215,7 @@ def diff_schemas(release_schema: dict, integration_schema: dict) -> list[dict]:
                 }
             )
 
-        release_default = _default(release_spec)
-        integration_default = _default(integration_spec)
-        if _show(release_default) != _show(integration_default):
-            changes.append(
-                {
-                    "kind": "default",
-                    "param": name,
-                    "release": _show(release_default),
-                    "integration": _show(integration_default),
-                }
-            )
-
-        for key in CONSTRAINTS:
-            release_value = release_spec.get(key, MISSING)
-            integration_value = integration_spec.get(key, MISSING)
-            if _show(release_value) != _show(integration_value):
-                changes.append(
-                    {
-                        "kind": "constraint",
-                        "param": name,
-                        "key": key,
-                        "release": _show(release_value),
-                        "integration": _show(integration_value),
-                    }
-                )
+        changes.extend(_schema_changes(release_spec, integration_spec, name))
     return changes
 
 
@@ -140,8 +225,9 @@ _LABELS = {
         "only_in_integration": "仅集成分支有参数 {param}",
         "required": "参数 {param} 是否必填：发布版 {release} / 集成分支 {integration}",
         "type": "参数 {param} 类型：发布版 {release} / 集成分支 {integration}",
-        "default": "参数 {param} 默认值：发布版 {release} / 集成分支 {integration}",
-        "constraint": "参数 {param} 约束 {key}：发布版 {release} / 集成分支 {integration}",
+        "default": "参数 {param}{where} 默认值：发布版 {release} / 集成分支 {integration}",
+        "constraint": "参数 {param}{where} 约束 {key}：发布版 {release} / 集成分支 {integration}",
+        "where": "（{path}）",
         "yes": "是",
         "no": "否",
     },
@@ -150,8 +236,9 @@ _LABELS = {
         "only_in_integration": "Parameter {param} exists only on the integration branch",
         "required": "Parameter {param} required: release {release} / integration {integration}",
         "type": "Parameter {param} type: release {release} / integration {integration}",
-        "default": "Parameter {param} default: release {release} / integration {integration}",
-        "constraint": "Parameter {param} {key}: release {release} / integration {integration}",
+        "default": "Parameter {param}{where} default: release {release} / integration {integration}",
+        "constraint": "Parameter {param}{where} {key}: release {release} / integration {integration}",
+        "where": " ({path})",
         "yes": "yes",
         "no": "no",
     },
@@ -170,6 +257,7 @@ def render_changes(changes: list[dict], lang: str) -> list[str]:
     for change in changes:
         kind = change["kind"]
         template = labels[kind]
+        where = change.get("where", "")
         lines.append(
             template.format(
                 param=change["param"],
@@ -180,6 +268,7 @@ def render_changes(changes: list[dict], lang: str) -> list[str]:
                 if kind == "required"
                 else change.get("integration", ""),
                 key=change.get("key", ""),
+                where=labels["where"].format(path=where) if where else "",
             )
         )
     return lines

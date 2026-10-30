@@ -19,6 +19,7 @@ description: "设置一个视图的阴影、太阳位置、地平面、背景与
 
 下表由注册表 inputSchema 自动比较得出，不是手写清单。
 
+- 参数 ground_plane_level（anyOf[0]） 约束 pattern：发布版 \S / 集成分支 —
 - 参数 view 约束 pattern：发布版 \S / 集成分支 —
 
 本页契约适用于集成分支，不适用于发布版 0.9.0；照抄分支参数会在发布版上失败。

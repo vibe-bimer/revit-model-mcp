@@ -484,9 +484,14 @@ def home_page(
     capabilities: dict,
     version: str,
     lang: str,
-    branch_count: int | None = None,
+    branch_count: int,
 ) -> str:
-    """Return the landing page for one language, ending with the literal text of its anchors."""
+    """Return the landing page for one language, ending with the literal text of its anchors.
+
+    ``branch_count`` is the number of tools on the integration branch. It is required
+    because the page states that count as a fact; defaulting it to this release's tool
+    count would quietly claim the branch ships the same set.
+    """
     text = dict(TEXT[lang], lang=lang)
     read, write = count_tools(tools)
     total = len(tools)
@@ -494,11 +499,7 @@ def home_page(
     body = "\n\n".join(
         [
             render_hero(text, version, read, write, total, art),
-            render_development(
-                lang,
-                len(tools),
-                branch_count if branch_count is not None else len(tools),
-            ),
+            render_development(lang, len(tools), branch_count),
             render_prompts(text, capabilities),
             render_capabilities(text, tools, capabilities, total),
             render_output(text),

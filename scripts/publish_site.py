@@ -31,6 +31,7 @@ import datetime
 import errno
 import fcntl
 import hashlib
+import importlib
 import json
 import os
 import platform
@@ -41,6 +42,16 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_SITE_TOOLS = _REPO_ROOT / "tools" / "site"
+if str(_SITE_TOOLS) not in sys.path:
+    sys.path.insert(0, str(_SITE_TOOLS))
+
+_mkdocs_command = importlib.import_module("mkdocs_command")
+builder_command = _mkdocs_command.builder_command
+BuilderNotFound = _mkdocs_command.BuilderNotFound
+
 
 EXIT_OK = 0
 EXIT_FAILED = 1
@@ -145,6 +156,20 @@ def git(repo: Path, *args: str) -> subprocess.CompletedProcess:
     )
 
 
+def remote_ref(merge: str) -> str:
+    """The branch path a merge config names, without the local ``refs/heads/`` namespace.
+
+    ``git config branch.<b>.merge`` is a full source ref such as
+    ``refs/heads/docs/spec-28-integration``. Only the ``refs/heads/`` prefix is local and has
+    to go; the rest of the path, slashes included, names the branch, so the remote-tracking
+    ref keeps its directory (``origin/docs/spec-28-integration``).
+    """
+    prefix = "refs/heads/"
+    if merge.startswith(prefix):
+        return merge[len(prefix) :]
+    return merge
+
+
 def resolve_target(repo: Path, skip_pull: bool, pinned: str | None) -> tuple[str, str]:
     """Return (commit sha, resolution mode) or raise with a sync failure."""
     if pinned:
@@ -169,7 +194,7 @@ def resolve_target(repo: Path, skip_pull: bool, pinned: str | None) -> tuple[str
             f"git fetch {remote} failed: {fetched.stderr.strip()}",
             "sync",
         )
-    tip = git(repo, "rev-parse", f"refs/remotes/{remote}/{merge.rsplit('/', 1)[-1]}")
+    tip = git(repo, "rev-parse", f"refs/remotes/{remote}/{remote_ref(merge)}")
     if tip.returncode != 0:
         raise SystemExitMessage(
             EXIT_SYNC,
@@ -228,35 +253,6 @@ def link_build_environment(source: Path, repo: Path) -> list[str]:
         os.symlink(origin, destination)
         linked.append(relative)
     return linked
-
-
-def builder_command(repo: Path, source: Path) -> list[str]:
-    configured = os.environ.get("MKDOCS", "").strip()
-    if configured:
-        return shlex.split(configured)
-    for candidate in (
-        repo / ".venv-docs" / "bin" / "mkdocs",
-        Path.home() / ".venv-docs" / "bin" / "mkdocs",
-    ):
-        if candidate.is_file():
-            return [str(candidate)]
-    found = shutil.which("mkdocs")
-    if found:
-        return [found]
-    requirements = source / "docs" / "requirements.txt"
-    if requirements.is_file() and shutil.which("uv"):
-        return [
-            "uv",
-            "run",
-            "--with-requirements",
-            str(requirements),
-            "mkdocs",
-        ]
-    raise SystemExitMessage(
-        EXIT_FAILED,
-        "mkdocs was not found; install docs/requirements.txt or set MKDOCS",
-        "build",
-    )
 
 
 def tool_version(command: list[str]) -> str:
@@ -574,7 +570,10 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
             )
 
             log(f"== building release {release_id}")
-            builder = builder_command(repo, source)
+            try:
+                builder = builder_command(repo, source)
+            except BuilderNotFound as error:
+                raise SystemExitMessage(EXIT_FAILED, str(error), "build") from error
             config_name = (
                 os.environ.get("MKDOCS_CONFIG", "").strip() or "mkdocs-lan.yml"
             )

@@ -38,6 +38,8 @@ class PageInfo:
     og_description: str = ""
     twitter_description: str = ""
     edit_url: str = ""
+    robots: str = ""
+    language_links: dict[str, str] = field(default_factory=dict)
 
 
 class PageParser(HTMLParser):
@@ -77,8 +79,16 @@ class PageParser(HTMLParser):
                 self.info.og_description = content
             elif key == "twitter:description":
                 self.info.twitter_description = content
+            elif key == "robots":
+                self.info.robots = content.strip().lower()
         if tag == "a" and "edit" in attrs.get("rel", "").split():
             self.info.edit_url = attrs.get("href", "")
+        if (
+            tag == "a"
+            and "md-select__link" in attrs.get("class", "").split()
+            and "hreflang" in attrs
+        ):
+            self.info.language_links[attrs["hreflang"]] = attrs.get("href", "")
         if tag == "link":
             rel = attrs.get("rel", "").split()
             if "alternate" in rel and "hreflang" in attrs:
@@ -275,6 +285,54 @@ def repo_file(href: str) -> str | None:
     return match.group(1) if match else None
 
 
+def audit_error_pages(site: Path, base_url: str) -> list[str]:
+    """Check the page a mistyped URL lands on: its language, index status and switcher.
+
+    The error page is not a document. It takes no canonical URL and must stay out of the index,
+    and its language switcher has to offer the other language's home page rather than whichever
+    page happened to render last during the build.
+    """
+    errors = []
+    homes = {"zh": site / "index.html", "en": site / "en" / "index.html"}
+    for relative, language in (("404.html", "zh"), ("en/404.html", "en")):
+        path = site / relative
+        if not path.is_file():
+            errors.append(f"{relative}: missing error page")
+            continue
+        text = path.read_text(encoding="utf-8")
+        info = parse_page_text(text)
+        errors.extend(audit_skip_link(relative, text))
+        errors.extend(audit_table_semantics(relative, text))
+        if not info.language.lower().startswith(language):
+            errors.append(
+                f"{relative}: html language is {info.language!r}, expected {language}"
+            )
+        if info.robots != "noindex":
+            errors.append(f'{relative}: missing <meta name="robots" content="noindex">')
+        if info.canonical:
+            errors.append(
+                f"{relative}: error page declares a canonical URL {info.canonical!r}"
+            )
+        if not info.language_links:
+            errors.append(f"{relative}: no language switcher entries")
+        for hreflang, href in sorted(info.language_links.items()):
+            expected = homes.get(hreflang.split("-")[0].lower())
+            if expected is None:
+                continue
+            target = local_target(site, urljoin(base_url, href), base_url)
+            if target is None:
+                errors.append(
+                    f"{relative}: language entry {hreflang!r} leaves the site: {href!r}"
+                )
+            elif target[0].resolve() != expected.resolve():
+                landed = target[0].resolve().relative_to(site.resolve()).as_posix()
+                errors.append(
+                    f"{relative}: language entry {hreflang!r} points at {landed!r}, "
+                    f"expected {expected.relative_to(site).as_posix()!r}"
+                )
+    return errors
+
+
 def audit_site(
     site: Path, base_url: str | None = None, root: Path | None = None
 ) -> tuple[list[str], dict]:
@@ -429,6 +487,7 @@ def audit_site(
         error_text = error_page.read_text(encoding="utf-8")
         errors.extend(audit_skip_link("404.html", error_text))
         errors.extend(audit_table_semantics("404.html", error_text))
+    errors.extend(audit_error_pages(site, base_url))
     zh = sum(not path.relative_to(site).as_posix().startswith("en/") for path in files)
     return sorted(set(errors)), {
         "pages": len(files),
