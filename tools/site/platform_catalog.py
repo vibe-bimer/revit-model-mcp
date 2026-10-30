@@ -18,6 +18,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import catalogs
+
 ROOT = Path(__file__).resolve().parents[2]
 CONTENT = ROOT / "tools/site/content"
 PLATFORM_JSON = CONTENT / "platform-tools.json"
@@ -26,7 +28,7 @@ PAGES = ROOT / "docs/platform"
 NAV_START = "  # >>> platform-nav"
 NAV_END = "  # <<< platform-nav"
 
-BRANCH = "integration/upstream-1.0"
+BRANCH = catalogs.integration().branch
 
 GROUP_LABELS = {
     "zh": {
@@ -383,64 +385,7 @@ ZH = {
 }
 
 # Tools this fork owns. Only the grafted ones exist on the integration branch.
-FORK_TOOLS = {
-    "revit_set_view_lighting": {
-        "status": "grafted",
-        "zh": "设置视图光照",
-        "en": "Set view lighting",
-        "zh_note": "已通过 fork 注册表接上七个兜底钩子，Python 工具注册与单元测试通过；C# 编译与真机验证仍在 Windows CI 与工作站上。",
-        "en_note": "Attached through the fork registry and the seven fallback hooks; the Python tool and its unit tests pass. C# compilation and live validation still happen on Windows CI and the workstation.",
-    },
-    "revit_create_level": {
-        "status": "pending",
-        "zh": "创建标高",
-        "en": "Create level",
-        "zh_note": "已有本地实现（含 dry_run 与验证块），待按新契约重映射到 fork 注册表。",
-        "en_note": "The local implementation exists with dry_run and a verification block; it still has to be remapped onto the fork registry.",
-    },
-    "revit_create_floor": {
-        "status": "pending",
-        "zh": "创建楼板",
-        "en": "Create floor",
-        "zh_note": "已有本地实现，待重映射。",
-        "en_note": "The local implementation exists; it still has to be remapped.",
-    },
-    "revit_set_phase": {
-        "status": "pending",
-        "zh": "设置阶段",
-        "en": "Set phase",
-        "zh_note": "已有本地实现；Revit 阶段不能创建或改名，只能写入既有阶段。",
-        "en_note": "The local implementation exists; Revit cannot create or rename phases, so it only assigns existing ones.",
-    },
-    "revit_merge_phases": {
-        "status": "pending",
-        "zh": "合并阶段",
-        "en": "Merge phases",
-        "zh_note": "已有本地实现；该命令不进批量步骤词表。",
-        "en_note": "The local implementation exists; the command is excluded from the batch step vocabulary.",
-    },
-    "revit_export_element_ids": {
-        "status": "pending",
-        "zh": "导出元素 ID 台账",
-        "en": "Export element ID register",
-        "zh_note": "已有本地实现，输出 xlsx 台账，含系统成员与连接器读取。",
-        "en_note": "The local implementation writes an xlsx register and reads system members and connectors.",
-    },
-    "revit_reset_element_ids": {
-        "status": "pending",
-        "zh": "重置元素 ID",
-        "en": "Reset element IDs",
-        "zh_note": "已有本地实现，可排练（dry_run 报出代价），每元素独立子事务。",
-        "en_note": "The local implementation is rehearsable, reports the cost in dry_run, and commits each element in its own subtransaction.",
-    },
-    "revit_rebuild_model_ids": {
-        "status": "pending",
-        "zh": "重建模型 ID",
-        "en": "Rebuild model IDs",
-        "zh_note": "已有本地实现（约一千行），支持模板、副本与重名策略；是最后一个移植项，工作量约等于前五项之和。",
-        "en_note": "The local implementation is about a thousand lines and supports templates, copies and duplicate-name policies; it is the last item to migrate and roughly equals the first five together.",
-    },
-}
+FORK_TOOLS = catalogs.fork_tools()
 
 LABELS = {
     "zh": {
