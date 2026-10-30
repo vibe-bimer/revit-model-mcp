@@ -16,6 +16,12 @@ import catalogs
 import contract_diff
 import yaml
 
+# A tool result must say which catalog it belongs to; these are the words the generated pages use.
+STATUS_MARKERS = {
+    "released": {"zh": ("已发布",), "en": ("Released",)},
+    "unreleased": {"zh": ("未发布",), "en": ("Unreleased",)},
+}
+
 
 @dataclass
 class PageInfo:
@@ -426,6 +432,112 @@ def audit_sources(root: Path) -> list[str]:
     return sorted(set(errors))
 
 
+def audit_search_index(site: Path) -> list[str]:
+    """Every search entry must state its language, and a tool entry its tool name and status.
+
+    The search plugin writes one index for the whole site, so nothing in a result says which
+    language it is written in or which catalog it belongs to. The build adds those fields; this
+    audit keeps them honest against the pages that were rendered.
+    """
+    index = site / "search/search_index.json"
+    if not index.is_file():
+        return ["search index missing: search/search_index.json"]
+    data = json.loads(index.read_text(encoding="utf-8"))
+    docs = data.get("docs") or []
+    if not docs:
+        return ["search index has no entries"]
+    errors: list[str] = []
+    page_entries = {
+        doc.get("location", ""): doc
+        for doc in docs
+        if "#" not in doc.get("location", "")
+    }
+    for doc in docs:
+        location = doc.get("location", "")
+        lang = doc.get("lang")
+        if lang is None:
+            errors.append(f"search entry {location!r} is missing lang")
+            continue
+        expected = "en" if location.startswith("en/") else "zh"
+        if lang != expected:
+            errors.append(
+                f"search entry {location!r} has lang {lang!r}, expected {expected!r}"
+            )
+        page = site / (location.split("#", 1)[0] or "") / "index.html"
+        if page.is_file():
+            rendered = parse_page(page).language
+            if rendered and rendered != lang:
+                errors.append(
+                    f"search entry {location!r} has lang {lang!r} but the page renders {rendered!r}"
+                )
+        tool = doc.get("tool")
+        if not tool:
+            continue
+        if "#" in location:
+            # A section entry carries only that section's text, so it inherits the language, tool
+            # name and status of the page it belongs to.
+            if location.split("#", 1)[0].rstrip("/") + "/" not in page_entries:
+                errors.append(f"search entry {location!r} has no page entry of its own")
+            continue
+        text = f"{doc.get('title', '')} {doc.get('text', '')}"
+        if tool not in text:
+            errors.append(f"search entry {location!r} is missing tool name {tool}")
+        markers = STATUS_MARKERS.get(doc.get("status"), {}).get(lang, ())
+        if not any(marker in text for marker in markers):
+            errors.append(
+                f"search entry {location!r} is missing the status marker for "
+                f"{doc.get('status')!r}"
+            )
+    return errors
+
+
+class _MigrationRowParser(HTMLParser):
+    """Collect the tool names and link presence of every table row."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.rows: list[dict] = []
+        self.row: dict | None = None
+        self.code: list[str] | None = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "tr":
+            self.row = {"tools": [], "linked": False}
+        elif tag == "a" and self.row is not None:
+            self.row["linked"] = True
+        elif tag == "code":
+            self.code = []
+
+    def handle_endtag(self, tag):
+        if tag == "tr" and self.row is not None:
+            self.rows.append(self.row)
+            self.row = None
+        elif tag == "code" and self.code is not None:
+            if self.row is not None:
+                self.row["tools"].append("".join(self.code))
+            self.code = None
+
+    def handle_data(self, data):
+        if self.code is not None:
+            self.code.append(data)
+
+
+def audit_migration_table(site: Path) -> list[str]:
+    """Every migration table row must reach the page or the status anchor it describes."""
+    errors: list[str] = []
+    for relative in ("platform/fork-tools", "en/platform/fork-tools"):
+        page = site / relative / "index.html"
+        if not page.is_file():
+            continue
+        parser = _MigrationRowParser()
+        parser.feed(page.read_text(encoding="utf-8"))
+        for row in parser.rows:
+            for tool in row["tools"]:
+                if tool.startswith("revit_") and not row["linked"]:
+                    errors.append(f"{relative}: migration row for {tool} has no link")
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--site-dir", type=Path, default=Path("site"))
@@ -435,6 +547,8 @@ def main() -> int:
         args.site_dir, args.base_url, Path(__file__).resolve().parents[2]
     )
     errors += audit_sources(Path(__file__).resolve().parents[2])
+    errors += audit_search_index(args.site_dir)
+    errors += audit_migration_table(args.site_dir)
     print(
         f"Pages: {stats['pages']} (zh {stats['zh']} / en {stats['en']}); checked internal references: {stats['links']}"
     )

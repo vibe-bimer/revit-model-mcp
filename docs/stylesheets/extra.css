@@ -441,6 +441,115 @@ body {
   font-weight: 700;
 }
 
+/* Version-aware results: a result states its language, its tool name and its catalog status. */
+.rmm-search-toggle {
+  border: 1px solid var(--rmc-rule);
+  border-radius: var(--rmc-radius);
+  color: var(--rmc-ink-3);
+  font-family: var(--rmc-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.03em;
+  margin-right: 0.3rem;
+  padding: 0.15rem 0.45rem;
+  transition: border-color 0.15s var(--rmc-ease), color 0.15s var(--rmc-ease);
+}
+
+.rmm-search-toggle:hover {
+  border-color: var(--rmc-rule-strong);
+  color: var(--rmc-ink);
+}
+
+.rmm-search-toggle--on {
+  background: var(--rmc-brand-wash);
+  border-color: color-mix(in oklab, var(--rmc-brand) 30%, transparent);
+  color: var(--rmc-brand);
+}
+
+.rmm-search-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.25rem 0 0;
+}
+
+.rmm-search-meta code {
+  background: none;
+  color: var(--rmc-ink-3);
+  font-size: 0.58rem;
+  padding: 0;
+}
+
+.rmm-search-badge {
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  font-family: var(--rmc-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.6;
+  padding: 0 0.4rem;
+  white-space: nowrap;
+}
+
+.rmm-search-badge--release {
+  background: var(--rmc-ok-wash);
+  border-color: color-mix(in oklab, var(--rmc-ok) 28%, transparent);
+  color: var(--rmc-ok);
+}
+
+.rmm-search-badge--branch {
+  background: var(--rmc-accent-wash);
+  border-color: color-mix(in oklab, var(--rmc-accent) 30%, transparent);
+  color: var(--rmc-accent);
+}
+
+.rmm-search-badge--language {
+  background: var(--rmc-paper-3);
+  border-color: var(--rmc-rule);
+  color: var(--rmc-ink-3);
+}
+
+.rmm-search-more {
+  color: var(--rmc-ink-3);
+  font-family: var(--rmc-mono);
+  font-size: 0.58rem;
+  padding: 0.6rem 1rem;
+}
+
+.rmm-search-empty {
+  color: var(--rmc-ink-2);
+  padding: 1rem 1rem 1.2rem;
+}
+
+.rmm-search-empty p {
+  margin: 0 0 0.5rem;
+}
+
+.rmm-search-action {
+  border: 1px solid var(--rmc-rule);
+  border-radius: var(--rmc-radius);
+  color: var(--rmc-brand);
+  font-family: var(--rmc-mono);
+  font-size: 0.6rem;
+  padding: 0.2rem 0.55rem;
+}
+
+.rmm-search-action:hover {
+  border-color: var(--rmc-brand);
+}
+
+.rmm-search-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.rmm-search-links a {
+  color: var(--rmc-brand);
+  font-size: 0.62rem;
+}
+
 /* 7. Content --------------------------------------------------------------- */
 
 .md-grid {

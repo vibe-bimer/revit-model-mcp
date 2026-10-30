@@ -9,13 +9,13 @@ This repository owns 8 tools. 1 is attached to the new base and 7 are still queu
 | Tools | Base and fork tools | Migration status |
 | --- | --- | --- |
 | [Set view lighting](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | Fork (this repository) | <span class="state ok">Grafted</span> |
-| Create level<br>`revit_create_level` | Fork (this repository) | <span class="state no">Pending</span> |
-| Create floor<br>`revit_create_floor` | Fork (this repository) | <span class="state no">Pending</span> |
-| Set phase<br>`revit_set_phase` | Fork (this repository) | <span class="state no">Pending</span> |
-| Merge phases<br>`revit_merge_phases` | Fork (this repository) | <span class="state no">Pending</span> |
-| Export element ID register<br>`revit_export_element_ids` | Fork (this repository) | <span class="state no">Pending</span> |
-| Reset element IDs<br>`revit_reset_element_ids` | Fork (this repository) | <span class="state no">Pending</span> |
-| Rebuild model IDs<br>`revit_rebuild_model_ids` | Fork (this repository) | <span class="state no">Pending</span> |
+| [Create level](#revit-create-level)<br>`revit_create_level` | Fork (this repository) | <span class="state no">Pending</span> |
+| [Create floor](#revit-create-floor)<br>`revit_create_floor` | Fork (this repository) | <span class="state no">Pending</span> |
+| [Set phase](#revit-set-phase)<br>`revit_set_phase` | Fork (this repository) | <span class="state no">Pending</span> |
+| [Merge phases](#revit-merge-phases)<br>`revit_merge_phases` | Fork (this repository) | <span class="state no">Pending</span> |
+| [Export element ID register](#revit-export-element-ids)<br>`revit_export_element_ids` | Fork (this repository) | <span class="state no">Pending</span> |
+| [Reset element IDs](#revit-reset-element-ids)<br>`revit_reset_element_ids` | Fork (this repository) | <span class="state no">Pending</span> |
+| [Rebuild model IDs](#revit-rebuild-model-ids)<br>`revit_rebuild_model_ids` | Fork (this repository) | <span class="state no">Pending</span> |
 
 Grafted means the branch lists and runs it. Pending means the implementation exists in the local version but the branch has no command yet.
 

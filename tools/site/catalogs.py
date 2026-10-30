@@ -121,6 +121,67 @@ def fork_tools(root: Path | None = None) -> dict:
     return dict(load(root).get("fork_tools") or {})
 
 
+OBJECT_ORDER = ("views", "sheets", "schedules", "view-display")
+
+
+def _catalog_tool_names(root: Path | None = None) -> set[str]:
+    """Every tool name either catalog publishes, from the snapshots the site is built from."""
+    root = root or ROOT
+    names: set[str] = set()
+    released = root / "tools/site/content/tools.json"
+    if released.is_file():
+        names.update(
+            tool["name"] for tool in json.loads(released.read_text(encoding="utf-8"))
+        )
+    source = load(root)["integration"].get("provenance") or {}
+    if source:
+        path = root / source["file"]
+        if path.is_file():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            names.update(tool["name"] for tool in data.get("tools") or [])
+    return names
+
+
+def object_groups(root: Path | None = None) -> dict[str, dict]:
+    """Return the object grouping both catalogs browse by, in declaration order.
+
+    Membership is data so the two indexes and the platform navigation cannot drift apart.
+    A tool that neither catalog publishes, or one listed twice, fails the load instead of
+    quietly vanishing from the navigation.
+    """
+    root = root or ROOT
+    path = root / "tools/site/content/object-groups.yaml"
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    groups = data.get("groups") or {}
+    known = _catalog_tool_names(root)
+    seen: dict[str, str] = {}
+    result: dict[str, dict] = {}
+    for key in OBJECT_ORDER:
+        group = groups.get(key)
+        if not group:
+            raise SystemExit(f"object-groups.yaml is missing group {key!r}")
+        tools = [str(name) for name in group.get("tools") or []]
+        for name in tools:
+            if name in seen:
+                raise SystemExit(
+                    f"object-groups.yaml lists {name} in {seen[name]} and {key}"
+                )
+            if name not in known:
+                raise SystemExit(
+                    f"object-groups.yaml names {name}, which neither catalog publishes"
+                )
+            seen[name] = key
+        result[key] = {
+            "zh": str(group["zh"]),
+            "en": str(group["en"]),
+            "tools": tools,
+        }
+    unknown = sorted(set(groups) - set(OBJECT_ORDER))
+    if unknown:
+        raise SystemExit(f"object-groups.yaml declares unknown groups: {unknown}")
+    return result
+
+
 def catalog_for_directory(directory: str, root: Path | None = None) -> Catalog | None:
     for catalog in (release(root), integration(root)):
         if catalog.directory == directory:

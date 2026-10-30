@@ -8,6 +8,17 @@ description: "集成分支（上游 1.0 基座加本仓库自研工具）的完�
 
 共 80 个工具：基座 79 个，自研 1 个；读取 34 个，动作 46 个。
 
+## 版本入口 {#versions}
+
+两个目录各自记录一个版本：现有版本已经发布，集成分支尚未发布。下面的数量与状态都从注册表读取，不写死。
+
+| | 现有版本 | 集成分支 |
+| --- | --- | --- |
+| 状态 | 已发布 0.9.0 | 未发布（集成分支） |
+| 分支 | main | `integration/upstream-1.0` |
+| 工具数 | 35 | 80 |
+| 目录 | [../features/index.md](../features/index.md) | index.md |
+
 ## 两套工具面 {#catalogs}
 
 现有版本是已经发布的 0.9.0，集成分支是以上游一零版为底座的新线。两者的工具数量与清单都不同，不能混用。
@@ -56,6 +67,55 @@ description: "集成分支（上游 1.0 基座加本仓库自研工具）的完�
 | [导出与登记](#group-export) | 4 | 2 | 2 |
 | [批处理与报告](#group-batch) | 6 | 5 | 1 |
 | [C# 逃生口](#group-code) | 1 | 0 | 1 |
+
+按视图、图纸、明细表与视口显示浏览：见 [按模型对象浏览](#objects)。
+
+## 按模型对象浏览 {#objects}
+
+同一批视图相关工具按操作的模型对象再分一次，方便先找对象再找工具；上面的分组表与下面的逐项文档保持原样。
+
+### 视图 {#objects-views}
+
+| 工具数 | 类型 | 基座与自研的区分 |
+| --- | --- | --- |
+| [激活视图](revit_activate_view.md)<br>`revit_activate_view` | 动作 | <span class="state part">基座（上游）</span> |
+| [应用视图样板](revit_apply_view_template.md)<br>`revit_apply_view_template` | 动作 | <span class="state part">基座（上游）</span> |
+| [关闭视图](revit_close_views.md)<br>`revit_close_views` | 动作 | <span class="state part">基座（上游）</span> |
+| [创建视图](revit_create_view.md)<br>`revit_create_view` | 动作 | <span class="state part">基座（上游）</span> |
+| [复制视图](revit_duplicate_view.md)<br>`revit_duplicate_view` | 动作 | <span class="state part">基座（上游）</span> |
+| [导出视图为 PNG](revit_export_view.md)<br>`revit_export_view` | 读取 | <span class="state part">基座（上游）</span> |
+| [视图列表](revit_list_views.md)<br>`revit_list_views` | 读取 | <span class="state part">基座（上游）</span> |
+| [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 动作 | <span class="state ok">自研（本仓库）</span> <span class="state ok">已移植</span> |
+| [设置视图可见性](revit_set_view_visibility.md)<br>`revit_set_view_visibility` | 动作 | <span class="state part">基座（上游）</span> |
+| [视图构件](revit_view_elements.md)<br>`revit_view_elements` | 读取 | <span class="state part">基座（上游）</span> |
+| [视图信息](revit_view_info.md)<br>`revit_view_info` | 读取 | <span class="state part">基座（上游）</span> |
+| [视图摘要](revit_view_summary.md)<br>`revit_view_summary` | 读取 | <span class="state part">基座（上游）</span> |
+| [视图警告](revit_view_warnings.md)<br>`revit_view_warnings` | 读取 | <span class="state part">基座（上游）</span> |
+
+### 图纸 {#objects-sheets}
+
+| 工具数 | 类型 | 基座与自研的区分 |
+| --- | --- | --- |
+| [创建图纸](revit_create_sheet.md)<br>`revit_create_sheet` | 动作 | <span class="state part">基座（上游）</span> |
+| [在图纸上布置视图](revit_place_views_on_sheet.md)<br>`revit_place_views_on_sheet` | 动作 | <span class="state part">基座（上游）</span> |
+
+### 明细表 {#objects-schedules}
+
+| 工具数 | 类型 | 基座与自研的区分 |
+| --- | --- | --- |
+| [读取明细表数据](revit_schedule_data.md)<br>`revit_schedule_data` | 读取 | <span class="state part">基座（上游）</span> |
+| [创建明细表](revit_create_schedule.md)<br>`revit_create_schedule` | 动作 | <span class="state part">基座（上游）</span> |
+
+### 视口与显示 {#objects-view-display}
+
+| 工具数 | 类型 | 基座与自研的区分 |
+| --- | --- | --- |
+| [截取构件画面](revit_capture_elements.md)<br>`revit_capture_elements` | 读取 | <span class="state part">基座（上游）</span> |
+| [隔离构件](revit_isolate.md)<br>`revit_isolate` | 动作 | <span class="state part">基座（上游）</span> |
+| [高亮构件](revit_override_graphics.md)<br>`revit_override_graphics` | 动作 | <span class="state part">基座（上游）</span> |
+| [选择构件](revit_select.md)<br>`revit_select` | 动作 | <span class="state part">基座（上游）</span> |
+| [显示构件](revit_show.md)<br>`revit_show` | 动作 | <span class="state part">基座（上游）</span> |
+| [标注构件](revit_tag_elements.md)<br>`revit_tag_elements` | 动作 | <span class="state part">基座（上游）</span> |
 
 ## 连接与实例 {#group-core}
 

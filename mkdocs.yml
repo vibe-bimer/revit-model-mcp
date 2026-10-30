@@ -50,6 +50,8 @@ extra_css:
   - stylesheets/extra.css
   - stylesheets/landing.css
 extra_javascript:
+  - javascripts/search-catalog.js
+  - javascripts/search-enhance.js
   - javascripts/site.js
 hooks:
   - docs/hooks.py
@@ -140,6 +142,10 @@ plugins:
             编辑原语: Editing primitives
             文档生命周期: Document lifecycle
             视图、图纸与明细表: Views, sheets and schedules
+            视图: Views
+            图纸: Sheets
+            明细表: Schedules
+            视口与显示: Viewports and display
             族: Families
             链接与基准: Links and datums
             CAD 与 MEP: CAD and MEP
@@ -275,28 +281,32 @@ nav:
           - platform/revit_save_document.md
           - platform/revit_sync_document.md
       - 视图、图纸与明细表:
-          - platform/revit_activate_view.md
-          - platform/revit_apply_view_template.md
-          - platform/revit_capture_elements.md
-          - platform/revit_close_views.md
-          - platform/revit_create_schedule.md
-          - platform/revit_create_sheet.md
-          - platform/revit_create_view.md
-          - platform/revit_duplicate_view.md
-          - platform/revit_export_view.md
-          - platform/revit_isolate.md
-          - platform/revit_list_views.md
-          - platform/revit_override_graphics.md
-          - platform/revit_place_views_on_sheet.md
-          - platform/revit_select.md
-          - platform/revit_set_view_lighting.md
-          - platform/revit_set_view_visibility.md
-          - platform/revit_show.md
-          - platform/revit_tag_elements.md
-          - platform/revit_view_elements.md
-          - platform/revit_view_info.md
-          - platform/revit_view_summary.md
-          - platform/revit_view_warnings.md
+          - 视图:
+              - platform/revit_activate_view.md
+              - platform/revit_apply_view_template.md
+              - platform/revit_close_views.md
+              - platform/revit_create_view.md
+              - platform/revit_duplicate_view.md
+              - platform/revit_export_view.md
+              - platform/revit_list_views.md
+              - platform/revit_set_view_lighting.md
+              - platform/revit_set_view_visibility.md
+              - platform/revit_view_elements.md
+              - platform/revit_view_info.md
+              - platform/revit_view_summary.md
+              - platform/revit_view_warnings.md
+          - 图纸:
+              - platform/revit_create_sheet.md
+              - platform/revit_place_views_on_sheet.md
+          - 明细表:
+              - platform/revit_create_schedule.md
+          - 视口与显示:
+              - platform/revit_capture_elements.md
+              - platform/revit_isolate.md
+              - platform/revit_override_graphics.md
+              - platform/revit_select.md
+              - platform/revit_show.md
+              - platform/revit_tag_elements.md
       - 族:
           - platform/revit_edit_families.md
           - platform/revit_family_audit.md

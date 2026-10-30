@@ -1,11 +1,21 @@
 """Resolve included Markdown links relative to their repository source."""
 
+import importlib.util
+import json
 import posixpath
 import re
+import sys
 from pathlib import Path
 from urllib.parse import urlsplit
 
 from markdown import Markdown
+
+ROOT = Path(__file__).resolve().parents[1]
+# A tool page's search entry is the only one whose location is a catalog directory followed by a
+# stable tool name, optionally with an anchor.
+TOOL_PAGE = re.compile(
+    r"(?P<directory>features|platform)/(?P<tool>revit_[a-z0-9_]+)/?$"
+)
 
 # Each entry maps the repository files that back a documentation page to its Chinese and English page, so a
 # link to any of those files resolves to the page the current language build actually has.
@@ -156,6 +166,95 @@ def _write_directory_sitemaps(site: Path) -> int:
         )
         written += 1
     return written
+
+
+def _catalog_module():
+    """Load the catalog manifest module the site generators use, so nothing here hard-codes a version."""
+    name = "rmm_catalogs"
+    if name in sys.modules:
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(name, ROOT / "tools/site/catalogs.py")
+    module = importlib.util.module_from_spec(spec)
+    # Register before executing: the module declares dataclasses, which look themselves up in
+    # sys.modules while the class body is built.
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _catalog_surfaces() -> dict[str, dict]:
+    """Map each catalog directory to the status fields a search result shows."""
+    module = _catalog_module()
+    release, integration = module.release(), module.integration()
+    return {
+        release.directory: {
+            "catalog": "release",
+            "status": release.status,
+            "version": release.version,
+            "branch": release.branch,
+        },
+        integration.directory: {
+            "catalog": "branch",
+            "status": integration.status,
+            "version": "",
+            "branch": integration.branch,
+        },
+    }
+
+
+def search_record(location: str, surfaces: dict[str, dict] | None = None) -> dict:
+    """Describe one search index entry by language, tool name and catalog status.
+
+    The search plugin indexes every page in one file, so a result cannot tell a Chinese page from
+    an English one or a released tool from a branch-only tool. These fields make both readable
+    without a second request.
+    """
+    surfaces = surfaces or _catalog_surfaces()
+    lang = "en" if location.startswith("en/") else "zh"
+    relative = location[len("en/") :] if lang == "en" else location
+    path = relative.split("#", 1)[0]
+    record: dict = {"lang": lang, "tool": None}
+    found = TOOL_PAGE.fullmatch(path)
+    for directory, surface in surfaces.items():
+        if path == directory or path.startswith(f"{directory}/"):
+            record.update(surface)
+            break
+    if found:
+        record["tool"] = found.group("tool")
+    return record
+
+
+def enrich_search_index(site: Path) -> int:
+    """Add language, tool name and catalog status to every entry of the built search index."""
+    index = site / "search/search_index.json"
+    if not index.is_file():
+        return 0
+    data = json.loads(index.read_text(encoding="utf-8"))
+    surfaces = _catalog_surfaces()
+    for doc in data.get("docs") or []:
+        doc.update(search_record(doc.get("location", ""), surfaces))
+    index.write_text(
+        json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+    )
+    return len(data.get("docs") or [])
+
+
+# The search plugin writes its index after the hooks' own post-build event, so the enrichment runs
+# at shutdown instead: that is the only point where the index every language build writes exists.
+SITE_DIR: Path | None = None
+
+
+def on_config(config):
+    """Remember the top-level site directory, which stays the same for every language build."""
+    global SITE_DIR
+    if SITE_DIR is None:
+        SITE_DIR = Path(config.site_dir)
+    return config
+
+
+def on_shutdown() -> None:
+    if SITE_DIR is not None:
+        enrich_search_index(SITE_DIR)
 
 
 def on_post_build(config) -> None:
