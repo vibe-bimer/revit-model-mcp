@@ -8,7 +8,8 @@ namespace Installer;
 ///     HKLM\Software\Policies\RevitModelMcp, which the add-in reads before any user setting.
 ///     <para>
 ///         Ownership rule: the installer writes a value only when its property is set explicitly (READONLY=1,
-///         EXECUTECODE=off|confirm) or was set by an earlier installer run. It remembers its own writes in a marker
+///         EXECUTECODE=off|confirm) or was set by an earlier installer run. READONLY defaults to 1, so a fresh install
+///         is read-only and a write-capable machine says so on the command line: READONLY=0. It remembers its own writes in a marker
 ///         key under HKLM\Software\RevitModelMcp\MsiPolicy, never by reading the policy key, so a value that Group
 ///         Policy or Intune owns is never rewritten, reset by repair, or removed by upgrade or uninstall.
 ///         ReadOnly is written as the literal 1, so a repair can never write 0.
@@ -20,12 +21,17 @@ static class MachinePolicyValues
     const string PolicyKey = @"Software\Policies\RevitModelMcp";
     const string MarkerKey = @"Software\RevitModelMcp\MsiPolicy";
 
+    /// <summary>
+    ///     Read-only is the default: the property starts at 1, so the value below is written unless the caller
+    ///     passes READONLY=0. The fork's eight actions rewrite element ids and rebuild whole models, so a fresh
+    ///     install must not be one tool call away from that. See adr/0003 and adr/0008.
+    /// </summary>
     const string ReadOnlySet = "READONLY=\"1\"";
     const string ExecuteCodeSet = "EXECUTECODE~=\"off\" OR EXECUTECODE~=\"confirm\"";
 
     public static IEnumerable<Property> Properties() =>
     [
-        new Property("READONLY", "") { Secure = true },
+        new Property("READONLY", "1") { Secure = true },
         new Property("EXECUTECODE", "") { Secure = true },
         new RegValueProperty("RMM_REMEMBERED_READONLY", RegistryHive.LocalMachine, MarkerKey, "ReadOnly", "") { Secure = true },
         new RegValueProperty("RMM_REMEMBERED_EXECUTECODE", RegistryHive.LocalMachine, MarkerKey, "ExecuteCode", "") { Secure = true }

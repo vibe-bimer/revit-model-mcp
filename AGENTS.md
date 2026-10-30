@@ -2,7 +2,7 @@
 
 ## Purpose and runtime
 
-Model MCP exposes live Revit models to MCP clients. Actions are enabled by default, and read-only mode stays available.
+Model MCP exposes live Revit models to MCP clients. The installer ships read-only, and the workstation policy is the only gate on writes.
 The C# add-in runs inside Revit on Windows and owns Revit API access through ExternalEvent.
 The Python server runs on the MCP client's machine and exposes stdio tools over local, SSH or HTTP transport to the add-in.
 
@@ -75,7 +75,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for packaging commands and test coverage.
 
 ## Hard rules
 
-- Actions are enabled by default; every change is one named undo entry, listed in the activity pane and reported in `summary`; read-only mode must stay available.
+- A fresh install is read-only: `READONLY=1` is the installer default, and a workstation that accepts writes says `READONLY=0` (adr/0003). Every change is one named undo entry, listed in the activity pane and reported in `summary`.
 - Direct HTTP actions still require authentication and are refused while the workstation read-only gate is present.
 - Never log model paths when redaction is on, or expose secrets and confidential model data in commits or logs.
 - Never include Revit API assemblies in artifacts.
