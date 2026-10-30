@@ -62,6 +62,11 @@ reader consults a per-user source, so that install is read-write until an admini
 store channel builds that same package. Closing the gap needs a decision 0003 did not make: either a per-user policy
 source, or a single machine-scope install.
 
+A server started from source — `uvx`, a wheel or a source archive without the MSI — has no machine policy either, so
+it is read-write unless something else refuses. The documented registrations therefore pass `REVIT_MCP_READ_ONLY=1`,
+which the server already honours as a force, and the reader who wants actions on such a machine sets it to `0`. That
+keeps the promise the pages make without inventing a second gate.
+
 ## Consequences
 
 A rebase of the fork onto a newer upstream touches nine sites and roughly 99 lines. Reading the list above is enough

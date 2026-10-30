@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import re
-import subprocess
 import sys
 import threading
 import urllib.request
@@ -15,7 +14,11 @@ from pathlib import Path
 
 LOGGER = logging.getLogger(__name__)
 PACKAGE = "revit-model-mcp"
-PYPI_URL = f"https://pypi.org/pypi/{PACKAGE}/json"
+# This fork publishes its server on GitHub Releases and not to PyPI. Upstream owns the
+# revit-model-mcp project on PyPI and both projects share version numbers, so a PyPI lookup
+# here would report upstream's release and a uvx refresh would install upstream's server.
+REPOSITORY = "vibe-bimer/revit-model-mcp"
+RELEASES_URL = f"https://api.github.com/repos/{REPOSITORY}/releases/latest"
 CHECK_INTERVAL = timedelta(hours=24)
 STABLE_VERSION = re.compile(
     r"v?(?:(\d+)!)?(\d+(?:\.\d+)*)(?:(?:[._-]?post|-)\s*(\d+))?"
@@ -97,23 +100,18 @@ def update_status(current: str | None = None) -> dict[str, str | None]:
 
 
 def _fetch_latest(path: Path) -> None:
+    """Record this fork's newest stable release tag, read from its own GitHub releases."""
     try:
-        with urllib.request.urlopen(PYPI_URL, timeout=5) as response:
-            package = json.load(response)
-        releases = package["releases"]
-        versions = [
-            version
-            for version, files in releases.items()
-            if files
-            and stable_version_key(version) is not None
-            and any(not file.get("yanked", False) for file in files)
-        ]
-        if not versions:
+        with urllib.request.urlopen(RELEASES_URL, timeout=5) as response:
+            release = json.load(response)
+        if not isinstance(release, dict) or release.get("draft") or release.get("prerelease"):
             return
-        version = versions[0]
-        for candidate in versions[1:]:
-            if newer_stable(candidate, version):
-                version = candidate
+        tag = release.get("tag_name")
+        if not isinstance(tag, str):
+            return
+        version = tag.removeprefix("v")
+        if stable_version_key(version) is None:
+            return
         state = read_state(path)
         if not state.get("latestKnown") or newer_stable(version, state["latestKnown"]):
             state["latestKnown"] = version
@@ -134,29 +132,8 @@ def check_for_updates(path: Path | None = None, now: datetime | None = None) -> 
             return
         state["lastChecked"] = now.isoformat()
         _write_state(path, state)
-        flags = 0
-        if os.name == "nt":
-            flags = subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
-        subprocess.Popen(
-            [
-                "uvx",
-                "--prerelease=disallow",
-                "--refresh-package",
-                PACKAGE,
-                "--from",
-                PACKAGE,
-                "python",
-                "-c",
-                "import importlib.metadata as m; print(m.version('revit-model-mcp'))",
-            ],
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            env={**os.environ, "UV_HTTP_TIMEOUT": "10"},
-            close_fds=True,
-            creationflags=flags,
-            start_new_session=os.name != "nt",
-        )
+        # No package warm-up here: this fork publishes no PyPI package, and a uvx refresh of the
+        # bare name would install upstream's server. The lookup only reads a release tag.
         threading.Thread(target=_fetch_latest, args=(path,), daemon=True).start()
     except Exception:
         LOGGER.debug("Update check could not start.", exc_info=True)

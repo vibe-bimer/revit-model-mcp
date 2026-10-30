@@ -161,9 +161,9 @@ EXTERNAL_ENDPOINTS = [
         _UPDATE_CHECK_DISABLE,
     ),
     _endpoint(
-        "pypi.org",
+        "api.github.com",
         "Python server",
-        "Best-effort check for a newer revit-model-mcp release.",
+        "Best-effort check for a newer release of this fork.",
         _HTTPS_REQUEST_ONLY,
         "Set REVIT_MCP_NO_UPDATE_CHECK=1.",
     ),

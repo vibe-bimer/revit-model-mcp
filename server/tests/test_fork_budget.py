@@ -52,15 +52,31 @@ def test_the_hook_budget_counts_both_sides_of_a_change(budget, config):
             "2\t0\tsrc/RevitModelMcp.Addin/Control/ActionMutations.cs",
         ]
     )
-    hooks, other, unowned = budget.changed_lines(numstat, config)
+    hooks, other, unowned, _ = budget.changed_lines(numstat, config)
     assert hooks == {"src/RevitModelMcp.Addin/Application.cs": 4}
     assert other == {"docs/tools.md": 10}
     assert unowned == ["src/RevitModelMcp.Addin/Control/ActionMutations.cs"]
 
 
 def test_a_binary_change_is_counted_by_name_not_by_lines(budget, config):
-    hooks, _, _ = budget.changed_lines("-\t-\tsrc/RevitModelMcp.Addin/Application.cs", config)
+    hooks, _, _, _ = budget.changed_lines("-\t-\tsrc/RevitModelMcp.Addin/Application.cs", config)
     assert hooks == {"src/RevitModelMcp.Addin/Application.cs": 0}
+
+
+def test_a_removal_is_asserted_and_never_counted_as_a_read(budget, config):
+    numstat = "0\t12\tserver/server.json"
+    hooks, other, unowned, removed = budget.changed_lines(numstat, config)
+    assert removed == ["server/server.json"]
+    assert other == {}
+    assert hooks == {}
+    assert unowned == []
+
+
+def test_every_removed_entry_states_its_reason_and_is_really_gone(config):
+    repository_root = BUILD.parent
+    for path, reason in config["removed"].items():
+        assert reason and reason != "", path
+        assert not (repository_root / path).exists(), path
 
 
 def test_every_read_entry_states_its_reason(config):
@@ -69,7 +85,7 @@ def test_every_read_entry_states_its_reason(config):
 
 
 def test_the_layer_fits_its_budget_right_now(budget, config, monkeypatch):
-    hooks, _, unowned = budget.changed_lines(budget.numstat(config["base"]), config)
+    hooks, _, unowned, _ = budget.changed_lines(budget.numstat(config["base"]), config)
     assert sum(hooks.values()) <= config["hookBudgetLines"]
     assert unowned == []
 

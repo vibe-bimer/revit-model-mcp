@@ -23,13 +23,13 @@ uvx --from https://github.com/vibe-bimer/revit-model-mcp/releases/download/v<VER
 Register the local Windows server with Claude Code:
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_READ_ONLY=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
 ```
 
 For a client on macOS or Linux:
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=ssh:revit-host -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=ssh:revit-host -e REVIT_MCP_REDACT_PATHS=1 -e REVIT_MCP_READ_ONLY=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
 ```
 
 Replace `revit-host` with an alias from the client's SSH configuration.

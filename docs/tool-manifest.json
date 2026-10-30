@@ -1755,10 +1755,10 @@
       "disable": "Install with UPDATEMODE=off (or UPDATECHECK=0), set updateMode to off in settings.json, or build with UpdateChannel=managed."
     },
     {
-      "domain": "pypi.org",
+      "domain": "api.github.com",
       "protocol": "https",
       "component": "Python server",
-      "purpose": "Best-effort check for a newer revit-model-mcp release.",
+      "purpose": "Best-effort check for a newer release of this fork.",
       "dataSent": "None beyond a standard HTTPS request.",
       "optional": true,
       "disable": "Set REVIT_MCP_NO_UPDATE_CHECK=1."

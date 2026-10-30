@@ -68,13 +68,20 @@ def test_a_bare_launcher_is_recognised(identity):
 
 
 def test_a_fork_source_is_not_a_bare_launcher(identity):
-    line = (
+    document = (
         "uvx --from https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/"
-        "v1.0.0.tar.gz#subdirectory=server revit-model-mcp"
+        "v1.0.0.tar.gz#subdirectory=server revit-model-mcp\n"
     )
-    # The scan skips a line that carries --from, so a fork source never trips it.
-    assert "--from" in line
-    assert identity.PYPI_LAUNCHER.search(line) is None
+    assert identity.launcher_problems("README.md", document) == []
+
+
+def test_the_launcher_scan_fires_in_every_scanned_file_type(identity):
+    """A bare launcher in code or markup is caught, not only in Markdown."""
+    for relative in ("install.ps1", "server/revit_model_mcp/updates.py", "docs/page.html"):
+        assert identity.launcher_problems(relative, "uvx revit-model-mcp --help\n")
+    assert identity.launcher_problems("README.md", "uvx revit-model-mcp==1.0.0\n")
+    assert identity.launcher_problems("README.md", "https://pypi.org/project/revit-model-mcp/\n")
+    assert identity.launcher_problems("README.md", "upstream ships uvx revit-model-mcp\n") == []
 
 
 def test_the_bundle_installs_the_fork_and_never_the_package_name(identity):

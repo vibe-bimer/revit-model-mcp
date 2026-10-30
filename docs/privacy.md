@@ -8,7 +8,7 @@ Changes to this policy are recorded in the repository history.
 - Your model data stays on your machines. The project has no server that receives it.
 - There is no analytics, telemetry, crash reporting or advertising code in the add-in or the Python server.
 - Revit model data leaves the workstation only as responses to the MCP client you chose. That client may send it to an AI model service under its own policy.
-- The Autodesk App Store build and its bundled server make no automatic requests. Other builds make only update checks to `api.github.com` (add-in) and `pypi.org` (server). They carry no model data and you can switch them off.
+- The Autodesk App Store build and its bundled server make no automatic requests. Other builds make only update checks to `api.github.com` (add-in and server). They carry no model data and you can switch them off.
 
 ## Data collection
 
@@ -30,11 +30,10 @@ Per-user installs download the SingleUser MSI and its SHA256 checksum from the r
 The Autodesk App Store build (the `store` channel) never checks GitHub and ships without the updater. Its bundled server never contacts PyPI. Updates arrive through the Autodesk App Store. Managed builds (the `managed` channel) likewise make no update requests.
 The **Connect AI app** button writes a local MCP client configuration entry on the workstation. It makes no network request.
 
-The Python server checks for a newer package once every 24 hours.
-It looks up the package page on `pypi.org` and refreshes the cached package with `uvx`, which downloads from PyPI and its package hosting service.
+The Python server checks for a newer release once every 24 hours.
+It reads the latest release of this fork on `api.github.com` and records the version; it downloads and installs nothing, and it never resolves the package name on PyPI, where the same name belongs to upstream.
 These requests contain no model data.
-The bundle launcher uses uvx to download the package and dependencies from PyPI and its package hosting service during installation or updates.
-Prerelease bundles download the package wheel from GitHub Releases.
+The bundle launcher uses uvx to download the server from this fork's GitHub release and its dependencies from PyPI and its package hosting service during installation or updates.
 
 To turn the checks off:
 

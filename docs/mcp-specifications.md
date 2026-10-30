@@ -32,8 +32,8 @@ All requests are HTTPS, carry no model data, and can be turned off. The Autodesk
 | --- | --- | --- | --- |
 | `api.github.com` | Add-in | Latest stable release check, at most every 24 hours | No |
 | `github.com`, `release-assets.githubusercontent.com` | Add-in | Release MSI and checksum download for per-user installs | No |
-| `pypi.org` | Python server | Optional check for a newer server release | No (the bundled executable never checks) |
-| `pypi.org`, `files.pythonhosted.org` | uv launcher | Package download when the server starts for the first time | No (the store build does not use the uv launcher) |
+| `api.github.com` | Python server | Optional check for a newer server release | No (the bundled executable never checks) |
+| `github.com`, `files.pythonhosted.org` | uv launcher | Server download from this fork's release and its dependencies when the server starts for the first time | No (the store build does not use the uv launcher) |
 
 No other domain is contacted. The committed manifest lists the domains of the regular build; the managed manifest (`--managed`) has none, and the release workflow attaches the store export `revit-model-mcp-<version>-store.mcp-manifest.json`, made from the managed manifest with `--export-snake-case`, with `external_endpoints` and `ai_llm_providers` empty. See the [full table](admin/security-whitepaper.md#outbound-network).
 Each tool in the store export includes the server's advertised `inputSchema`.
@@ -84,5 +84,5 @@ All modifying tools are refused in read-only mode. Tool names and descriptions d
 
 ## Server runtime
 
-The MSI installers ship the server as a self-contained Windows executable (`revit-model-mcp.exe`, a PyInstaller folder with its own Python runtime and the locked dependencies) under `%ProgramFiles%\Model MCP\server` (multi-user) or `%LocalAppData%\Programs\Model MCP\server` (single-user). The user needs no Python and no uv, and the executable never starts uv or contacts PyPI. The bundled Python and package licenses are in the `licenses` folder next to the executable and in [THIRD-PARTY-NOTICES](https://github.com/vibe-bimer/revit-model-mcp/blob/main/THIRD-PARTY-NOTICES.md).
+The MSI installers ship the server as a self-contained Windows executable (`revit-model-mcp.exe`, a PyInstaller folder with its own Python runtime and the locked dependencies) under `%ProgramFiles%\Revit Model MCP (vibe-bimer)\server` (multi-user) or `%LocalAppData%\Programs\Revit Model MCP (vibe-bimer)\server` (single-user). The user needs no Python and no uv, and the executable never starts uv or contacts PyPI. The bundled Python and package licenses are in the `licenses` folder next to the executable and in [THIRD-PARTY-NOTICES](https://github.com/vibe-bimer/revit-model-mcp/blob/main/THIRD-PARTY-NOTICES.md).
 The add-in bundle and the Claude Desktop `.mcpb` still start the server through uv.

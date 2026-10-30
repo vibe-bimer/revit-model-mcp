@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "revit-model-mcp"
 version = "1.0.0"
-description = "Model MCP: MCP access to live Autodesk Revit projects with actions enabled by default and opt-out read-only mode"
+description = "Revit Model MCP (vibe-bimer): read-only-by-default MCP access to live Autodesk Revit projects"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"

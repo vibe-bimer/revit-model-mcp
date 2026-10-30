@@ -94,13 +94,13 @@ Every network call in the shipped code is in this table. The project has no tele
 | --- | --- | --- | --- | --- |
 | Add-in update check | `api.github.com` (`/repos/vibe-bimer/revit-model-mcp/releases/latest`) | At most every 24 hours after Revit starts | A plain HTTPS request with the user agent `RevitModelMcp updater` | `UPDATECHECK=0`, `updateCheck:false`, `REVIT_MCP_NO_UPDATE_CHECK=1`, managed bundle, `UpdateMode=off` |
 | Add-in update download (per-user installs only) | `github.com` and `release-assets.githubusercontent.com` | When a newer stable release exists | A plain HTTPS request for the MSI and `SHA256SUMS.txt` | Same as above |
-| Server update check | `pypi.org` | At most every 24 hours at server start | A plain HTTPS request | `REVIT_MCP_NO_UPDATE_CHECK=1` |
-| Server package download | `pypi.org`, `files.pythonhosted.org` | When uv installs or refreshes the package, and at first launcher start | A plain HTTPS request | Pin the version and install from a wheelhouse |
+| Server update check | `api.github.com` | At most every 24 hours at server start | A plain HTTPS request | `REVIT_MCP_NO_UPDATE_CHECK=1` |
+| Server package download | `github.com`, `files.pythonhosted.org` | When uv installs or refreshes the package, and at first launcher start | A plain HTTPS request | Pin the version and install from a wheelhouse |
 | Install script | `api.github.com`, `github.com` | When `install.ps1` is run | A plain HTTPS request | Do not run it |
 | User-configured | The HTTP(S) host in `REVIT_MCP_HOST`, an SSH host, the Revit Server REST base | Per use | MCP requests and results | Do not configure |
 | Local only | Loopback `/health` self-probe | When HTTP is on | None leaves the machine | `httpEnabled=false` |
 
-GitHub and PyPI see the network address of a request as for any web request. The add-in's Revit Server client sends the Windows user name and the machine name in request headers when a multi-model run uses Revit Server REST.
+GitHub, and PyPI for dependencies, see the network address of a request as for any web request. The add-in's Revit Server client sends the Windows user name and the machine name in request headers when a multi-model run uses Revit Server REST.
 [INFERENCE] GitHub can redirect release assets to other `githubusercontent.com` hosts; allow the host family if you permit per-user updates.
 
 ## Storage and retention

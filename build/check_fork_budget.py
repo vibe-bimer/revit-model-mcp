@@ -31,6 +31,8 @@ def classify(path: str, config: dict) -> str:
         return "hook"
     if path in config["reads"]:
         return "read"
+    if path in config.get("removed", {}):
+        return "removed"
     return "unowned"
 
 
@@ -40,6 +42,7 @@ def changed_lines(
     """Split a `git diff --numstat` into hook changes, other changes and files no rule owns."""
     hooks: dict[str, int] = {}
     other: dict[str, int] = {}
+    removed: list[str] = []
     unowned: list[str] = []
     for line in numstat.splitlines():
         if not line.strip():
@@ -54,9 +57,12 @@ def changed_lines(
             unowned.append(path)
         elif kind == "hook":
             hooks[path] = int(added) + int(deleted)
+        elif kind == "removed":
+            # A removal is a deliberate act, not a silent read: it is asserted below instead of counted.
+            removed.append(path)
         elif kind != "fork":
             other[path] = int(added) + int(deleted)
-    return hooks, other, unowned
+    return hooks, other, unowned, removed
 
 
 def numstat(base: str, repository_root: Path = REPOSITORY_ROOT) -> str:
@@ -75,7 +81,7 @@ def numstat(base: str, repository_root: Path = REPOSITORY_ROOT) -> str:
 def main() -> int:
     config = load_config()
     base = config["base"]
-    hooks, other, unowned = changed_lines(numstat(base), config)
+    hooks, other, unowned, removed = changed_lines(numstat(base), config)
     budget = config["hookBudgetLines"]
     spent = sum(hooks.values())
 
@@ -89,6 +95,12 @@ def main() -> int:
     if spent > budget:
         print(f"FAIL the hooks spend {spent} lines of a {budget}-line budget")
         failed = True
+    for path in sorted(removed):
+        print(f"removed  {path}: {config['removed'][path]}")
+    for path in sorted(config.get("removed", {})):
+        if (REPOSITORY_ROOT / path).exists():
+            print(f"FAIL {path} is listed as removed but still exists")
+            failed = True
     if unowned:
         print("FAIL these changed files answer to no rule in build/fork.json:")
         for path in sorted(unowned):

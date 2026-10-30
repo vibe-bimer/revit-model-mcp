@@ -180,9 +180,9 @@ Dir ServerDir(string root)
     _ => (@"%CommonAppDataFolder%\Autodesk\Revit\Addins", @"[CommonAppDataFolder]Autodesk\Revit\Addins")
 };
 
-// This UpgradeCode is this fork's own, so an installation of the pre-1.0 fork sits beside this one instead
-// of upgrading in place: uninstall the old package before installing this one. Component GUIDs stay shared
-// between the two scopes on purpose, and the launch condition makes them safe: the scopes cannot coexist.
+// The other scope's add-in root, searched so the launch condition can refuse a machine that already holds
+// the same product installed for the other scope. Component GUIDs stay shared between the two scopes on
+// purpose, and that refusal is what makes them safe: the scopes cannot coexist.
 // "Installed" keeps uninstall, repair and maintenance of the product itself working on a conflicted machine.
 IEnumerable<Property> OtherScopeProperties(string scope, Func<int, string> addinsFolder) =>
     wixEntities.Select(entity => new Property($"RMM_OTHER_SCOPE_{entity.Version}",

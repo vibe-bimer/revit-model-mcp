@@ -50,11 +50,11 @@ In Revit, Add-ins > MCP > Connect AI app registers the bundled server in Claude 
 The MSI includes the server executable, so this path needs no separate Python or uv installation.
 
 If you prefer to start the server through uv instead of the bundled executable:
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then register the server from this fork's own source. The `revit-model-mcp` project on PyPI belongs to upstream, so a bare `uvx` of that name installs the wrong server.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then register the server from this fork's own source. The `revit-model-mcp` project on PyPI belongs to upstream, so a bare `uvx` of that name installs the wrong server. A source install has no machine policy, so the registration below sets `REVIT_MCP_READ_ONLY=1` to keep the read-only default; set it to `0` to allow actions there.
 For Claude Code on the same Windows machine:
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -e REVIT_MCP_READ_ONLY=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
 ```
 
 For Claude Desktop, open the `revit-model-mcp-<version>.mcpb` bundle from the latest release, or add this to its MCP configuration:

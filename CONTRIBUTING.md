@@ -57,7 +57,7 @@ Owner review applies to the paths in [CODEOWNERS](.github/CODEOWNERS):
 - Add-in and Core source under `src/`, except project dependency manifests.
 - Python runtime code under `server/revit_model_mcp/`.
 - Installer code under `build/install/` and the root installation script.
-- Release, release-please, WinGet and Dependabot auto-merge workflows.
+- Release, release-please and Dependabot auto-merge workflows.
 - CODEOWNERS, the security policy and the license.
 
 Docs, tests, other CI workflows and dependency manifests without an owner can merge after required checks pass.

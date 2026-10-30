@@ -26,7 +26,6 @@
     ".github/workflows/ci.yml": "the bundle launcher check",
     ".github/workflows/pr-checks.yml": "the documentation gate",
     ".github/workflows/release.yml": "the fork's release: wheel-only, no PyPI and no registry",
-    ".github/workflows/winget.yml": "the fork's repository gate",
     ".gitignore": "the documentation build output ignores",
     "AGENTS.md": "the read-only default",
     "CONTRIBUTING.md": "lists the fork gates under local checks",
@@ -41,10 +40,6 @@
     "build/install/Installer.cs": "the fork's UpgradeCode, product name and manufacturer",
     "build/upstream_report.py": "the base report",
     "build/validate_bundle.py": "the managed bundle must install this fork's server",
-    "build/winget/New-WingetManifests.ps1": "removed: this fork ships no WinGet package",
-    "build/winget/Sharafutdinov.RevitModelMcp.installer.yaml.template": "removed: upstream's WinGet package identity",
-    "build/winget/Sharafutdinov.RevitModelMcp.locale.en-US.yaml.template": "removed: upstream's WinGet package identity",
-    "build/winget/Sharafutdinov.RevitModelMcp.yaml.template": "removed: upstream's WinGet package identity",
     "bundle/README.md": "the fork's own install and release identity",
     "bundle/manifest.json": "generated",
     "docs/actions.md": "the read-only default and the refusal code",
@@ -80,7 +75,6 @@
     "server/revit_model_mcp/revit_channel.py": "the release page the update check reads",
     "server/revit_model_mcp/server.py": "one registration call and one import",
     "server/revit_model_mcp/toolsets.py": "the shipped surface lists the fork's tools",
-    "server/server.json": "the fork's registry name and repository",
     "server/tests/golden/tools.schema.json": "generated",
     "server/tests/test_actions.py": "the step vocabulary check reads the table the validator indexes",
     "server/tests/test_fork_actions.py": "the fork's own tests",
@@ -103,5 +97,13 @@
     "tests/RevitModelMcp.Core.Tests/Installer/InstallerScriptsTests.cs": "the installer diagnostics carry the product name",
     "tests/RevitModelMcp.Core.Tests/Updates/UpdatePolicyTests.cs": "the release page the policy tests assert",
     "tools/check_fork_identity.py": "the identity check"
+  },
+  "removed": {
+    ".github/workflows/winget.yml": "removed: it published to upstream's WinGet package",
+    "build/winget/New-WingetManifests.ps1": "removed: this fork submits no WinGet manifests",
+    "build/winget/Sharafutdinov.RevitModelMcp.installer.yaml.template": "removed: upstream's package id",
+    "build/winget/Sharafutdinov.RevitModelMcp.locale.en-US.yaml.template": "removed: upstream's package id",
+    "build/winget/Sharafutdinov.RevitModelMcp.yaml.template": "removed: upstream's package id",
+    "server/server.json": "removed: this fork publishes no registry entry"
   }
 }

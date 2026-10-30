@@ -628,7 +628,7 @@ def dump_registry() -> list[dict]:
         os.environ,
         REVIT_MCP_HOST="http://127.0.0.1:53110",
         REVIT_MCP_TOKEN="dump",
-        REVIT_MCP_ALLOW_WRITE="1",
+        REVIT_MCP_READ_ONLY="0",
     )
     process = subprocess.Popen(
         command,

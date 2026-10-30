@@ -34,7 +34,7 @@ Signing starts with the first release after the project's application is approve
    For Claude Code on the same Windows machine:
 
    ```sh
-   claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
+   claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -e REVIT_MCP_READ_ONLY=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
    ```
 
    For Claude Desktop, add this to its MCP configuration file, or use the `.mcpb` bundle from the [latest release](https://github.com/vibe-bimer/revit-model-mcp/releases/latest):
@@ -47,7 +47,8 @@ Signing starts with the first release after the project's application is approve
          "args": ["--from", "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server", "revit-model-mcp"],
          "env": {
            "REVIT_MCP_HOST": "local",
-           "REVIT_MCP_REDACT_PATHS": "1"
+           "REVIT_MCP_REDACT_PATHS": "1",
+           "REVIT_MCP_READ_ONLY": "1"
          }
        }
      }
@@ -65,7 +66,7 @@ The **MCP** panel on the **Add-Ins** tab has two buttons. Press F1 while the poi
 
 ### Connect an AI app
 
-**Connect AI app** writes the same local registration as step 6 above, with `REVIT_MCP_HOST=local` and `REVIT_MCP_REDACT_PATHS=1`, into the configuration of each app it finds on the Revit workstation. When the MSI installed the bundled server, the entry starts that executable directly (`%LocalAppData%\Programs\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe` for the single-user MSI, `%ProgramFiles%\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe` for the multi-user MSI) and nothing else needs to be installed. Without it (add-in bundle or ZIP installs) the entry is `uvx --from https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server revit-model-mcp` for a release build, or the same URL under `refs/heads/main` for a development build, and uv must be on the PATH. The dialog shows which one it will write. It does not install the apps.
+**Connect AI app** writes the same local registration as step 6 above, with `REVIT_MCP_HOST=local` and `REVIT_MCP_REDACT_PATHS=1`, into the configuration of each app it finds on the Revit workstation. When the MSI installed the bundled server, the entry starts that executable directly (`%LocalAppData%\Programs\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe` for the single-user MSI, `%ProgramFiles%\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe` for the multi-user MSI) and nothing else needs to be installed. Without it (add-in bundle or ZIP installs) the entry is `uvx --from https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server revit-model-mcp` for a release build, or the same URL under `refs/heads/main` for a development build, and uv must be on the PATH. The tag archive is the canonical source form: the release wheel and the tag archive carry the same server, and the archive needs no version arithmetic. The dialog shows which one it will write. It does not install the apps. The dialog writes `REVIT_MCP_HOST` and `REVIT_MCP_REDACT_PATHS` only, so a registration that starts the server from source is write-capable until you add `REVIT_MCP_READ_ONLY=1` to its environment.
 
 | App | Configuration file |
 |---|---|

@@ -113,6 +113,7 @@ PACKAGE_NAME_ALLOWED = {
     "CHANGELOG.md": "historical release notes name the package as it was published",
     "docs/admin/deployment.md": "an offline --no-index wheelhouse install cannot reach PyPI",
     "docs/validation.md": "upstream's own v0.9.0 evidence, framed as such",
+    "server/tests/test_fork_identity.py": "the fixtures prove each rule can fire",
     "server/tests/test_validate_bundle.py": "a negative fixture asserts the validator rejects this launcher",
     "tests/RevitModelMcp.Core.Tests/Connect/McpClientConfiguratorTests.cs": "negative fixtures assert the editor leaves a foreign launcher alone",
     "tools/check_fork_identity.py": "the patterns themselves",
@@ -278,43 +279,38 @@ def check_release_workflow(problems: list[str]) -> None:
             )
 
 
+def launcher_problems(relative: str, text: str) -> list[str]:
+    """Name every line of one file that would start the server from PyPI."""
+    found: list[str] = []
+    for number, line in enumerate(text.splitlines(), start=1):
+        # A line that names upstream is explaining the trap, not falling into it.
+        if "upstream" in line.lower():
+            continue
+        if PYPI_PROJECT_PAGE.search(line):
+            found.append(
+                f"{relative}:{number}: links upstream's PyPI project, which publishes "
+                "a different server under the same name"
+            )
+            continue
+        if "--from" in line:
+            continue
+        match = PYPI_LAUNCHER.search(line) or PYPI_VERSION_SPEC.search(line)
+        if match is not None:
+            found.append(
+                f"{relative}:{number}: starts the server with {match.group(0)!r}, "
+                "which uvx resolves on PyPI to upstream's server; use "
+                "--from with this fork's release wheel or tag archive"
+            )
+    return found
+
+
 def check_package_launchers(problems: list[str]) -> None:
-    """Fail when a shipped document starts the server by the bare package name."""
+    """Fail when a shipped file starts the server by the bare package name."""
     for path in iter_scanned_files():
         relative = path.relative_to(REPO_ROOT).as_posix()
         if relative in PACKAGE_NAME_ALLOWED:
             continue
-        if Path(relative).suffix not in (
-            ".md",
-            ".yml",
-            ".yaml",
-            ".json",
-            ".txt",
-            ".ps1",
-            ".cmd",
-            ".cs",
-        ):
-            continue
-        text = path.read_text(encoding="utf-8")
-        for number, line in enumerate(text.splitlines(), start=1):
-            # A line that names upstream is explaining the trap, not falling into it.
-            if "upstream" in line.lower():
-                continue
-            if PYPI_PROJECT_PAGE.search(line):
-                problems.append(
-                    f"{relative}:{number}: links upstream's PyPI project, which publishes "
-                    "a different server under the same name"
-                )
-                continue
-            if "--from" in line:
-                continue
-            match = PYPI_LAUNCHER.search(line) or PYPI_VERSION_SPEC.search(line)
-            if match is not None:
-                problems.append(
-                    f"{relative}:{number}: starts the server with {match.group(0)!r}, "
-                    "which uvx resolves on PyPI to upstream's server; use "
-                    "--from with this fork's release wheel or tag archive"
-                )
+        problems.extend(launcher_problems(relative, path.read_text(encoding="utf-8")))
 
 
 def check_stray_references(problems: list[str]) -> None:
