@@ -150,26 +150,30 @@ def resolve_target(repo: Path, skip_pull: bool, pinned: str | None) -> tuple[str
         check = git(repo, "cat-file", "-e", f"{pinned}^{{commit}}")
         if check.returncode != 0:
             raise SystemExitMessage(
-                EXIT_SYNC, f"pinned commit {pinned} does not exist in {repo}"
+                EXIT_SYNC, f"pinned commit {pinned} does not exist in {repo}", "sync"
             )
         return git(repo, "rev-parse", pinned).stdout.strip(), "pin"
     if skip_pull:
         return git(repo, "rev-parse", "HEAD").stdout.strip(), "head"
-    upstream = git(repo, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}")
-    if upstream.returncode != 0 or "/" not in upstream.stdout:
+    branch = git(repo, "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+    remote = git(repo, "config", f"branch.{branch}.remote").stdout.strip()
+    merge = git(repo, "config", f"branch.{branch}.merge").stdout.strip()
+    if not remote or not merge:
         log("no upstream branch; publishing the local HEAD")
         return git(repo, "rev-parse", "HEAD").stdout.strip(), "head"
-    remote = upstream.stdout.strip().split("/", 1)[0]
     fetched = git(repo, "fetch", remote)
     if fetched.returncode != 0:
         raise SystemExitMessage(
             EXIT_SYNC,
             f"git fetch {remote} failed: {fetched.stderr.strip()}",
+            "sync",
         )
-    tip = git(repo, "rev-parse", upstream.stdout.strip())
+    tip = git(repo, "rev-parse", f"refs/remotes/{remote}/{merge.rsplit('/', 1)[-1]}")
     if tip.returncode != 0:
         raise SystemExitMessage(
-            EXIT_SYNC, f"cannot resolve {upstream.stdout.strip()} after fetch"
+            EXIT_SYNC,
+            f"cannot resolve {remote}/{merge} after fetch",
+            "sync",
         )
     return tip.stdout.strip(), "upstream"
 
@@ -340,7 +344,7 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
             os.environ.get("SITE_COMMIT", "").strip() or None,
         )
     except SystemExitMessage as failure:
-        status.attempt(utc_now(), "?", None, "failure", "sync")
+        status.attempt(utc_now(), "?", None, "failure", failure.stage)
         status.failed(utc_now(), failure.stage, failure.reason)
         status.save()
         log(f"sync failed: {failure.reason}")

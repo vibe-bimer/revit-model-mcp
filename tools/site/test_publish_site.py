@@ -212,3 +212,40 @@ class ReleaseLayoutTests(PublishHarness):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FailureSemanticsTests(PublishHarness):
+    def setUp(self):
+        super().setUp()
+        self.commit("v1")
+        self.assertEqual(self.publish().returncode, 0)
+        self.good_release = self.current_target()
+
+    def test_build_failure_keeps_the_served_site_and_records_the_reason(self):
+        self.write_source("v2")
+        self.commit("v2")
+        broken = self.publish(FAKE_FAIL="1")
+        self.assertEqual(broken.returncode, 1)
+        self.assertEqual(self.current_target(), self.good_release)
+        status = self.status()
+        self.assertEqual(status["last_attempt"]["outcome"], "failure")
+        self.assertEqual(status["last_failure"]["stage"], "build")
+        self.assertIn("mkdocs build failed", status["last_failure"]["reason"])
+        self.assertEqual(status["current_release"], Path(self.good_release).name)
+        # A failed build leaves no half release behind.
+        self.assertNotIn(".staging", "".join(self.release_ids()))
+
+    def test_sync_failure_is_a_distinguishable_non_success(self):
+        self.git("branch", "-M", "main")
+        self.git("remote", "add", "origin", "/nonexistent/remote.git")
+        self.git("config", "branch.main.remote", "origin")
+        self.git("config", "branch.main.merge", "refs/heads/main")
+        broken = self.publish(SITE_SKIP_PULL="", SITE_COMMIT="")
+        self.assertEqual(broken.returncode, 2)
+        self.assertEqual(self.current_target(), self.good_release)
+        self.assertEqual(self.status()["last_failure"]["stage"], "sync")
+
+    def test_unknown_pinned_commit_is_a_sync_failure(self):
+        broken = self.publish(SITE_COMMIT="0" * 40)
+        self.assertEqual(broken.returncode, 2)
+        self.assertEqual(self.status()["last_failure"]["stage"], "sync")
