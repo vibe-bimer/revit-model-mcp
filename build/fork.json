@@ -96,7 +96,10 @@
     "tests/RevitModelMcp.Core.Tests/Help/HelpLinksTests.cs": "the help site the add-in opens",
     "tests/RevitModelMcp.Core.Tests/Installer/InstallerScriptsTests.cs": "the installer diagnostics carry the product name",
     "tests/RevitModelMcp.Core.Tests/Updates/UpdatePolicyTests.cs": "the release page the policy tests assert",
-    "tools/check_fork_identity.py": "the identity check"
+    "tools/check_fork_identity.py": "the identity check",
+    "build/tool_manifest.py": "the network table names this fork's release feed",
+    "server/revit_model_mcp/updates.py": "the update check reads this fork's release tag",
+    "server/tests/test_updates.py": "asserts the update check never resolves the package name"
   },
   "removed": {
     ".github/workflows/winget.yml": "removed: it published to upstream's WinGet package",
