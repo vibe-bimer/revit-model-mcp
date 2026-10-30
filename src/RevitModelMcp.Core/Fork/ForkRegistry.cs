@@ -32,9 +32,9 @@ public static class ForkRegistry
             $"{(context.DryRun ? "Would rebuild" : "Rebuilt")} {Plural(context.Count, "element")} with new ids in {Subject(context)}.");
     }
 
-    private static readonly List<string> Commands_ = [];
-    private static readonly List<(string Command, string Past, string Process, string? NounOne, string? NounMany)> Phrases_ = [];
-    private static readonly Dictionary<string, Func<ActionSummaryContext, string>> Summarizers = new(StringComparer.Ordinal);
+    private static readonly List<string> _commands = [];
+    private static readonly List<(string Command, string Past, string Process, string? NounOne, string? NounMany)> _phrases = [];
+    private static readonly Dictionary<string, Func<ActionSummaryContext, string>> _summarizers = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Registers one fork action: its wire command, its activity-pane title phrase and the summary it reports.
@@ -43,22 +43,22 @@ public static class ForkRegistry
         Func<ActionSummaryContext, string> summarizer)
     {
         if (string.IsNullOrWhiteSpace(command)) throw new ArgumentException("A fork command name is required.");
-        if (Summarizers.ContainsKey(command)) throw new InvalidOperationException($"Fork command '{command}' is already registered.");
-        Commands_.Add(command);
-        Phrases_.Add((command, past, process, nounOne, nounMany));
-        Summarizers[command] = summarizer;
+        if (_summarizers.ContainsKey(command)) throw new InvalidOperationException($"Fork command '{command}' is already registered.");
+        _commands.Add(command);
+        _phrases.Add((command, past, process, nounOne, nounMany));
+        _summarizers[command] = summarizer;
     }
 
     /// <summary>Wire commands the fork adds. Never reuses an upstream command.</summary>
-    public static IReadOnlyList<string> Commands => Commands_;
+    public static IReadOnlyList<string> Commands => _commands;
 
     /// <summary>Whether the command is a fork action.</summary>
-    public static bool IsAction(string command) => Summarizers.ContainsKey(command);
+    public static bool IsAction(string command) => _summarizers.ContainsKey(command);
 
     /// <summary>Attempts to build the summary line for a fork action.</summary>
     public static bool TrySummarize(ActionSummaryContext context, out string summary)
     {
-        if (Summarizers.TryGetValue(context.Command, out var summarizer))
+        if (_summarizers.TryGetValue(context.Command, out var summarizer))
         {
             summary = summarizer(context);
             return true;
@@ -73,7 +73,7 @@ public static class ForkRegistry
     /// count noun, in upstream's shape.
     /// </summary>
     public static IReadOnlyList<(string Command, string Past, string Process, string? NounOne, string? NounMany)>
-        Phrases => Phrases_;
+        Phrases => _phrases;
 
     private static string Subject(ActionSummaryContext context) =>
         string.IsNullOrWhiteSpace(context.DocumentTitle) ? "the model" : context.DocumentTitle;

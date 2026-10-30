@@ -53,45 +53,45 @@ internal static class ForkLighting
     /// <summary>Rejects an input the wire contract cannot judge: one change at least, and paired sun angles.</summary>
     internal static void Validate(ActionJobContract action)
     {
-        Require(action.Options.Shadows.HasValue || action.Options.ShadowIntensity.HasValue || action.Options.SunlightIntensity.HasValue
+        ForkLookup.Require(action.Options.Shadows.HasValue || action.Options.ShadowIntensity.HasValue || action.Options.SunlightIntensity.HasValue
                 || action.Options.SunDate is not null || action.Options.SunTime is not null
                 || action.Options.SunAzimuthDeg.HasValue || action.Options.SunAltitudeDeg.HasValue
                 || action.Options.GroundPlane.HasValue || action.Options.GroundPlaneLevel is not null
                 || action.Options.Background is not null || action.Options.LightingScheme is not null,
             "Provide at least one lighting setting to change.");
-        Require(action.Options.ShadowIntensity is null or (>= 0 and <= 100), "shadowIntensity must be between 0 and 100.");
-        Require(action.Options.SunlightIntensity is null or (>= 0 and <= 100), "sunlightIntensity must be between 0 and 100.");
+        ForkLookup.Require(action.Options.ShadowIntensity is null or (>= 0 and <= 100), "shadowIntensity must be between 0 and 100.");
+        ForkLookup.Require(action.Options.SunlightIntensity is null or (>= 0 and <= 100), "sunlightIntensity must be between 0 and 100.");
         if (action.Options.SunDate is not null)
         {
-            Require(DateTime.TryParseExact(action.Options.SunDate.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
+            ForkLookup.Require(DateTime.TryParseExact(action.Options.SunDate.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out _), "sunDate must use yyyy-MM-dd.");
         }
 
         if (action.Options.SunTime is not null)
         {
-            Require(DateTime.TryParseExact(action.Options.SunTime.Trim(), "HH:mm", CultureInfo.InvariantCulture,
+            ForkLookup.Require(DateTime.TryParseExact(action.Options.SunTime.Trim(), "HH:mm", CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out _), "sunTime must use 24-hour HH:mm.");
         }
 
-        Require(action.Options.SunAzimuthDeg.HasValue == action.Options.SunAltitudeDeg.HasValue,
+        ForkLookup.Require(action.Options.SunAzimuthDeg.HasValue == action.Options.SunAltitudeDeg.HasValue,
             "sunAzimuthDeg and sunAltitudeDeg must be provided together.");
-        Require(action.Options.SunAzimuthDeg is null or (>= 0 and <= 360), "sunAzimuthDeg must be between 0 and 360.");
-        Require(action.Options.SunAltitudeDeg is null or (>= -90 and <= 90), "sunAltitudeDeg must be between -90 and 90.");
+        ForkLookup.Require(action.Options.SunAzimuthDeg is null or (>= 0 and <= 360), "sunAzimuthDeg must be between 0 and 360.");
+        ForkLookup.Require(action.Options.SunAltitudeDeg is null or (>= -90 and <= 90), "sunAltitudeDeg must be between -90 and 90.");
         if (action.Options.Background is not null)
         {
-            Require(action.Options.Background.Trim().ToLowerInvariant() is "sky" or "gradient", "background must be 'sky' or 'gradient'.");
+            ForkLookup.Require(action.Options.Background.Trim().ToLowerInvariant() is "sky" or "gradient", "background must be 'sky' or 'gradient'.");
         }
 
         if (action.Options.BackgroundColors is not null)
         {
-            Require(action.Options.Background?.Trim().ToLowerInvariant() == "gradient", "backgroundColors requires background 'gradient'.");
-            Require(action.Options.BackgroundColors.Count == 3 && action.Options.BackgroundColors.All(IsHexColor),
+            ForkLookup.Require(action.Options.Background?.Trim().ToLowerInvariant() == "gradient", "backgroundColors requires background 'gradient'.");
+            ForkLookup.Require(action.Options.BackgroundColors.Count == 3 && action.Options.BackgroundColors.All(IsHexColor),
                 "backgroundColors must hold three '#RRGGBB' colors: sky, horizon, ground.");
         }
 
         if (action.Options.LightingScheme is not null)
         {
-            Require(action.Options.LightingScheme.Trim().ToLowerInvariant() is "exterior-sun" or "exterior-sun-and-artificial"
+            ForkLookup.Require(action.Options.LightingScheme.Trim().ToLowerInvariant() is "exterior-sun" or "exterior-sun-and-artificial"
                     or "exterior-artificial" or "interior-sun" or "interior-sun-and-artificial" or "interior-artificial",
                 "lightingScheme must be exterior-sun, exterior-sun-and-artificial, exterior-artificial, interior-sun, interior-sun-and-artificial or interior-artificial.");
         }
@@ -436,14 +436,6 @@ internal static class ForkLighting
         }
         catch (Autodesk.Revit.Exceptions.ArgumentException)
         {
-        }
-    }
-
-    private static void Require(bool condition, string message)
-    {
-        if (!condition)
-        {
-            throw new ArgumentException(message);
         }
     }
 
