@@ -13,7 +13,7 @@ internal static class ActionVerifier
             "move" => new ActionFacts { Elements = ids.Select(id => Bounds(RequiredElement(targetDocument, RevitValueReader.GetId(id)))).ToList() },
             "set-parameter" => ParameterFacts(targetDocument, action),
             "delete" => new ActionFacts { Requested = ids.Select(RevitValueReader.GetId).ToList() },
-            _ => null
+            _ => Fork.ForkActions.CaptureBefore(targetDocument, command, action, ids)
         };
 
     internal static void CaptureAfter(Document targetDocument, string command, ActionJobContract action, ActionResultData result)
@@ -49,6 +49,9 @@ internal static class ActionVerifier
                     .Where(id => ActionCommandExecutor.CreateId(id).ToElement(targetDocument) is not null).ToList();
                 verification.After = new ActionFacts { StillPresent = stillPresent };
                 if (stillPresent.Count > 0) throw new InvalidOperationException("Deletion verification found surviving elements.");
+                break;
+            default:
+                Fork.ForkActions.CaptureAfter(targetDocument, command, action, result);
                 break;
         }
     }

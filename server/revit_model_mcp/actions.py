@@ -12,6 +12,7 @@ from mcp.types import ToolAnnotations
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, create_model, model_validator
 
 from revit_model_mcp.errors import unavailable
+from revit_model_mcp.fork_actions import register_fork_actions
 from revit_model_mcp.policy import policy_gate
 from revit_model_mcp.revit_channel import (
     DEFAULT_TIMEOUT_SECONDS,
@@ -1965,3 +1966,5 @@ def register_actions(mcp, execute, host_provider) -> None:
             timeout_seconds=timeout_seconds,
             document=document,
         )
+
+    register_fork_actions(mcp, send)

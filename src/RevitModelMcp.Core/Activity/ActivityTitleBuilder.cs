@@ -11,7 +11,7 @@ public static class ActivityTitleBuilder
     private static readonly Noun Family = new("family", "families");
     private static readonly Noun Link = new("link", "links");
 
-    private static readonly Dictionary<string, Phrase> Phrases = new(StringComparer.Ordinal)
+    private static readonly Dictionary<string, Phrase> Phrases = MergeFork(new(StringComparer.Ordinal)
     {
         ["select"] = new("Selected", "Selecting", Element),
         ["show"] = new("Showed", "Showing", Element),
@@ -59,6 +59,16 @@ public static class ActivityTitleBuilder
         if (phrase.Noun is not { } noun) return verb;
         if (count == 0) return $"{verb} {noun.Many}";
         return $"{verb} {count} {(count == 1 ? noun.One : noun.Many)}";
+    }
+
+    private static Dictionary<string, Phrase> MergeFork(Dictionary<string, Phrase> phrases)
+    {
+        foreach (var (command, past, process, nounOne, nounMany) in Core.Fork.ForkRegistry.Phrases)
+        {
+            phrases[command] = new Phrase(past, process, nounOne is null ? null : new Noun(nounOne, nounMany!));
+        }
+
+        return phrases;
     }
 
     private sealed record Phrase(string Past, string Process, Noun? Noun);

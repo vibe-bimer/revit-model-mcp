@@ -1306,6 +1306,10 @@ internal static class ActionCommandExecutor
             case "create-schedule":
                 return ScheduleActions.Create(document, action);
             default:
+                if (Core.Fork.ForkRegistry.IsAction(command) && Fork.ForkActions.TryRun(document, command, action, ids, preflight, out var forkResult))
+                {
+                    return forkResult!;
+                }
                 throw new ArgumentException($"Unknown action: {command}.");
         }
     }
