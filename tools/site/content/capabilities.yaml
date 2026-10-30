@@ -299,7 +299,7 @@ tools:
       en: Export the ID register of drawn model components to Excel, ordered by category, family and type
     note:
       zh: 文件写到 Revit 工作站上
-      en: The workbook is written on the Revit workstation
+      en: 'The workbook is written on the Revit workstation. The column headers are Chinese Revit UI labels — 类别, 族, 类型, 标高, 构件ID, 名称 and 工作集 are category, family, type, level, element id, name and workset.'
   revit_view_elements:
     source: 4c4f085ce46a
     group: views
@@ -629,7 +629,7 @@ tools:
       en: Mark these elements as demolished in the Existing phase
     note:
       zh: 阶段顺序检查的 API 只在 2022+ ，2020 走兜底
-      en: The phase order API exists from 2022; 2020 uses a fallback
+      en: 'The phase order API exists from 2022; 2020 uses a fallback. Phase names are Revit UI strings, so in the example demolished_phase="现有" the value is the Chinese label of the Existing phase.'
   revit_merge_phases:
     source: e15e02257c26
     group: phases

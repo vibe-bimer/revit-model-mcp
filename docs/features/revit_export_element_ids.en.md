@@ -11,7 +11,7 @@ description: "Write the ID register of drawn model components to an Excel workbo
 Write the ID register of drawn model components to an Excel workbook
 
 !!! note "Usage notes"
-    The workbook is written on the Revit workstation
+    The workbook is written on the Revit workstation. The column headers are Chinese Revit UI labels — 类别, 族, 类型, 标高, 构件ID, 名称 and 工作集 are category, family, type, level, element id, name and workset.
 
 ## Copyable prompts {#prompts}
 
