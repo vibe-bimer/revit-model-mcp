@@ -112,27 +112,27 @@ internal static class ForkActions
         switch (command)
         {
             case "set-view-lighting":
-            {
-                var lighting = ForkLighting.Read(document, ForkLighting.Resolve(document, action.View));
-                verification.After = new ActionFacts { Lighting = lighting };
-                // A view change has no element id to report, so the settings that moved are the changed set.
-                result.ChangedSettings = ViewLightingComparison.Differences(verification.Before?.Lighting, lighting);
-                return true;
-            }
+                {
+                    var lighting = ForkLighting.Read(document, ForkLighting.Resolve(document, action.View));
+                    verification.After = new ActionFacts { Lighting = lighting };
+                    // A view change has no element id to report, so the settings that moved are the changed set.
+                    result.ChangedSettings = ViewLightingComparison.Differences(verification.Before?.Lighting, lighting);
+                    return true;
+                }
             case "create-level":
-            {
-                if (result.Id is not { } id) return false;
-                verification.After = new ActionFacts { Fork = ForkLevels.Read(document, ForkLookup.CreateId(id)) };
-                verification.WouldCreate = action.DryRun ? true : null;
-                return true;
-            }
+                {
+                    if (result.Id is not { } id) return false;
+                    verification.After = new ActionFacts { Fork = ForkLevels.Read(document, ForkLookup.CreateId(id)) };
+                    verification.WouldCreate = action.DryRun ? true : null;
+                    return true;
+                }
             case "create-floor":
-            {
-                if (result.Id is not { } id) return false;
-                verification.After = ForkFloors.Read(document, ForkLookup.CreateId(id));
-                verification.WouldCreate = action.DryRun ? true : null;
-                return true;
-            }
+                {
+                    if (result.Id is not { } id) return false;
+                    verification.After = ForkFloors.Read(document, ForkLookup.CreateId(id));
+                    verification.WouldCreate = action.DryRun ? true : null;
+                    return true;
+                }
             case "set-phase":
                 verification.After = ForkPhases.ReadAssignment(document, action.ElementIds ?? []);
                 verification.Changed = ForkPhases.ChangedBetween(verification.Before, verification.After);
