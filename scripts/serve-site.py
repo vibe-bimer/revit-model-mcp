@@ -10,7 +10,10 @@ removes about 80%. This server keeps the same "static files from a directory" co
   * Cache-Control: one year immutable for the theme's content-hashed bundles, revalidation for
     everything else, because stylesheets/extra.css and javascripts/site.js are not hashed;
   * HTTP/1.1 with keep-alive instead of one connection per file;
-  * the site's own 404.html instead of a bare error page, and no directory listings.
+  * the site's own 404.html for a missing page, and a few dozen bytes of text for a missing
+    asset: a browser asking for a stale image does not need a whole page, and the server never
+    consults robots.txt, which is an indexing hint rather than access control;
+  * no directory listings.
 
 Usage: serve-site.py [port] [directory]
 """
@@ -25,7 +28,7 @@ import threading
 from email.utils import formatdate, parsedate_to_datetime
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import ClassVar
 from urllib.parse import unquote, urlsplit
 
@@ -44,6 +47,49 @@ COMPRESSIBLE = {
 MIN_GZIP_BYTES = 1024
 # A run of eight or more hex digits in the filename stem is the build's content hash.
 FINGERPRINT = re.compile(r"[0-9a-f]{8,}")
+# A miss for one of these is a missing asset, not a missing page: the answer stays tiny.
+ASSET_SUFFIXES = frozenset(
+    {
+        ".css",
+        ".gif",
+        ".gz",
+        ".ico",
+        ".jpeg",
+        ".jpg",
+        ".js",
+        ".json",
+        ".map",
+        ".otf",
+        ".png",
+        ".svg",
+        ".ttf",
+        ".txt",
+        ".webmanifest",
+        ".webp",
+        ".woff",
+        ".woff2",
+        ".xml",
+    }
+)
+ASSET_DIRECTORIES = (
+    "assets/",
+    "fonts/",
+    "javascripts/",
+    "screenshots/",
+    "stylesheets/",
+)
+# Small enough to fit in one packet, and it names nothing about the site.
+ASSET_ERROR_BODY = b"404 Not Found\n"
+# The English tree carries its own error page; a miss under it is answered in English.
+ENGLISH_PREFIX = "/en/"
+
+
+def is_asset_path(target: str) -> bool:
+    """Whether a miss names an asset rather than a page."""
+    path = target.split("?", 1)[0].split("#", 1)[0]
+    if PurePosixPath(path).suffix.lower() in ASSET_SUFFIXES:
+        return True
+    return any(path.lstrip("/").startswith(part) for part in ASSET_DIRECTORIES)
 
 
 def cache_control(path: Path) -> str:
@@ -291,6 +337,8 @@ class DocsHandler(BaseHTTPRequestHandler):
 
     _TYPES: ClassVar[dict[str, str]] = {
         ".woff2": "font/woff2",
+        # Pin the icon type: mimetypes guesses differently across platforms.
+        ".ico": "image/vnd.microsoft.icon",
         ".js": "text/javascript; charset=utf-8",
         ".mjs": "text/javascript; charset=utf-8",
         ".css": "text/css; charset=utf-8",
@@ -313,19 +361,52 @@ class DocsHandler(BaseHTTPRequestHandler):
             return f"{guessed}; charset=utf-8"
         return guessed
 
-    def _not_found(self, body: bool) -> None:
-        page = self.root.resolve() / "404.html"
-        if not page.is_file():
-            self.send_error(HTTPStatus.NOT_FOUND, "File not found")
-            return
-        data = page.read_bytes() if body else b""
+    def _request_path(self) -> str:
+        """The decoded request path, read only to pick the error surface."""
+        raw = urlsplit(self.path).path
+        try:
+            return unquote(raw, errors="strict")
+        except UnicodeDecodeError:
+            return raw
+
+    def _error_page(self, target: str) -> Path | None:
+        """The error page for a miss: the English one under /en/, else the root page."""
+        root = self.root.resolve()
+        if target.startswith(ENGLISH_PREFIX):
+            english = root / "en" / "404.html"
+            if english.is_file():
+                return english
+        page = root / "404.html"
+        return page if page.is_file() else None
+
+    def _error(
+        self, body: bool, payload: bytes, content_type: str, cache_control: str
+    ) -> None:
         self.send_response(HTTPStatus.NOT_FOUND)
-        self.send_header("Content-Type", "text/html; charset=utf-8")
-        self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Cache-Control", cache_control)
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         if body:
-            self.wfile.write(data)
+            self.wfile.write(payload)
+
+    def _not_found(self, body: bool) -> None:
+        """Answer a miss: tiny text for an asset, the readable page for a document.
+
+        robots.txt never takes part: a deployment that disallows every crawler still answers
+        both surfaces exactly the same way, because the file is an indexing hint, not access
+        control.
+        """
+        target = self._request_path()
+        if is_asset_path(target):
+            self._error(body, ASSET_ERROR_BODY, "text/plain; charset=utf-8", "no-store")
+            return
+        page = self._error_page(target)
+        if page is None:
+            self.send_error(HTTPStatus.NOT_FOUND, "File not found")
+            return
+        self._error(body, page.read_bytes(), "text/html; charset=utf-8", "no-cache")
 
 
 class Server(ThreadingHTTPServer):
