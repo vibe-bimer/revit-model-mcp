@@ -172,7 +172,6 @@ Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从�
 使用 `Family: Type` 时，`type_name=null` 使用其中指定的类型；另行提供冲突的 `type_name` 会被拒绝。
 只提供族名称时，`type_name=null` 选择第一个已载入类型。
 
-<a id="answer-dialogs"></a>
 ## 自动应答对话框 {#answer-dialogs}
 
 `REVIT_MCP_ANSWER_DIALOGS=1` 让该 Revit 实例自动应答它显示的所有对话框；默认关闭，不设置时行为不变。
