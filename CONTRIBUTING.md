@@ -97,6 +97,21 @@ Full solution formatting requires Windows.
 On macOS and Linux, the hook prints a notice and exits successfully; Windows PR CI verifies C# formatting.
 Review hook edits and stage them before committing again.
 
+### Fork layer checks
+
+The fork's code is a bounded layer on upstream (`adr/0001`, `adr/0008`), and two scripts keep the bound honest.
+Run them from the repository root:
+
+```sh
+uv run python build/check_fork_budget.py
+uv run python build/upstream_report.py
+```
+
+The first fails when the dispatch hooks change by more than `build/fork.json` allows, or when a changed file is
+neither fork code, a hook, nor a read listed with its reason. The second prints which upstream commits the base
+contains and which it does not, so the read in `adr/0001`'s rhythm is a command rather than a memory. Both read the
+base commit from `build/fork.json`, which is the one place it is written down.
+
 ## Build and test
 
 Run from a fresh clone's repository root on Windows with the .NET SDK selected by `global.json`:

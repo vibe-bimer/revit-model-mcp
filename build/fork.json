@@ -1,0 +1,43 @@
+{
+  "base": "760bb7c21337abb2a2aec21434e1d208e01e6cc0",
+  "baseTag": "v1.0.0 plus eleven post-release fixes",
+  "forkPaths": [
+    "src/RevitModelMcp.Core/Fork/",
+    "src/RevitModelMcp.Addin/Fork/",
+    "server/revit_model_mcp/fork_actions.py"
+  ],
+  "hooks": [
+    "src/RevitModelMcp.Core/Control/ActionJobParser.cs",
+    "src/RevitModelMcp.Addin/Control/ActionCommandExecutor.cs",
+    "src/RevitModelMcp.Addin/Control/ActionVerifier.cs",
+    "src/RevitModelMcp.Core/Activity/ActionSummaryBuilder.cs",
+    "src/RevitModelMcp.Core/Activity/ActivityTitleBuilder.cs",
+    "src/RevitModelMcp.Addin/Application.cs"
+  ],
+  "hookBudgetLines": 80,
+  "reads": {
+    "src/RevitModelMcp.Core/Control/ControlJobParser.cs": "one job kind, one saveTo field, one dispatch arm and one parser method for the element identifier register",
+    "src/RevitModelMcp.Addin/Control/ReadCommandExecutor.cs": "the register's read arm",
+    "server/revit_model_mcp/actions.py": "one registration call, one import and the step union",
+    "server/revit_model_mcp/server.py": "one registration call and one import",
+    "src/RevitModelMcp.Core/Control/ActionVerificationModels.cs": "the fork facts carried on upstream's verification models",
+    "server/revit_model_mcp/toolsets.py": "the shipped surface lists the fork's tools",
+    "docs/tools.md": "the shipped surface table",
+    "AGENTS.md": "the read-only default",
+    "build/install/Installer.Policy.cs": "the read-only default",
+    "docs/tool-manifest.json": "generated",
+    "bundle/manifest.json": "generated",
+    "server/tests/golden/tools.schema.json": "generated",
+    "server/tests/test_actions.py": "the step vocabulary check reads the table the validator indexes",
+    "server/tests/test_fork_actions.py": "the fork's own tests",
+    "server/tests/test_server.py": "the shipped surface lists the fork's tools",
+    "server/tests/test_toolsets.py": "the payload guard carries the fork's allowance",
+    "tests/RevitModelMcp.Core.Tests/Fork/ForkInputTests.cs": "the fork's own tests",
+    "adr/0008-bounded-fork-layer-as-built.md": "the record this file describes",
+    "build/fork.json": "this file",
+    "build/check_fork_budget.py": "the budget check",
+    "build/upstream_report.py": "the base report",
+    "tools/check_fork_identity.py": "the identity check",
+    "CONTRIBUTING.md": "lists the fork gates under local checks"
+  }
+}
