@@ -19,6 +19,7 @@ import json
 from pathlib import Path
 
 import catalogs
+import contract_diff
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTENT = ROOT / "tools/site/content"
@@ -28,7 +29,11 @@ PAGES = ROOT / "docs/platform"
 NAV_START = "  # >>> platform-nav"
 NAV_END = "  # <<< platform-nav"
 
-BRANCH = catalogs.integration().branch
+INTEGRATION = catalogs.integration()
+BRANCH = INTEGRATION.branch
+PROVENANCE = catalogs.provenance()
+COMMIT = PROVENANCE["commit"]
+RELEASE_VERSION = catalogs.release().version
 
 GROUP_LABELS = {
     "zh": {
@@ -420,6 +425,22 @@ LABELS = {
         "include_release": "当前版本是否已有",
         "yes": "有",
         "no": "没有",
+        "page_status": "状态",
+        "unreleased_fact": "未发布（集成分支）",
+        "branch_fact": "来源分支",
+        "commit_fact": "来源提交",
+        "release_version_fact": "发布版版本",
+        "same_name_fact": "发布版有同名工具",
+        "applies_release_fact": "本页契约适用于发布版",
+        "same_name_yes": "有，但参数不同",
+        "same_name_same": "有，参数一致",
+        "same_name_no": "没有",
+        "applies_no": "否",
+        "twin_link": "同名发布版页面",
+        "contract_diff": "与发布版的契约差异",
+        "contract_diff_intro": "下表由注册表 inputSchema 自动比较得出，不是手写清单。",
+        "contract_diff_warning": "本页契约适用于集成分支，不适用于发布版 {version}；照抄分支参数会在发布版上失败。",
+        "contract_diff_none": "同名工具的契约与发布版 {version} 一致。",
         "parameters": "参数",
         "common": "通用参数",
         "name": "参数",
@@ -468,6 +489,22 @@ LABELS = {
         "include_release": "In the current release",
         "yes": "Yes",
         "no": "No",
+        "page_status": "Status",
+        "unreleased_fact": "Unreleased (integration branch)",
+        "branch_fact": "Source branch",
+        "commit_fact": "Source commit",
+        "release_version_fact": "Release version",
+        "same_name_fact": "Same-name tool in the release",
+        "applies_release_fact": "This contract applies to the release",
+        "same_name_yes": "Yes, but the parameters differ",
+        "same_name_same": "Yes, with identical parameters",
+        "same_name_no": "No",
+        "applies_no": "No",
+        "twin_link": "Same-name release page",
+        "contract_diff": "Contract differences from the release",
+        "contract_diff_intro": "The table below is computed from the registry inputSchema; it is not a hand-written list.",
+        "contract_diff_warning": "This contract belongs to the integration branch, not to release {version}; copying the branch parameters fails on the release.",
+        "contract_diff_none": "The same-name tool has an identical contract to release {version}.",
         "parameters": "Parameters",
         "common": "Common parameters",
         "name": "Parameter",
@@ -626,19 +663,47 @@ def table_heading(lang: str) -> list[str]:
     ]
 
 
-def tool_page(tool: dict, released_names: set[str], lang: str) -> str:
+def _release_view(released) -> tuple[set[str], dict[str, dict]]:
+    """Accept a list of released tools (for schema diffs) or a bare set of names."""
+    items = list(released)
+    if items and isinstance(items[0], dict):
+        names = {tool["name"] for tool in items}
+        schemas = {tool["name"]: tool.get("inputSchema", {}) for tool in items}
+        return names, schemas
+    return set(items), {}
+
+
+def tool_page(tool: dict, released, lang: str) -> str:
     labels = LABELS[lang]
     name = tool["name"]
     origin = origin_of(name)
+    released_names, release_schemas = _release_view(released)
+    same_name = name in released_names
+    changes = (
+        contract_diff.diff_schemas(release_schemas[name], tool["inputSchema"])
+        if same_name
+        else []
+    )
     if lang == "zh":
         title, summary = ZH[name]
     else:
         title, summary = tool["title"] or name, " ".join(tool["description"].split())
+    if not same_name:
+        same_name_text = labels["same_name_no"]
+    elif changes:
+        same_name_text = labels["same_name_yes"]
+    else:
+        same_name_text = labels["same_name_same"]
     facts = [
         f"<b>{labels['group']}</b> {GROUP_LABELS[lang][tool['toolset']]}",
         f"<b>{labels['kind']}</b> {labels['read'] if tool['readOnly'] else labels['action']}",
         f"<b>{labels['origin']}</b> {origin_text(origin, name, lang)}",
-        f"<b>{labels['include_release']}</b> {labels['yes'] if name in released_names else labels['no']}",
+        f"<b>{labels['page_status']}</b> {labels['unreleased_fact']}",
+        f"<b>{labels['release_version_fact']}</b> {RELEASE_VERSION}",
+        f"<b>{labels['branch_fact']}</b> <code>{BRANCH}</code>",
+        f"<b>{labels['commit_fact']}</b> <code>{COMMIT}</code>",
+        f"<b>{labels['same_name_fact']}</b> {same_name_text}",
+        f"<b>{labels['applies_release_fact']}</b> {labels['applies_no']}",
     ]
     out = [
         f"# {title}",
@@ -655,6 +720,9 @@ def tool_page(tool: dict, released_names: set[str], lang: str) -> str:
         out += [f'!!! note "{labels["notes"]}"', f"    {note}", ""]
     if lang == "zh":
         out += [summary, ""]
+    if same_name:
+        out += [f"[{labels['twin_link']}](../features/{name}.md)", ""]
+        out += _contract_diff_section(changes, lang)
     out += [f"## {labels['parameters']} {{#parameters}}", ""]
     rows = parameter_rows(tool, False, lang)
     out += (table_heading(lang) + rows) if rows else [labels["no_specific"]]
@@ -679,6 +747,18 @@ def tool_page(tool: dict, released_names: set[str], lang: str) -> str:
         "",
     ]
     return "\n".join(out)
+
+
+def _contract_diff_section(changes: list[dict], lang: str) -> list[str]:
+    labels = LABELS[lang]
+    out = [f"## {labels['contract_diff']} {{#contract-diff}}", ""]
+    if changes:
+        out += [labels["contract_diff_intro"], ""]
+        out += [f"- {line}" for line in contract_diff.render_changes(changes, lang)]
+        out += ["", labels["contract_diff_warning"].format(version=RELEASE_VERSION), ""]
+    else:
+        out += [labels["contract_diff_none"].format(version=RELEASE_VERSION), ""]
+    return out
 
 
 def index_page(tools: list[dict], released: list[dict], lang: str) -> str:
@@ -817,13 +897,12 @@ def nav_block(tools: list[dict]) -> str:
 
 def generate() -> dict[Path, str]:
     tools, released = load_platform()
-    released_names = {tool["name"] for tool in released}
     files: dict[Path, str] = {}
     for lang, suffix in (("zh", ""), ("en", ".en")):
         files[PAGES / f"index{suffix}.md"] = index_page(tools, released, lang)
         files[PAGES / f"fork-tools{suffix}.md"] = fork_page(tools, lang)
         for tool in tools:
             files[PAGES / f"{tool['name']}{suffix}.md"] = tool_page(
-                tool, released_names, lang
+                tool, released, lang
             )
     return files

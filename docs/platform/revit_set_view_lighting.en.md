@@ -2,10 +2,20 @@
 
 `revit_set_view_lighting`
 
-<p class="facts"><span><b>Group</b> Views, sheets and schedules</span><span><b>Kind</b> Action</span><span><b>Base and fork tools</b> Fork (this repository) · Grafted</span><span><b>In the current release</b> Yes</span></p>
+<p class="facts"><span><b>Group</b> Views, sheets and schedules</span><span><b>Kind</b> Action</span><span><b>Base and fork tools</b> Fork (this repository) · Grafted</span><span><b>Status</b> Unreleased (integration branch)</span><span><b>Release version</b> 0.9.0</span><span><b>Source branch</b> <code>integration/upstream-1.0</code></span><span><b>Source commit</b> <code>55d6ea51f5100b73faf6f02621b973642f12b08e</code></span><span><b>Same-name tool in the release</b> Yes, but the parameters differ</span><span><b>This contract applies to the release</b> No</span></p>
 
 !!! note "Usage notes"
     Attached through the fork registry and the seven fallback hooks; the Python tool and its unit tests pass. C# compilation and live validation still happen on Windows CI and the workstation.
+
+[Same-name release page](../features/revit_set_view_lighting.md)
+
+## Contract differences from the release {#contract-diff}
+
+The table below is computed from the registry inputSchema; it is not a hand-written list.
+
+- Parameter view pattern: release \S / integration —
+
+This contract belongs to the integration branch, not to release 0.9.0; copying the branch parameters fails on the release.
 
 ## Parameters {#parameters}
 

@@ -2,9 +2,22 @@
 
 `revit_export_view`
 
-<p class="facts"><span><b>分组</b> 视图、图纸与明细表</span><span><b>类型</b> 读取</span><span><b>基座与自研的区分</b> 基座（上游）</span><span><b>当前版本是否已有</b> 有</span></p>
+<p class="facts"><span><b>分组</b> 视图、图纸与明细表</span><span><b>类型</b> 读取</span><span><b>基座与自研的区分</b> 基座（上游）</span><span><b>状态</b> 未发布（集成分支）</span><span><b>发布版版本</b> 0.9.0</span><span><b>来源分支</b> <code>integration/upstream-1.0</code></span><span><b>来源提交</b> <code>55d6ea51f5100b73faf6f02621b973642f12b08e</code></span><span><b>发布版有同名工具</b> 有，但参数不同</span><span><b>本页契约适用于发布版</b> 否</span></p>
 
 把选定视图导出为 MCP 客户端上的 PNG 文件，不改变活动视图与模型。
+
+[同名发布版页面](../features/revit_export_view.md)
+
+## 与发布版的契约差异 {#contract-diff}
+
+下表由注册表 inputSchema 自动比较得出，不是手写清单。
+
+- 仅集成分支有参数 output_path
+- 参数 pixel_size 约束 minimum：发布版 1 / 集成分支 32
+- 仅集成分支有参数 process_id
+- 仅发布版有参数 save_to
+
+本页契约适用于集成分支，不适用于发布版 0.9.0；照抄分支参数会在发布版上失败。
 
 ## 参数 {#parameters}
 
