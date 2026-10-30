@@ -12,17 +12,17 @@ description: "Create a project or family from a template on the Revit workstatio
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `activate` | No | True | boolean |  |
-| `kind` | No | project | string |  |
-| `name` | No | None | any |  |
-| `save_as` | No | None | any |  |
-| `template` | No | None | any |  |
+| `activate` | No | `true` | boolean |  |
+| `kind` | No | `"project"` | string |  |
+| `name` | No | `null` | any |  |
+| `save_as` | No | `null` | any |  |
+| `template` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `process_id` | No | None | any |  |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

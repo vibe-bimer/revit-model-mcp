@@ -97,7 +97,7 @@ The response also includes `destinationPath`, `saved`, `sourceView`, `sourceElem
 The template the new model starts from carries no real view, so the rebuild adds a three-dimensional view when one is missing; without it Revit refuses to open the file.
 When a name the source uses already exists in the new project, Revit asks the user how to resolve the duplicate while it pastes, and that question blocks an unattended run; by default the rebuild answers it with OK (`duplicate_names=override`), which keeps the source model's own types and reports how many questions it answered under `autoAnsweredDialogs`. `duplicate_names=rename` renames the template's elements first and removes them again afterwards: it costs about 30 seconds per copy and Revit refuses many of those deletes, so it is only a fallback.
 `duplicate_names=reuse` never asks about a duplicated name and keeps the version the new model already holds; a run that writes several copies uses it by default, because asking is what makes Revit refuse a paste. A copy Revit refuses anyway is retried with that same setting; the recorded retry recovered a copy that was eleven elements short, but callers must still verify the returned mapping.
-`copies=2` and up write several files from one new model, one copy after another, and remove the elements of each copy before the next one: Revit keeps handing out higher ids in a document, so every copy holds the same components with ids of its own and no ids have to be burned first. `destination_path` may carry `{n}` for the copy number; without it the number is appended before the extension. The per-copy paths, sizes and ID mappings are reported under `copyResults`. Revit sometimes refuses the bulk paste of a later copy: that copy then falls back to the element-by-element path and comes out smaller with `idMappingVerified=false` in its `copyResults` entry, so callers must check every entry. One copy per run was the reliable shape in the recorded tests; see [rebuild performance](rebuild-performance.md) for the measurements. For parallel runs across several Revit instances, use separate HTTP endpoints or transports that each discover exactly one instance; `document` does not bypass the single-instance gate. The instances take their port, token and channel directory from `REVIT_MCP_HTTP_PORT`, `REVIT_MCP_TOKEN` and `REVIT_MCP_CHANNEL_DIR`.
+`copies=2` and up write several files from one new model, one copy after another, and remove the elements of each copy before the next one: Revit keeps handing out higher ids in a document, so every copy holds the same components with ids of its own and no ids have to be burned first. `destination_path` may carry `{n}` for the copy number; without it the number is appended before the extension. The per-copy paths, sizes and ID mappings are reported under `copyResults`. Revit sometimes refuses the bulk paste of a later copy: that copy then falls back to the element-by-element path and comes out smaller with `idMappingVerified=false` in its `copyResults` entry, so callers must check every entry. One copy per run was the reliable shape in the recorded tests; see [rebuild performance](rebuild-performance.md) for the measurements. For parallel runs across several Revit instances, use separate HTTP endpoints or transports that each discover exactly one instance; `document` does not bypass the single-instance gate. The instances take their port, token and channel directory from `REVIT_MCP_HTTP_PORT`, `REVIT_MCP_TOKEN` and `REVIT_MCP_CHANNEL_DIR`. An unattended farm stalls on modal prompts such as "file is already open": set `REVIT_MCP_ANSWER_DIALOGS=1` on each instance before it starts to answer them automatically; see [answering dialogs automatically](#answer-dialogs) for the scope and the risk.
 Revit assigns the copied elements the IDs that follow the ones the new model already holds, so two rebuilds of the same source produce the same IDs; `seed` adds that many temporary levels to the new model before the copy and removes them again, which moves a copy's IDs into a block of their own.
 Created IDs reported by a rebuild dry run likewise do not identify a saved output model.
 
@@ -163,6 +163,22 @@ For the single-action `revit_place_family` tool, missing families return up to f
 Inside `revit_batch`, a missing family surfaces only as `steps[].error` text; `closestFamilies` is unavailable.
 For `Family: Type`, `type_name=null` uses the embedded type; a conflicting `type_name` is rejected.
 For a family name alone, `type_name=null` selects the first loaded type.
+
+## Answering dialogs automatically {#answer-dialogs}
+
+`REVIT_MCP_ANSWER_DIALOGS=1` makes that Revit instance answer every dialog it shows; it is off by default, and leaving it unset keeps the current behaviour.
+Without it, the add-in answers only the TaskDialogs its own actions raise (the `dialogsSuppressed` list above) and leaves every other prompt to the user.
+
+Set it **before the target Revit process starts**. The add-in reads it once in `Attach` and keeps the value in memory, so changing the variable afterwards has no effect on that instance.
+To turn it off, set it back to `0` or remove it, then restart the instance.
+
+The scope is the whole instance: with the variable at `1`, the dialog handler answers every dialog with OK (`DialogOverride.cs:16`, `:28`, `:38`, `:42`).
+The "file is already open", "save changes", "overwrite this file" and "delete" prompts that stall an unattended copy farm therefore stop blocking the run.
+
+!!! warning "Check the risk before turning it on"
+    Automatic answers decide overwrite, save and delete prompts on the user's behalf. Turn it on only for a dedicated throwaway instance or a copy farm, and only for a model that can take those answers.
+
+The behaviour above comes from reading the source (`src/RevitModelMcp.Addin/Control/DialogOverride.cs`); the exact set of dialogs answered this way has not been verified on a live workstation.
 
 ## Gates {#gates}
 

@@ -18,8 +18,8 @@ description: "Request cancellation of an action jobId. Process-models stops befo
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `process_id` | No | None | any |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

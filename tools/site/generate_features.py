@@ -180,6 +180,66 @@ def frontmatter(description: str) -> str:
     )
 
 
+def capability_source(description: str) -> str:
+    """Short fingerprint of the English description a capability translation was written from.
+
+    The reviewed Chinese title, summary and prompts in capabilities.yaml are translations, so they
+    age whenever the English description changes. Recording the fingerprint makes that drift a
+    failing check instead of a silent mismatch a reader has to notice.
+    """
+    return hashlib.sha256(description.encode()).hexdigest()[:12]
+
+
+def check_capability_sources(tools: list[dict], capabilities: dict) -> None:
+    """Fail when a capability translation predates the English description it translates."""
+    stale = [
+        tool["name"]
+        for tool in tools
+        if capabilities["tools"][tool["name"]].get("source")
+        != capability_source(tool["description"])
+    ]
+    if stale:
+        raise SystemExit(
+            "Stale capability translation source: "
+            + ", ".join(sorted(stale))
+            + "; review the zh title, summary and prompts, then run "
+            "tools/site/generate_features.py --refresh-sources"
+        )
+
+
+def refresh_capability_sources(tools: list[dict]) -> int:
+    """Write current fingerprints into capabilities.yaml without reformatting the file."""
+    lines = CAPABILITIES.read_text(encoding="utf-8").splitlines(keepends=True)
+    wanted = {tool["name"]: capability_source(tool["description"]) for tool in tools}
+    header = re.compile(r"^  ([A-Za-z0-9_]+):\s*$")
+    starts = [index for index, line in enumerate(lines) if header.match(line)]
+    sections = []
+    for position, start in enumerate(starts):
+        end = starts[position + 1] if position + 1 < len(starts) else len(lines)
+        for index in range(start + 1, len(lines)):
+            if not lines[index].startswith((" ", "\n", "#")):
+                end = min(end, index)
+                break
+        sections.append((start, end, header.match(lines[start]).group(1)))
+    changed = 0
+    for start, end, name in reversed(sections):
+        if name not in wanted:
+            continue
+        block = lines[start + 1 : end]
+        entry = f"    source: {wanted[name]}\n"
+        for index, line in enumerate(block):
+            if re.match(r"^    source: '?[0-9a-f]{12}'?\s*$", line):
+                block[index] = entry
+                break
+        else:
+            block.insert(0, entry)
+        if block != lines[start + 1 : end]:
+            changed += 1
+            lines[start + 1 : end] = block
+    CAPABILITIES.write_text("".join(lines), encoding="utf-8")
+    return changed
+
+
 def load() -> tuple[list[dict], dict, dict]:
     tools = json.loads(TOOLS_JSON.read_text(encoding="utf-8"))
     capabilities = yaml.safe_load(CAPABILITIES.read_text(encoding="utf-8"))
@@ -209,6 +269,7 @@ def load() -> tuple[list[dict], dict, dict]:
                 raise SystemExit(f"Missing {lang} prompt: {name}")
             for param, spec in tool["inputSchema"]["properties"].items():
                 parameter_meaning(tool, param, spec, capabilities, lang)
+    check_capability_sources(tools, capabilities)
     return tools, capabilities, contracts
 
 
@@ -940,6 +1001,11 @@ def main() -> int:
         metavar="WORKTREE",
         help="snapshot the integration branch registry from a checkout of that branch",
     )
+    parser.add_argument(
+        "--refresh-sources",
+        action="store_true",
+        help="record the current English description fingerprints in capabilities.yaml",
+    )
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument(
@@ -965,6 +1031,12 @@ def main() -> int:
             encoding="utf-8",
         )
         print(f"tools.json: {len(tools)} tools")
+        return 0
+    if args.refresh_sources:
+        changed = refresh_capability_sources(
+            json.loads(TOOLS_JSON.read_text(encoding="utf-8"))
+        )
+        print(f"capabilities.yaml: {changed} source fingerprints updated")
         return 0
     if args.verify_registry and json.loads(TOOLS_JSON.read_text()) != dump_registry():
         raise SystemExit(

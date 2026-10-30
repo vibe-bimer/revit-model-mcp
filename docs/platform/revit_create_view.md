@@ -14,23 +14,23 @@ description: "创建平面、剖面、三维或绘图视图；无边界三维视
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `box` | 否 | None | any |  |
-| `detail_level` | 否 | None | any |  |
-| `display_style` | 否 | None | any |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `element_ids` | 否 | None | any | 要处理的构件 Revit ID 列表。 |
+| `box` | 否 | `null` | any |  |
+| `detail_level` | 否 | `null` | any |  |
+| `display_style` | 否 | `null` | any |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `element_ids` | 否 | `null` | any | 要处理的构件 Revit ID 列表。 |
 | `kind` | 是 | — | string |  |
-| `level` | 否 | None | any |  |
-| `name` | 否 | None | any |  |
-| `scale` | 否 | None | any |  |
-| `template` | 否 | None | any |  |
-| `view_family_type` | 否 | None | any |  |
+| `level` | 否 | `null` | any |  |
+| `name` | 否 | `null` | any |  |
+| `scale` | 否 | `null` | any |  |
+| `template` | 否 | `null` | any |  |
+| `view_family_type` | 否 | `null` | any |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

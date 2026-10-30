@@ -239,3 +239,68 @@ class DescriptionFrontmatterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ParameterDefaultTests(unittest.TestCase):
+    """A parameter table must keep "no default", an empty string and null apart.
+
+    The three states mean different things to a caller: no default key means the schema does not
+    say, an empty string is an explicit "clear it" value, and null means "leave it unchanged".
+    Rendering the first two as the same dash hides a real difference in behavior.
+    """
+
+    def rows(self, properties: dict, lang: str = "zh") -> list[str]:
+        tool = {"name": "revit_probe", "inputSchema": {"properties": properties}}
+        return platform_catalog.parameter_rows(tool, False, lang)
+
+    def test_a_missing_default_renders_as_a_dash(self):
+        for lang in ("zh", "en"):
+            rows = self.rows({"element_ids": {"type": "array"}}, lang)
+            self.assertIn("| — |", rows[0], f"{lang}: {rows[0]}")
+
+    def test_an_empty_string_default_renders_as_an_explicit_empty_string(self):
+        for lang in ("zh", "en"):
+            rows = self.rows({"prefix": {"type": "string", "default": ""}}, lang)
+            self.assertIn('| `""` |', rows[0], f"{lang}: {rows[0]}")
+
+    def test_a_null_default_renders_as_null_not_python_none(self):
+        for lang in ("zh", "en"):
+            rows = self.rows({"view": {"type": "string", "default": None}}, lang)
+            self.assertIn("| `null` |", rows[0], f"{lang}: {rows[0]}")
+            self.assertNotIn("None", rows[0], f"{lang}: {rows[0]}")
+
+    def test_the_three_states_stay_distinct_side_by_side(self):
+        rows = self.rows(
+            {
+                "element_ids": {"type": "array"},
+                "prefix": {"type": "string", "default": ""},
+                "view": {"type": "string", "default": None},
+            }
+        )
+        defaults = [row.split(" | ")[2] for row in rows]
+        self.assertEqual(defaults, ["—", '`""`', "`null`"])
+
+    def test_a_generated_platform_page_shows_the_empty_string_default(self):
+        tool = next(
+            tool
+            for tool in platform_catalog.load_platform()[0]
+            if tool["name"] == "revit_align_link_datums"
+        )
+        for lang in ("zh", "en"):
+            page = platform_catalog.tool_page(
+                tool, platform_catalog.load_platform()[1], lang
+            )
+            self.assertIn("| `prefix` |", page)
+            self.assertIn(
+                '| `""` |', page, f"{lang} page lost the empty-string default"
+            )
+            self.assertIn("| `null` |", page, f"{lang} page lost a null default")
+
+    def test_no_generated_platform_page_renders_python_none(self):
+        files = platform_catalog.generate()
+        offenders = [
+            str(path.relative_to(platform_catalog.ROOT))
+            for path, content in files.items()
+            if "| None |" in content
+        ]
+        self.assertEqual(offenders, [])

@@ -659,6 +659,18 @@ def sort_key(tool: dict) -> tuple[int, str]:
     return order.index(tool["toolset"]), tool["name"]
 
 
+def default_cell(spec: dict) -> str:
+    """Render the default column so "unset", "" and null stay distinguishable.
+
+    A schema without a default key does not say what happens, an empty string is an explicit
+    value that clears a field, and null means the tool leaves the current value alone. Collapsing
+    the first two into the same dash would hide that difference from a reader copying a call.
+    """
+    if "default" not in spec:
+        return "—"
+    return f"`{json.dumps(spec['default'], ensure_ascii=False)}`"
+
+
 def parameter_rows(tool: dict, common: bool, lang: str) -> list[str]:
     rows = []
     for name, spec in tool["inputSchema"].get("properties", {}).items():
@@ -667,7 +679,6 @@ def parameter_rows(tool: dict, common: bool, lang: str) -> list[str]:
         required = "是" if lang == "zh" else "Yes"
         if name not in tool["inputSchema"].get("required", []):
             required = "否" if lang == "zh" else "No"
-        default = spec.get("default", "")
         kind = spec.get("type") or ("any" if "anyOf" in spec else "")
         meaning = (
             (PARAM_MEANINGS["zh"].get(name) if lang == "zh" else "")
@@ -676,7 +687,7 @@ def parameter_rows(tool: dict, common: bool, lang: str) -> list[str]:
         )
         meaning = " ".join(str(meaning).split())
         rows.append(
-            f"| `{name}` | {required} | {default if default != '' else '—'} | {kind} | {meaning} |"
+            f"| `{name}` | {required} | {default_cell(spec)} | {kind} | {meaning} |"
         )
     return rows
 

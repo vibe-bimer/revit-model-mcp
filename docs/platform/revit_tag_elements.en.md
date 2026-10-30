@@ -12,21 +12,21 @@ description: "Tag elements in a view, chosen by category names or by element IDs
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `categories` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `element_ids` | No | None | any |  |
-| `leader` | No | False | boolean |  |
-| `max_elements` | No | 5000 | integer |  |
-| `orientation` | No | horizontal | string |  |
-| `skip_tagged` | No | True | boolean |  |
-| `tag_type` | No | None | any |  |
+| `categories` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `element_ids` | No | `null` | any |  |
+| `leader` | No | `false` | boolean |  |
+| `max_elements` | No | `5000` | integer |  |
+| `orientation` | No | `"horizontal"` | string |  |
+| `skip_tagged` | No | `true` | boolean |  |
+| `tag_type` | No | `null` | any |  |
 | `view` | Yes | — | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

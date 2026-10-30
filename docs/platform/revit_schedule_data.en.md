@@ -12,16 +12,16 @@ description: "Read displayed schedule header and body cell text, with paging. A 
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `max_rows` | No | 500 | integer |  |
-| `offset` | No | 0 | integer |  |
+| `max_rows` | No | `500` | integer |  |
+| `offset` | No | `0` | integer |  |
 | `schedule` | Yes | — | string | Exact schedule name or decimal Revit view ID. (Use the id when two schedules share a name.) |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
 
 ## Behavior (registry text) {#behavior}
 

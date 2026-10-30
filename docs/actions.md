@@ -52,7 +52,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 | `revit_delete` | `element_ids` | 删除非空 ID 列表中的构件及其依赖。 |
 | `revit_reset_element_ids` | `element_ids`、`dry_run=false` | 用副本替换构件，让 Revit 分配新 ID；报告 `idMapping`。若删除会移除依赖、构件有宿主或属于组、构件是 MEP 曲线或 MEP 系统成员（副本不会重新接入网络，Revit 会在删除的原构件周围自动修复管线），或 Revit 无法复制该构件，则拒绝替换。 |
 | `revit_batch` | `steps`、`dry_run=false` | 执行 1–50 个动作，合并为名为 `revit_batch` 的一次撤销记录。 |
-| `revit_rebuild_model_ids` | `destination_path`、`view=null`、`template_path=null`、`overwrite=false`、`remove_template_levels=true`、`seed=0`、`duplicate_names="override"`、`copies=1`、`dry_run=false` | 将三维视图中可选择的构件复制到新模型，让 Revit 为每个构件分配新 ID；不改变已打开模型。先复制标高、轴网和参照平面，以解析宿主；相机、太阳路径、剖面框、视图及无类别元素不复制，并在 `excluded` 中报告。视图、图纸、明细表、注释、阶段、工作集、MEP 系统和未选中的宿主均不带入，因此结果保留几何、类型和参数。数据报告 `count`、`newIdMin`／`newIdMax`、`sourceCategoryCounts`、`copiedCategoryCounts`，以及按类别和类型校验的 `idMapping`。 |
+| `revit_rebuild_model_ids` | `destination_path`、`view=null`、`template_path=null`、`overwrite=false`、`remove_template_levels=true`、`seed=0`、`duplicate_names="override"`、`copies=1`、`dry_run=false` | 将三维视图中可选择的构件复制到新模型，让 Revit 为每个构件分配新 ID；不改变已打开模型。先复制标高、轴网和参照平面，以解析宿主；相机、太阳路径、剖面框、视图及无类别构件不复制，并在 `excluded` 中报告。视图、图纸、明细表、注释、阶段、工作集、MEP 系统和未选中的宿主均不带入，因此结果保留几何、类型和参数。数据报告 `count`、`newIdMin`／`newIdMax`、`sourceCategoryCounts`、`copiedCategoryCounts`，以及按类别和类型校验的 `idMapping`。 |
 
 `type_name`、`wall_type` 和 `floor_type` 是接受 `null` 的必填参数。
 
@@ -98,12 +98,12 @@ Revit 的 API 只能把背景换成天空、渐变或图片，无法恢复成「
 不指定 `view` 时使用第一个非透视三维视图；只复制该视图中可选择的构件。
 `template_path` 用于选择模板，代替默认公制模板；`remove_template_levels=true` 移除模板自带的标高。
 `overwrite=true` 明确允许替换已有目标文件；默认值为 false。
-响应还包括 `destinationPath`、`saved`、`sourceView`、`sourceElementCount`、`datumCount`，以及每个排除元素的原因。
+响应还包括 `destinationPath`、`saved`、`sourceView`、`sourceElementCount`、`datumCount`，以及每个排除构件的原因。
 新模型使用的模板没有实际视图，因此缺少三维视图时重建工具会添加一个；否则 Revit 会拒绝打开文件。
-源模型使用的名称已存在于新项目时，Revit 会在粘贴过程中询问如何处理重名，这会阻塞无人值守运行；默认重建工具以 OK 自动回答（`duplicate_names=override`），保留源模型自己的类型，并通过 `autoAnsweredDialogs` 报告自动回答次数。`duplicate_names=rename` 先重命名模板元素，再尝试删除它们：每份副本约多花 30 秒，且 Revit 会拒绝许多删除操作，因此它仅作为后备方式。
+源模型使用的名称已存在于新项目时，Revit 会在粘贴过程中询问如何处理重名，这会阻塞无人值守运行；默认重建工具以 OK 自动回答（`duplicate_names=override`），保留源模型自己的类型，并通过 `autoAnsweredDialogs` 报告自动回答次数。`duplicate_names=rename` 先重命名模板构件，再尝试删除它们：每份副本约多花 30 秒，且 Revit 会拒绝许多删除操作，因此它仅作为后备方式。
 `duplicate_names=reuse` 不询问重名处理方式，保留新模型已有的版本；一次写入多份副本时默认使用该方式，因为弹出询问会导致 Revit 拒绝粘贴。即使如此，若 Revit 仍拒绝复制，工具会以同一设置重试；记录中的重试恢复了一份少了 11 个构件的副本，但调用者仍必须校验返回的映射。
-`copies=2` 或更大值会从一个新模型依次写入多份文件，每次复制后删除当前副本的构件再进行下一次：Revit 在同一文档中不断分配更大的 ID，因此各副本拥有相同构件和各自的 ID，无须提前消耗 ID。`destination_path` 可用 `{n}` 表示副本编号；不含该占位符时，编号追加在扩展名之前。每份副本的路径、大小和 ID 映射在 `copyResults` 中报告。Revit 有时会拒绝后续副本的批量粘贴：工具随后退回逐元素复制，结果可能更小，其 `copyResults` 项中 `idMappingVerified=false`，因此调用者必须检查每一项。记录中的测试以每次运行一份副本的方式较可靠；测量见[重建性能与成本](rebuild-performance.md)。若要在多个 Revit 实例中并行运行，应使用独立 HTTP 端点或各自只发现一个实例的传输；`document` 不能绕过单实例门禁。实例分别通过 `REVIT_MCP_HTTP_PORT`、`REVIT_MCP_TOKEN` 和 `REVIT_MCP_CHANNEL_DIR` 获取端口、令牌和通道目录。
-Revit 为复制构件分配紧接新模型已有元素之后的 ID，因此从同一源模型重建两次会得到相同 ID；`seed` 在复制前添加指定数量的临时标高，再将它们删除，让副本的 ID 移入独立号段。
+`copies=2` 或更大值会从一个新模型依次写入多份文件，每次复制后删除当前副本的构件再进行下一次：Revit 在同一文档中不断分配更大的 ID，因此各副本拥有相同构件和各自的 ID，无须提前消耗 ID。`destination_path` 可用 `{n}` 表示副本编号；不含该占位符时，编号追加在扩展名之前。每份副本的路径、大小和 ID 映射在 `copyResults` 中报告。Revit 有时会拒绝后续副本的批量粘贴：工具随后退回逐构件复制，结果可能更小，其 `copyResults` 项中 `idMappingVerified=false`，因此调用者必须检查每一项。记录中的测试以每次运行一份副本的方式较可靠；测量见[重建性能与成本](rebuild-performance.md)。若要在多个 Revit 实例中并行运行，应使用独立 HTTP 端点或各自只发现一个实例的传输；`document` 不能绕过单实例门禁。实例分别通过 `REVIT_MCP_HTTP_PORT`、`REVIT_MCP_TOKEN` 和 `REVIT_MCP_CHANNEL_DIR` 获取端口、令牌和通道目录。副本农场在无人值守下会被“文件已打开”这类模态提示卡住：给每个实例在启动前设置 `REVIT_MCP_ANSWER_DIALOGS=1` 可自动应答，风险与范围见[自动应答对话框](#answer-dialogs)。
+Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从同一源模型重建两次会得到相同 ID；`seed` 在复制前添加指定数量的临时标高，再将它们删除，让副本的 ID 移入独立号段。
 重建试运行报告的创建 ID 同样不能标识已保存的输出模型。
 
 <a id="verification-and-committed-changes"></a>
@@ -171,6 +171,22 @@ Revit 为复制构件分配紧接新模型已有元素之后的 ID，因此从�
 在 `revit_batch` 内，缺失族只作为 `steps[].error` 文本报告，不提供 `closestFamilies`。
 使用 `Family: Type` 时，`type_name=null` 使用其中指定的类型；另行提供冲突的 `type_name` 会被拒绝。
 只提供族名称时，`type_name=null` 选择第一个已载入类型。
+
+## 自动应答对话框 {#answer-dialogs}
+
+`REVIT_MCP_ANSWER_DIALOGS=1` 让该 Revit 实例自动应答它显示的所有对话框；默认关闭，不设置时行为不变。
+未设置或设为其它值时，插件只应答动作执行期间自己触发的 TaskDialog（见上一节的 `dialogsSuppressed`），其余提示仍等待人工点击。
+
+**必须在目标 Revit 进程启动前设置。** 插件在 `Attach` 时读取一次该变量并保存在内存中，进程启动后再改环境变量对这个实例无效。
+退出方式是改回 `0` 或删除该变量，然后重启该实例。
+
+作用范围是该实例的全部对话框：变量为 `1` 时，对话框处理器对每个对话框都以 OK 应答（`DialogOverride.cs:16`、`:28`、`:38`、`:42`）。
+副本农场里常见的“文件已打开”“是否另存”“覆盖同名文件”“删除确认”因此不再阻塞无人值守运行。
+
+!!! warning "开启前确认风险"
+    自动应答会替用户确认覆盖、另存和删除类提示。只在专用的一次性实例或副本农场上开启，并确认目标模型可以承受这些回答。
+
+以上行为来自源码核对（`src/RevitModelMcp.Addin/Control/DialogOverride.cs`），未在真机上验证具体会被自动应答的对话框清单。
 
 ## 动作门禁 {#gates}
 

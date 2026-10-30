@@ -53,7 +53,7 @@ asyncio 锁只会串行化同一个服务器进程内的调用。
 
 文件监视器和定时器回调通过 ExternalEvent 请求执行工作。
 事件处理器在 Revit API 上下文中调用 [ControlChannel.Tick](../src/RevitModelMcp.Addin/Control/ControlChannel.cs)。
-默认 MCP 工具查询模型和导出图像，不修改模型元素。
+默认 MCP 工具查询模型和导出图像，不修改模型构件。
 显式启用的动作同时要求服务器注册开关和工作站门禁。
 事务、警告处理和对话框抑制见[动作行为](../README.md#actions-opt-in)。
 图像导出使用 `Document.ExportImage`，并指定要导出的视图集合。

@@ -1,6 +1,7 @@
 # Transport
 
 `REVIT_MCP_HOST` selects `local`, `ssh:<alias>`, `http://host:port` or `https://host:port`.
+The variable is optional; when it is unset the host is `local`.
 `--host` overrides it.
 HTTP connects directly to the add-in and requires no SSH server or remote file transfer.
 The MCP client still communicates with the Python server over stdio.
@@ -26,6 +27,7 @@ The add-in never logs it.
 Do not put it in a URL, repository or shared shell history.
 
 Revit environment variables override settings at startup: `REVIT_MCP_HTTP_ENABLED=0|1`, `REVIT_MCP_HTTP_BIND`, `REVIT_MCP_HTTP_PORT` and `REVIT_MCP_TOKEN`.
+The add-in also reads `REVIT_MCP_ANSWER_DIALOGS=1`, which makes that Revit instance answer every dialog; it too must be set before the instance starts, see [answering dialogs automatically](actions.md#answer-dialogs).
 Overrides are not written back to the settings file.
 Set `httpEnabled=false` or `REVIT_MCP_HTTP_ENABLED=0` to turn the listener off entirely.
 Restart Revit after changing listener settings.

@@ -12,23 +12,23 @@ description: "Create a plan, section, 3D or drafting view. Unbounded 3D views sh
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `box` | No | None | any |  |
-| `detail_level` | No | None | any |  |
-| `display_style` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `element_ids` | No | None | any |  |
+| `box` | No | `null` | any |  |
+| `detail_level` | No | `null` | any |  |
+| `display_style` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `element_ids` | No | `null` | any |  |
 | `kind` | Yes | — | string |  |
-| `level` | No | None | any |  |
-| `name` | No | None | any |  |
-| `scale` | No | None | any |  |
-| `template` | No | None | any |  |
-| `view_family_type` | No | None | any |  |
+| `level` | No | `null` | any |  |
+| `name` | No | `null` | any |  |
+| `scale` | No | `null` | any |  |
+| `template` | No | `null` | any |  |
+| `view_family_type` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

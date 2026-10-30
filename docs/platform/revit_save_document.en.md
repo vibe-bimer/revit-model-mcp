@@ -12,17 +12,17 @@ description: "Save a document. Needs confirm_token from a first call, which chan
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `compact` | No | False | boolean |  |
-| `confirm_token` | No | None | any |  |
-| `overwrite` | No | False | boolean |  |
-| `save_as` | No | None | any |  |
+| `compact` | No | `false` | boolean |  |
+| `confirm_token` | No | `null` | any |  |
+| `overwrite` | No | `false` | boolean |  |
+| `save_as` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `document` | Yes | — | string |  |
-| `process_id` | No | None | any |  |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

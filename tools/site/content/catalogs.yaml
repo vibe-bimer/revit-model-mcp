@@ -67,15 +67,15 @@ fork_tools:
     en_note: The local implementation exists; the command is excluded from the batch step vocabulary.
   revit_export_element_ids:
     status: pending
-    zh: 导出元素 ID 台账
+    zh: 导出构件 ID 台账
     en: Export element ID register
     zh_note: 已有本地实现，输出 xlsx 台账，含系统成员与连接器读取。
     en_note: The local implementation writes an xlsx register and reads system members and connectors.
   revit_reset_element_ids:
     status: pending
-    zh: 重置元素 ID
+    zh: 重置构件 ID
     en: Reset element IDs
-    zh_note: 已有本地实现，可排练（dry_run 报出代价），每元素独立子事务。
+    zh_note: 已有本地实现，可排练（dry_run 报出代价），每构件独立子事务。
     en_note: The local implementation is rehearsable, reports the cost in dry_run, and commits each element in its own subtransaction.
   revit_rebuild_model_ids:
     status: pending

@@ -17,7 +17,7 @@ No additional business parameters; use the common parameters below.
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `document` | Yes | — | string |  |
-| `process_id` | No | None | any |  |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

@@ -432,6 +432,68 @@ def audit_sources(root: Path) -> list[str]:
     return sorted(set(errors))
 
 
+TERMINOLOGY = (
+    ("元素", "构件", "a model element is a 构件 on every page"),
+    (
+        r"(?:写入|动作|双|权限|写)开关",
+        "门禁",
+        "the write permission is a 门禁; 开关 stays a display toggle verb",
+    ),
+)
+
+# Paths whose prose legitimately quotes a literal, keyed by path relative to docs/.
+TERMINOLOGY_WHITELIST: dict[str, set[str]] = {}
+
+
+def _prose_lines(path: Path):
+    """Original line numbers with fenced blocks skipped and inline code spans removed."""
+    in_fence = False
+    in_comment = False
+    for number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if in_comment:
+            if "-->" in line:
+                in_comment = False
+            continue
+        if "<!--" in line:
+            if "-->" not in line.split("<!--", 1)[1]:
+                in_comment = True
+            line = re.sub(r"<!--.*?-->", "", line)
+        yield number, re.sub(r"`[^`\n]*`", "", line)
+
+
+def audit_terminology(
+    root: Path, whitelist: dict[str, set[str]] | None = None
+) -> list[str]:
+    """Report Chinese prose that uses a second word for a concept the site already named."""
+    docs = root / "docs"
+    if not docs.is_dir():
+        return []
+    allowed = TERMINOLOGY_WHITELIST if whitelist is None else whitelist
+    errors = []
+    for path in sorted(docs.rglob("*.md")):
+        if path.name.endswith(".en.md"):
+            continue
+        relative = path.relative_to(docs).as_posix()
+        skipped = allowed.get(relative, set())
+        for line_number, line in _prose_lines(path):
+            for pattern, preferred, reason in TERMINOLOGY:
+                for match in re.finditer(pattern, line):
+                    if match.group(0) in skipped:
+                        continue
+                    errors.append(
+                        f"docs/{relative}:{line_number}: '{match.group(0)}' — use "
+                        f"'{preferred}' ({reason})"
+                    )
+    return errors
+
+
 def audit_search_index(site: Path) -> list[str]:
     """Every search entry must state its language, and a tool entry its tool name and status.
 
@@ -547,6 +609,7 @@ def main() -> int:
         args.site_dir, args.base_url, Path(__file__).resolve().parents[2]
     )
     errors += audit_sources(Path(__file__).resolve().parents[2])
+    errors += audit_terminology(Path(__file__).resolve().parents[2])
     errors += audit_search_index(args.site_dir)
     errors += audit_migration_table(args.site_dir)
     print(

@@ -14,12 +14,12 @@ description: "对本地、UNC 或 RSN 模型启动持久化的只读批量运行
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `folder` | 否 | None | any |  |
-| `open_timeout_minutes` | 否 | None | any |  |
-| `parameter_rules` | 否 | None | any |  |
-| `paths` | 否 | None | any |  |
-| `recursive` | 否 | False | boolean |  |
-| `years` | 否 | None | any |  |
+| `folder` | 否 | `null` | any |  |
+| `open_timeout_minutes` | 否 | `null` | any |  |
+| `parameter_rules` | 否 | `null` | any |  |
+| `paths` | 否 | `null` | any |  |
+| `recursive` | 否 | `false` | boolean |  |
+| `years` | 否 | `null` | any |  |
 
 ## 功能说明（注册表原文） {#behavior}
 

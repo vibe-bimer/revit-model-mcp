@@ -12,16 +12,16 @@ description: "Duplicate a view, optionally with detailing or as a dependent view
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
-| `mode` | No | duplicate | string |  |
-| `name` | No | None | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `mode` | No | `"duplicate"` | string |  |
+| `name` | No | `null` | any |  |
 | `view` | Yes | — | string |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

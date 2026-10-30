@@ -12,23 +12,23 @@ description: "Export PDF, DWG, IFC or schedule CSV files on the Revit workstatio
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `all_sheets` | No | False | boolean |  |
-| `confirm_token` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
+| `all_sheets` | No | `false` | boolean |  |
+| `confirm_token` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
 | `format` | Yes | — | string |  |
-| `options` | No | None | any |  |
-| `output_dir` | No | None | any |  |
-| `overwrite` | No | False | boolean |  |
-| `sheet_set` | No | None | any |  |
-| `sheets` | No | None | any |  |
-| `views` | No | None | any |  |
+| `options` | No | `null` | any |  |
+| `output_dir` | No | `null` | any |  |
+| `overwrite` | No | `false` | boolean |  |
+| `sheet_set` | No | `null` | any |  |
+| `sheets` | No | `null` | any |  |
+| `views` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | 1800 | integer |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | `1800` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

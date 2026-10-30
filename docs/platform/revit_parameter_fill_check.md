@@ -26,20 +26,20 @@ description: "按参数与类目统计已填、空值与缺失数量，并给出
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
 | `categories` | 是 | — | array | Category names (1 to 20) from the categories catalog; matches any listed category. |
-| `include_types` | 否 | True | boolean |  |
-| `level` | 否 | None | any |  |
+| `include_types` | 否 | `true` | boolean |  |
+| `level` | 否 | `null` | any |  |
 | `parameters` | 是 | — | array | Exact localized parameter names (1 to 30); names that do not match count as missing. |
-| `sample_limit` | 否 | 20 | integer | Maximum sampled element IDs per empty and missing list, 1 to 100 (default 20); counts always cover all elements. |
-| `view` | 否 | None | any | 视图的准确名称或十进制视图 ID。 |
-| `workset` | 否 | None | any |  |
+| `sample_limit` | 否 | `20` | integer | Maximum sampled element IDs per empty and missing list, 1 to 100 (default 20); counts always cover all elements. |
+| `view` | 否 | `null` | any | 视图的准确名称或十进制视图 ID。 |
+| `workset` | 否 | `null` | any |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
-| `timeout_seconds` | 否 | 120 | integer | 本次调用的等待上限（秒）。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+| `timeout_seconds` | 否 | `120` | integer | 本次调用的等待上限（秒）。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

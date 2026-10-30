@@ -12,17 +12,17 @@ description: "Load workstation .rfa files in one undo entry. Existing families a
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
-| `overwrite` | No | False | boolean |  |
-| `overwrite_parameter_values` | No | False | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
+| `overwrite` | No | `false` | boolean |  |
+| `overwrite_parameter_values` | No | `false` | boolean |  |
 | `paths` | Yes | — | array |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | 600 | integer |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | `600` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

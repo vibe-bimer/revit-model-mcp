@@ -13,15 +13,15 @@ description: "Rotate elements about a vertical axis through center_mm, or throug
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `angle_deg` | Yes | — | number |  |
-| `center_mm` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
+| `center_mm` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
 | `element_ids` | Yes | — | array |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

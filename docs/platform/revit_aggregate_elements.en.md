@@ -25,25 +25,25 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `area_scheme` | No | None | any | Exact area-scheme name, case-insensitive. |
-| `categories` | No | None | any |  |
-| `family` | No | None | any |  |
+| `area_scheme` | No | `null` | any | Exact area-scheme name, case-insensitive. |
+| `categories` | No | `null` | any |  |
+| `family` | No | `null` | any |  |
 | `group_by` | Yes | — | array | One or two distinct fields (e.g. category, family, type, level) or exact localized parameter names. |
-| `level` | No | None | any |  |
-| `parameter_filters` | No | None | any | AND-combined filters: parameter (exact localized name), operator (equals, contains, greater, less, empty, not-empty, exists) and value. Numbers use mm, m2, m3 or display units. |
-| `phase` | No | None | any |  |
-| `sum_field` | No | None | any | Numeric field or parameter name to sum and average per group; lengths in mm, areas m2, volumes m3. |
-| `type_name` | No | None | any | Exact type name, case-insensitive. |
-| `view` | No | None | any | Exact non-template view name; limits the search to that view. |
-| `workset` | No | None | any |  |
+| `level` | No | `null` | any |  |
+| `parameter_filters` | No | `null` | any | AND-combined filters: parameter (exact localized name), operator (equals, contains, greater, less, empty, not-empty, exists) and value. Numbers use mm, m2, m3 or display units. |
+| `phase` | No | `null` | any |  |
+| `sum_field` | No | `null` | any | Numeric field or parameter name to sum and average per group; lengths in mm, areas m2, volumes m3. |
+| `type_name` | No | `null` | any | Exact type name, case-insensitive. |
+| `view` | No | `null` | any | Exact non-template view name; limits the search to that view. |
+| `workset` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
-| `timeout_seconds` | No | 120 | integer | Seconds to wait for a result (default 120). |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
+| `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
 
 ## Behavior (registry text) {#behavior}
 

@@ -14,22 +14,22 @@ description: "把主体的轴网与标高和一个已载入的 Revit 链接比�
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `kinds` | 否 | None | any |  |
-| `level_offset_mm` | 否 | 0 | number |  |
+| `kinds` | 否 | `null` | any |  |
+| `level_offset_mm` | 否 | `0` | number |  |
 | `link` | 是 | — | string |  |
-| `name_map` | 否 | None | any |  |
-| `prefix` | 否 | — | string |  |
-| `reuse_matching` | 否 | True | boolean |  |
-| `suffix` | 否 | — | string |  |
-| `tolerance_mm` | 否 | 0.5 | number |  |
+| `name_map` | 否 | `null` | any |  |
+| `prefix` | 否 | `""` | string |  |
+| `reuse_matching` | 否 | `true` | boolean |  |
+| `suffix` | 否 | `""` | string |  |
+| `tolerance_mm` | 否 | `0.5` | number |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
-| `timeout_seconds` | 否 | 120 | integer | 本次调用的等待上限（秒）。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+| `timeout_seconds` | 否 | `120` | integer | 本次调用的等待上限（秒）。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

@@ -13,16 +13,16 @@ description: "Compile and run C# against the live Revit API on the Revit thread.
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `code` | Yes | — | string |  |
-| `confirm_token` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `transaction` | No | auto | string |  |
+| `confirm_token` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `transaction` | No | `"auto"` | string |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | 600 | integer |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | `600` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

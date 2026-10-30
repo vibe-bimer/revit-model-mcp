@@ -12,18 +12,18 @@ description: "Edit an open family in place, or named project families (exact nam
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
-| `families` | No | None | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `families` | No | `null` | any |  |
 | `operations` | Yes | — | array |  |
-| `overwrite_parameter_values` | No | False | boolean |  |
-| `stop_on_error` | No | True | boolean |  |
+| `overwrite_parameter_values` | No | `false` | boolean |  |
+| `stop_on_error` | No | `true` | boolean |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | 1800 | integer |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | `1800` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

@@ -19,7 +19,7 @@ description: "按标题或路径引用激活一个已经打开的文档。"
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
 | `document` | 是 | — | string | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

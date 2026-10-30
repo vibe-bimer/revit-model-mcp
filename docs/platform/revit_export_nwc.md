@@ -14,35 +14,35 @@ description: "在 Revit 工作站导出 Navisworks NWC，需要安装导出器�
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `confirm_token` | 否 | None | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
-| `convert_element_properties` | 否 | None | any |  |
-| `convert_lights` | 否 | None | any |  |
-| `convert_linked_cad_formats` | 否 | None | any |  |
-| `coordinates` | 否 | None | any |  |
-| `divide_file_into_levels` | 否 | None | any |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `element_ids` | 否 | None | any | 要处理的构件 Revit ID 列表。 |
-| `export_element_ids` | 否 | None | any |  |
-| `export_links` | 否 | None | any |  |
-| `export_parts` | 否 | None | any |  |
-| `export_room_as_attribute` | 否 | None | any |  |
-| `export_room_geometry` | 否 | None | any |  |
-| `export_urls` | 否 | None | any |  |
-| `faceting_factor` | 否 | None | any |  |
-| `find_missing_materials` | 否 | None | any |  |
-| `overwrite` | 否 | False | boolean |  |
-| `parameters` | 否 | None | any |  |
+| `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
+| `convert_element_properties` | 否 | `null` | any |  |
+| `convert_lights` | 否 | `null` | any |  |
+| `convert_linked_cad_formats` | 否 | `null` | any |  |
+| `coordinates` | 否 | `null` | any |  |
+| `divide_file_into_levels` | 否 | `null` | any |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `element_ids` | 否 | `null` | any | 要处理的构件 Revit ID 列表。 |
+| `export_element_ids` | 否 | `null` | any |  |
+| `export_links` | 否 | `null` | any |  |
+| `export_parts` | 否 | `null` | any |  |
+| `export_room_as_attribute` | 否 | `null` | any |  |
+| `export_room_geometry` | 否 | `null` | any |  |
+| `export_urls` | 否 | `null` | any |  |
+| `faceting_factor` | 否 | `null` | any |  |
+| `find_missing_materials` | 否 | `null` | any |  |
+| `overwrite` | 否 | `false` | boolean |  |
+| `parameters` | 否 | `null` | any |  |
 | `path` | 是 | — | string |  |
-| `scope` | 否 | None | any |  |
-| `settings_xml` | 否 | None | any |  |
-| `view` | 否 | None | any | 视图的准确名称或十进制视图 ID。 |
+| `scope` | 否 | `null` | any |  |
+| `settings_xml` | 否 | `null` | any |  |
+| `view` | 否 | `null` | any | 视图的准确名称或十进制视图 ID。 |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `timeout_seconds` | 否 | 1800 | integer | 本次调用的等待上限（秒）。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `timeout_seconds` | 否 | `1800` | integer | 本次调用的等待上限（秒）。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

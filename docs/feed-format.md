@@ -92,8 +92,8 @@ HTTP 端点还会拒绝发往其他进程的任务。
 }
 ```
 
-`elements` 统计全部非类型元素，包括视图和图纸。
-`familyTypesUnused` 统计未被任何非类型元素的类型 ID 引用的元素类型。
+`elements` 统计全部非类型构件，包括视图和图纸。
+`familyTypesUnused` 统计未被任何非类型构件的类型 ID 引用的构件类型。
 `linksRvt` 统计 RVT 类型；`linksCad` 统计具有外部文件引用的 CAD 类型；`cadImports` 和 `images` 统计实例。
 `viewsNotOnSheets` 排除模板，统计未放置在图纸上的平面、剖面、立面、三维、绘图和图例视图。
 未放置房间的面积不大于零且没有位置；未封闭房间的面积不大于零但有位置。
@@ -174,12 +174,12 @@ Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `in
 }
 ```
 
-范围计数覆盖所有匹配的非类型元素，不分页。
+范围计数覆盖所有匹配的非类型构件，不分页。
 每个参数的 `filled + empty + missing` 等于 `elements`；存储类型和归属计数仅包含已存在的参数。
 只有实例上没有同名参数时，才回退到类型参数。
-已填写参数需要满足 `HasValue`；字符串还要求包含非空白文本，元素 ID 必须不同于 `InvalidElementId`。
+已填写参数需要满足 `HasValue`；字符串还要求包含非空白文本，构件 ID 必须不同于 `InvalidElementId`。
 当 `HasValue` 为 true 时，双精度和整数的零值也计为已填写。
-每个采样列表独立限制在 `sampleLimit` 范围内；`byCategory` 仅包含存在匹配元素的类别。
+每个采样列表独立限制在 `sampleLimit` 范围内；`byCategory` 仅包含存在匹配构件的类别。
 
 <a id="command-responses"></a>
 
@@ -254,7 +254,7 @@ Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `in
 `changed` 包含四舍五入后的边界或参数值发生变化的 ID，或 `Document.Delete` 返回的全部 ID。
 `dependents` 不包含显式请求的 ID。
 试运行产生的创建 ID 是临时的。
-创建元数据来自所创建元素及其类型和标高。
+创建元数据来自所创建构件及其类型和标高。
 
 批量任务包含一个非空的 `steps` 数组，最多有 50 个命令对象：
 
@@ -286,7 +286,7 @@ Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `in
 ## 几何与图像导出
 
 当数据可用时，`revit_element_details` 直接在 `data` 下返回 `location`、`boundingBox` 和 `roomCenterMm`。
-`revit_query_elements(include_geometry=true)` 会在每个返回元素上包含这些字段。
+`revit_query_elements(include_geometry=true)` 会在每个返回构件上包含这些字段。
 点位置使用 `type:"point"`、`xMm`、`yMm`、`zMm`。
 曲线位置使用 `type:"curve"`、`startMm`、`endMm`、`lengthMm`。
 包围盒使用 `minMm`、`maxMm`、`centerMm` 数组。

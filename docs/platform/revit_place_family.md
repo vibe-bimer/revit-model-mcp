@@ -20,10 +20,10 @@ description: "在指定标高上放置已载入的非宿主族；`family` 可以
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `family` | 是 | — | string |  |
 | `level` | 是 | — | string |  |
-| `rotation_deg` | 否 | 0 | number |  |
+| `rotation_deg` | 否 | `0` | number |  |
 | `type_name` | 是 | — | any |  |
 | `x_mm` | 是 | — | number |  |
 | `y_mm` | 是 | — | number |  |
@@ -32,7 +32,7 @@ description: "在指定标高上放置已载入的非宿主族；`family` 可以
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

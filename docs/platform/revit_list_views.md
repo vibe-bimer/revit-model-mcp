@@ -25,16 +25,16 @@ description: "列出非样板视图的 ID、名称、类型、标高、比例与
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `name_contains` | 否 | None | any | Case-insensitive substring of the view name. |
-| `view_type` | 否 | None | any | English ViewType name such as FloorPlan or ThreeD, case-insensitive. |
+| `name_contains` | 否 | `null` | any | Case-insensitive substring of the view name. |
+| `view_type` | 否 | `null` | any | English ViewType name such as FloorPlan or ThreeD, case-insensitive. |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
-| `timeout_seconds` | 否 | 120 | integer | 本次调用的等待上限（秒）。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+| `timeout_seconds` | 否 | `120` | integer | 本次调用的等待上限（秒）。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

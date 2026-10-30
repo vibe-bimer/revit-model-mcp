@@ -65,7 +65,7 @@ For area totals, group by level and select the area scheme.
 For `revit_export_view`, `save_to` is a new PNG file path on the MCP client's machine; the default downloads to a local temporary directory and returns `localPath`, image width/height, `sizeBytes` and view metadata without base64.
 For `revit_export_element_ids`, `save_to` is an absolute `.xlsx` path on the Revit workstation. The default is `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`; the response returns `path`, `fileName`, `sheetName`, `columns`, `rowCount`, `totalCandidates`, `truncated`, `sizeBytes` and `categoryCounts`.
 Neither export overwrites an existing destination. The workbook has at most 50,000 rows; more candidates set `truncated=true`.
-Its default columns are `类别`, `族`, `类型`, `标高`, `构件ID`, `名称` and `工作集`; `fields` replaces them with built-in field names or parameter names.
+Its default columns are `类别`, `族`, `类型`, `标高`, `构件ID`, `名称` and `工作集` (the Chinese headers of the workbook: category, family, type, level, element id, name and workset); `fields` replaces them with built-in field names or parameter names.
 The level column is empty for components without a level, including most MEP pipe and duct runs.
 Exporting a view does not change the active view or write to the model.
 

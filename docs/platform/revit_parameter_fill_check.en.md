@@ -24,20 +24,20 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `categories` | Yes | — | array | Category names (1 to 20) from the categories catalog; matches any listed category. |
-| `include_types` | No | True | boolean |  |
-| `level` | No | None | any |  |
+| `include_types` | No | `true` | boolean |  |
+| `level` | No | `null` | any |  |
 | `parameters` | Yes | — | array | Exact localized parameter names (1 to 30); names that do not match count as missing. |
-| `sample_limit` | No | 20 | integer | Maximum sampled element IDs per empty and missing list, 1 to 100 (default 20); counts always cover all elements. |
-| `view` | No | None | any | Exact non-template view name; limits the search to that view. |
-| `workset` | No | None | any |  |
+| `sample_limit` | No | `20` | integer | Maximum sampled element IDs per empty and missing list, 1 to 100 (default 20); counts always cover all elements. |
+| `view` | No | `null` | any | Exact non-template view name; limits the search to that view. |
+| `workset` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
-| `timeout_seconds` | No | 120 | integer | Seconds to wait for a result (default 120). |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
+| `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
 
 ## Behavior (registry text) {#behavior}
 

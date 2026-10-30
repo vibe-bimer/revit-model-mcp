@@ -12,28 +12,28 @@ description: "Align host grids and levels to a loaded link, with optional creati
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `create_missing` | No | True | boolean |  |
-| `create_plan_views` | No | False | boolean |  |
-| `dry_run` | No | False | boolean |  |
-| `grid_type` | No | None | any |  |
-| `include_pinned` | No | False | boolean |  |
-| `kinds` | No | None | any |  |
-| `level_offset_mm` | No | 0 | number |  |
-| `level_type` | No | None | any |  |
+| `create_missing` | No | `true` | boolean |  |
+| `create_plan_views` | No | `false` | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
+| `grid_type` | No | `null` | any |  |
+| `include_pinned` | No | `false` | boolean |  |
+| `kinds` | No | `null` | any |  |
+| `level_offset_mm` | No | `0` | number |  |
+| `level_type` | No | `null` | any |  |
 | `link` | Yes | — | string |  |
-| `name_map` | No | None | any |  |
-| `plan_view_type` | No | None | any |  |
-| `prefix` | No | — | string |  |
-| `reuse_matching` | No | True | boolean |  |
-| `suffix` | No | — | string |  |
-| `tolerance_mm` | No | 0.5 | number |  |
+| `name_map` | No | `null` | any |  |
+| `plan_view_type` | No | `null` | any |  |
+| `prefix` | No | `""` | string |  |
+| `reuse_matching` | No | `true` | boolean |  |
+| `suffix` | No | `""` | string |  |
+| `tolerance_mm` | No | `0.5` | number |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | 600 | integer |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | `600` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

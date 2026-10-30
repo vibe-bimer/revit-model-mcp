@@ -18,17 +18,17 @@ The same-name tool has an identical contract to release 0.9.0.
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
 | `dx_mm` | Yes | — | number |  |
 | `dy_mm` | Yes | — | number |  |
-| `dz_mm` | No | 0 | number |  |
+| `dz_mm` | No | `0` | number |  |
 | `element_ids` | Yes | — | array |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

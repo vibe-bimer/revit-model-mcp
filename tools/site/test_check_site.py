@@ -205,3 +205,63 @@ class NoHardcodedCountsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TerminologyTests(unittest.TestCase):
+    """Chinese prose keeps one word per concept; UI literals and code stay untouched."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        (self.root / "docs").mkdir()
+
+    def page(self, name, text):
+        path = self.root / "docs" / name
+        path.write_text(text, encoding="utf-8")
+        return path
+
+    def test_element_written_as_yuansu_is_an_error(self):
+        self.page("probe.md", "读取选中元素的参数。\n")
+        errors = check_site.audit_terminology(self.root)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("元素", errors[0])
+        self.assertIn("构件", errors[0])
+        self.assertIn("docs/probe.md", errors[0])
+
+    def test_the_agreed_word_passes(self):
+        self.page("probe.md", "读取选中构件的参数。\n")
+        self.assertEqual(check_site.audit_terminology(self.root), [])
+
+    def test_a_fenced_code_block_is_not_prose(self):
+        self.page("probe.md", "说明：\n\n```text\n元素\n```\n")
+        self.assertEqual(check_site.audit_terminology(self.root), [])
+
+    def test_an_inline_code_span_is_not_prose(self):
+        self.page("probe.md", "界面值 `元素` 保持原样。\n")
+        self.assertEqual(check_site.audit_terminology(self.root), [])
+
+    def test_a_whitelisted_literal_passes(self):
+        self.page("probe.md", "界面写作 元素。\n")
+        self.assertEqual(
+            check_site.audit_terminology(self.root, whitelist={"probe.md": {"元素"}}),
+            [],
+        )
+
+    def test_the_write_gate_named_as_a_switch_is_an_error(self):
+        self.page("gates.md", "写入开关打开后才允许修改模型。\n")
+        errors = check_site.audit_terminology(self.root)
+        self.assertEqual(len(errors), 1)
+        self.assertIn("门禁", errors[0])
+
+    def test_toggling_display_keeps_the_verb(self):
+        self.page("views.md", "开关阴影显示即可。\n")
+        self.assertEqual(check_site.audit_terminology(self.root), [])
+
+    def test_english_pages_are_not_checked(self):
+        self.page("probe.en.md", "Read the parameters of the selected elements.\n")
+        self.assertEqual(check_site.audit_terminology(self.root), [])
+
+    def test_the_repository_prose_agrees(self):
+        root = Path(__file__).resolve().parents[2]
+        self.assertEqual(check_site.audit_terminology(root), [])

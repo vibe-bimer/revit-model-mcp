@@ -12,25 +12,25 @@ description: "Open each model in the interactive session, run steps and C# code,
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `code` | No | None | any |  |
-| `confirm_token` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `exports` | No | None | any |  |
-| `folder` | No | None | any |  |
-| `open` | No | None | any |  |
-| `paths` | No | None | any |  |
-| `pattern` | No | *.rvt | string |  |
-| `recursive` | No | False | boolean |  |
-| `save` | No | None | any |  |
-| `steps` | No | None | any |  |
-| `stop_on_error` | No | False | boolean |  |
+| `code` | No | `null` | any |  |
+| `confirm_token` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `exports` | No | `null` | any |  |
+| `folder` | No | `null` | any |  |
+| `open` | No | `null` | any |  |
+| `paths` | No | `null` | any |  |
+| `pattern` | No | `"*.rvt"` | string |  |
+| `recursive` | No | `false` | boolean |  |
+| `save` | No | `null` | any |  |
+| `steps` | No | `null` | any |  |
+| `stop_on_error` | No | `false` | boolean |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `process_id` | No | None | any |  |
-| `timeout_seconds` | No | 14400 | integer |  |
+| `process_id` | No | `null` | any |  |
+| `timeout_seconds` | No | `14400` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

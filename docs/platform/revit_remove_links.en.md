@@ -12,17 +12,17 @@ description: "Delete selected link types and their instances; dry_run previews. 
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `confirm_token` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `include_imported_cad` | No | False | boolean |  |
-| `kinds` | No | None | any |  |
+| `confirm_token` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `include_imported_cad` | No | `false` | boolean |  |
+| `kinds` | No | `null` | any |  |
 | `links` | Yes | — | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

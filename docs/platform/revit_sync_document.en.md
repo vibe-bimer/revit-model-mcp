@@ -13,18 +13,18 @@ description: "Synchronize a workshared document with central. Needs confirm_toke
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `comment` | Yes | — | string |  |
-| `compact` | No | False | boolean |  |
-| `confirm_token` | No | None | any |  |
-| `relinquish` | No | all | any |  |
-| `save_local_after` | No | True | boolean |  |
-| `save_local_before` | No | True | boolean |  |
+| `compact` | No | `false` | boolean |  |
+| `confirm_token` | No | `null` | any |  |
+| `relinquish` | No | `"all"` | any |  |
+| `save_local_after` | No | `true` | boolean |  |
+| `save_local_before` | No | `true` | boolean |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `document` | Yes | — | string |  |
-| `process_id` | No | None | any |  |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

@@ -12,19 +12,19 @@ description: "Update a parameter on elements matching the same filters as revit_
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
 | `filters` | Yes | — |  |  |
-| `include_type_parameters` | No | False | boolean |  |
-| `max_elements` | No | 5000 | integer |  |
+| `include_type_parameters` | No | `false` | boolean |  |
+| `max_elements` | No | `5000` | integer |  |
 | `parameter` | Yes | — | string |  |
-| `parameter_id` | No | None | any |  |
+| `parameter_id` | No | `null` | any |  |
 | `value` | Yes | — | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

@@ -12,14 +12,14 @@ description: "Close open UI views in the active document."
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `keep_active` | No | True | boolean |  |
-| `views` | No | None | any |  |
+| `keep_active` | No | `true` | boolean |  |
+| `views` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `process_id` | No | None | any |  |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

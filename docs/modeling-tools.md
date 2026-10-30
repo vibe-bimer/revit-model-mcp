@@ -88,7 +88,7 @@
 
 宿主解析有两条路：
 
-1. **显式 `host_element_id`**：校验元素存在、是 `Wall`，且符号的 `Family.FamilyPlacementType == OneLevelBasedHosted`。Revit 自己不校验宿主，失败也没有文档化的异常类型，这一层必须由工具做。
+1. **显式 `host_element_id`**：校验构件存在、是 `Wall`，且符号的 `Family.FamilyPlacementType == OneLevelBasedHosted`。Revit 自己不校验宿主，失败也没有文档化的异常类型，这一层必须由工具做。
 2. **就近找墙**：把定位点投影到候选墙的定位线上，取水平距离最小者；要求距离不超过 `host_search_radius_mm`，且投影参数落在 0..1（点确实落在这段墙上）。**找不到、超出半径、或最近距离并列**，一律拒绝并列出候选 `{ id, distanceMm }`，让调用者显式指定。
 
 响应回报 `hostResolution: { mode: "explicit" | "nearest", hostId, distanceMm }`，因此试运行也能看清它会挂到哪面墙上。
@@ -142,7 +142,7 @@
 - **必须**设置 `CopyPasteOptions.SetDuplicateTypeNamesHandler(...)`（是方法，不是属性）。不设时 Revit 会弹模态对话框问「只复制新类型还是取消」，无人值守直接卡死；默认返回 `DuplicateTypeAction.UseDestinationTypes`。
 - 跨标高时 `Transform` 取纯平移；没有哪个重载接受「目标标高」参数，标高差必须由调用者算。
 - **宿主族构件的宿主必须在 `element_ids` 里**，否则整批拒绝并点名。Revit 文档化的后果是「找不到新宿主时该构件会在粘贴完成时被删除」——静默丢构件比拒绝更糟。
-- **失败粒度是逐元素报告**：复制不销毁任何东西，没必要像 `revit_reset_element_ids` 那样整批拒绝。每个元素给 `old → new` 或失败原因。
+- **失败粒度是逐构件报告**：复制不销毁任何东西，没必要像 `revit_reset_element_ids` 那样整批拒绝。每个构件给 `old → new` 或失败原因。
 - `CopyElements` 只返回新 ID 集合，**不保证顺序、不给映射**。按「类别 + 类型 + 位置」校验配对，无法精确配对时明确标 `idMappingVerified: false`。
 
 <a id="verification"></a>
@@ -183,4 +183,4 @@
 - **`Room.IsEnclosed` 在两个年份都不存在**；房间封闭性只能用 `Room.IsPointInRoom` / `ClosedShell` 判断。
 - **2026 工作站的族库不完整**：`RVT 2026\Libraries` 只有 446 个 `.rfa`（结构预制与路径分析），没有门窗柱梁；`RVT 2020\Libraries` 有 4,514 个，中文库门窗柱梁齐全。在 2026 上验证 `load_family` 要用 2020 库的族文件（族向后兼容）或模型里已载入的族。
 - **`CloseMainWindow()` 在该工作站上对 Revit 2020 与 2026 都不生效**；强杀前必须先确认 `isModified=false`，之后再清掉 `%LOCALAPPDATA%\RevitModelMcp\instance_*.json` 心跳。
-- **「仅几何构件」的边界**：语料既不能证实也不能证伪 Revit 会不会在建结构构件时顺带生成分析元素。契约只保证这些工具不调用任何分析 API；是否产生分析元素由项目设置决定，验证时把 `IsStructuralAnalysisEnabled` 当作环境事实记录。
+- **「仅几何构件」的边界**：语料既不能证实也不能证伪 Revit 会不会在建结构构件时顺带生成分析构件。契约只保证这些工具不调用任何分析 API；是否产生分析构件由项目设置决定，验证时把 `IsStructuralAnalysisEnabled` 当作环境事实记录。

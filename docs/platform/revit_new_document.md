@@ -14,17 +14,17 @@ description: "在 Revit 工作站上用样板创建项目或族文件。"
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `activate` | 否 | True | boolean |  |
-| `kind` | 否 | project | string |  |
-| `name` | 否 | None | any |  |
-| `save_as` | 否 | None | any |  |
-| `template` | 否 | None | any |  |
+| `activate` | 否 | `true` | boolean |  |
+| `kind` | 否 | `"project"` | string |  |
+| `name` | 否 | `null` | any |  |
+| `save_as` | 否 | `null` | any |  |
+| `template` | 否 | `null` | any |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 
 ## 功能说明（注册表原文） {#behavior}
 
