@@ -144,5 +144,46 @@ class ServingBaselineTests(ServeSiteTestCase):
         self.assertEqual(status, 304)
 
 
+class RobustnessTests(ServeSiteTestCase):
+    def test_nul_percent_encoding_is_controlled_400(self):
+        status, _, _ = self.request("GET", "/%00")
+        self.assertEqual(status, 400)
+
+    def test_nul_head_request_is_controlled_400(self):
+        status, _, body = self.request("HEAD", "/%00")
+        self.assertEqual(status, 400)
+        self.assertEqual(body, b"")
+
+    def test_invalid_utf8_percent_encoding_is_controlled_400(self):
+        status, _, _ = self.request("GET", "/%ff%fe")
+        self.assertEqual(status, 400)
+
+    def test_parent_escape_variants_are_404(self):
+        for target in (
+            "/%2e%2e/secret",
+            "/a/../index.html",
+            "/features/../../etc/passwd",
+            "/features/%2e%2e%2f%2e%2e%2fetc/passwd",
+        ):
+            with self.subTest(target=target):
+                status, _, _ = self.request("GET", target)
+                self.assertEqual(status, 404)
+
+    def test_absolute_paths_are_404(self):
+        for target in ("//etc/passwd", "/%2fetc%2fpasswd"):
+            with self.subTest(target=target):
+                status, _, _ = self.request("GET", target)
+                self.assertEqual(status, 404)
+
+    def test_server_keeps_answering_after_bad_targets(self):
+        for target in ("/%00", "/%ff%fe", "/%2e%2e/secret"):
+            try:
+                self.request("GET", target)
+            except (http.client.HTTPException, OSError):
+                pass
+        status, _, _ = self.request("GET", "/")
+        self.assertEqual(status, 200)
+
+
 if __name__ == "__main__":
     unittest.main()

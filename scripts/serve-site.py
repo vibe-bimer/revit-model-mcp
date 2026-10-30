@@ -55,6 +55,10 @@ def cache_control(path: Path) -> str:
     return "no-cache"
 
 
+class _BadRequest(Exception):
+    """The request target cannot be decoded into a safe path."""
+
+
 class DocsHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
     server_version = "RevitModelMcpDocs"
@@ -80,7 +84,14 @@ class DocsHandler(BaseHTTPRequestHandler):
 
     def _resolve(self) -> Path | None:
         raw = urlsplit(self.path).path
-        parts = [part for part in unquote(raw).split("/") if part not in ("", ".")]
+        try:
+            decoded = unquote(raw, errors="strict")
+        except UnicodeDecodeError:
+            # Percent escapes that are not valid UTF-8 cannot name a file.
+            raise _BadRequest from None
+        if "\x00" in decoded:
+            raise _BadRequest
+        parts = [part for part in decoded.split("/") if part not in ("", ".")]
         if any(part == ".." for part in parts):
             return None
         target = self.root.joinpath(*parts)
@@ -88,8 +99,9 @@ class DocsHandler(BaseHTTPRequestHandler):
             target = target / "index.html"
         try:
             resolved = target.resolve()
-        except OSError:
-            return None
+        except (OSError, ValueError):
+            # ValueError covers paths the filesystem layer cannot even name.
+            raise _BadRequest from None
         if resolved != self.root and self.root not in resolved.parents:
             return None
         return resolved if resolved.is_file() else None
@@ -108,7 +120,11 @@ class DocsHandler(BaseHTTPRequestHandler):
         return cached
 
     def _respond(self, body: bool) -> None:
-        path = self._resolve()
+        try:
+            path = self._resolve()
+        except _BadRequest:
+            self.send_error(HTTPStatus.BAD_REQUEST, "Invalid request target")
+            return
         if path is None:
             self._not_found(body)
             return
