@@ -275,6 +275,55 @@ def switch_current(state: Path, release_id: str) -> str | None:
     return previous
 
 
+def restore_current(state: Path, release_id: str) -> None:
+    tmp = state / f".current-{os.getpid()}"
+    if tmp.is_symlink() or tmp.exists():
+        tmp.unlink()
+    os.symlink(f"releases/{release_id}", tmp)
+    os.replace(tmp, state / "current")
+
+
+def probe_current(state: Path, marker: str) -> str | None:
+    """Serve the current pointer with the real server and fetch the home page.
+
+    Returns None on success or a human-readable failure reason. Probing
+    through ``current`` exercises the same per-request resolution the live
+    server performs after a migration to a symlinked publish root.
+    """
+    import http.client
+    import importlib.util
+    import threading
+
+    spec = importlib.util.spec_from_file_location(
+        "publish_probe_serve_site", Path(__file__).resolve().parent / "serve-site.py"
+    )
+    serve_site = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(serve_site)
+    serve_site.DocsHandler.root = state / "current"
+    server = serve_site.Server(("127.0.0.1", 0), serve_site.DocsHandler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        connection = http.client.HTTPConnection(
+            "127.0.0.1", server.server_address[1], timeout=10
+        )
+        try:
+            connection.request("GET", "/")
+            response = connection.getresponse()
+            body = response.read().decode("utf-8", "replace")
+            if response.status != 200:
+                return f"health probe got HTTP {response.status}"
+            if marker not in body:
+                return f"health probe body lacks the site marker {marker!r}"
+            return None
+        finally:
+            connection.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=5)
+
+
 def ensure_publish_root(publish_root: Path, state: Path) -> None:
     """The served root is a symlink to the state's current pointer."""
     if publish_root.is_symlink():
@@ -475,12 +524,25 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
 
             previous = switch_current(state, release_id_back)
             log(f"== current -> {release_id_back} (was {previous or 'nothing'})")
+            ensure_publish_root(publish_root, state)
+            marker = os.environ.get("SITE_HEALTH_MARKER", "Revit Model MCP")
+            problem = probe_current(state, marker)
+            if problem:
+                if previous:
+                    restore_current(state, previous)
+                    log(f"== rolled current back to {previous}")
+                else:
+                    current = state / "current"
+                    if current.is_symlink():
+                        current.unlink()
+                    log("== removed current; no previous release to restore")
+                raise SystemExitMessage(EXIT_HEALTH, problem, "health")
             utc = utc_now()
             manifest["release_id"] = release_id_back
+            manifest.setdefault("verification", {})["health_probe"] = "pass"
             status.attempt(utc, commit, release_id_back, "success", "publish")
             status.succeeded(utc, release_id_back, commit, False, manifest)
             status.save()
-            ensure_publish_root(publish_root, state)
             keep = int(os.environ.get("SITE_KEEP_RELEASES", "3"))
             protected = {release_id_back} | ({previous} if previous else set())
             prune_releases(state, keep, protected)

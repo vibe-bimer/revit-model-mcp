@@ -249,3 +249,33 @@ class FailureSemanticsTests(PublishHarness):
         broken = self.publish(SITE_COMMIT="0" * 40)
         self.assertEqual(broken.returncode, 2)
         self.assertEqual(self.status()["last_failure"]["stage"], "sync")
+
+
+class HealthProbeTests(PublishHarness):
+    def setUp(self):
+        super().setUp()
+        self.commit("v1")
+        self.assertEqual(self.publish().returncode, 0)
+        self.first_release = Path(self.current_target()).name
+
+    def test_failed_probe_rolls_current_back_to_the_previous_release(self):
+        self.write_source("v2")
+        self.commit("v2")
+        broken = self.publish(FAKE_PROBE_BAD="1")
+        self.assertEqual(broken.returncode, 4)
+        self.assertEqual(Path(self.current_target()).name, self.first_release)
+        status = self.status()
+        self.assertEqual(status["last_failure"]["stage"], "health")
+        self.assertEqual(status["last_attempt"]["outcome"], "failure")
+        # The served site still answers with the previous version.
+        page = (self.publish_root / "index.html").read_text()
+        self.assertIn("v1", page)
+        self.assertNotIn("v2", page)
+        self.assertEqual(status["current_release"], self.first_release)
+
+    def test_probe_marker_is_configurable(self):
+        self.write_source("v2")
+        self.commit("v2")
+        ok = self.publish(SITE_HEALTH_MARKER="no such marker anywhere")
+        self.assertEqual(ok.returncode, 4)
+        self.assertEqual(Path(self.current_target()).name, self.first_release)
