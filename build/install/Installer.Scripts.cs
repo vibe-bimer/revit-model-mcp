@@ -35,8 +35,9 @@ static class InstallerScripts
 
     /// <summary>
     ///     Uninstall cleanup: deletes settings.json only when it holds nothing but the keys the installer writes
-    ///     (updateCheck, updateMode), then deletes the folder only when it is empty. policy.json, logs or any other
-    ///     file keeps the folder. Never recursive, never through a link.
+    ///     (updateCheck, updateMode), and the shipped policy.json only when it still holds nothing but the default
+    ///     ReadOnly, so a policy an administrator wrote survives. Then deletes the folder only when it is empty. Logs or
+    ///     any other file keep the folder. Never recursive, never through a link.
     /// </summary>
     public const string RemoveProgramDataFolderScript =
         "$ErrorActionPreference = 'SilentlyContinue'; " +
@@ -48,8 +49,30 @@ static class InstallerScripts
         "$settings = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json; " +
         "if ($settings) { $foreign = @($settings.PSObject.Properties.Name | Where-Object { $_ -notin 'updateCheck', 'updateMode' }); " +
         "if ($foreign.Count -eq 0) { Remove-Item -LiteralPath $path -Force } } }; " +
+        "$shipped = Join-Path $directory 'policy.json'; " +
+        "if (Test-Path -LiteralPath $shipped -PathType Leaf) { " +
+        "$policy = Get-Content -LiteralPath $shipped -Raw | ConvertFrom-Json; " +
+        "if ($policy -and @($policy.PSObject.Properties).Count -eq 1 -and $policy.ReadOnly -eq $true) { Remove-Item -LiteralPath $shipped -Force } }; " +
         "if (-not @(Get-ChildItem -LiteralPath $directory -Force).Count) { [System.IO.Directory]::Delete($directory) } " +
         "}; exit 0";
+
+    /// <summary>
+    ///     The default policy this fork ships. ReadOnly is the only value: everything else keeps the upstream default,
+    ///     and an administrator who wants writes changes this value or the installer's READONLY property. See adr/0003.
+    /// </summary>
+    public const string DefaultPolicyJson = "{\"ReadOnly\": true}";
+
+    /// <summary>
+    ///     Writes the default policy.json into %ProgramData%\RevitModelMcp only when no file is there yet, so a file an
+    ///     administrator wrote is never replaced, not even by a repair or an upgrade. The folder is already
+    ///     administrator-only when this runs, so the file inherits an ACL no standard user can change, which is what
+    ///     the readers require before they trust it.
+    /// </summary>
+    public const string EnsureDefaultPolicyScript =
+        "$policy = Join-Path (Join-Path $env:ProgramData 'RevitModelMcp') 'policy.json'; " +
+        "if (-not (Test-Path -LiteralPath $policy)) { " +
+        "Set-Content -LiteralPath $policy -Value '" + DefaultPolicyJson + "' -Encoding UTF8 " +
+        "}; ";
 
     public static string Encode(string script) => Convert.ToBase64String(Encoding.Unicode.GetBytes(script));
 

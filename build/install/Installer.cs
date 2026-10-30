@@ -210,10 +210,11 @@ IEnumerable<PathFileAction> UpdateSettingActions(string environmentFolder, bool 
 }
 
 // Always creates %ProgramData%\RevitModelMcp with a protected ACL, so an administrator who later drops policy.json
-// there gets a folder a standard user cannot have created or changed. Fails the install if the folder is untrustworthy.
+// there gets a folder a standard user cannot have created or changed, then writes the shipped default policy.json when
+// no file is there yet. Fails the install if the folder is untrustworthy.
 PathFileAction EnsureProgramDataFolderAction()
 {
-    var encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(MachinePolicyValues.EnsureProgramDataFolderScript));
+    var encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(MachinePolicyValues.EnsureProgramDataScript));
     return new PathFileAction(new Id("MachineEnsureProgramDataFolder"),
         @"[SystemFolder]WindowsPowerShell\v1.0\powershell.exe",
         $"-NoProfile -NonInteractive -EncodedCommand {encoded}",

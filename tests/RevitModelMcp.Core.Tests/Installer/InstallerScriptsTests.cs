@@ -1,4 +1,5 @@
 using global::Installer;
+using RevitModelMcp.Core.Policy;
 
 namespace RevitModelMcp.Core.Tests.InstallerLogic;
 
@@ -96,6 +97,40 @@ public sealed class InstallerScriptsTests
         await Assert.That(script).Contains("[System.IO.Directory]::Delete($directory)");
         await Assert.That(script).Contains("ReparsePoint");
         await Assert.That(script).DoesNotContain("-Recurse");
-        await Assert.That(script).DoesNotContain("policy.json");
+    }
+
+    [Test]
+    public async Task ShippedPolicyIsReadOnlyAndSaysNothingElse()
+    {
+        await Assert.That(InstallerScripts.DefaultPolicyJson).IsEqualTo("""{"ReadOnly": true}""");
+        var policy = MachinePolicy.ParseJson(InstallerScripts.DefaultPolicyJson);
+        await Assert.That(policy.Problem).IsNull();
+        await Assert.That(policy.ReadOnly).IsTrue();
+        await Assert.That(policy.ToolDeny).IsNull();
+        await Assert.That(policy.ToolAllow).IsNull();
+        await Assert.That(policy.ExecuteCode).IsNull();
+        await Assert.That(policy.UpdateMode).IsNull();
+        await Assert.That(policy.HttpEnabled).IsNull();
+        await Assert.That(policy.RedactPaths).IsNull();
+    }
+
+    [Test]
+    public async Task ShippedPolicyIsWrittenOnlyWhereNoFileIsYet()
+    {
+        var script = InstallerScripts.EnsureDefaultPolicyScript;
+        await Assert.That(script).Contains("if (-not (Test-Path -LiteralPath $policy))");
+        await Assert.That(script).Contains("Join-Path (Join-Path $env:ProgramData 'RevitModelMcp') 'policy.json'");
+        await Assert.That(script).Contains("Set-Content -LiteralPath $policy -Value '" + InstallerScripts.DefaultPolicyJson + "'");
+        await Assert.That(script).DoesNotContain("-Force");
+    }
+
+    [Test]
+    public async Task UninstallRemovesTheShippedPolicyOnlyWhileItIsStillTheDefault()
+    {
+        var script = InstallerScripts.RemoveProgramDataFolderScript;
+        await Assert.That(script).Contains("Join-Path $directory 'policy.json'");
+        await Assert.That(script).Contains("@($policy.PSObject.Properties).Count -eq 1");
+        await Assert.That(script).Contains("$policy.ReadOnly -eq $true");
+        await Assert.That(script).Contains("Remove-Item -LiteralPath $shipped -Force");
     }
 }

@@ -100,4 +100,12 @@ static class MachinePolicyValues
         "Add-Rule $acl $admins 'FullControl'; Add-Rule $acl $system 'FullControl'; Add-Rule $acl $users 'ReadAndExecute'; " +
         "[void][System.IO.Directory]::CreateDirectory($directory, $acl) " +
         "}; ";
+
+    /// <summary>
+    ///     The folder script followed by the shipped default policy file, in one deferred action so the file is written
+    ///     only once the folder exists with an administrator-only ACL. The registry value covers an install that passes
+    ///     READONLY=0; this file is what makes a machine no installer configured read-only. See adr/0003.
+    /// </summary>
+    public const string EnsureProgramDataScript =
+        EnsureProgramDataFolderScript + InstallerScripts.EnsureDefaultPolicyScript;
 }
