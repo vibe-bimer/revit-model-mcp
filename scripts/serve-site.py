@@ -274,11 +274,11 @@ class DocsHandler(BaseHTTPRequestHandler):
             self.wfile.write(payload)
 
     def _is_fresh(self, etag: str, mtime: float) -> bool:
-        if self.headers.get("If-None-Match"):
-            return etag in [
-                candidate.strip()
-                for candidate in self.headers["If-None-Match"].split(",")
-            ]
+        if_none_match = self.headers.get("If-None-Match")
+        if if_none_match:
+            candidates = [c.strip() for c in if_none_match.split(",")]
+            # "*" matches any current representation of the resource.
+            return "*" in candidates or etag in candidates
         if self.headers.get("If-Modified-Since"):
             try:
                 since = parsedate_to_datetime(self.headers["If-Modified-Since"])

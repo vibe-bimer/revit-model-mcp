@@ -330,5 +330,67 @@ class EncodingNegotiationTests(ServeSiteTestCase):
         self.assertNotIn("vary", headers)
 
 
+class ConditionalRequestTests(ServeSiteTestCase):
+    def _fresh_headers(self, target, encoding="identity"):
+        headers = self.request("GET", target, {"Accept-Encoding": encoding})[1]
+        conditional = {"Accept-Encoding": encoding, "If-None-Match": headers["etag"]}
+        return headers, conditional
+
+    def test_if_none_match_star_returns_304(self):
+        _, _, _ = self.request("GET", "/big.html")
+        status, _, _ = self.request("GET", "/big.html", {"If-None-Match": "*"})
+        self.assertEqual(status, 304)
+
+    def test_if_none_match_takes_precedence_over_if_modified_since(self):
+        _, headers, _ = self.request("GET", "/big.html")
+        status, _, body = self.request(
+            "GET",
+            "/big.html",
+            {
+                "If-None-Match": '"stale-opaque-tag"',
+                "If-Modified-Since": headers["last-modified"],
+            },
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(body.decode("utf-8"), BIG_PAGE)
+
+    def test_stale_if_modified_since_still_returns_200(self):
+        status, _, _ = self.request(
+            "GET", "/big.html", {"If-Modified-Since": "Mon, 01 Jan 2001 00:00:00 GMT"}
+        )
+        self.assertEqual(status, 200)
+
+    def test_gzip_304_keeps_validators_and_vary(self):
+        _, headers, _ = self.request("GET", "/big.html", {"Accept-Encoding": "gzip"})
+        status, not_modified, body = self.request(
+            "GET",
+            "/big.html",
+            {"Accept-Encoding": "gzip", "If-None-Match": headers["etag"]},
+        )
+        self.assertEqual(status, 304)
+        self.assertEqual(body, b"")
+        self.assertEqual(not_modified["etag"], headers["etag"])
+        self.assertIn('-gzip"', not_modified["etag"])
+        self.assertEqual(not_modified.get("vary"), "Accept-Encoding")
+        self.assertEqual(not_modified["cache-control"], headers["cache-control"])
+
+    def test_identity_304_does_not_match_gzip_etag(self):
+        _, headers, _ = self.request("GET", "/big.html", {"Accept-Encoding": "gzip"})
+        status, _, _ = self.request(
+            "GET",
+            "/big.html",
+            {"Accept-Encoding": "identity", "If-None-Match": headers["etag"]},
+        )
+        self.assertEqual(status, 200)
+
+    def test_head_conditional_returns_304(self):
+        _, headers, _ = self.request("GET", "/big.html")
+        status, _, body = self.request(
+            "HEAD", "/big.html", {"If-None-Match": headers["etag"]}
+        )
+        self.assertEqual(status, 304)
+        self.assertEqual(body, b"")
+
+
 if __name__ == "__main__":
     unittest.main()
