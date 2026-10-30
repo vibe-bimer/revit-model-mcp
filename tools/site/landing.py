@@ -287,7 +287,7 @@ def render_development(lang: str, released_count: int, branch_count: int) -> str
         intro = f"当前网站的 {released_count} 个工具对应现有版本。新版正在独立分支上集成，尚未作为当前版本发布。"
         base = f"上游底座包含文档管理、视图与图纸、族和链接、模型导出、批处理等能力；集成分支的工具清单目前有 {branch_count} 项。"
         sample = "视图光照工具已完成 Python 工具注册和测试；C# 编译与 Revit 真机验证尚待完成。"
-        pending = "楼板、标高、阶段设置与合并、元素 ID 导出、重置和模型重建仍待移植。Revit 2020 和 2026 均为目标工作站年份。"
+        pending = "楼板、标高、阶段设置与合并、构件 ID 导出、重置和模型重建仍待移植。Revit 2020 和 2026 均为目标工作站年份。"
         source = "查看集成规格与进展"
         catalog = f"按基座与自研查阅 {branch_count} 个工具"
     else:

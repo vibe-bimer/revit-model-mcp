@@ -13,8 +13,8 @@ description: "本仓库自研 8 个工具的移植状态：1 个已接到新版�
 | [创建楼板](#revit-create-floor)<br>`revit_create_floor` | 自研（本仓库） | <span class="state no">待移植</span> |
 | [设置阶段](#revit-set-phase)<br>`revit_set_phase` | 自研（本仓库） | <span class="state no">待移植</span> |
 | [合并阶段](#revit-merge-phases)<br>`revit_merge_phases` | 自研（本仓库） | <span class="state no">待移植</span> |
-| [导出元素 ID 台账](#revit-export-element-ids)<br>`revit_export_element_ids` | 自研（本仓库） | <span class="state no">待移植</span> |
-| [重置元素 ID](#revit-reset-element-ids)<br>`revit_reset_element_ids` | 自研（本仓库） | <span class="state no">待移植</span> |
+| [导出构件 ID 台账](#revit-export-element-ids)<br>`revit_export_element_ids` | 自研（本仓库） | <span class="state no">待移植</span> |
+| [重置构件 ID](#revit-reset-element-ids)<br>`revit_reset_element_ids` | 自研（本仓库） | <span class="state no">待移植</span> |
 | [重建模型 ID](#revit-rebuild-model-ids)<br>`revit_rebuild_model_ids` | 自研（本仓库） | <span class="state no">待移植</span> |
 
 已移植表示分支上能列出并执行；待移植表示实现已在本地版本里，但分支上还没有对应命令。
@@ -35,13 +35,13 @@ description: "本仓库自研 8 个工具的移植状态：1 个已接到新版�
 
 `revit_merge_phases` — 已有本地实现；该命令不进批量步骤词表。
 
-## 导出元素 ID 台账 {#revit-export-element-ids}
+## 导出构件 ID 台账 {#revit-export-element-ids}
 
 `revit_export_element_ids` — 已有本地实现，输出 xlsx 台账，含系统成员与连接器读取。
 
-## 重置元素 ID {#revit-reset-element-ids}
+## 重置构件 ID {#revit-reset-element-ids}
 
-`revit_reset_element_ids` — 已有本地实现，可排练（dry_run 报出代价），每元素独立子事务。
+`revit_reset_element_ids` — 已有本地实现，可排练（dry_run 报出代价），每构件独立子事务。
 
 ## 重建模型 ID {#revit-rebuild-model-ids}
 

@@ -33,7 +33,7 @@ description: "参数的填充率：有值 / 空 / 缺失，并给出抽样 ID"
 | --- | :--: | --- | --- | --- |
 | `categories` | 是 | — | `array<string>` | 类别名称列表（取并集） |
 | `parameters` | 是 | — | `array<string>` | 要统计的参数名列表 |
-| `include_types` | 否 | `true` | `boolean` | 实例上找不到参数时，是否回退到类型参数（默认 true）；不是把类型元素额外计数 |
+| `include_types` | 否 | `true` | `boolean` | 实例上找不到参数时，是否回退到类型参数（默认 true）；不是把类型构件额外计数 |
 | `level` | 否 | `null` | `string / null` | 只统计该标高上的构件 |
 | `sample_limit` | 否 | `20` | `integer` | 每个参数最多返回多少个抽样 ID |
 | `view` | 否 | `null` | `string / null` | 视图名称（或视图 ID） |

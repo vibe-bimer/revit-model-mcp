@@ -26,7 +26,7 @@ Revit 2020 检查于 2026-09-28 和 2026-09-29 进行，使用 Windows 工作站
 `revit_create_floor` 覆盖了 Revit 2020 的 `Document.Create.NewFloor` 路径；`revit_set_phase` 覆盖了阶段顺序检查的兼容路径，而对应检查 API 直到 Revit 2022 才公开。
 `revit_export_element_ids` 为 `MEP文件.rvt` 的构件写出了工作簿，冻结表头、自动筛选，以及类别 → 族 → 类型的排序均保持完整。
 `revit_reset_element_ids` 重置了 `MEP文件.rvt` 中 27 个未连接构件的 ID，清单保持不变；其系统保护检查将所有管道、风管和已连接附件排除在执行范围外。
-`revit_rebuild_model_ids` 将 `建筑结构.rvt` 中 899 个可选元素复制到新模型，源模型保持不变；新模型打开时没有提示框，其三维视图包含 900 个元素，并保留源模型的墙和标高类型。
+`revit_rebuild_model_ids` 将 `建筑结构.rvt` 中 899 个可选构件复制到新模型，源模型保持不变；新模型打开时没有提示框，其三维视图包含 900 个构件，并保留源模型的墙和标高类型。
 在 0.9.0 构建上，单个任务用 165 s 写出该模型的十份副本（每份 16.5 s）：每份包含 899 个构件，`idMappingVerified=true`，没有任何 ID 出现在两份副本中，ID 区间为 2473–4256、19259–21042、……、44771–46554。
 截图和 JSON 证据位于 [`validation-assets` 分支](https://github.com/vibe-bimer/revit-model-mcp/tree/validation-assets)。
 Revit 批处理（`revit_batch`）在撤销菜单中的标签无法通过 API 验证。

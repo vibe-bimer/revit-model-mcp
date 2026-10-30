@@ -111,9 +111,9 @@
 | 12 | `revit_export_view` | 导出已发现的 3D／平面视图 | PNG、客户端 `localPath`、大小、视图元数据；打开图像确认渲染，活动视图不变 | [ ] |
 | 13 | `revit_view_elements` | 对第 10 项发现的视图分页读取 | ID、类别／族／类型／标高、测量值和 `hasMore` | [ ] |
 | 14 | `revit_element_details` | 查看第 9 或 13 项中的 ID | 实例／类型参数、相关警告、可用几何；房间包含面积、体积、边界和 `roomCenterMm` | [ ] |
-| 15 | `revit_view_warnings` | 传已发现的视图 | 涉及视图内元素的警告；`presentOnView` 区分受影响但位于视图外的元素 | [ ] |
+| 15 | `revit_view_warnings` | 传已发现的视图 | 涉及视图内构件的警告；`presentOnView` 区分受影响但位于视图外的构件 | [ ] |
 | 16 | `revit_list_warnings` | 先列分组，再传返回的 `warning_text` 和 `include_elements=true` | `totalWarnings`、分组计数、受影响 ID；空分组有效 | [ ] |
-| 17 | `revit_list_relations` | `level-rooms`、`area-scheme-elements`、`view-template-dependents` 用 `source_name`；`group-elements`、`nested-family` 用 `source_id` | `relation`、`source`、相关元素记录；不提供任意宿主／被承载关系图。名称来自目录，ID 来自元素查询 | [ ] |
+| 17 | `revit_list_relations` | `level-rooms`、`area-scheme-elements`、`view-template-dependents` 用 `source_name`；`group-elements`、`nested-family` 用 `source_id` | `relation`、`source`、相关构件记录；不提供任意宿主／被承载关系图。名称来自目录，ID 来自构件查询 | [ ] |
 | 18 | `revit_list_instances` | “有哪些 Revit 进程及活动文档？”；再用 `document` 过滤 | `documentName`、`documentPath`、`revitVersion`、`pluginVersion`、`processId`、`pluginResponding` 的列表；不是族／类型实例。Local／SSH 回退记录可能文档为空且 `pluginResponding=false`；HTTP 只列已连接进程 | [ ] |
 | 19 | `revit_export_element_ids` | 用默认／自定义 `fields`，将已绘制构件 ID 清单导出到新的工作站 `.xlsx` 路径 | `path`、`fileName`、`sheetName`、列名、行数／总数／类别数、`truncated`、大小；按类别／族／类型排序。默认列：类别、族、类型、标高、构件ID、名称、工作集。ID 不变；MEP 管线标高可能为空 | [ ] |
 
@@ -121,7 +121,7 @@
 - [ ] **3.20 关闭路径脱敏**：设置 `REVIT_MCP_REDACT_PATHS=0` 后显示完整路径。
 - [ ] **3.21 查询边界**：`hasMore=true` 时继续分页；检查无匹配、偏移超出结果、无效字段／过滤条件、不存在的 ID／视图。缺少文档、读取失败、超时属于错误，不是完整结果。工具声明承诺不返回部分数据，但当前文件通道可能返回终态 `success:false`、`partial:true` 数据：记录此例外，不得算作完整证据；完整结果必须满足 `success:true` 且 `partial:false`（或无该字段）。等待超时不取消任务。房间数量按标高聚合；面积合计按标高分组并选定面积方案。
 - [ ] **3.22 关系**：覆盖全部五种支持的关系、空成员关系、无效／缺失／类型错误的源对象；不得推断不支持的宿主关系。
-- [ ] **3.23 导出安全**：检查自定义／默认字段、工作簿列和数量、已有目标文件被拒绝、工作站 `.xlsx` 与客户端 PNG 路径差异；有适当模型时检查超过 50,000 行的工作簿截断标志。确认两个导出均不修改模型元素或赋 ID。
+- [ ] **3.23 导出安全**：检查自定义／默认字段、工作簿列和数量、已有目标文件被拒绝、工作站 `.xlsx` 与客户端 PNG 路径差异；有适当模型时检查超过 50,000 行的工作簿截断标志。确认两个导出均不修改模型构件或赋 ID。
 
 ---
 
@@ -133,7 +133,7 @@
 
 连接必须恰好发现一个 Revit 进程。`document` 用于选择该进程内已打开的模型；多个文档打开时必填。未知或歧义目标会在任何修改前被拒绝。`revit_select`、`revit_show`、`revit_isolate` 还要求目标文档处于活动状态。
 
-**安全语义因工具而异**：选择、显示／导航使用 UI 调用，不需要模型事务；隔离改变临时视图状态，没有 `dry_run`。下表每个普通模型编辑工具都支持事务式 `dry_run=true`：执行、验证预期结果，再回滚。批处理支持事务组回滚。换 ID 是独立的不可逆替换流程：必须先 dry run；任一元素不合格时阻止整组选中项的真实执行。重建 ID 写入新模型文件，不修改源模型；其 dry run 执行复制但不保存文件。
+**安全语义因工具而异**：选择、显示／导航使用 UI 调用，不需要模型事务；隔离改变临时视图状态，没有 `dry_run`。下表每个普通模型编辑工具都支持事务式 `dry_run=true`：执行、验证预期结果，再回滚。批处理支持事务组回滚。换 ID 是独立的不可逆替换流程：必须先 dry run；任一构件不合格时阻止整组选中项的真实执行。重建 ID 写入新模型文件，不修改源模型；其 dry run 执行复制但不保存文件。
 
 !!! warning "报错不等于回滚"
     `verification.error` 可能在 **COMMIT（提交）后**发生：编辑已经完成，但提交后的重读失败。传输或拾取超时不会取消待执行任务，任务可能稍后执行。重试前检查目标模型、ID 及输出文件，不能宣称每个失败响应都保证模型不变。
@@ -142,7 +142,7 @@
 
 | # | 动作工具 | 测试及验证 | 清理／安全 | [ ] |
 | --- | --- | --- | --- | --- |
-| 1 | `revit_select` | 选择已发现的房间／元素 ID；确认高亮和选中数量 `count`；`element_ids=[]` 清空选择 | 恢复原选择；无模型事务、无 `dry_run` | [ ] |
+| 1 | `revit_select` | 选择已发现的房间／构件 ID；确认高亮和选中数量 `count`；`element_ids=[]` 清空选择 | 恢复原选择；无模型事务、无 `dry_run` | [ ] |
 | 2 | `revit_show` | 对已发现 ID 分别使用 `select=true`、`false`；核对 `activeView`、`viewOpened`、选择状态及必要时打开标高平面／3D 视图的导航行为 | 恢复视图／选择；仅 UI，不是按名称打开；无模型事务、无 `dry_run` | [ ] |
 | 3 | `revit_isolate` | 在活动视图中临时隔离 ID，再用 `element_ids=[]`、`reset=true`；核对临时隐藏／隔离状态 | 重置视图状态；无 `dry_run`，不是持久几何编辑 | [ ] |
 | 4 | `revit_move` | 先 dry run，再按模型轴 `dx_mm`、`dy_mm`、`dz_mm` 移动测试实例；比较前后位置或包围盒 | 反向移动或丢弃测试副本；检查 mm 单位 | [ ] |
@@ -154,8 +154,8 @@
 | 10 | `revit_merge_phases` | 先 dry run，再将源阶段创建／拆除引用转到目标；核对数量、`sourceDeleted`；仍被引用的阶段可能保留且 `sourceDeleted=false` | 专用一次性副本；源／目标必须不同；不能加入批处理 | [ ] |
 | 11 | `revit_set_parameter` | 先 dry run，再改可写参数；核对前后值及实例／类型归属；长度 mm、面积 m²、其他 double 内部单位 | 恢复值或丢弃副本；共享类型修改影响全部实例；只读／ElementId 参数被拒绝 | [ ] |
 | 12 | `revit_set_view_lighting` | 先 dry run 读取改动前后读数；再真实设置阴影开关、`shadow_intensity`、`sunlight_intensity`、太阳日期／时间或光照模式方位角／高度角、地面平面与标高、背景与渲染光源方案。核对 `changedSettings` 与 `verification.before/after.lighting`，并用 `revit_export_view` 对比图片；在共享太阳与阴影设置的视图上确认 `shadows` 被拒绝 | 恢复可还原项（阴影、强度、太阳时间、光源方案）；**背景与地面平面标高无法通过 API 清除**，需丢弃副本。`shadows` 关闭后强度设置不再有可见效果 | [ ] |
-| 13 | `revit_delete` | 先 dry run，检查包含依赖的 ID，再仅删除已批准的测试元素；核对存活检查和返回数量 | 删除数量含依赖；丢弃副本或经授权使用 Revit UI 撤销 | [ ] |
-| 14 | `revit_reset_element_ids` | **必须先 dry run**：检查 `ineligible` 原因和 `idMapping`；合格／不合格混选时真实执行须整组拒绝。对已批准的全合格测试副本，确认旧 ID 消失、新副本及保留的类型／类别 | **不可逆，不依赖撤销。** 拒绝有宿主、属组、有依赖、MEP 曲线／系统成员及不可复制元素。丢弃副本并恢复备份；不原地赋 ID，也不把旧 ID 写入参数 | [ ] |
+| 13 | `revit_delete` | 先 dry run，检查包含依赖的 ID，再仅删除已批准的测试构件；核对存活检查和返回数量 | 删除数量含依赖；丢弃副本或经授权使用 Revit UI 撤销 | [ ] |
+| 14 | `revit_reset_element_ids` | **必须先 dry run**：检查 `ineligible` 原因和 `idMapping`；合格／不合格混选时真实执行须整组拒绝。对已批准的全合格测试副本，确认旧 ID 消失、新副本及保留的类型／类别 | **不可逆，不依赖撤销。** 拒绝有宿主、属组、有依赖、MEP 曲线／系统成员及不可复制构件。丢弃副本并恢复备份；不原地赋 ID，也不把旧 ID 写入参数 | [ ] |
 | 15 | `revit_rebuild_model_ids` | Dry run 有映射但无保存文件。真实执行到新的工作站 `destination_path`；检查 `saved`、源／副本数量、排除项、每个 ID 映射。覆盖视图／模板、`seed`、重名模式、`copies`／`{n}` 路径，逐项检查 `copyResults` | 源模型不变、不保存。未经批准不覆盖；检查所有输出。只复制三维视图可选构件及基准对象，不是完整项目归档；不保留视图／图纸／明细表／注释／阶段／工作集／MEP 系统／未选宿主 | [ ] |
 | 16 | `revit_batch` | 先 dry run，再执行 1–50 个已批准步骤；核对预期验证、回滚及选择恢复。真实成功只有一个 `revit_batch` 撤销项；首个执行失败回滚事务组；检查 `committed`、从零计数的 `failedStep` 及各步结果 | 使用一次性副本；后续步骤参数无效须在任何执行前拒绝。允许名称：`move`、`place_family`、`create_wall`、`create_floor`、`create_level`、`set_phase`、`set_parameter`、`set_view_lighting`、`delete`、`select`、`isolate`；不允许 `show`、阶段合并、换 ID／重建 ID 或嵌套批处理 | [ ] |
 

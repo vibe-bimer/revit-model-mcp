@@ -57,7 +57,7 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | [视图统计](revit_view_summary.md)<br>`revit_view_summary` | 视图元数据 + 类别计数（各有多少、多少种类型） |
 | [导出视图图片](revit_export_view.md)<br>`revit_export_view` | 把视图导出成 PNG 图片（1–4000 像素） |
 | [视图构件明细](revit_view_elements.md)<br>`revit_view_elements` | 分页读取视图中的构件（可按类别过滤） |
-| [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关元素的警告 |
+| [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关构件的警告 |
 | <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案 |
 
 ### 导出与检验 (6) {#group-export}
@@ -118,7 +118,7 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | [视图统计](revit_view_summary.md)<br>`revit_view_summary` | 视图元数据 + 类别计数（各有多少、多少种类型） |
 | [导出视图图片](revit_export_view.md)<br>`revit_export_view` | 把视图导出成 PNG 图片（1–4000 像素） |
 | [视图构件明细](revit_view_elements.md)<br>`revit_view_elements` | 分页读取视图中的构件（可按类别过滤） |
-| [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关元素的警告 |
+| [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关构件的警告 |
 | <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案 |
 
 ### 图纸 {#objects-sheets}

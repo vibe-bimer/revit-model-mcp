@@ -116,7 +116,7 @@ description: "可直接复制的提示词库，每个工具配有示例提示词
 
 ### [视图相关警告](revit_view_warnings.md)
 
-`revit_view_warnings` — 只读该视图相关元素的警告
+`revit_view_warnings` — 只读该视图相关构件的警告
 
 ```text
 这个视图里有哪些警告？

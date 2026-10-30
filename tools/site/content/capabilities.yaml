@@ -351,7 +351,7 @@ tools:
       zh: "视图相关警告"
       en: "View warnings"
     summary:
-      zh: 只读该视图相关元素的警告
+      zh: 只读该视图相关构件的警告
       en: "Read warnings involving elements present in a selected view"
     years:
       '2020':
@@ -920,7 +920,7 @@ param_notes:
   revit_parameter_fill_check:
     source: 2b42f82c5af8
     include_types:
-      zh: 实例上找不到参数时，是否回退到类型参数（默认 true）；不是把类型元素额外计数
+      zh: 实例上找不到参数时，是否回退到类型参数（默认 true）；不是把类型构件额外计数
       en: fall back to type parameters when absent on the instance (true by default); does not add type elements to the count
     level:
       zh: 只统计该标高上的构件

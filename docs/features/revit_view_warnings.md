@@ -1,5 +1,5 @@
 ---
-description: "只读该视图相关元素的警告"
+description: "只读该视图相关构件的警告"
 ---
 
 # 视图相关警告
@@ -8,7 +8,7 @@ description: "只读该视图相关元素的警告"
 
 <p class="facts"><span><b>分组</b> 视图与截图</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.4.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span></p>
 
-只读该视图相关元素的警告
+只读该视图相关构件的警告
 
 [同名集成分支页面](../platform/revit_view_warnings.md)
 
