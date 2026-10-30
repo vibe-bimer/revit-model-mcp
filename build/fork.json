@@ -38,6 +38,7 @@
     "build/check_fork_budget.py": "the budget check",
     "build/upstream_report.py": "the base report",
     "tools/check_fork_identity.py": "the identity check",
-    "CONTRIBUTING.md": "lists the fork gates under local checks"
+    "CONTRIBUTING.md": "lists the fork gates under local checks",
+    "server/tests/test_fork_budget.py": "the bounds are asserted, so the gate has tests"
   }
 }
