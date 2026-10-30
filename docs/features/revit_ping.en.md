@@ -1,3 +1,7 @@
+---
+description: "Check whether the Revit add-in is reachable"
+---
+
 # Check connection
 
 `revit_ping`

@@ -1,3 +1,7 @@
+---
+description: "不连接 Revit，直接从快照生成本地 Excel 报告。"
+---
+
 # 生成快照报告
 
 `revit_build_report`

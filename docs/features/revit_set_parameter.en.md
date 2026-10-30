@@ -1,3 +1,7 @@
+---
+description: "Set a named parameter; lengths use mm, areas m² and other doubles internal units"
+---
+
 # Edit parameter
 
 `revit_set_parameter`

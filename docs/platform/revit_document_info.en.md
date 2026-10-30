@@ -1,3 +1,7 @@
+---
+description: "Read the active model's file name, Revit version, levels (elevations in mm), area schemes, worksets and view count. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Document Info
 
 `revit_document_info`

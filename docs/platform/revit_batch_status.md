@@ -1,3 +1,7 @@
+---
+description: "在发起客户端退出后仍可读取运行与模型状态。"
+---
+
 # 批量收集状态
 
 `revit_batch_status`

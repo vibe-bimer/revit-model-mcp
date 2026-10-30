@@ -1,3 +1,7 @@
+---
+description: "列出 Revit 进程及其文档名、路径、版本、进程号与插件响应状态；忙碌进程仍会列出。"
+---
+
 # 实例列表
 
 `revit_list_instances`

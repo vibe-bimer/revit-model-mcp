@@ -1,3 +1,7 @@
+---
+description: "Place a loaded unhosted family on a named level. family is a name or Family: Type; a null type_name uses the embedded or first type. XY is in mm, rotation in degrees."
+---
+
 # Place Family
 
 `revit_place_family`

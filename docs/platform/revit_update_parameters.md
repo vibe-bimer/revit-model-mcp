@@ -1,3 +1,7 @@
+---
+description: "对符合同一查询条件的构件更新同一个参数，组成员跳到 `skipped.inGroup` 而不中断调用。"
+---
+
 # 批量更新参数
 
 `revit_update_parameters`

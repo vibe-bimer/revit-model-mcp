@@ -1,3 +1,7 @@
+---
+description: "Read durable run and model status after the initiating client exits."
+---
+
 # Batch collection status
 
 `revit_batch_status`

@@ -1,3 +1,7 @@
+---
+description: "生成本地 xlsx 问题登记表，含构件快照与审阅文档；已有同名输出文件时拒绝执行。"
+---
+
 # 生成问题登记表
 
 `revit_issue_register`

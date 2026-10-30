@@ -1,3 +1,7 @@
+---
+description: "Export a selected view to a PNG file on the MCP client. Does not change the active view or the model. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Export View to PNG
 
 `revit_export_view`

@@ -1,3 +1,7 @@
+---
+description: "按模型轴平移构件（mm）"
+---
+
 # 移动构件
 
 `revit_move`

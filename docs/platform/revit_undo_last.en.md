@@ -1,3 +1,7 @@
+---
+description: "Undo the last MCP action through Revit's own undo command. Runs only when the target document is active, no command is pending and Revit's last undo entry is the one this session recorded; otherwise the result carries a refusal reason."
+---
+
 # Undo Last Action
 
 `revit_undo_last`

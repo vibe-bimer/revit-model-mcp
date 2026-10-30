@@ -1,3 +1,7 @@
+---
+description: "按 `dx_mm`、`dy_mm`、`dz_mm` 沿模型轴移动构件；`dry_run` 回滚并返回验证块。"
+---
+
 # 移动构件
 
 `revit_move`

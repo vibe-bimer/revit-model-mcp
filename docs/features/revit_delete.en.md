@@ -1,3 +1,7 @@
+---
+description: "Delete selected elements and their Revit dependencies"
+---
+
 # Delete elements
 
 `revit_delete`

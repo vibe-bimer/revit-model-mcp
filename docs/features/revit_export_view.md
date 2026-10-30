@@ -1,3 +1,7 @@
+---
+description: "把视图导出成 PNG 图片（1–4000 像素）"
+---
+
 # 导出视图图片
 
 `revit_export_view`

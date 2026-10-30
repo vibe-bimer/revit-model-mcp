@@ -1,3 +1,7 @@
+---
+description: "Build a local Excel report from snapshots without contacting Revit."
+---
+
 # Build Snapshot Report
 
 `revit_build_report`

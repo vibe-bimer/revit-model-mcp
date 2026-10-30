@@ -1,3 +1,7 @@
+---
+description: "在 Revit 里选中指定构件（空列表=清除选择）"
+---
+
 # 选择构件
 
 `revit_select`

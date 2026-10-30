@@ -1,3 +1,7 @@
+---
+description: "检查连接与插件版本"
+---
+
 # 检查连接
 
 `revit_ping`

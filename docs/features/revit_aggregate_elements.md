@@ -1,3 +1,7 @@
+---
+description: "按 1–2 个字段分组统计数量，可附加求和与平均（mm / m² / m³）"
+---
+
 # 分组统计
 
 `revit_aggregate_elements`

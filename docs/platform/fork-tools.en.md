@@ -1,3 +1,7 @@
+---
+description: "Migration status of this repository's 8 fork tools: 1 attached to the new base and 7 still queued."
+---
+
 # Fork tool migration status
 
 This repository owns 8 tools. 1 is attached to the new base and 7 are still queued. None of them change base behaviour; they append commands through the fork registry.

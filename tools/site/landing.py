@@ -11,6 +11,7 @@ sections that carry them keep their identifiers.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 CONTENT = Path(__file__).resolve().parent / "content"
@@ -31,6 +32,7 @@ TEXT = {
         "eyebrow": "插件 / MCP 版本 {version}",
         "lede": "把 Autodesk Revit 模型接到 AI 助手上：查参数与几何、统计构件、检查模型、导出清单、编辑构件，"
         "以及复制模型并换新 ID。默认只读，动作需要双门禁。",
+        "description": "把 Autodesk Revit 模型接到 AI 助手：查询参数与几何、统计构件、检查模型、导出清单并编辑构件，默认只读。",
         "cta_install": "开始安装",
         "cta_browse": "浏览 {total} 个功能",
         "stat_read": "读取工具",
@@ -117,6 +119,7 @@ TEXT = {
         "lede": "Bring Autodesk Revit models to your AI assistant: inspect parameters and geometry, count "
         "elements, check models, export registers, edit elements, and copy models with new IDs. "
         "Read-only by default; actions need both gates.",
+        "description": "Bring Autodesk Revit models to your AI assistant: inspect parameters and geometry, count elements, check models, export registers and edit elements. Read-only by default.",
         "cta_install": "Install and connect",
         "cta_browse": "Browse {total} features",
         "stat_read": "Read tools",
@@ -507,6 +510,7 @@ def home_page(
     )
     return f"""---
 title: {text["title"]}
+description: {json.dumps(text["description"], ensure_ascii=False)}
 hide:
   - toc
 ---

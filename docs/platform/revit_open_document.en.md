@@ -1,3 +1,7 @@
+---
+description: "Open a local, UNC or RSN model. Central models open detached by default. Cloud paths are unsupported. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action."
+---
+
 # Open Document
 
 `revit_open_document`

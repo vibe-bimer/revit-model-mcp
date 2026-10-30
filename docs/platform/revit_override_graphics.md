@@ -1,3 +1,7 @@
+---
+description: "在选定模型视图中给构件上色；`reset` 恢复本 Revit 会话中保存的替代。"
+---
+
 # 高亮构件
 
 `revit_override_graphics`

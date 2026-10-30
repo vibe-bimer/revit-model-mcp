@@ -1,3 +1,7 @@
+---
+description: "Count filled, empty and missing parameters per parameter and category, with samples of empty and missing element IDs. Numeric zero counts as filled. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Parameter Fill Check
 
 `revit_parameter_fill_check`

@@ -1,3 +1,7 @@
+---
+description: "在 Revit 工作站导出 PDF、DWG、IFC 或明细表 CSV；`dry_run` 只返回计划生成的文件名。"
+---
+
 # 导出模型文件
 
 `revit_export`

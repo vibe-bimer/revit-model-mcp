@@ -1,3 +1,7 @@
+---
+description: "Read warnings involving elements present in a selected view"
+---
+
 # View warnings
 
 `revit_view_warnings`

@@ -1,3 +1,7 @@
+---
+description: "Inspect one view's template, display, categories, worksets, filters and links. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # View Info
 
 `revit_view_info`

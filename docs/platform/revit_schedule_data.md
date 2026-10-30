@@ -1,3 +1,7 @@
+---
+description: "读取明细表显示的表头与单元格文本，支持分页。"
+---
+
 # 读取明细表数据
 
 `revit_schedule_data`

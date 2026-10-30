@@ -1,3 +1,7 @@
+---
+description: "绕穿过 `center_mm` 的竖轴旋转，或不给点时按组合包围盒中心旋转。"
+---
+
 # 旋转构件
 
 `revit_rotate`

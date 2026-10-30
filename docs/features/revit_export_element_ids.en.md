@@ -1,3 +1,7 @@
+---
+description: "Write the ID register of drawn model components to an Excel workbook"
+---
+
 # Export element ID register
 
 `revit_export_element_ids`

@@ -1,3 +1,7 @@
+---
+description: "临时隔离显示（reset=true 恢复）"
+---
+
 # 临时隔离显示
 
 `revit_isolate`

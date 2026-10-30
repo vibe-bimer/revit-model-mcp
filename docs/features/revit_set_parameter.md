@@ -1,3 +1,7 @@
+---
+description: "按参数名写值（长度 mm、面积 m²，其余按内部单位）"
+---
+
 # 修改参数
 
 `revit_set_parameter`

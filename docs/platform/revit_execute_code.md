@@ -1,3 +1,7 @@
+---
+description: "在 Revit 线程上编译并运行 C#，可直接调用 Revit API；写入模型需要先取得确认令牌。"
+---
+
 # 执行 C# 代码
 
 `revit_execute_code`

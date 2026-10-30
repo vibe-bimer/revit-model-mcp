@@ -1,3 +1,7 @@
+---
+description: "Compare host grids and levels with one loaded Revit link. Changes nothing. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Compare Link Datums
 
 `revit_compare_link_datums`

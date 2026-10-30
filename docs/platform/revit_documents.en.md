@@ -1,3 +1,7 @@
+---
+description: "List every open document in one Revit process, including background documents. Linked documents are listed only when include_linked is set. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Open Documents
 
 `revit_documents`

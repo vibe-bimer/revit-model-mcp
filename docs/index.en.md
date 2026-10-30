@@ -1,5 +1,6 @@
 ---
 title: Revit Model MCP
+description: "Bring Autodesk Revit models to your AI assistant: inspect parameters and geometry, count elements, check models, export registers and edit elements. Read-only by default."
 hide:
   - toc
 ---

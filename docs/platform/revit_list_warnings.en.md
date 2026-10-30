@@ -1,3 +1,7 @@
+---
+description: "Group model warnings by description text. warning_text with include_elements=true returns the elements of one group. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # List Warnings
 
 `revit_list_warnings`

@@ -1,3 +1,7 @@
+---
+description: "Create a plan, section, 3D or drafting view. Unbounded 3D views show the whole model, shaded, fine detail. Box coordinates are model mm."
+---
+
 # Create View
 
 `revit_create_view`

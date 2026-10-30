@@ -1,3 +1,7 @@
+---
+description: "按标题或路径引用激活一个已经打开的文档。"
+---
+
 # 激活文档
 
 `revit_activate_document`

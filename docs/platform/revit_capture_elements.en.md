@@ -1,3 +1,7 @@
+---
+description: "Render a highlighted PNG that marks 1 to 500 elements, for issue evidence. Supports 3d or plan mode over local or SSH transport. The temporary view is rolled back. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Capture Elements
 
 `revit_capture_elements`

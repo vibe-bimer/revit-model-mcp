@@ -1,3 +1,7 @@
+---
+description: "读取活动模型的文件名、Revit 版本、标高（毫米）、面积方案、工作集与视图数量。"
+---
+
 # 文档信息
 
 `revit_document_info`

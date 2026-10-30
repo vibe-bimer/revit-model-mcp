@@ -1,3 +1,7 @@
+---
+description: "读取选定视图的构件类目与数量。"
+---
+
 # 视图摘要
 
 `revit_view_summary`

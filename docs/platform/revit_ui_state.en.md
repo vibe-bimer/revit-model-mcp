@@ -1,3 +1,7 @@
+---
+description: "Read the active document, open views, selection and open documents. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Revit UI State
 
 `revit_ui_state`

@@ -1,3 +1,7 @@
+---
+description: "整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型"
+---
+
 # 新模型重建 ID
 
 `revit_rebuild_model_ids`

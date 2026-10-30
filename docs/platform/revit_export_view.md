@@ -1,3 +1,7 @@
+---
+description: "把选定视图导出为 MCP 客户端上的 PNG 文件，不改变活动视图与模型。"
+---
+
 # 导出视图为 PNG
 
 `revit_export_view`

@@ -1,3 +1,7 @@
+---
+description: "按闭合轮廓建楼板（至少 3 个顶点，mm）"
+---
+
 # 创建楼板
 
 `revit_create_floor`

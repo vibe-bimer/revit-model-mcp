@@ -1,3 +1,7 @@
+---
+description: "通过 Revit 自身的撤销命令撤销上一次 MCP 动作；条件不满足时结果带拒绝原因。"
+---
+
 # 撤销上一个动作
 
 `revit_undo_last`

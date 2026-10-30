@@ -1,3 +1,7 @@
+---
+description: "List running Revit instances and their active documents"
+---
+
 # Revit instance list
 
 `revit_list_instances`

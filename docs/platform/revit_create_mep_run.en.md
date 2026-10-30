@@ -1,3 +1,7 @@
+---
+description: "Create connected duct, pipe, cable tray or conduit segments from model mm points. A missing Z uses the level elevation plus the kind's default offset. Unplaceable elbows are reported as unjoined pairs."
+---
+
 # Create MEP Run
 
 `revit_create_mep_run`

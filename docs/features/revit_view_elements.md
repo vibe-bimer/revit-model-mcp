@@ -1,3 +1,7 @@
+---
+description: "分页读取视图中的构件（可按类别过滤）"
+---
+
 # 视图构件明细
 
 `revit_view_elements`

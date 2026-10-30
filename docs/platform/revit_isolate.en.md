@@ -1,3 +1,7 @@
+---
+description: "Temporarily isolate element IDs in the active view; an empty list resets."
+---
+
 # Isolate Elements
 
 `revit_isolate`

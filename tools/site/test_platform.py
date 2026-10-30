@@ -8,6 +8,7 @@ page text, or a nav block that stops matching the snapshot.
 import unittest
 
 import platform_catalog
+import yaml
 
 
 class SnapshotAuditTests(unittest.TestCase):
@@ -82,6 +83,13 @@ class ForkToolTests(unittest.TestCase):
                 self.assertTrue(item.get(field), f"{name} is missing {field}")
 
 
+def _body(page: str) -> str:
+    """Strip the generated frontmatter so body assertions stay about the page text."""
+    if page.startswith("---\n"):
+        return page.split("\n---\n", 1)[1].lstrip("\n")
+    return page
+
+
 class PageTests(unittest.TestCase):
     def setUp(self):
         self.tools, self.released = platform_catalog.load_platform()
@@ -100,7 +108,7 @@ class PageTests(unittest.TestCase):
         tool = next(t for t in self.tools if t["name"] == "revit_set_view_lighting")
         page = platform_catalog.tool_page(tool, self.released, "zh")
         title, summary = platform_catalog.ZH[tool["name"]]
-        self.assertTrue(page.startswith(f"# {title}"))
+        self.assertTrue(_body(page).startswith(f"# {title}"))
         self.assertIn(summary, page)
         self.assertIn('class="facts"', page)
         self.assertIn("已移植", page)
@@ -189,6 +197,44 @@ class PagePathTests(unittest.TestCase):
             if not path.exists() or path.read_text(encoding="utf-8") != content
         ]
         self.assertEqual(stale, [], "run tools/site/generate_features.py --write")
+
+
+def _frontmatter(page):
+    if not page.startswith("---\n"):
+        raise AssertionError(f"page does not start with frontmatter: {page[:60]!r}")
+    end = page.find("\n---\n", 4)
+    if end < 0:
+        raise AssertionError("frontmatter is not closed")
+    return yaml.safe_load(page[4:end])
+
+
+class DescriptionFrontmatterTests(unittest.TestCase):
+    def setUp(self):
+        self.tools, self.released = platform_catalog.load_platform()
+
+    def test_tool_pages_carry_a_localised_description(self):
+        for name in ("revit_set_view_lighting", "revit_export_view"):
+            tool = next(item for item in self.tools if item["name"] == name)
+            for lang in ("zh", "en"):
+                with self.subTest(tool=name, lang=lang):
+                    description = _frontmatter(
+                        platform_catalog.tool_page(tool, self.released, lang)
+                    )["description"]
+                    self.assertTrue(description)
+                    has_cjk = any("\u4e00" <= char <= "\u9fff" for char in description)
+                    self.assertEqual(has_cjk, lang == "zh")
+
+    def test_index_and_fork_pages_carry_a_description(self):
+        for lang in ("zh", "en"):
+            for page in (
+                platform_catalog.index_page(self.tools, self.released, lang),
+                platform_catalog.fork_page(self.tools, lang),
+            ):
+                with self.subTest(lang=lang):
+                    description = _frontmatter(page)["description"]
+                    self.assertTrue(description)
+                    has_cjk = any("\u4e00" <= char <= "\u9fff" for char in description)
+                    self.assertEqual(has_cjk, lang == "zh")
 
 
 if __name__ == "__main__":

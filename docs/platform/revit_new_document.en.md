@@ -1,3 +1,7 @@
+---
+description: "Create a project or family from a template on the Revit workstation."
+---
+
 # New Document
 
 `revit_new_document`

@@ -1,3 +1,7 @@
+---
+description: "Read a schema version 1 project snapshot for batch audits. Closed worksets can make the result incomplete. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Model Snapshot
 
 `revit_model_snapshot`

@@ -1,3 +1,7 @@
+---
+description: "List recent jobs, or wait up to wait_seconds (0 to 50, default 40) for the result of an action jobId. Results stay on the workstation for 24 hours, across server restarts. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # List Revit Jobs
 
 `revit_jobs`

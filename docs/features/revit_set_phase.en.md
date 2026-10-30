@@ -1,3 +1,7 @@
+---
+description: "Assign created/demolished phases; an empty string clears and null leaves unchanged"
+---
+
 # Set element phases
 
 `revit_set_phase`

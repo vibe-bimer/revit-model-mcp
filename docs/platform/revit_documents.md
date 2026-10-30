@@ -1,3 +1,7 @@
+---
+description: "列出一个 Revit 进程中打开的所有文档，包含后台文档；链接文档需显式开启。"
+---
+
 # 文档列表
 
 `revit_documents`

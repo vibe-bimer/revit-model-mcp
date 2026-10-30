@@ -1,3 +1,7 @@
+---
+description: "赋创建阶段 / 拆除阶段（空串清除，null 不变）"
+---
+
 # 设置构件阶段
 
 `revit_set_phase`

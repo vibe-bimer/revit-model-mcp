@@ -1,3 +1,7 @@
+---
+description: "Colour elements in selected model views; reset restores overrides saved in this Revit session."
+---
+
 # Highlight Elements
 
 `revit_override_graphics`

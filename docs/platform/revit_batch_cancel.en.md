@@ -1,3 +1,7 @@
+---
+description: "Persist cancellation and prevent unstarted models from running."
+---
+
 # Cancel batch collection
 
 `revit_batch_cancel`

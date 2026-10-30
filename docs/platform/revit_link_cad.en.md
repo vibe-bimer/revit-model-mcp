@@ -1,3 +1,7 @@
+---
+description: "Link or import a DWG into a plan view on the Revit workstation. Returns CAD layers and extents in mm."
+---
+
 # Link CAD Drawing
 
 `revit_link_cad`

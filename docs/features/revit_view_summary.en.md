@@ -1,3 +1,7 @@
+---
+description: "Read view metadata, category counts and number of distinct types"
+---
+
 # View summary
 
 `revit_view_summary`

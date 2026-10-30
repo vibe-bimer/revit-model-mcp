@@ -1,3 +1,7 @@
+---
+description: "把构件换成同一族内的兼容类型，重名类型按族解析；`dry_run` 会回滚。"
+---
+
 # 更改构件类型
 
 `revit_change_type`

@@ -1,3 +1,7 @@
+---
+description: "Read instance/type parameters and geometry for one element ID"
+---
+
 # Element details
 
 `revit_element_details`

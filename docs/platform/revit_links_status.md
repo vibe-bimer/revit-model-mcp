@@ -1,3 +1,7 @@
+---
+description: "读取 RVT、CAD 与图片链接状态；每类最多 100 条，汇总计数覆盖全部链接。"
+---
+
 # 链接状态
 
 `revit_links_status`

@@ -1,3 +1,7 @@
+---
+description: "Move elements by offsets along model axes in millimetres"
+---
+
 # Move elements
 
 `revit_move`

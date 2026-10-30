@@ -1,3 +1,7 @@
+---
+description: "Synchronize a workshared document with central. Needs confirm_token from a first call, which changes nothing."
+---
+
 # Synchronize Document
 
 `revit_sync_document`

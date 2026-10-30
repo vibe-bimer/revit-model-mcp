@@ -1,3 +1,7 @@
+---
+description: "Start a persistent, read-only run over local, UNC or RSN models. open_timeout_minutes is the per-model open deadline (default 30, 45 when upgrading in memory)."
+---
+
 # Start batch collection
 
 `revit_batch_start`

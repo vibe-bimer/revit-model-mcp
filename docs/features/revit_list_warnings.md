@@ -1,3 +1,7 @@
+---
+description: "全模型警告按文本分组，可展开受影响构件"
+---
+
 # 模型警告
 
 `revit_list_warnings`

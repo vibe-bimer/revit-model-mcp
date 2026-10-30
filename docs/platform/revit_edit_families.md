@@ -1,3 +1,7 @@
+---
+description: "就地编辑已打开的族，或对指定项目族逐个执行一个加载循环；`dry_run` 回滚全部改动。"
+---
+
 # 编辑族
 
 `revit_edit_families`

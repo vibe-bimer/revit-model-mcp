@@ -1,3 +1,7 @@
+---
+description: "Read model quality counts: project metadata, file size, counts, units and the ten most frequent warning groups. Unavailable metrics are null and listed in skipped. output_path also writes an .xlsx health report with up to five snapshots. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Model Health Check
 
 `revit_model_health`

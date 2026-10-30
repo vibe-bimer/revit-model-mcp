@@ -1,3 +1,7 @@
+---
+description: "在活动视图中临时隔离指定构件 ID；空列表即取消隔离。"
+---
+
 # 隔离构件
 
 `revit_isolate`

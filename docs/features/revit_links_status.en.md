@@ -1,3 +1,7 @@
+---
+description: "Inspect RVT, CAD and image link status, paths and instance counts"
+---
+
 # Link status
 
 `revit_links_status`

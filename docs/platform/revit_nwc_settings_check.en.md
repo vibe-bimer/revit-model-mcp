@@ -1,3 +1,7 @@
+---
+description: "Parse a Navisworks exporter XML file on the Revit workstation without exporting. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Check NWC Settings
 
 `revit_nwc_settings_check`

@@ -1,3 +1,7 @@
+---
+description: "桥接洞口、配对平行 CAD 线并在一次撤销内连接基本墙；Revit 拒绝的连接会列出原因。"
+---
+
 # 从 CAD 建墙
 
 `revit_walls_from_cad`

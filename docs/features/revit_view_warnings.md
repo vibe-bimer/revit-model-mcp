@@ -1,3 +1,7 @@
+---
+description: "只读该视图相关元素的警告"
+---
+
 # 视图相关警告
 
 `revit_view_warnings`

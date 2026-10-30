@@ -1,3 +1,7 @@
+---
+description: "Count filled, empty and missing parameter values and sample element IDs"
+---
+
 # Parameter fill check
 
 `revit_parameter_fill_check`

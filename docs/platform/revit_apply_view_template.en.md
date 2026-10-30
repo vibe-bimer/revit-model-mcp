@@ -1,3 +1,7 @@
+---
+description: "Apply a matching view template to one or more views."
+---
+
 # Apply View Template
 
 `revit_apply_view_template`

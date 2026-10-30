@@ -1,3 +1,7 @@
+---
+description: "写入一个实例或类型参数，可用参数 ID、共享参数 GUID 或本地化名称定位；长度用毫米、面积用平方米。"
+---
+
 # 设置参数
 
 `revit_set_parameter`

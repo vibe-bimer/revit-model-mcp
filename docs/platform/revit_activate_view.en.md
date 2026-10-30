@@ -1,3 +1,7 @@
+---
+description: "Activate a non-template view. Zoom to fit, preserve zoom, or frame element IDs."
+---
+
 # Activate View
 
 `revit_activate_view`

@@ -1,3 +1,7 @@
+---
+description: "Read RVT, CAD and image link status. Each list is capped at 100 entries; summary counts cover all links. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # Links Status
 
 `revit_links_status`

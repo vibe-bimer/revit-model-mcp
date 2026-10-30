@@ -92,6 +92,10 @@ LABELS = {
         "contract_diff_intro": "下表由注册表 inputSchema 自动比较得出，不是手写清单。",
         "contract_diff_note": "本页是发布版 {version} 的契约；集成分支上的同名工具参数不同，请勿混用。",
         "legend": "已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。",
+        "index_desc": "当前发布版全部工具的功能总览，按分组列出每个工具的用途、参数与 Revit 年份支持。",
+        "matrix_desc": "读取工具与动作工具在 Revit 2020、2026 及 2022–2027 上的验证状态矩阵。",
+        "prompts_desc": "可直接复制的提示词库，每个工具配有示例提示词与用途摘要。",
+        "version_desc": "Revit {year} 下全部工具的支持范围与验证状态清单，按分组列出。",
     },
     "en": {
         "group": "Group",
@@ -146,8 +150,19 @@ LABELS = {
         "contract_diff_intro": "The list below is computed from the registry inputSchema; it is not a hand-written list.",
         "contract_diff_note": "This page is the contract of release {version}; the same-name tool on the integration branch takes different parameters, so do not mix them.",
         "legend": "Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.",
+        "index_desc": "Feature overview of every tool in the current release, grouped with each tool's purpose, parameters and Revit year support.",
+        "matrix_desc": "Validation status matrix for read and action tools across Revit 2020, 2026 and 2022–2027.",
+        "prompts_desc": "Copyable prompt library with a sample prompt and purpose summary for every tool.",
+        "version_desc": "Support scope and validation status of every tool for Revit {year}, grouped by task area.",
     },
 }
+
+
+def frontmatter(description: str) -> str:
+    """Render the YAML frontmatter that feeds the page description meta tag."""
+    return (
+        "---\ndescription: " + json.dumps(description, ensure_ascii=False) + "\n---\n\n"
+    )
 
 
 def load() -> tuple[list[dict], dict, dict]:
@@ -368,7 +383,7 @@ def tool_page(
         f"[{labels['all_tools']}](index.md) · [{labels['matrix']}](matrix.md) · [{labels['prompts_page']}](prompts.md)",
         "",
     ]
-    return "\n".join(out)
+    return frontmatter(cap["summary"][lang]) + "\n".join(out)
 
 
 def origin_badge(cap: dict, lang: str) -> str:
@@ -435,7 +450,7 @@ def index_page(
             )
         out.append("")
     out += [f'!!! warning "{labels["gate"]}"', f"    {labels['gate_body']}", ""]
-    return "\n".join(out)
+    return frontmatter(labels["index_desc"]) + "\n".join(out)
 
 
 def matrix_page(tools: list[dict], capabilities: dict, lang: str) -> str:
@@ -466,7 +481,7 @@ def matrix_page(tools: list[dict], capabilities: dict, lang: str) -> str:
                 f"| {origin_badge(cap, lang)}[{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {' | '.join(cells)} |"
             )
         out.append("")
-    return "\n".join(out)
+    return frontmatter(labels["matrix_desc"]) + "\n".join(out)
 
 
 def prompts_page(tools: list[dict], capabilities: dict, lang: str) -> str:
@@ -493,7 +508,7 @@ def prompts_page(tools: list[dict], capabilities: dict, lang: str) -> str:
             ]
             for prompt in cap["prompts"]:
                 out += ["```text", prompt[lang], "```", ""]
-    return "\n".join(out)
+    return frontmatter(labels["prompts_desc"]) + "\n".join(out)
 
 
 def version_page(tools: list[dict], capabilities: dict, lang: str, year: str) -> str:
@@ -534,7 +549,7 @@ def version_page(tools: list[dict], capabilities: dict, lang: str, year: str) ->
                 f"| [{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {cap['summary'][lang]} | {state_badge(cap['years'][year]['state'], labels)} |"
             )
         out.append("")
-    return "\n".join(out)
+    return frontmatter(labels["version_desc"].format(year=year)) + "\n".join(out)
 
 
 def home_page(

@@ -1,3 +1,7 @@
+---
+description: "复制视图，可选带详图复制或创建为从属视图。"
+---
+
 # 复制视图
 
 `revit_duplicate_view`

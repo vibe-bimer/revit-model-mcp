@@ -1,3 +1,7 @@
+---
+description: "在 Revit 工作站导出 Navisworks NWC，需要安装导出器；`settings_xml` 应用导出器参数。"
+---
+
 # 导出 NWC
 
 `revit_export_nwc`

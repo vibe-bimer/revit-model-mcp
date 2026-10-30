@@ -1,3 +1,7 @@
+---
+description: "Close a background document. Needs confirm_token from a first call, which changes nothing."
+---
+
 # Close Document
 
 `revit_close_document`

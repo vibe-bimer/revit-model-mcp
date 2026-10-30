@@ -1,3 +1,7 @@
+---
+description: "Download completed snapshots to new local files without overwriting."
+---
+
 # Fetch batch snapshots
 
 `revit_batch_fetch`

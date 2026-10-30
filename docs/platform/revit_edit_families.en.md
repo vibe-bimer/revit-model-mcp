@@ -1,3 +1,7 @@
+---
+description: "Edit an open family in place, or named project families (exact names or [\"*\"]), one load cycle each. A dry run rolls back all changes. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action."
+---
+
 # Edit Families
 
 `revit_edit_families`

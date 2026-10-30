@@ -1,3 +1,7 @@
+---
+description: "Read model object membership or dependencies. relation is level-rooms, area-scheme-elements or view-template-dependents (with source_name), or group-elements or nested-family (with source_id). A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # List Relations
 
 `revit_list_relations`

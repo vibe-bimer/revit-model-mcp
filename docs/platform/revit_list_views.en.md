@@ -1,3 +1,7 @@
+---
+description: "List non-template views with id, name, type, level, scale and template. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries."
+---
+
 # List Views
 
 `revit_list_views`
