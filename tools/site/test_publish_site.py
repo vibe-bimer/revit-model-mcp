@@ -6,6 +6,7 @@ spec: the observable contract is exit codes, the release layout under the
 state root, the ``current`` symlink and the recorded status.
 """
 
+import importlib.util
 import json
 import os
 import shutil
@@ -587,3 +588,36 @@ class RealMkdocsSmokeTests(PublishHarness):
         self.assertRegex(manifest["tools"]["builder"], r"\d+\.\d+")
         self.assertEqual(len(manifest["config"]["sha256"]), 64)
         self.assertEqual(len(manifest["tree_sha"]), 64)
+
+
+class EnvironmentLinkTests(unittest.TestCase):
+    """The export cannot carry untracked virtualenvs, so the publisher links them."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name)
+        spec = importlib.util.spec_from_file_location(
+            "publish_site_under_test", PUBLISH_SCRIPT
+        )
+        self.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.module)
+
+    def test_venvs_present_in_the_checkout_are_linked_into_the_export(self):
+        repo = self.base / "repo"
+        source = self.base / "export"
+        (repo / "server" / ".venv" / "bin").mkdir(parents=True)
+        (repo / ".venv-docs" / "bin").mkdir(parents=True)
+        source.mkdir()
+        linked = self.module.link_build_environment(source, repo)
+        self.assertEqual(linked, ["server/.venv", ".venv-docs"])
+        self.assertTrue((source / "server" / ".venv").is_symlink())
+        self.assertTrue((source / ".venv-docs").is_symlink())
+
+    def test_a_missing_venv_is_left_absent(self):
+        repo = self.base / "repo"
+        source = self.base / "export"
+        repo.mkdir()
+        source.mkdir()
+        self.assertEqual(self.module.link_build_environment(source, repo), [])
+        self.assertFalse((source / "server" / ".venv").exists())

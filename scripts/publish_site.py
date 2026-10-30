@@ -210,6 +210,26 @@ def export_source(repo: Path, commit: str, destination: Path) -> None:
         )
 
 
+def link_build_environment(source: Path, repo: Path) -> list[str]:
+    """Reuse the checkout's virtualenvs inside the export.
+
+    ``git archive`` never carries an untracked virtualenv, and the registry gate
+    launches ``server/.venv/bin/revit-model-mcp``. Linking the checkout's venv
+    into the export keeps the gate running against the same server code the
+    developer tested, without copying it or writing into the checkout.
+    """
+    linked: list[str] = []
+    for relative in ("server/.venv", ".venv-docs"):
+        origin = repo / relative
+        destination = source / relative
+        if not origin.exists() or destination.exists() or destination.is_symlink():
+            continue
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        os.symlink(origin, destination)
+        linked.append(relative)
+    return linked
+
+
 def builder_command(repo: Path, source: Path) -> list[str]:
     configured = os.environ.get("MKDOCS", "").strip()
     if configured:
@@ -515,6 +535,11 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
             log(f"== exporting {resolution} commit {commit[:10]}")
             export_source(repo, commit, source)
 
+            linked = link_build_environment(source, repo)
+            if linked:
+                log(
+                    f"== linked the checkout virtualenvs into the export: {', '.join(linked)}"
+                )
             gate_env = dict(os.environ, SITE_PUBLISH_RUNNING="1")
             python = os.environ.get("PYTHON") or sys.executable
             verification["generate_check"] = gate(
@@ -565,6 +590,8 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
             if result.returncode != 0:
                 raise SystemExitMessage(EXIT_FAILED, "mkdocs build failed", "build")
 
+            if linked:
+                verification["linked_environments"] = ", ".join(linked)
             verification["check_site"] = gate(
                 "check_site",
                 (source / "tools" / "site" / "check_site.py").is_file(),
