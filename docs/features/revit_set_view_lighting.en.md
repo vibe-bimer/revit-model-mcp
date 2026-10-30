@@ -2,7 +2,7 @@
 
 `revit_set_view_lighting`
 
-<p class="facts"><span><b>Group</b> Views and snapshots</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.10.0</span><span><b>Effect</b> Model elements / parameters</span><span><b>Origin</b> Fork (this repository)</span></p>
+<p class="facts"><span><b>Group</b> Views and snapshots</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.10.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> Yes</span><span><b>This contract applies to the release</b> Yes</span><span><b>Effect</b> Model elements / parameters</span><span><b>Origin</b> Fork (this repository)</span></p>
 
 Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme
 
@@ -11,6 +11,16 @@ Set a view's shadows, sun position and intensities, ground plane, background and
 
 !!! note "Usage notes"
     Sun and shadow settings belong to the view; a shared setting passes the change on to every view that shares it, and the shadow switch itself is unavailable when they are shared
+
+[Same-name integration branch page](../platform/revit_set_view_lighting.md)
+
+## Contract differences from the integration branch {#contract-diff}
+
+The list below is computed from the registry inputSchema; it is not a hand-written list.
+
+- Parameter view pattern: release \S / integration —
+
+This page is the contract of release 0.9.0; the same-name tool on the integration branch takes different parameters, so do not mix them.
 
 ## Copyable prompts {#prompts}
 

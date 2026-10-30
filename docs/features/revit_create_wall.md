@@ -2,12 +2,14 @@
 
 `revit_create_wall`
 
-<p class="facts"><span><b>分组</b> 编辑</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.2.0</span><span><b>影响范围</b> 模型构件 / 参数</span></p>
+<p class="facts"><span><b>分组</b> 编辑</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.2.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 模型构件 / 参数</span></p>
 
 按两点建直墙（mm，指定标高、墙类型、高度）
 
 !!! warning "动作工具需要双门禁"
     客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
+
+[同名集成分支页面](../platform/revit_create_wall.md)
 
 ## 可复制提示词 {#prompts}
 

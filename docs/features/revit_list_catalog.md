@@ -2,12 +2,25 @@
 
 `revit_list_catalog`
 
-<p class="facts"><span><b>分组</b> 查询与统计</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.1.0</span></p>
+<p class="facts"><span><b>分组</b> 查询与统计</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.1.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span></p>
 
 查可用名字：类别、族类型、标高、面积方案、视图、工作集、阶段、参数
 
 !!! note "使用提示"
     查询与过滤都用这些名字
+
+[同名集成分支页面](../platform/revit_list_catalog.md)
+
+## 与集成分支的契约差异 {#contract-diff}
+
+下表由注册表 inputSchema 自动比较得出，不是手写清单。
+
+- 仅集成分支有参数 limit
+- 仅集成分支有参数 name_contains
+- 仅发布版有参数 pickup_timeout_seconds
+- 仅集成分支有参数 process_id
+
+本页是发布版 0.9.0 的契约；集成分支上的同名工具参数不同，请勿混用。
 
 ## 可复制提示词 {#prompts}
 

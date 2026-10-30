@@ -2,9 +2,22 @@
 
 `revit_view_elements`
 
-<p class="facts"><span><b>Group</b> Views and snapshots</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.2.0</span></p>
+<p class="facts"><span><b>Group</b> Views and snapshots</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.2.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> Yes</span><span><b>This contract applies to the release</b> Yes</span></p>
 
 Page through elements in a selected view, optionally filtered by category
+
+[Same-name integration branch page](../platform/revit_view_elements.md)
+
+## Contract differences from the integration branch {#contract-diff}
+
+The list below is computed from the registry inputSchema; it is not a hand-written list.
+
+- Parameter limit minimum: release — / integration 1
+- Parameter offset minimum: release — / integration 0
+- Parameter pickup_timeout_seconds exists only in the release
+- Parameter process_id exists only on the integration branch
+
+This page is the contract of release 0.9.0; the same-name tool on the integration branch takes different parameters, so do not mix them.
 
 ## Copyable prompts {#prompts}
 

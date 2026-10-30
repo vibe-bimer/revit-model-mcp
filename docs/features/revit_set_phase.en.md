@@ -2,7 +2,7 @@
 
 `revit_set_phase`
 
-<p class="facts"><span><b>Group</b> Phases</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.3.0</span><span><b>Effect</b> Model elements / parameters</span><span><b>Origin</b> Fork (this repository)</span></p>
+<p class="facts"><span><b>Group</b> Phases</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.3.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> No</span><span><b>This contract applies to the release</b> Yes</span><span><b>Effect</b> Model elements / parameters</span><span><b>Origin</b> Fork (this repository)</span></p>
 
 Assign created/demolished phases; an empty string clears and null leaves unchanged
 

@@ -2,7 +2,7 @@
 
 `revit_reset_element_ids`
 
-<p class="facts"><span><b>分组</b> 批量与 ID</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.8.0</span><span><b>影响范围</b> 模型构件 / 参数</span><span><b>来源</b> 自研（本仓库）</span></p>
+<p class="facts"><span><b>分组</b> 批量与 ID</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.8.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 没有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 模型构件 / 参数</span><span><b>来源</b> 自研（本仓库）</span></p>
 
 同文档内换 ID：只对无宿主、无依赖的独立构件有效
 

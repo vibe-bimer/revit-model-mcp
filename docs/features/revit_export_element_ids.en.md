@@ -2,7 +2,7 @@
 
 `revit_export_element_ids`
 
-<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.8.0</span><span><b>Origin</b> Fork (this repository)</span></p>
+<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.8.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> No</span><span><b>This contract applies to the release</b> Yes</span><span><b>Origin</b> Fork (this repository)</span></p>
 
 Write the ID register of drawn model components to an Excel workbook
 

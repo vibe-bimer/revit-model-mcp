@@ -2,9 +2,22 @@
 
 `revit_export_view`
 
-<p class="facts"><span><b>Group</b> Views and snapshots</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.3.0</span></p>
+<p class="facts"><span><b>Group</b> Views and snapshots</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.3.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> Yes</span><span><b>This contract applies to the release</b> Yes</span></p>
 
 Export a view as a PNG, from 1 to 4000 pixels
+
+[Same-name integration branch page](../platform/revit_export_view.md)
+
+## Contract differences from the integration branch {#contract-diff}
+
+The list below is computed from the registry inputSchema; it is not a hand-written list.
+
+- Parameter output_path exists only on the integration branch
+- Parameter pixel_size minimum: release 1 / integration 32
+- Parameter process_id exists only on the integration branch
+- Parameter save_to exists only in the release
+
+This page is the contract of release 0.9.0; the same-name tool on the integration branch takes different parameters, so do not mix them.
 
 ## Copyable prompts {#prompts}
 

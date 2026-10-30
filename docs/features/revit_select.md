@@ -2,7 +2,7 @@
 
 `revit_select`
 
-<p class="facts"><span><b>分组</b> 选中与显示</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.1.0</span><span><b>影响范围</b> 选择 / 视图状态</span></p>
+<p class="facts"><span><b>分组</b> 选中与显示</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.1.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 选择 / 视图状态</span></p>
 
 在 Revit 里选中指定构件（空列表=清除选择）
 
@@ -11,6 +11,8 @@
 
 !!! note "使用提示"
     不改模型
+
+[同名集成分支页面](../platform/revit_select.md)
 
 ## 可复制提示词 {#prompts}
 

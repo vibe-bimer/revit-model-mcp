@@ -2,7 +2,7 @@
 
 `revit_set_parameter`
 
-<p class="facts"><span><b>Group</b> Editing</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.1.0</span><span><b>Effect</b> Model elements / parameters</span></p>
+<p class="facts"><span><b>Group</b> Editing</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.1.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> Yes</span><span><b>This contract applies to the release</b> Yes</span><span><b>Effect</b> Model elements / parameters</span></p>
 
 Set a named parameter; lengths use mm, areas m² and other doubles internal units
 
@@ -11,6 +11,17 @@ Set a named parameter; lengths use mm, areas m² and other doubles internal unit
 
 !!! note "Usage notes"
     Supports dry_run
+
+[Same-name integration branch page](../platform/revit_set_parameter.md)
+
+## Contract differences from the integration branch {#contract-diff}
+
+The list below is computed from the registry inputSchema; it is not a hand-written list.
+
+- Parameter parameter_id exists only on the integration branch
+- Parameter value type: release string / integration integer|number|string
+
+This page is the contract of release 0.9.0; the same-name tool on the integration branch takes different parameters, so do not mix them.
 
 ## Copyable prompts {#prompts}
 

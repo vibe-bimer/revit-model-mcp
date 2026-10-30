@@ -2,7 +2,7 @@
 
 `revit_place_family`
 
-<p class="facts"><span><b>Group</b> Editing</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.2.0</span><span><b>Effect</b> Model elements / parameters</span></p>
+<p class="facts"><span><b>Group</b> Editing</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.2.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> Yes</span><span><b>This contract applies to the release</b> Yes</span><span><b>Effect</b> Model elements / parameters</span></p>
 
 Place a loaded unhosted family on a named level with optional Z rotation
 
@@ -11,6 +11,8 @@ Place a loaded unhosted family on a named level with optional Z rotation
 
 !!! note "Usage notes"
     Not run live on 2026
+
+[Same-name integration branch page](../platform/revit_place_family.md)
 
 ## Copyable prompts {#prompts}
 
