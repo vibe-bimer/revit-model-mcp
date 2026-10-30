@@ -107,6 +107,38 @@
   }
 
   /* One entry per page: the index has one entry per heading, and a result list wants pages. */
+  // A build run under "mkdocs serve" never reaches the shutdown step that annotates the index, so
+  // the catalog of a page is also derived from its path when the entry does not carry one.
+  function surfaceForPath(path) {
+    var clean = path.indexOf("en/") === 0 ? path.slice(3) : path;
+    var directory = clean.split("/")[0];
+    var keys = ["release", "branch"];
+    for (var i = 0; i < keys.length; i++) {
+      var surface = catalog[keys[i]] || {};
+      if (surface.directory === directory) {
+        return surface;
+      }
+    }
+    return null;
+  }
+
+  function annotate(entry) {
+    var surface = surfaceForPath(entry.path);
+    if (!surface) {
+      return;
+    }
+    if (!entry.tool) {
+      var match = /^(?:en\/)?[^/]+\/(revit_[a-z0-9_]+)\/?$/.exec(entry.path);
+      entry.tool = match ? match[1] : null;
+    }
+    if (!entry.status) {
+      entry.status = surface.status || null;
+      entry.version = surface.version || "";
+      entry.branch = surface.branch || "";
+      entry.catalog = surface.catalog || null;
+    }
+  }
+
   function collect(docs) {
     var byPath = Object.create(null);
     var order = [];
@@ -125,6 +157,7 @@
           branch: doc.branch || "",
           catalog: doc.catalog || null,
         };
+        annotate(entry);
         order.push(path);
       }
       entry.text += " " + (doc.text || "");
