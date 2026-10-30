@@ -8,6 +8,17 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 
 这一节是现有版本的 35 个工具。集成分支的 80 个工具按基座与自研分开，见 [新版基座工具目录](../platform/index.md)。
 
+## 版本入口 {#versions}
+
+本目录记录的是已发布的现有版本；集成分支尚未发布，两者工具数量与清单都不同。下表的状态、版本号与数量都从注册表读取。
+
+| | 已发布 0.9.0 | 集成分支 |
+| --- | --- | --- |
+| 版本 | 0.9.0 | 未发布（集成分支） |
+| 分支 | main | `integration/upstream-1.0` |
+| 工具 | 35 | 80 |
+| 目录 | index.md | [新版基座工具目录](../platform/index.md) |
+
 ## 按 Revit 年份查阅 {#by-version}
 
 | Revit 年份 | 验证状态 |
@@ -94,6 +105,41 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | <span class="state part">自研</span> [同文档替换 ID](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | 同文档内换 ID：只对无宿主、无依赖的独立构件有效 |
 | <span class="state part">自研</span> [新模型重建 ID](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | 整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型 |
 | [批量动作](revit_batch.md)<br>`revit_batch` | 1–50 步动作合并成一次撤销（revit_batch） |
+
+## 按模型对象浏览 {#objects}
+
+视图相关工具按操作的模型对象再分一次：视图、图纸、明细表与视口显示。现有版本没有图纸和明细表的工具，对应位置指向集成分支的同类工具。
+
+### 视图 {#objects-views}
+
+| 工具 | 用途 |
+| --- | --- |
+| [视图目录](revit_list_views.md)<br>`revit_list_views` | 列出视图，可按视图类型与名称过滤 |
+| [视图统计](revit_view_summary.md)<br>`revit_view_summary` | 视图元数据 + 类别计数（各有多少、多少种类型） |
+| [导出视图图片](revit_export_view.md)<br>`revit_export_view` | 把视图导出成 PNG 图片（1–4000 像素） |
+| [视图构件明细](revit_view_elements.md)<br>`revit_view_elements` | 分页读取视图中的构件（可按类别过滤） |
+| [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关元素的警告 |
+| <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案 |
+
+### 图纸 {#objects-sheets}
+
+
+集成分支有 2 个同类工具：[图纸](../platform/index.md#objects-sheets)。
+
+
+### 明细表 {#objects-schedules}
+
+
+集成分支有 2 个同类工具：[明细表](../platform/index.md#objects-schedules)。
+
+
+### 视口与显示 {#objects-view-display}
+
+| 工具 | 用途 |
+| --- | --- |
+| [选择构件](revit_select.md)<br>`revit_select` | 在 Revit 里选中指定构件（空列表=清除选择） |
+| [定位显示构件](revit_show.md)<br>`revit_show` | 在视图里定位/高亮构件，必要时打开对应视图 |
+| [临时隔离显示](revit_isolate.md)<br>`revit_isolate` | 临时隔离显示（reset=true 恢复） |
 
 !!! warning "动作工具需要双门禁"
     客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。

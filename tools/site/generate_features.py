@@ -29,6 +29,7 @@ TOOLS_JSON = CONTENT / "tools.json"
 CAPABILITIES = CONTENT / "capabilities.yaml"
 CONTRACTS = CONTENT / "contracts.yaml"
 PAGES = ROOT / "docs/features"
+JAVASCRIPTS = ROOT / "docs/javascripts"
 MKDOCS = ROOT / "mkdocs.yml"
 NAV_START = "  # >>> features-nav"
 NAV_END = "  # <<< features-nav"
@@ -66,6 +67,13 @@ LABELS = {
         "unsupported": "不支持",
         "other": "2022–2025 / 2027",
         "summary": "用途",
+        "versions": "版本入口",
+        "versions_intro": "本目录记录的是已发布的现有版本；集成分支尚未发布，两者工具数量与清单都不同。下表的状态、版本号与数量都从注册表读取。",
+        "entry": "目录",
+        "platform_page": "新版基座工具目录",
+        "objects": "按模型对象浏览",
+        "objects_intro": "视图相关工具按操作的模型对象再分一次：视图、图纸、明细表与视口显示。现有版本没有图纸和明细表的工具，对应位置指向集成分支的同类工具。",
+        "branch_tools": "集成分支有 {count} 个同类工具",
         "index": "功能总览",
         "matrix": "版本支持矩阵",
         "prompts_page": "提示词库",
@@ -124,6 +132,13 @@ LABELS = {
         "unsupported": "Unsupported",
         "other": "2022–2025 / 2027",
         "summary": "Purpose",
+        "versions": "Version entries",
+        "versions_intro": "This catalog records the released version. The integration branch is unreleased, and the two differ in both count and tool list. The status, version number and counts below are read from the registries.",
+        "entry": "Catalog",
+        "platform_page": "Platform tool catalog",
+        "objects": "Browse by model object",
+        "objects_intro": "The view-related tools are split again by the model object they act on: views, sheets, schedules and viewport display. The release has no sheet or schedule tools, so those rows point at the same-named tools on the integration branch.",
+        "branch_tools": "The integration branch has {count} tools of this kind",
         "index": "Feature overview",
         "matrix": "Version support matrix",
         "prompts_page": "Prompt library",
@@ -411,12 +426,24 @@ def index_page(
             f" {branch_count} tools, split into base and fork, are in the"
             " [platform tool catalog](../platform/index.md)."
         )
+    branch_tools = platform_catalog.load_platform()[0]
     out = [
         f"# {labels['index']}",
         "",
         LABELS[lang]["counts"].format(**counts(tools)),
         "",
         pointer,
+        "",
+        f"## {labels['versions']} {{#versions}}",
+        "",
+        labels["versions_intro"],
+        "",
+        f"| | {labels['released']} {RELEASE_VERSION} | {platform_catalog.LABELS[lang]['platform']} |",
+        "| --- | --- | --- |",
+        f"| {labels['version']} | {RELEASE_VERSION} | {platform_catalog.LABELS[lang]['unreleased_fact']} |",
+        f"| {platform_catalog.LABELS[lang]['branch']} | main | `{platform_catalog.BRANCH}` |",
+        f"| {labels['tools']} | {len(tools)} | {branch_count} |",
+        f"| {labels['entry']} | index.md | [{labels['platform_page']}](../platform/index.md) |",
         "",
         f"## {labels['by_version']} {{#by-version}}",
         "",
@@ -448,6 +475,38 @@ def index_page(
             out.append(
                 f"| {origin_badge(cap, lang)}[{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {cap['summary'][lang]} |"
             )
+        out.append("")
+    object_groups = catalogs.object_groups()
+    out += [f"## {labels['objects']} {{#objects}}", "", labels["objects_intro"], ""]
+    for object_key, object_group in object_groups.items():
+        members = [t for t in tools if t["name"] in object_group["tools"]]
+        out.append(f"### {object_group[lang]} {{#objects-{object_key}}}")
+        out.append("")
+        if members:
+            out += [
+                f"| {labels['tools']} | {labels['summary']} |",
+                "| --- | --- |",
+            ]
+            for tool in members:
+                cap = capabilities["tools"][tool["name"]]
+                out.append(
+                    f"| {origin_badge(cap, lang)}[{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {cap['summary'][lang]} |"
+                )
+        else:
+            # The release has no tool for this object; the branch does, so point at it instead of
+            # leaving an empty table with no way forward.
+            branch_count_for_group = sum(
+                1 for t in branch_tools if t["name"] in object_group["tools"]
+            )
+            out += [
+                "",
+                f"{labels['branch_tools'].format(count=branch_count_for_group)}："
+                f"[{object_group[lang]}](../platform/index.md#objects-{object_key})。"
+                if lang == "zh"
+                else f"{labels['branch_tools'].format(count=branch_count_for_group)}: "
+                f"[{object_group[lang]}](../platform/index.md#objects-{object_key}).",
+                "",
+            ]
         out.append("")
     out += [f'!!! warning "{labels["gate"]}"', f"    {labels['gate_body']}", ""]
     return frontmatter(labels["index_desc"]) + "\n".join(out)
@@ -592,6 +651,60 @@ def nav_block(tools: list[dict], capabilities: dict) -> str:
     return "\n".join(lines)
 
 
+def search_catalog_data(
+    tools: list[dict], capabilities: dict, platform_tools: list[dict]
+) -> str:
+    """Ship the catalog behind the search results, so a result can name its version.
+
+    The search index only knows a page's location, title and text. This file gives the browser the
+    stable tool name, the human title and the catalog status for both surfaces, so a result can
+    carry a status badge and an exact tool-name query can surface a page the engine did not rank.
+    """
+    release, integration = catalogs.release(), catalogs.integration()
+    payload = {
+        "release": {
+            "catalog": "release",
+            "status": release.status,
+            "version": release.version,
+            "branch": release.branch,
+            "directory": release.directory,
+            "tools": {
+                tool["name"]: {
+                    "zh": capabilities["tools"][tool["name"]]["title"]["zh"],
+                    "en": capabilities["tools"][tool["name"]]["title"]["en"],
+                }
+                for tool in tools
+            },
+        },
+        "branch": {
+            "catalog": "branch",
+            "status": integration.status,
+            "version": "",
+            "branch": integration.branch,
+            "directory": integration.directory,
+            "tools": {
+                tool["name"]: {
+                    "zh": platform_catalog.ZH[tool["name"]][0],
+                    "en": tool["title"] or tool["name"],
+                }
+                for tool in platform_tools
+            },
+        },
+        "objects": {
+            key: {"zh": group["zh"], "en": group["en"]}
+            for key, group in catalogs.object_groups().items()
+        },
+    }
+    body = json.dumps(
+        payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    )
+    return (
+        "/* Generated by tools/site/generate_features.py from the catalog registries;"
+        " do not edit. */\n"
+        f"window.__RMM_CATALOG__ = {body};\n"
+    )
+
+
 def generate(tools: list[dict], capabilities: dict, contracts: dict) -> dict[Path, str]:
     platform_tools, _ = platform_catalog.load_platform()
     integration_schemas = {tool["name"]: tool["inputSchema"] for tool in platform_tools}
@@ -627,6 +740,9 @@ def generate(tools: list[dict], capabilities: dict, contracts: dict) -> dict[Pat
         flags=re.DOTALL,
     )
     files.update(platform_catalog.generate())
+    files[JAVASCRIPTS / "search-catalog.js"] = search_catalog_data(
+        tools, capabilities, platform_tools
+    )
     files[MKDOCS] = re.sub(
         re.escape(PLATFORM_NAV_START) + r".*?" + re.escape(PLATFORM_NAV_END),
         platform_catalog.nav_block(platform_tools),

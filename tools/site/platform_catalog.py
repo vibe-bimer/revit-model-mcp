@@ -410,6 +410,13 @@ LABELS = {
         "fork_origin": "自研（本仓库）",
         "grafted": "已移植",
         "pending": "待移植",
+        "versions": "版本入口",
+        "versions_intro": "两个目录各自记录一个版本：现有版本已经发布，集成分支尚未发布。下面的数量与状态都从注册表读取，不写死。",
+        "entry": "目录",
+        "features_page": "功能总览",
+        "objects": "按模型对象浏览",
+        "objects_intro": "同一批视图相关工具按操作的模型对象再分一次，方便先找对象再找工具；上面的分组表与下面的逐项文档保持原样。",
+        "objects_pointer": "按视图、图纸、明细表与视口显示浏览：见 [按模型对象浏览](#objects)。",
         "groups": "分组统计",
         "group": "分组",
         "tools": "工具数",
@@ -476,6 +483,13 @@ LABELS = {
         "fork_origin": "Fork (this repository)",
         "grafted": "Grafted",
         "pending": "Pending",
+        "versions": "Version entries",
+        "versions_intro": "Each catalog records one version: the current release is published and the integration branch is not. The counts and statuses below are read from the registries, never written by hand.",
+        "entry": "Catalog",
+        "features_page": "Feature overview",
+        "objects": "Browse by model object",
+        "objects_intro": "The view-related tools are split again by the model object they act on, so a reader can start from the object instead of the toolset; the group table above and the per-tool pages below stay as they are.",
+        "objects_pointer": "Browse views, sheets, schedules and viewport display: see [browse by model object](#objects).",
         "groups": "Tools per group",
         "group": "Group",
         "tools": "Tools",
@@ -789,6 +803,17 @@ def index_page(tools: list[dict], released: list[dict], lang: str) -> str:
         "",
         labels["count_line"].format(**numbers),
         "",
+        f"## {labels['versions']} {{#versions}}",
+        "",
+        labels["versions_intro"],
+        "",
+        f"| | {labels['current']} | {labels['platform']} |",
+        "| --- | --- | --- |",
+        f"| {labels['page_status']} | {labels['released']} {RELEASE_VERSION} | {labels['unreleased_fact']} |",
+        f"| {labels['branch']} | main | `{BRANCH}` |",
+        f"| {labels['tools']} | {len(released)} | {len(tools)} |",
+        f"| {labels['entry']} | [{labels['features_page']}](../features/index.md) | index.md |",
+        "",
         f"## {labels['catalogs']} {{#catalogs}}",
         "",
         labels["catalogs_intro"].format(**fmt),
@@ -828,7 +853,31 @@ def index_page(tools: list[dict], released: list[dict], lang: str) -> str:
         out.append(
             f"| [{GROUP_LABELS[lang][key]}](#group-{key}) | {len(members)} | {read} | {len(members) - read} |"
         )
-    out.append("")
+    out += [
+        "",
+        labels["objects_pointer"],
+        "",
+        f"## {labels['objects']} {{#objects}}",
+        "",
+    ]
+    out += [labels["objects_intro"], ""]
+    object_groups = catalogs.object_groups()
+    for object_key, object_group in object_groups.items():
+        members = [t for t in tools if t["name"] in object_group["tools"]]
+        out += [
+            f"### {object_group[lang]} {{#objects-{object_key}}}",
+            "",
+            f"| {labels['tools']} | {labels['kind']} | {labels['origin']} |",
+            "| --- | --- | --- |",
+        ]
+        for tool in sorted(members, key=sort_key):
+            name = tool["name"]
+            title = ZH[name][0] if lang == "zh" else (tool["title"] or name)
+            out.append(
+                f"| [{title}]({name}.md)<br>`{name}` | "
+                f"{labels['read'] if tool['readOnly'] else labels['action']} | {badge(origin_of(name), name, lang)} |"
+            )
+        out.append("")
     for key, members in groups.items():
         out += [
             f"## {GROUP_LABELS[lang][key]} {{#group-{key}}}",
@@ -878,7 +927,13 @@ def fork_page(tools: list[dict], lang: str) -> str:
     for name, item in FORK_TOOLS.items():
         state = labels["grafted"] if item["status"] == "grafted" else labels["pending"]
         style = "ok" if item["status"] == "grafted" else "no"
-        page = f"[{item[lang]}]({name}.md)" if name in names else item[lang]
+        # A pending tool has no page of its own yet, so the row points at the status anchor
+        # further down this page: every row must be clickable, not just the grafted ones.
+        page = (
+            f"[{item[lang]}]({name}.md)"
+            if name in names
+            else f"[{item[lang]}](#{name.replace('_', '-')})"
+        )
         out.append(
             f"| {page}<br>`{name}` | {labels['fork_origin']} | "
             f'<span class="state {style}">{state}</span> |'
@@ -908,9 +963,24 @@ def nav_block(tools: list[dict]) -> str:
         groups.setdefault(tool["toolset"], []).append(tool)
     lines = [NAV_START, "  - 新版基座:", "      - platform/index.md"]
     lines.append("      - 自研工具的移植状态: platform/fork-tools.md")
+    object_groups = catalogs.object_groups()
     for key, members in groups.items():
         lines.append(f"      - {GROUP_LABELS['zh'][key]}:")
-        lines.extend(f"          - platform/{t['name']}.md" for t in members)
+        if key != "views-sheets":
+            lines.extend(f"          - platform/{t['name']}.md" for t in members)
+            continue
+        # Views, sheets and schedules are one toolset but three things a reader looks for, so the
+        # navigation lists them under the object each tool acts on.
+        listed: set[str] = set()
+        for object_group in object_groups.values():
+            subset = [t for t in members if t["name"] in object_group["tools"]]
+            if not subset:
+                continue
+            lines.append(f"          - {object_group['zh']}:")
+            lines.extend(f"              - platform/{t['name']}.md" for t in subset)
+            listed.update(t["name"] for t in subset)
+        rest = [t for t in members if t["name"] not in listed]
+        lines.extend(f"          - platform/{t['name']}.md" for t in rest)
     lines.append(NAV_END)
     return "\n".join(lines)
 

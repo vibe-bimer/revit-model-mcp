@@ -8,6 +8,17 @@ description: "Feature overview of every tool in the current release, grouped wit
 
 This section covers the 35 tools of the current release. The integration branch's 80 tools, split into base and fork, are in the [platform tool catalog](../platform/index.md).
 
+## Version entries {#versions}
+
+This catalog records the released version. The integration branch is unreleased, and the two differ in both count and tool list. The status, version number and counts below are read from the registries.
+
+| | Released 0.9.0 | Integration branch |
+| --- | --- | --- |
+| Version | 0.9.0 | Unreleased (integration branch) |
+| Branch | main | `integration/upstream-1.0` |
+| Tool | 35 | 80 |
+| Catalog | index.md | [Platform tool catalog](../platform/index.md) |
+
 ## Browse by Revit year {#by-version}
 
 | Revit year | Validation |
@@ -94,6 +105,41 @@ Validated live means an execution was recorded on a real workstation. Build only
 | <span class="state part">Fork</span> [Replace IDs in place](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | Replace eligible standalone elements with copies to obtain new IDs |
 | <span class="state part">Fork</span> [Rebuild IDs in new models](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | Copy selectable 3D-view components into one or more new models with fresh IDs |
 | [Batch actions](revit_batch.md)<br>`revit_batch` | Execute 1–50 actions as one undo step and roll back on the first failed step |
+
+## Browse by model object {#objects}
+
+The view-related tools are split again by the model object they act on: views, sheets, schedules and viewport display. The release has no sheet or schedule tools, so those rows point at the same-named tools on the integration branch.
+
+### Views {#objects-views}
+
+| Tool | Purpose |
+| --- | --- |
+| [View catalog](revit_list_views.md)<br>`revit_list_views` | List views filtered by type and name |
+| [View summary](revit_view_summary.md)<br>`revit_view_summary` | Read view metadata, category counts and number of distinct types |
+| [Export view image](revit_export_view.md)<br>`revit_export_view` | Export a view as a PNG, from 1 to 4000 pixels |
+| [View element rows](revit_view_elements.md)<br>`revit_view_elements` | Page through elements in a selected view, optionally filtered by category |
+| [View warnings](revit_view_warnings.md)<br>`revit_view_warnings` | Read warnings involving elements present in a selected view |
+| <span class="state part">Fork</span> [Set view lighting](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme |
+
+### Sheets {#objects-sheets}
+
+
+The integration branch has 2 tools of this kind: [Sheets](../platform/index.md#objects-sheets).
+
+
+### Schedules {#objects-schedules}
+
+
+The integration branch has 2 tools of this kind: [Schedules](../platform/index.md#objects-schedules).
+
+
+### Viewports and display {#objects-view-display}
+
+| Tool | Purpose |
+| --- | --- |
+| [Select elements](revit_select.md)<br>`revit_select` | Select elements in Revit; an empty list clears the selection |
+| [Show elements](revit_show.md)<br>`revit_show` | Locate and highlight elements, opening a suitable view when needed |
+| [Temporary isolation](revit_isolate.md)<br>`revit_isolate` | Temporarily isolate selected elements or reset the active view |
 
 !!! warning "Actions require both write gates"
     Set `REVIT_MCP_ALLOW_WRITE=1` in the client and create the workstation `allow-write` file. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.

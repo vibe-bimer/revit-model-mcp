@@ -8,6 +8,17 @@ This section records the tool surface of the integration branch, kept apart from
 
 80 tools: 79 base and 1 fork; 34 read and 46 action.
 
+## Version entries {#versions}
+
+Each catalog records one version: the current release is published and the integration branch is not. The counts and statuses below are read from the registries, never written by hand.
+
+| | Current release | Integration branch |
+| --- | --- | --- |
+| Status | Released 0.9.0 | Unreleased (integration branch) |
+| Branch | main | `integration/upstream-1.0` |
+| Tools | 35 | 80 |
+| Catalog | [Feature overview](../features/index.md) | index.md |
+
 ## Two catalogs {#catalogs}
 
 The current release is 0.9.0. The integration branch is the new line built on the upstream 1.0 base. Their tool counts and names differ, so they are not interchangeable.
@@ -56,6 +67,55 @@ Every page carries an origin marker: base means the tool came with the upstream 
 | [Export and registers](#group-export) | 4 | 2 | 2 |
 | [Batch and reports](#group-batch) | 6 | 5 | 1 |
 | [C# escape hatch](#group-code) | 1 | 0 | 1 |
+
+Browse views, sheets, schedules and viewport display: see [browse by model object](#objects).
+
+## Browse by model object {#objects}
+
+The view-related tools are split again by the model object they act on, so a reader can start from the object instead of the toolset; the group table above and the per-tool pages below stay as they are.
+
+### Views {#objects-views}
+
+| Tools | Kind | Base and fork tools |
+| --- | --- | --- |
+| [Activate View](revit_activate_view.md)<br>`revit_activate_view` | Action | <span class="state part">Base (upstream)</span> |
+| [Apply View Template](revit_apply_view_template.md)<br>`revit_apply_view_template` | Action | <span class="state part">Base (upstream)</span> |
+| [Close Views](revit_close_views.md)<br>`revit_close_views` | Action | <span class="state part">Base (upstream)</span> |
+| [Create View](revit_create_view.md)<br>`revit_create_view` | Action | <span class="state part">Base (upstream)</span> |
+| [Duplicate View](revit_duplicate_view.md)<br>`revit_duplicate_view` | Action | <span class="state part">Base (upstream)</span> |
+| [Export View to PNG](revit_export_view.md)<br>`revit_export_view` | Read | <span class="state part">Base (upstream)</span> |
+| [List Views](revit_list_views.md)<br>`revit_list_views` | Read | <span class="state part">Base (upstream)</span> |
+| [Set View Lighting](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | Action | <span class="state ok">Fork (this repository)</span> <span class="state ok">Grafted</span> |
+| [Set View Visibility](revit_set_view_visibility.md)<br>`revit_set_view_visibility` | Action | <span class="state part">Base (upstream)</span> |
+| [View Elements](revit_view_elements.md)<br>`revit_view_elements` | Read | <span class="state part">Base (upstream)</span> |
+| [View Info](revit_view_info.md)<br>`revit_view_info` | Read | <span class="state part">Base (upstream)</span> |
+| [View Summary](revit_view_summary.md)<br>`revit_view_summary` | Read | <span class="state part">Base (upstream)</span> |
+| [View Warnings](revit_view_warnings.md)<br>`revit_view_warnings` | Read | <span class="state part">Base (upstream)</span> |
+
+### Sheets {#objects-sheets}
+
+| Tools | Kind | Base and fork tools |
+| --- | --- | --- |
+| [Create Sheet](revit_create_sheet.md)<br>`revit_create_sheet` | Action | <span class="state part">Base (upstream)</span> |
+| [Place Views on Sheet](revit_place_views_on_sheet.md)<br>`revit_place_views_on_sheet` | Action | <span class="state part">Base (upstream)</span> |
+
+### Schedules {#objects-schedules}
+
+| Tools | Kind | Base and fork tools |
+| --- | --- | --- |
+| [Read Schedule Data](revit_schedule_data.md)<br>`revit_schedule_data` | Read | <span class="state part">Base (upstream)</span> |
+| [Create Schedule](revit_create_schedule.md)<br>`revit_create_schedule` | Action | <span class="state part">Base (upstream)</span> |
+
+### Viewports and display {#objects-view-display}
+
+| Tools | Kind | Base and fork tools |
+| --- | --- | --- |
+| [Capture Elements](revit_capture_elements.md)<br>`revit_capture_elements` | Read | <span class="state part">Base (upstream)</span> |
+| [Isolate Elements](revit_isolate.md)<br>`revit_isolate` | Action | <span class="state part">Base (upstream)</span> |
+| [Highlight Elements](revit_override_graphics.md)<br>`revit_override_graphics` | Action | <span class="state part">Base (upstream)</span> |
+| [Select Elements](revit_select.md)<br>`revit_select` | Action | <span class="state part">Base (upstream)</span> |
+| [Show Elements](revit_show.md)<br>`revit_show` | Action | <span class="state part">Base (upstream)</span> |
+| [Tag Elements](revit_tag_elements.md)<br>`revit_tag_elements` | Action | <span class="state part">Base (upstream)</span> |
 
 ## Connection and instances {#group-core}
 
