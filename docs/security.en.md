@@ -34,17 +34,17 @@ Release assets carry GitHub build provenance attestations.
 After downloading an asset, verify it with the GitHub CLI:
 
 ```sh
-gh attestation verify RevitModelMcp-<version>-SingleUser.msi --owner sharafutdinovdi
+gh attestation verify RevitModelMcp-<version>-SingleUser.msi --owner vibe-bimer
 ```
 
 A successful command exits with code 0 and reports a verified attestation.
-Check that the repository is `sharafutdinovdi/revit-model-mcp`, the signer workflow is `.github/workflows/release.yml`, and the source commit matches the intended release tag.
+Check that the repository is `vibe-bimer/revit-model-mcp`, the signer workflow is `.github/workflows/release.yml`, and the source commit matches the intended release tag.
 For an explicit repository and workflow constraint:
 
 ```sh
 gh attestation verify RevitModelMcp-<version>-SingleUser.msi \
-  --repo sharafutdinovdi/revit-model-mcp \
-  --signer-workflow sharafutdinovdi/revit-model-mcp/.github/workflows/release.yml
+  --repo vibe-bimer/revit-model-mcp \
+  --signer-workflow vibe-bimer/revit-model-mcp/.github/workflows/release.yml
 ```
 
 The same command accepts a per-year ZIP, wheel, source distribution, `.mcpb` or `SHA256SUMS.txt` in place of the MSI filename.

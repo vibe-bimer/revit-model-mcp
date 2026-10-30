@@ -96,7 +96,7 @@ python3 revit-corpus/scripts/corpus_query.py 'Floor' -k class --show
   一次性证书设置（记录中的工作站已经完成）：
   `New-SelfSignedCertificate -Subject "CN=RevitModelMcp Dev" -Type CodeSigningCert -CertStoreLocation Cert:\CurrentUser\My`，随后将证书加入 LocalMachine 的 TrustedPublisher 和 Root。参见 [Autodesk 关于代码签名窗口反复出现的说明](https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/The-code-signing-window-always-appears-when-launching-Revit.html)。
 - **远程重启 Revit 时，先正常关闭而非强制终止**：先请求 `CloseMainWindow()`；只有确认模型没有未保存改动后，才退回 `Stop-Process`。`revit_document_info` 会报告 `isModified`；强制终止会丢弃未保存编辑，历史上已经因此丢失过一整个会话的人工阶段操作。通过交互式计划任务 `RevitMcpLaunch`（`schtasks /Run /TN RevitMcpLaunch`）重新启动，让 GUI 出现在控制台会话中。强制终止后，删除 `%LOCALAPPDATA%\RevitModelMcp` 下过期的 `instance_<pid>.json` 心跳，否则动作会报告“exactly one instance”约束违规。
-- 只有当 Python 服务器从本克隆运行（`uv run --directory server revit-model-mcp`）而不是从已发布的 `uvx revit-model-mcp` 包运行时，MCP 客户端才能获得新增工具。开发时将连接器指向本克隆。
+- 只有当 Python 服务器从本克隆运行（`uv run --directory server revit-model-mcp`）而不是从已发布包运行时，MCP 客户端才能获得新增工具。开发时将连接器指向本克隆。
 - **通过 `revit` MCP 连接器进行真机冒烟测试**：先调用 `revit_ping`，再以 `dry_run=true` 调用新工具，最后真实执行、核对 `verification` 并清理。
 
 <a id="revit-2020-builds"></a>

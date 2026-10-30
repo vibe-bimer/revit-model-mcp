@@ -134,12 +134,14 @@ jobs:
           path = Path('bundle/manifest.json')
           manifest = json.loads(path.read_text())
           manifest['version'] = version
-          package = f'revit-model-mcp=={version}'
-          # Prereleases are distributed as wheels on GitHub, without PyPI publishing.
-          if '-' in version:
-              wheel, = Path('server/dist').glob('*.whl')
-              package = f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/releases/download/{os.environ["RELEASE_TAG"]}/{wheel.name}'
-          manifest['server']['mcp_config']['args'] = ['--from', package, 'revit-model-mcp'] if '-' in version else [package]
+          # This fork does not publish to PyPI, so the bundle must install the
+          # wheel attached to this release. Referring to `revit-model-mcp==<version>`
+          # would resolve on PyPI to upstream's package, which is a different
+          # server. Upstream and this fork also share version numbers, so the
+          # substitution would succeed silently and run the wrong code.
+          wheel, = Path('server/dist').glob('*.whl')
+          package = f'https://github.com/{os.environ["GITHUB_REPOSITORY"]}/releases/download/{os.environ["RELEASE_TAG"]}/{wheel.name}'
+          manifest['server']['mcp_config']['args'] = ['--from', package, 'revit-model-mcp']
           path.write_text(json.dumps(manifest, indent=2) + '\n')
       - name: Validate and pack Claude Desktop bundle
         shell: pwsh
@@ -213,13 +215,13 @@ jobs:
             echo "- [SHA256SUMS.txt]($base/SHA256SUMS.txt) covers every release asset."
             echo
             echo 'Close Revit before installing, then start Revit and open a model.'
-            echo 'On the MCP client, run the published Python package:'
+            echo 'On the MCP client, install the wheel above. This fork does not publish to PyPI, so `uvx revit-model-mcp` would install the upstream server instead.'
             echo
             echo '```sh'
-            echo 'uvx revit-model-mcp'
+            echo "uvx --from $wheel revit-model-mcp"
             echo '```'
             echo
-            echo 'Prereleases are not published to PyPI; install the wheel above instead.'
+            echo 'Download the wheel above and point uvx at that path, or install it with `uv tool install <wheel>`.'
           } > install-notes.md
           cat install-notes.md
       - name: Publish GitHub Release
@@ -251,79 +253,17 @@ jobs:
           fi
 
 
-  # PyPI pending publisher:
-  # Project: revit-model-mcp
-  # Owner: sharafutdinovdi
-  # Repository: revit-model-mcp
-  # Workflow: release.yml
-  # Environment: pypi
-  # Prerelease tags skip PyPI and MCP Registry publishing.
-  pypi:
-    needs: build
-    if: ${{ !contains(inputs.tag || github.ref_name, '-') }}
-    runs-on: ubuntu-latest
-    environment: pypi
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: python-dist
-          path: dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
-
-  mcp-registry:
-    needs: pypi
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.tag || github.ref_name }}
-      - name: Set registry package version
-        env:
-          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-        run: |
-          python - <<'PYTHON'
-          import json
-          import os
-          import pathlib
-          import tomllib
-
-          version = tomllib.loads(pathlib.Path('server/pyproject.toml').read_text())['project']['version']
-          assert version == os.environ['RELEASE_TAG'][1:], 'Tag and package version differ'
-          path = pathlib.Path('server/server.json')
-          manifest = json.loads(path.read_text())
-          manifest['version'] = version
-          manifest['packages'][0]['version'] = version
-          path.write_text(json.dumps(manifest, indent=2) + '\n')
-          PYTHON
-      - name: Install mcp-publisher
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          release=$(gh api repos/modelcontextprotocol/registry/releases/latest)
-          tag=$(jq -r .tag_name <<< "$release")
-          archive=mcp-publisher_linux_amd64.tar.gz
-          gh release download "$tag" --repo modelcontextprotocol/registry --pattern "$archive"
-          checksums=$(jq -r '.assets[].name | select(endswith("_checksums.txt"))' <<< "$release")
-          if [[ -n "$checksums" ]]; then
-            gh release download "$tag" --repo modelcontextprotocol/registry --pattern "$checksums"
-            awk -v archive="$archive" '$2 == archive { print }' "$checksums" > publisher.sha256
-            test -s publisher.sha256
-            sha256sum --check publisher.sha256
-          else
-            echo "Release $tag provides no checksum file"
-          fi
-          tar -xzf "$archive" mcp-publisher
-      - name: Publish to MCP Registry
-        run: |
-          ./mcp-publisher login github-oidc
-          ./mcp-publisher publish server/server.json 2>&1 | tee mcp-publish-response.txt
+  # This fork does not publish to PyPI or the MCP Registry.
+  #
+  # Upstream owns the `revit-model-mcp` project on PyPI and the
+  # `io.github.vibe-bimer/revit-model-mcp` entry in the registry. Trusted
+  # publishing is bound to upstream's owner and repository, so a release from
+  # this fork cannot publish under either name, and claiming them would
+  # impersonate another project. The jobs were removed rather than left to fail.
+  #
+  # Install the wheel attached to the release instead. To publish this fork
+  # under its own names, register a pending publisher for a fork-owned project,
+  # point server/server.json at the fork namespace, and add the jobs back.
 
   # Releases created with GITHUB_TOKEN do not trigger release workflows.
   winget:

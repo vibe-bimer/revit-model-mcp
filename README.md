@@ -6,12 +6,11 @@
 
 For people reviewing or automating Revit models with an AI client: read a live Revit model through MCP, read-only by default, and act in it only when two explicit gates are on.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/sharafutdinovdi/revit-model-mcp/ci.yml?style=flat-square)](https://github.com/sharafutdinovdi/revit-model-mcp/actions/workflows/ci.yml)
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/sharafutdinovdi/revit-model-mcp/codeql.yml?label=CodeQL&style=flat-square)](https://github.com/sharafutdinovdi/revit-model-mcp/actions/workflows/codeql.yml)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/sharafutdinovdi/revit-model-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/sharafutdinovdi/revit-model-mcp)
-[![Latest release](https://img.shields.io/github/v/release/sharafutdinovdi/revit-model-mcp?style=flat-square)](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest)
-[![PyPI](https://img.shields.io/pypi/v/revit-model-mcp?style=flat-square)](https://pypi.org/project/revit-model-mcp/)
-[![Downloads](https://img.shields.io/github/downloads/sharafutdinovdi/revit-model-mcp/total?style=flat-square)](https://github.com/sharafutdinovdi/revit-model-mcp/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/vibe-bimer/revit-model-mcp/ci.yml?style=flat-square)](https://github.com/vibe-bimer/revit-model-mcp/actions/workflows/ci.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/vibe-bimer/revit-model-mcp/codeql.yml?label=CodeQL&style=flat-square)](https://github.com/vibe-bimer/revit-model-mcp/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/vibe-bimer/revit-model-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/vibe-bimer/revit-model-mcp)
+[![Latest release](https://img.shields.io/github/v/release/vibe-bimer/revit-model-mcp?style=flat-square)](https://github.com/vibe-bimer/revit-model-mcp/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/vibe-bimer/revit-model-mcp/total?style=flat-square)](https://github.com/vibe-bimer/revit-model-mcp/releases)
 ![Revit 2020-2027](https://img.shields.io/badge/Revit-2020--2027-005FB8?style=flat-square)
 ![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square)
 [![MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
@@ -20,24 +19,24 @@ For people reviewing or automating Revit models with an AI client: read a live R
 
 Revit Model MCP returns requested model data to the selected MCP client.
 The bundle enables response path redaction by default.
-The [privacy policy](https://sharafutdinovdi.github.io/revit-model-mcp/privacy/) covers collection, storage, sharing, retention and contact information.
+The [privacy policy](https://vibe-bimer.github.io/revit-model-mcp/privacy/) covers collection, storage, sharing, retention and contact information.
 
 ## Install
 
 ### Claude Desktop bundle
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) on the client's PATH, download `revit-model-mcp-<version>.mcpb` from the [latest release](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest), and open it in Claude Desktop.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/) on the client's PATH, download `revit-model-mcp-<version>.mcpb` from the [latest release](https://github.com/vibe-bimer/revit-model-mcp/releases/latest), and open it in Claude Desktop.
 The settings form configures the workstation host, path redaction, optional actions and the HTTP bearer token without editing JSON.
 Use `local` on the Windows Revit workstation, or [configure a remote workstation](#remote-workstations) for macOS and Linux clients.
 Path redaction starts enabled and actions start disabled.
 The Windows workstation still needs the add-in below.
 See the [bundle guide](bundle/README.md) for build details and prerequisites.
 
-**Verify downloads.** Release assets include GitHub build provenance attestations; follow [download verification](https://sharafutdinovdi.github.io/revit-model-mcp/security/#verify-downloads) before installing.
+**Verify downloads.** Release assets include GitHub build provenance attestations; follow [download verification](https://vibe-bimer.github.io/revit-model-mcp/security/#verify-downloads) before installing.
 
 ### On the Revit workstation
 
-Download `RevitModelMcp-<version>-SingleUser.msi` (current user) or `RevitModelMcp-<version>-MultiUser.msi` (all users) from the [latest release](https://github.com/sharafutdinovdi/revit-model-mcp/releases/latest).
+Download `RevitModelMcp-<version>-SingleUser.msi` (current user) or `RevitModelMcp-<version>-MultiUser.msi` (all users) from the [latest release](https://github.com/vibe-bimer/revit-model-mcp/releases/latest).
 Run it with Revit closed, then start Revit and open a model.
 Alternatively, run from a clone in PowerShell:
 
@@ -45,13 +44,22 @@ Alternatively, run from a clone in PowerShell:
 .\install.ps1 -Source Release
 ```
 
+**Upgrading from v0.9.0 or earlier.** Those builds shipped upstream's installer identity, so Windows Installer grouped them with the upstream product instead of this fork. Installing upstream over them replaced them silently, and this fork's own installer could not upgrade them either. The installer now carries its own identity, which means the first build released after this change installs alongside an older one rather than replacing it. Uninstall the older build before installing, then confirm a single Revit Model MCP entry remains under Apps and Features.
+
 ### On the machine with the MCP client
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and use Python 3.11+.
+This fork publishes wheels on GitHub Releases and not to PyPI, so `uvx revit-model-mcp` would install the upstream server instead.
+Name the fork's release explicitly, replacing `<version>` with a tag from [the releases page](https://github.com/vibe-bimer/revit-model-mcp/releases):
+
+```sh
+SERVER="git+https://github.com/vibe-bimer/revit-model-mcp@v<version>"
+```
+
 For Claude Code on the same Windows workstation:
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "$SERVER" revit-model-mcp
 ```
 
 For manual Claude Desktop registration, add to its MCP configuration:
@@ -61,7 +69,7 @@ For manual Claude Desktop registration, add to its MCP configuration:
   "mcpServers": {
     "revit-model-mcp": {
       "command": "uvx",
-      "args": ["revit-model-mcp"],
+      "args": ["--from", "git+https://github.com/vibe-bimer/revit-model-mcp@v<version>", "revit-model-mcp"],
       "env": {
         "REVIT_MCP_HOST": "local",
         "REVIT_MCP_REDACT_PATHS": "1"
@@ -111,27 +119,27 @@ The picture below is the PNG saved by `revit_export_view` during an earlier sess
 | Views and export | `revit_list_views`, `revit_view_summary`, `revit_view_elements`, `revit_view_warnings`, `revit_export_view`, `revit_export_element_ids` |
 | Coordinator checks | `revit_model_health`, `revit_links_status`, `revit_shared_coordinates`, `revit_parameter_fill_check` |
 
-See the [full tool reference](https://sharafutdinovdi.github.io/revit-model-mcp/tools/) for arguments, units and limits.
+See the [full tool reference](https://vibe-bimer.github.io/revit-model-mcp/tools/) for arguments, units and limits.
 
 <a id="actions-opt-in"></a>
 
 Actions are opt-in: both `REVIT_MCP_ALLOW_WRITE=1` in the server and the workstation `allow-write` file are required.
-The action set covers selection and navigation (`select`, `show`, `isolate`), model mutations (`move`, `place_family`, `create_wall`, `create_floor`, `set_phase`, `set_parameter`, `delete`), phase management (`merge_phases`) and multi-step orchestration (`revit_batch`, up to 50 steps with one undo entry).
+The action set is 16 tools: selection and navigation (`select`, `show`, `isolate`), model edits (`move`, `place_family`, `create_wall`, `create_floor`, `create_level`, `set_phase`, `set_parameter`, `delete`), view lighting (`set_view_lighting`), phase management (`merge_phases`), ID replacement (`reset_element_ids`, `rebuild_model_ids`) and multi-step orchestration (`revit_batch`, up to 50 steps with one undo entry).
 Model mutations support `dry_run` previews and return `verification`; `revit_batch` rolls back on its first failed step.
-See [actions](https://sharafutdinovdi.github.io/revit-model-mcp/actions/) for gates, exceptions and verification failures.
+See [actions](https://vibe-bimer.github.io/revit-model-mcp/actions/) for gates, exceptions and verification failures.
 
 ## Remote workstations
 
 Local Windows clients use `REVIT_MCP_HOST=local` under the Revit user's account.
 Remote clients can use an SSH tunnel to the workstation's loopback endpoint.
-HTTP requires a bearer token except for `/health` and binds to loopback by default; see [transport setup](https://sharafutdinovdi.github.io/revit-model-mcp/transport/).
+HTTP requires a bearer token except for `/health` and binds to loopback by default; see [transport setup](https://vibe-bimer.github.io/revit-model-mcp/transport/).
 
 ## Security
 
 The default tools read the model without model-changing transactions; exports and channel operations write files outside it.
 MCP actions require both gates, while direct HTTP callers require the bearer token and workstation gate.
 `REVIT_MCP_REDACT_PATHS=1` hides directories in response path fields, but names, parameter values, errors, channel files and exported image `localPath` values remain visible.
-See [security details](https://sharafutdinovdi.github.io/revit-model-mcp/security/) for authentication and privacy boundaries, and [SECURITY.md](SECURITY.md) to report a vulnerability.
+See [security details](https://vibe-bimer.github.io/revit-model-mcp/security/) for authentication and privacy boundaries, and [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ## Compatibility
 
@@ -145,20 +153,20 @@ See [security details](https://sharafutdinovdi.github.io/revit-model-mcp/securit
 | 2026 | .NET 8 | Builds, live reads/actions and install script |
 | 2027 | .NET 10 | Build evidence |
 
-See [validation evidence](https://sharafutdinovdi.github.io/revit-model-mcp/validation/) for dates and limits, and [known gaps](https://sharafutdinovdi.github.io/revit-model-mcp/roadmap/#known-gaps).
+See [validation evidence](https://vibe-bimer.github.io/revit-model-mcp/validation/) for dates and limits, and [known gaps](https://vibe-bimer.github.io/revit-model-mcp/roadmap/#known-gaps).
 
 ## Contributing and support
 
-[Documentation](https://sharafutdinovdi.github.io/revit-model-mcp/) covers setup, tools and transport.
+[Documentation](https://vibe-bimer.github.io/revit-model-mcp/) covers setup, tools and transport.
 
 Adding a new read or action tool? Follow the checklists in [docs/agents/adding-revit-tools.md](docs/agents/adding-revit-tools.md), which also covers the optional local Revit API corpus lookup, the build/deploy chain and live smoke testing.
 
-Start with [CONTRIBUTING.md](CONTRIBUTING.md), ask questions in [Discussions](https://github.com/sharafutdinovdi/revit-model-mcp/discussions), or report bugs and request features through the [issue forms](https://github.com/sharafutdinovdi/revit-model-mcp/issues/new/choose).
+Start with [CONTRIBUTING.md](CONTRIBUTING.md), ask questions in [Discussions](https://github.com/vibe-bimer/revit-model-mcp/discussions), or report bugs and request features through the [issue forms](https://github.com/vibe-bimer/revit-model-mcp/issues/new/choose).
 CI runs the C# and Python test suites and builds the supported Revit configurations.
 
 ## Contributors
 
-[![Contributors](https://contrib.rocks/image?repo=sharafutdinovdi/revit-model-mcp)](https://github.com/sharafutdinovdi/revit-model-mcp/graphs/contributors)
+[![Contributors](https://contrib.rocks/image?repo=vibe-bimer/revit-model-mcp)](https://github.com/vibe-bimer/revit-model-mcp/graphs/contributors)
 
 ## License
 

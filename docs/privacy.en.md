@@ -60,4 +60,4 @@ Client conversations, client logs and package caches require separate deletion t
 ## Contact
 
 Privacy questions can be sent to [sharafutdinov.di.dev@outlook.com](mailto:sharafutdinov.di.dev@outlook.com).
-Security-sensitive reports can use the [private GitHub security advisory form](https://github.com/sharafutdinovdi/revit-model-mcp/security/advisories/new).
+Security-sensitive reports can use the [private GitHub security advisory form](https://github.com/vibe-bimer/revit-model-mcp/security/advisories/new).

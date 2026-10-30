@@ -10,22 +10,25 @@ Python 包通过 MCP stdio 提供 Revit 工具，默认只读。
 
 ## 安装与运行
 
-首次发布到 PyPI 后，可以使用 uv 运行已发布的包：
+本 fork 把 wheel 发布在 GitHub Releases 上，不发布到 PyPI。`uvx revit-model-mcp` 在 PyPI 上解析到上游项目，那是另一个服务器，因此必须显式指定本 fork 的发布产物：
 
 ```sh
-uvx revit-model-mcp
+SERVER="git+https://github.com/vibe-bimer/revit-model-mcp@v<version>"
+uvx --from "$SERVER" revit-model-mcp
 ```
+
+把 `<version>` 换成[发布页](https://github.com/vibe-bimer/revit-model-mcp/releases)上的标签，或让 `--from` 指向该版本的 wheel。
 
 向 Claude Code 注册 Windows 本地服务器：
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -- uvx revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -- uvx --from "$SERVER" revit-model-mcp
 ```
 
 对于 macOS 或 Linux 上的客户端：
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=ssh:revit-host -e REVIT_MCP_REDACT_PATHS=1 -- uvx revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=ssh:revit-host -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "$SERVER" revit-model-mcp
 ```
 
 将 `revit-host` 替换为客户端 SSH 配置中的别名。
@@ -38,7 +41,7 @@ Windows 上的 Claude Desktop 在 `claude_desktop_config.json` 中使用以下�
   "mcpServers": {
     "revit-model-mcp": {
       "command": "uvx",
-      "args": ["revit-model-mcp"],
+      "args": ["--from", "git+https://github.com/vibe-bimer/revit-model-mcp@v<version>", "revit-model-mcp"],
       "env": {
         "REVIT_MCP_HOST": "local",
         "REVIT_MCP_REDACT_PATHS": "1"
@@ -51,14 +54,14 @@ Windows 上的 Claude Desktop 在 `claude_desktop_config.json` 中使用以下�
 `uvx` 必须位于客户端 PATH 中；也支持使用可执行文件的绝对路径。
 远程 Desktop 客户端使用 `REVIT_MCP_HOST=ssh:revit-host`。
 
-开发时，或首次发布到 PyPI 之前，从仓库根目录运行：
+开发时，从仓库根目录运行：
 
 ```sh
 uv run --directory server revit-model-mcp
 claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -- uv run --directory /absolute/path/to/revit-model-mcp/server revit-model-mcp
 ```
 
-mcp-name: io.github.sharafutdinovdi/revit-model-mcp
+mcp-name: io.github.vibe-bimer/revit-model-mcp
 
 <a id="configuration"></a>
 
@@ -67,7 +70,7 @@ mcp-name: io.github.sharafutdinovdi/revit-model-mcp
 | 变量 | 默认值 | 行为 |
 |---|---|---|
 | `REVIT_MCP_HOST` | `local` | 本地 PowerShell、`ssh:<alias>`，或 `http://` / `https://` 插件端点。`--host` 会覆盖它。 |
-| `REVIT_MCP_ALLOW_WRITE` | 未设置 | `1` 会在服务器启动时注册 14 个动作工具，包括 `revit_batch`；还需要工作站门禁。布尔设置也接受 `true/false`、`yes/no` 和 `on/off`，不区分大小写并忽略首尾空白。 |
+| `REVIT_MCP_ALLOW_WRITE` | 未设置 | `1` 会在服务器启动时注册 16 个动作工具，包括 `revit_batch`；还需要工作站门禁。布尔设置也接受 `true/false`、`yes/no` 和 `on/off`，不区分大小写并忽略首尾空白。 |
 | `REVIT_MCP_TOKEN` | 未设置 | 来自工作站设置的 HTTP Bearer 令牌。`--token` 会覆盖它。 |
 | `REVIT_MCP_SSH_MUX` | 启用 | `0` 禁用 OpenSSH 连接多路复用。local 模式忽略 SSH 设置。 |
 | `REVIT_MCP_SSH_OPTIONS` | 未设置 | 额外 SSH 参数，按 shell 引号规则解析，在内置选项之后、主机之前追加。例如：`-o ServerAliveInterval=30 -p 2222`。 |

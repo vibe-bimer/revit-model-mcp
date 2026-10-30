@@ -1,9 +1,9 @@
 # 参与贡献
 
-错误报告和功能请求请使用 [Issue 表单](https://github.com/sharafutdinovdi/revit-model-mcp/issues/new/choose)。
+错误报告和功能请求请使用 [Issue 表单](https://github.com/vibe-bimer/revit-model-mcp/issues/new/choose)。
 错误报告应包含 Revit 年份、插件版本、安装方法、传输方式、复现步骤和已脱敏日志。
 对于可见故障，请在表单的截图字段附上对话框或功能区截图。
-使用和安装问题请前往 [Discussions](https://github.com/sharafutdinovdi/revit-model-mcp/discussions)。
+使用和安装问题请前往 [Discussions](https://github.com/vibe-bimer/revit-model-mcp/discussions)。
 
 贡献者须遵守[行为准则](https://github.com/sharafutdinovdi/.github/blob/main/CODE_OF_CONDUCT.md)。
 
@@ -124,7 +124,7 @@ Windows 上使用 `.venv\Scripts\python.exe` 和 `.venv\Scripts\mkdocs.exe`。
 打开 `http://127.0.0.1:8000/revit-model-mcp/`。
 提交 PR 前，在已激活环境中运行 `mkdocs build --strict`。
 
-中英文文档必须同步维护。工具页面和导航根据当前 MCP 注册表快照 [`tools.json`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/tools.json)、[`capabilities.yaml`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/capabilities.yaml) 中经审核的双语标题、摘要、提示词和参数含义，以及 [`contracts.yaml`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/contracts.yaml) 中完整的中文工具描述生成。工具描述、签名、schema 或注册发生变化后，激活文档环境，并用 `python -m pip install -e server` 使服务器可导入，然后更新快照：
+中英文文档必须同步维护。工具页面和导航根据当前 MCP 注册表快照 [`tools.json`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/tools.json)、[`capabilities.yaml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/capabilities.yaml) 中经审核的双语标题、摘要、提示词和参数含义，以及 [`contracts.yaml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/contracts.yaml) 中完整的中文工具描述生成。工具描述、签名、schema 或注册发生变化后，激活文档环境，并用 `python -m pip install -e server` 使服务器可导入，然后更新快照：
 
 ```sh
 python tools/site/generate_features.py --dump

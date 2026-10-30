@@ -20,4 +20,4 @@ API code, then follow the read and action tool checklists. See
 
 ### Domain docs
 
-Single-context: one `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+Single-context: one `CONTEXT.md` and `adr/` at the repo root. Decision records live outside `docs/` because everything under `docs/` is a published, bilingual site page; see `docs/agents/domain.md`.

@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.sharafutdinovdi/revit-model-mcp",
+  "name": "io.github.vibe-bimer/revit-model-mcp",
   "description": "The Python package exposes Revit tools over MCP stdio, read-only by default.",
   "repository": {
-    "url": "https://github.com/sharafutdinovdi/revit-model-mcp",
+    "url": "https://github.com/vibe-bimer/revit-model-mcp",
     "source": "github"
   },
   "version": "0.9.0",

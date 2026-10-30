@@ -38,17 +38,17 @@ Windows 文件通道依赖账户的文件系统权限。
 下载资产后，使用 GitHub CLI 校验：
 
 ```sh
-gh attestation verify RevitModelMcp-<version>-SingleUser.msi --owner sharafutdinovdi
+gh attestation verify RevitModelMcp-<version>-SingleUser.msi --owner vibe-bimer
 ```
 
 成功时命令以退出码 0 结束，并报告已验证的证明。
-检查仓库是否为 `sharafutdinovdi/revit-model-mcp`，签名工作流是否为 `.github/workflows/release.yml`，以及源码提交是否与预期发布标签匹配。
+检查仓库是否为 `vibe-bimer/revit-model-mcp`，签名工作流是否为 `.github/workflows/release.yml`，以及源码提交是否与预期发布标签匹配。
 若要显式限制仓库和工作流：
 
 ```sh
 gh attestation verify RevitModelMcp-<version>-SingleUser.msi \
-  --repo sharafutdinovdi/revit-model-mcp \
-  --signer-workflow sharafutdinovdi/revit-model-mcp/.github/workflows/release.yml
+  --repo vibe-bimer/revit-model-mcp \
+  --signer-workflow vibe-bimer/revit-model-mcp/.github/workflows/release.yml
 ```
 
 同一命令也可以将 MSI 文件名替换为按年份发布的 ZIP、wheel、源码发行包、`.mcpb` 或 `SHA256SUMS.txt`。

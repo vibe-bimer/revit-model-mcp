@@ -151,9 +151,8 @@ Design notes:
   `%LOCALAPPDATA%\RevitModelMcp` after a forced stop, or actions report
   "exactly one instance" violations.
 - New tools reach MCP clients only when the Python server runs from this
-  clone (`uv run --directory server revit-model-mcp`), not from the published
-  `uvx revit-model-mcp` package. Point the connector at the clone while
-  developing.
+  clone (`uv run --directory server revit-model-mcp`), not from a published
+  release. Point the connector at the clone while developing.
 - Live smoke test through the `revit` MCP connector: `revit_ping`, then the
   new tool with `dry_run=true` first, then a real run plus verification and
   cleanup.

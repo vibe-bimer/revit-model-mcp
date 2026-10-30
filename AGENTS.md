@@ -81,6 +81,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for packaging commands and test coverage.
 - Keep transports loopback-first; remote exposure requires explicit configuration.
 - Preserve timeout and verification warnings: a timed-out or failed verification response may follow a committed change.
 - Never run `git reset --hard`, `git clean -fd` or force push.
+- Keep this fork's release identity separate from upstream: its own installer UpgradeCode, package name, registry name and release feed. Never reuse `sharafutdinovdi/revit-model-mcp` in a shipped surface, and never resolve the Python server by a bare PyPI version spec. Both projects share version numbers, so either mistake installs upstream's code while appearing to work. `python tools/check_fork_identity.py` enforces this.
 
 ## Release ritual
 

@@ -5,7 +5,7 @@ using WixSharp.Controls;
 using WixToolset.Dtf.WindowsInstaller;
 
 const string outputName = "RevitModelMcp";
-const string projectName = "RevitModelMcp";
+const string projectName = "Revit Model MCP (vibe-bimer)";
 
 var versioning = Versioning.CreateFromVersionString(args[0]);
 var project = new Project
@@ -15,13 +15,18 @@ var project = new Project
     Platform = Platform.x64,
     UI = WUI.WixUI_FeatureTree,
     MajorUpgrade = MajorUpgrade.Default,
-    GUID = new Guid("75e1b812-23a4-45ce-9e7c-84d7d43b8c70"),
+    // Own upgrade code. Never reuse the upstream one: Windows Installer groups
+    // products by upgrade code, so sharing it makes an upstream MSI a major
+    // upgrade that silently removes this install and with it every local action.
+    // The upstream code is 75e1b812-23a4-45ce-9e7c-84d7d43b8c70.
+    // tools/check_fork_identity.py fails if the two ever match again.
+    GUID = new Guid("8F2D710A-B967-4180-AB08-1678A02BA350"),
     BannerImage = @"build\install\Resources\Icons\BannerImage.png",
     BackgroundImage = @"build\install\Resources\Icons\BackgroundImage.png",
     Version = versioning.VersionPrefix,
     ControlPanelInfo =
     {
-        Manufacturer = "Dinar Sharafutdinov",
+        Manufacturer = "vibe-bimer",
         ProductIcon = @"build\install\Resources\Icons\ShellIcon.ico"
     },
     Actions =

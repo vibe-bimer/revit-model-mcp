@@ -72,4 +72,4 @@ Python 诊断信息发送到 MCP 客户端的日志流；保留规则由该客�
 ## 联系方式
 
 隐私问题可以发送至 [sharafutdinov.di.dev@outlook.com](mailto:sharafutdinov.di.dev@outlook.com)。
-涉及安全的敏感报告可以使用 [GitHub 私密安全公告表单](https://github.com/sharafutdinovdi/revit-model-mcp/security/advisories/new)。
+涉及安全的敏感报告可以使用 [GitHub 私密安全公告表单](https://github.com/vibe-bimer/revit-model-mcp/security/advisories/new)。

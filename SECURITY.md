@@ -1,7 +1,7 @@
 # Security policy
 
 Private vulnerability reporting is enabled for this repository.
-Report vulnerabilities through [GitHub's private report form](https://github.com/sharafutdinovdi/revit-model-mcp/security/advisories/new) or email [sharafutdinov.di.dev@outlook.com](mailto:sharafutdinov.di.dev@outlook.com).
+Report vulnerabilities through [GitHub's private report form](https://github.com/vibe-bimer/revit-model-mcp/security/advisories/new) or email [sharafutdinov.di.dev@outlook.com](mailto:sharafutdinov.di.dev@outlook.com).
 Include the affected version and steps to reproduce.
 Do not include credentials or confidential model data.
 Keep undisclosed vulnerabilities out of public issues and Discussions.

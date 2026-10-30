@@ -7,7 +7,7 @@
 > 抽查参考模型：**Snowdon Towers Sample Architectural.rvt**（随 Revit 提供）。下文引用的值采集于 2026-09-15、Revit 2024.3，仅供历史对比，不保证其他模型或发布版本相同。先用 `revit_list_catalog` 发现名称，再通过 `revit_document_info` + `revit_aggregate_elements` 采集当前模型的基线。
 
 !!! note "计划覆盖，不是验证证据"
-    本清单覆盖当前 **33 个工具：19 个读取 + 14 个需显式启用的动作**，支持 **Revit 2020 和 2022–2027**，不支持 Revit 2021。将被测发布版本的 `tools/list` 与[读取契约](tools.md)、[动作契约](actions.md)及[功能总览](features/index.md)核对。本次文档更新没有执行任何真机 Revit 调用、勾选检查项或新增工作站证据；已记录的运行见[验证证据](validation.md)。下文 2026-09-15 的客户端问题均为历史复测项，不代表当前兼容性保证。
+    本清单覆盖当前 **35 个工具：19 个读取 + 16 个需显式启用的动作**，支持 **Revit 2020 和 2022–2027**，不支持 Revit 2021。将被测发布版本的 `tools/list` 与[读取契约](tools.md)、[动作契约](actions.md)及[功能总览](features/index.md)核对。本次文档更新没有执行任何真机 Revit 调用、勾选检查项或新增工作站证据；已记录的运行见[验证证据](validation.md)。下文 2026-09-15 的客户端问题均为历史复测项，不代表当前兼容性保证。
 
 ---
 
@@ -56,14 +56,14 @@
 <a id="21-local-server-via-uvx-windows-workstation"></a>
 ### 2.1 通过 `uvx` 运行本地服务器（Windows 工作站）
 
-- [ ] `uvx revit-model-mcp` 首次运行时能够从 PyPI 解析并安装包（记录包数量 + 耗时）。
+- [ ] `uvx --from "$SERVER" revit-model-mcp` 首次运行时能从本 fork 的发布 wheel 安装包（记录包数量 + 耗时）。`$SERVER` 见 README 的安装段；不要用裸 `uvx revit-model-mcp`，那会装上上游服务器。
 - [ ] 服务器启动，并在 `initialize` 中报告 `serverInfo: { name: "Revit Model Reader", version: "<ver>" }`。
-- [ ] 禁用动作时，`tools/list` 恰好返回 **19 个读取工具**（第 3 节）；以 `REVIT_MCP_ALLOW_WRITE=1` 重启服务器后返回 **33 个工具：19 个读取 + 14 个动作**（第 4 节）。动作虽已列出，是否可执行仍由工作站门禁决定。
+- [ ] 禁用动作时，`tools/list` 恰好返回 **19 个读取工具**（第 3 节）；以 `REVIT_MCP_ALLOW_WRITE=1` 重启服务器后返回 **35 个工具：19 个读取 + 16 个动作**（第 4 节）。动作虽已列出，是否可执行仍由工作站门禁决定。
 
 <a id="22-claude-code-registration-claude-mcp-add"></a>
 ### 2.2 注册到 Claude Code（`claude mcp add`）
 
-- [ ] `claude mcp add revit-model-mcp -s user -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx revit-model-mcp` 写入 `~/.claude.json`。
+- [ ] `claude mcp add revit-model-mcp -s user -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "$SERVER" revit-model-mcp` 写入 `~/.claude.json`。
 - [ ] `claude mcp list` 显示 `revit-model-mcp: ... ✓ Connected`。
 - [ ] `claude -p "what model is open in Revit?"`（无界面模式）返回真实模型数据（将 stdout 保存到文件——直接使用原始管道可能丢失无界面模式的输出）。
 - [ ] **应用内本地 Agent**：在 Claude Desktop 的 Code 界面中选择 **“Local”** 标记，询问 Revit 问题 → Agent 调用 `mcp__revit-model-mcp__*`，并使用真实数据回答。
@@ -127,18 +127,18 @@
 
 <a id="4-action-tools-gated-writes-9"></a>
 <a id="4-action-tools-gated-actions-14"></a>
-## 4. 动作工具 — 受门禁保护的动作（15）
+## 4. 动作工具 — 受门禁保护的动作（16）
 
 动作需要**同时满足两道门禁**：`REVIT_MCP_ALLOW_WRITE=1` **以及**工作站上的 allow-write 文件。直接 HTTP 调用者还需要 Bearer 令牌。本节只描述另行授权的人工测试，不是文档维护时执行的动作。使用一次性模型副本和独立输出路径，先备份、记录基线；真实修改前获得所有者许可。
 
 连接必须恰好发现一个 Revit 进程。`document` 用于选择该进程内已打开的模型；多个文档打开时必填。未知或歧义目标会在任何修改前被拒绝。`revit_select`、`revit_show`、`revit_isolate` 还要求目标文档处于活动状态。
 
-**安全语义因工具而异**：选择、显示／导航使用 UI 调用，不需要模型事务；隔离改变临时视图状态，没有 `dry_run`。下表九个普通模型编辑工具支持事务式 `dry_run=true`：执行、验证预期结果，再回滚。批处理支持事务组回滚。换 ID 是独立的不可逆替换流程：必须先 dry run；任一元素不合格时阻止整组选中项的真实执行。重建 ID 写入新模型文件，不修改源模型；其 dry run 执行复制但不保存文件。
+**安全语义因工具而异**：选择、显示／导航使用 UI 调用，不需要模型事务；隔离改变临时视图状态，没有 `dry_run`。下表每个普通模型编辑工具都支持事务式 `dry_run=true`：执行、验证预期结果，再回滚。批处理支持事务组回滚。换 ID 是独立的不可逆替换流程：必须先 dry run；任一元素不合格时阻止整组选中项的真实执行。重建 ID 写入新模型文件，不修改源模型；其 dry run 执行复制但不保存文件。
 
 !!! warning "报错不等于回滚"
-    `verification.error` 可能在 **COMMIT（提交）后**发生：编辑已经完成，但提交后的重读失败。传输或接单超时不会取消待执行任务，任务可能稍后执行。重试前检查目标模型、ID 及输出文件，不能宣称每个失败响应都保证模型不变。
+    `verification.error` 可能在 **COMMIT（提交）后**发生：编辑已经完成，但提交后的重读失败。传输或拾取超时不会取消待执行任务，任务可能稍后执行。重试前检查目标模型、ID 及输出文件，不能宣称每个失败响应都保证模型不变。
 
-- [ ] **4.0 枚举**：启用服务器动作标志后，`tools/list` 恰好包含下列 **15 个具名动作**和 19 个读取（共 34 个）。保存 schema；不存在独立的“按名称打开视图”或 undo 工具。
+- [ ] **4.0 枚举**：启用服务器动作标志后，`tools/list` 恰好包含下列 **16 个具名动作**和 19 个读取（共 35 个）。保存 schema；不存在独立的“按名称打开视图”或 undo 工具。
 
 | # | 动作工具 | 测试及验证 | 清理／安全 | [ ] |
 | --- | --- | --- | --- | --- |
@@ -149,14 +149,15 @@
 | 5 | `revit_place_family` | 先 dry run，再将已加载无宿主族放到目录标高；测试旋转、显式／null `type_name`、`Family: Type`、类型冲突及缺失族建议 | 房间内用 `roomCenterMm`；删除测试实例或丢弃副本 | [ ] |
 | 6 | `revit_create_wall` | 先 dry run，再用不同模型 XY 端点、目录标高／类型和正高度创建直墙；核对新 ID／类型／几何 | 删除测试墙或丢弃副本；`wall_type` 必填但可为 null | [ ] |
 | 7 | `revit_create_floor` | 先 dry run，再用至少三个模型 XY 顶点建楼板；核对自动闭合边界、ID、类型及标高；拒绝连续重复顶点 | 删除测试楼板或丢弃副本；`floor_type` 必填但可为 null | [ ] |
-| 8 | `revit_set_phase` | 先 dry run，再用目录阶段名；测试创建／拆除赋值、`""` 清除及 null 保持不变；检查阶段引用 | 恢复原赋值或丢弃副本；不创建／重命名阶段；两个参数均 null 被拒绝 | [ ] |
-| 9 | `revit_merge_phases` | 先 dry run，再将源阶段创建／拆除引用转到目标；核对数量、`sourceDeleted`；仍被引用的阶段可能保留且 `sourceDeleted=false` | 专用一次性副本；源／目标必须不同；不能加入批处理 | [ ] |
-| 10 | `revit_set_parameter` | 先 dry run，再改可写参数；核对前后值及实例／类型归属；长度 mm、面积 m²、其他 double 内部单位 | 恢复值或丢弃副本；共享类型修改影响全部实例；只读／ElementId 参数被拒绝 | [ ] |
-| 11 | `revit_set_view_lighting` | 先 dry run 读取改动前后读数；再真实设置阴影开关、`shadow_intensity`、`sunlight_intensity`、太阳日期／时间或光照模式方位角／高度角、地面平面与标高、背景与渲染光源方案。核对 `changedSettings` 与 `verification.before/after.lighting`，并用 `revit_export_view` 对比图片；在共享太阳与阴影设置的视图上确认 `shadows` 被拒绝 | 恢复可还原项（阴影、强度、太阳时间、光源方案）；**背景与地面平面标高无法通过 API 清除**，需丢弃副本。`shadows` 关闭后强度设置不再有可见效果 | [ ] |
-| 12 | `revit_delete` | 先 dry run，检查包含依赖的 ID，再仅删除已批准的测试元素；核对存活检查和返回数量 | 删除数量含依赖；丢弃副本或经授权使用 Revit UI 撤销 | [ ] |
-| 13 | `revit_reset_element_ids` | **必须先 dry run**：检查 `ineligible` 原因和 `idMapping`；合格／不合格混选时真实执行须整组拒绝。对已批准的全合格测试副本，确认旧 ID 消失、新副本及保留的类型／类别 | **不可逆，不依赖撤销。** 拒绝有宿主、属组、有依赖、MEP 曲线／系统成员及不可复制元素。丢弃副本并恢复备份；不原地赋 ID，也不把旧 ID 写入参数 | [ ] |
-| 14 | `revit_rebuild_model_ids` | Dry run 有映射但无保存文件。真实执行到新的工作站 `destination_path`；检查 `saved`、源／副本数量、排除项、每个 ID 映射。覆盖视图／模板、`seed`、重名模式、`copies`／`{n}` 路径，逐项检查 `copyResults` | 源模型不变、不保存。未经批准不覆盖；检查所有输出。只复制三维视图可选构件及基准对象，不是完整项目归档；不保留视图／图纸／明细表／注释／阶段／工作集／MEP 系统／未选宿主 | [ ] |
-| 15 | `revit_batch` | 先 dry run，再执行 1–50 个已批准步骤；核对预期验证、回滚及选择恢复。真实成功只有一个 `revit_batch` 撤销项；首个执行失败回滚事务组；检查 `committed`、从零计数的 `failedStep` 及各步结果 | 使用一次性副本；后续步骤参数无效须在任何执行前拒绝。允许名称：`move`、`place_family`、`create_wall`、`create_floor`、`set_phase`、`set_parameter`、`set_view_lighting`、`delete`、`select`、`isolate`；不允许 `show`、阶段合并、换 ID／重建 ID 或嵌套批处理 | [ ] |
+| 8 | `revit_create_level` | 先 dry run，再按名称与高程（mm）新建标高；核对 `verification.after` 的 ID、类别与 `elevationMm`；同名标高被拒绝；`create_view=true` 时视图数加一，视图类型按视图族选择 | 删除测试标高或丢弃副本；先确认没有同名标高；`name` 与 `elevation_mm` 必填，空白名称被拒绝 | [ ] |
+| 9 | `revit_set_phase` | 先 dry run，再用目录阶段名；测试创建／拆除赋值、`""` 清除及 null 保持不变；检查阶段引用 | 恢复原赋值或丢弃副本；不创建／重命名阶段；两个参数均 null 被拒绝 | [ ] |
+| 10 | `revit_merge_phases` | 先 dry run，再将源阶段创建／拆除引用转到目标；核对数量、`sourceDeleted`；仍被引用的阶段可能保留且 `sourceDeleted=false` | 专用一次性副本；源／目标必须不同；不能加入批处理 | [ ] |
+| 11 | `revit_set_parameter` | 先 dry run，再改可写参数；核对前后值及实例／类型归属；长度 mm、面积 m²、其他 double 内部单位 | 恢复值或丢弃副本；共享类型修改影响全部实例；只读／ElementId 参数被拒绝 | [ ] |
+| 12 | `revit_set_view_lighting` | 先 dry run 读取改动前后读数；再真实设置阴影开关、`shadow_intensity`、`sunlight_intensity`、太阳日期／时间或光照模式方位角／高度角、地面平面与标高、背景与渲染光源方案。核对 `changedSettings` 与 `verification.before/after.lighting`，并用 `revit_export_view` 对比图片；在共享太阳与阴影设置的视图上确认 `shadows` 被拒绝 | 恢复可还原项（阴影、强度、太阳时间、光源方案）；**背景与地面平面标高无法通过 API 清除**，需丢弃副本。`shadows` 关闭后强度设置不再有可见效果 | [ ] |
+| 13 | `revit_delete` | 先 dry run，检查包含依赖的 ID，再仅删除已批准的测试元素；核对存活检查和返回数量 | 删除数量含依赖；丢弃副本或经授权使用 Revit UI 撤销 | [ ] |
+| 14 | `revit_reset_element_ids` | **必须先 dry run**：检查 `ineligible` 原因和 `idMapping`；合格／不合格混选时真实执行须整组拒绝。对已批准的全合格测试副本，确认旧 ID 消失、新副本及保留的类型／类别 | **不可逆，不依赖撤销。** 拒绝有宿主、属组、有依赖、MEP 曲线／系统成员及不可复制元素。丢弃副本并恢复备份；不原地赋 ID，也不把旧 ID 写入参数 | [ ] |
+| 15 | `revit_rebuild_model_ids` | Dry run 有映射但无保存文件。真实执行到新的工作站 `destination_path`；检查 `saved`、源／副本数量、排除项、每个 ID 映射。覆盖视图／模板、`seed`、重名模式、`copies`／`{n}` 路径，逐项检查 `copyResults` | 源模型不变、不保存。未经批准不覆盖；检查所有输出。只复制三维视图可选构件及基准对象，不是完整项目归档；不保留视图／图纸／明细表／注释／阶段／工作集／MEP 系统／未选宿主 | [ ] |
+| 16 | `revit_batch` | 先 dry run，再执行 1–50 个已批准步骤；核对预期验证、回滚及选择恢复。真实成功只有一个 `revit_batch` 撤销项；首个执行失败回滚事务组；检查 `committed`、从零计数的 `failedStep` 及各步结果 | 使用一次性副本；后续步骤参数无效须在任何执行前拒绝。允许名称：`move`、`place_family`、`create_wall`、`create_floor`、`create_level`、`set_phase`、`set_parameter`、`set_view_lighting`、`delete`、`select`、`isolate`；不允许 `show`、阶段合并、换 ID／重建 ID 或嵌套批处理 | [ ] |
 
 - [ ] **4.1 门禁反向测试**：服务器动作标志关闭时，即使有工作站门禁，动作也不在 `tools/list` 中；标志打开但无工作站门禁时，已列出的动作被拒绝。删除工作站门禁无需重启 Revit 即生效。读取仍可使用。
 - [ ] **4.2 HTTP 令牌门禁**：不带 Bearer 令牌的直接 HTTP 动作被拒绝；`/health` 无令牌也可使用。

@@ -362,7 +362,7 @@ HTTP 直接返回 JSON 和 PNG；local 和 SSH 模式保留基于文件的响应
 在需要构建或运行组件的每台机器上克隆仓库：
 
 ```sh
-git clone https://github.com/sharafutdinovdi/revit-model-mcp.git
+git clone https://github.com/vibe-bimer/revit-model-mcp.git
 cd revit-model-mcp
 ```
 

@@ -1,9 +1,9 @@
 # Contributing
 
-Bug reports and feature requests use the [issue forms](https://github.com/sharafutdinovdi/revit-model-mcp/issues/new/choose).
+Bug reports and feature requests use the [issue forms](https://github.com/vibe-bimer/revit-model-mcp/issues/new/choose).
 Bug reports include the Revit year, add-in version, installation method, transport, reproduction steps and sanitized logs.
 For visible failures, attach a screenshot of the dialog or ribbon in the form's screenshot field.
-Usage and installation questions belong in [Discussions](https://github.com/sharafutdinovdi/revit-model-mcp/discussions).
+Usage and installation questions belong in [Discussions](https://github.com/vibe-bimer/revit-model-mcp/discussions).
 
 Contributors follow the [code of conduct](https://github.com/sharafutdinovdi/.github/blob/main/CODE_OF_CONDUCT.md).
 
@@ -118,7 +118,7 @@ On Windows, use `.venv\Scripts\python.exe` and `.venv\Scripts\mkdocs.exe`.
 Open `http://127.0.0.1:8000/revit-model-mcp/`.
 Run `mkdocs build --strict` in the activated environment before submitting a PR.
 
-Maintain the Chinese and English documentation together. Tool pages and navigation are generated from the current MCP registry snapshot in [`tools.json`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/tools.json), reviewed bilingual titles, summaries, prompts and parameter meanings in [`capabilities.yaml`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/capabilities.yaml), and complete Chinese tool descriptions in [`contracts.yaml`](https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/tools/site/content/contracts.yaml). After tool descriptions, signatures, schemas or registration change, activate the documentation environment and make the server importable with `python -m pip install -e server`, then refresh the snapshot:
+Maintain the Chinese and English documentation together. Tool pages and navigation are generated from the current MCP registry snapshot in [`tools.json`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/tools.json), reviewed bilingual titles, summaries, prompts and parameter meanings in [`capabilities.yaml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/capabilities.yaml), and complete Chinese tool descriptions in [`contracts.yaml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/contracts.yaml). After tool descriptions, signatures, schemas or registration change, activate the documentation environment and make the server importable with `python -m pip install -e server`, then refresh the snapshot:
 
 ```sh
 python tools/site/generate_features.py --dump

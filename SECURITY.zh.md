@@ -4,7 +4,7 @@
 ## 报告漏洞
 
 本仓库已启用私密漏洞报告。
-请通过 [GitHub 私密报告表单](https://github.com/sharafutdinovdi/revit-model-mcp/security/advisories/new)，或发送邮件到 [sharafutdinov.di.dev@outlook.com](mailto:sharafutdinov.di.dev@outlook.com) 报告漏洞。
+请通过 [GitHub 私密报告表单](https://github.com/vibe-bimer/revit-model-mcp/security/advisories/new)，或发送邮件到 [sharafutdinov.di.dev@outlook.com](mailto:sharafutdinov.di.dev@outlook.com) 报告漏洞。
 包含受影响版本和复现步骤。
 不要附带凭据或机密模型数据。
 尚未披露的漏洞不得发布到公开 Issue 或 Discussions。

@@ -8,7 +8,7 @@ The workstation host defaults to `local` for a Windows client under the Revit us
 macOS and Linux clients use `ssh:<alias>`, `http://host:port` or `https://host:port` to reach Windows.
 Use a loopback tunnel or TLS proxy for remote HTTP access.
 The optional HTTP bearer token field is sensitive and maps to `REVIT_MCP_TOKEN`.
-See [transport setup](https://sharafutdinovdi.github.io/revit-model-mcp/transport/) for workstation configuration.
+See [transport setup](https://vibe-bimer.github.io/revit-model-mcp/transport/) for workstation configuration.
 
 Path redaction defaults to enabled.
 Actions default to disabled and also require the workstation `allow-write` file.
@@ -18,7 +18,7 @@ Redaction leaves model names, parameter values, errors and exported image `local
 
 Revit Model MCP returns requested model data to the selected MCP client.
 The bundle enables response path redaction by default.
-The [privacy policy](https://sharafutdinovdi.github.io/revit-model-mcp/privacy/) covers collection, storage, sharing, retention and contact information.
+The [privacy policy](https://vibe-bimer.github.io/revit-model-mcp/privacy/) covers collection, storage, sharing, retention and contact information.
 
 ## Build
 
@@ -56,10 +56,10 @@ rsvg-convert -w 256 -h 256 docs/assets/logo.svg -o bundle/icon.png
 After downloading a release bundle:
 
 ```sh
-gh attestation verify revit-model-mcp-<version>.mcpb --owner sharafutdinovdi
+gh attestation verify revit-model-mcp-<version>.mcpb --owner vibe-bimer
 ```
 
-Confirm that the verified repository is `sharafutdinovdi/revit-model-mcp` and the signer workflow is `.github/workflows/release.yml`.
+Confirm that the verified repository is `vibe-bimer/revit-model-mcp` and the signer workflow is `.github/workflows/release.yml`.
 The attestation covers the bundle file, not dependencies downloaded by uv at runtime.
 This is GitHub build provenance, not an MCPB certificate signature.
-See [download verification](https://sharafutdinovdi.github.io/revit-model-mcp/security/#verify-downloads) for provenance boundaries and MSI verification.
+See [download verification](https://vibe-bimer.github.io/revit-model-mcp/security/#verify-downloads) for provenance boundaries and MSI verification.

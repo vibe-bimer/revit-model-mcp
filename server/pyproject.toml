@@ -26,11 +26,11 @@ classifiers = [
 dependencies = ["mcp>=2.0.0"]
 
 [project.urls]
-Homepage = "https://github.com/sharafutdinovdi/revit-model-mcp"
-Changelog = "https://github.com/sharafutdinovdi/revit-model-mcp/blob/main/CHANGELOG.md"
-Repository = "https://github.com/sharafutdinovdi/revit-model-mcp"
-Documentation = "https://github.com/sharafutdinovdi/revit-model-mcp#readme"
-Issues = "https://github.com/sharafutdinovdi/revit-model-mcp/issues"
+Homepage = "https://github.com/vibe-bimer/revit-model-mcp"
+Changelog = "https://github.com/vibe-bimer/revit-model-mcp/blob/main/CHANGELOG.md"
+Repository = "https://github.com/vibe-bimer/revit-model-mcp"
+Documentation = "https://github.com/vibe-bimer/revit-model-mcp#readme"
+Issues = "https://github.com/vibe-bimer/revit-model-mcp/issues"
 
 [project.scripts]
 revit-model-mcp = "revit_model_mcp.server:main"

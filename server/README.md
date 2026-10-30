@@ -6,22 +6,25 @@ It requires Python 3.11 or later and the matching add-in loaded in Revit on Wind
 
 ## Install and run
 
-After the first PyPI release, run the published package with uv:
+This fork publishes wheels on GitHub Releases and does not publish to PyPI. `uvx revit-model-mcp` resolves on PyPI to the upstream project, which is a different server, so name the fork's release explicitly:
 
 ```sh
-uvx revit-model-mcp
+SERVER="git+https://github.com/vibe-bimer/revit-model-mcp@v<version>"
+uvx --from "$SERVER" revit-model-mcp
 ```
+
+Replace `<version>` with a tag from [the releases page](https://github.com/vibe-bimer/revit-model-mcp/releases), or point `--from` at the release wheel instead of the tag.
 
 Register the local Windows server with Claude Code:
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -- uvx revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -- uvx --from "$SERVER" revit-model-mcp
 ```
 
 For a client on macOS or Linux:
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=ssh:revit-host -e REVIT_MCP_REDACT_PATHS=1 -- uvx revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=ssh:revit-host -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "$SERVER" revit-model-mcp
 ```
 
 Replace `revit-host` with an alias from the client's SSH configuration.
@@ -34,7 +37,7 @@ Claude Desktop uses this entry in `claude_desktop_config.json` on Windows:
   "mcpServers": {
     "revit-model-mcp": {
       "command": "uvx",
-      "args": ["revit-model-mcp"],
+      "args": ["--from", "git+https://github.com/vibe-bimer/revit-model-mcp@v<version>", "revit-model-mcp"],
       "env": {
         "REVIT_MCP_HOST": "local",
         "REVIT_MCP_REDACT_PATHS": "1"
@@ -47,21 +50,21 @@ Claude Desktop uses this entry in `claude_desktop_config.json` on Windows:
 `uvx` must be available on the client's PATH; an absolute executable path is also supported.
 A remote Desktop client uses `REVIT_MCP_HOST=ssh:revit-host`.
 
-For development or before the first PyPI publication, run from the repository root:
+For development, run from the repository root:
 
 ```sh
 uv run --directory server revit-model-mcp
 claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -- uv run --directory /absolute/path/to/revit-model-mcp/server revit-model-mcp
 ```
 
-mcp-name: io.github.sharafutdinovdi/revit-model-mcp
+mcp-name: io.github.vibe-bimer/revit-model-mcp
 
 ## Configuration
 
 | Variable | Default | Behavior |
 |---|---|---|
 | `REVIT_MCP_HOST` | `local` | Local PowerShell, `ssh:<alias>` or an `http://` / `https://` add-in endpoint. `--host` overrides it. |
-| `REVIT_MCP_ALLOW_WRITE` | Unset | `1` registers the 14 action tools, including `revit_batch`, at server startup; the workstation gate is also required. Boolean settings also accept `true/false`, `yes/no` and `on/off`, without regard to case or surrounding whitespace. |
+| `REVIT_MCP_ALLOW_WRITE` | Unset | `1` registers the 16 action tools, including `revit_batch`, at server startup; the workstation gate is also required. Boolean settings also accept `true/false`, `yes/no` and `on/off`, without regard to case or surrounding whitespace. |
 | `REVIT_MCP_TOKEN` | Unset | HTTP bearer token from workstation settings. `--token` overrides it. |
 | `REVIT_MCP_SSH_MUX` | Enabled | `0` disables OpenSSH connection multiplexing. Local mode ignores SSH settings. |
 | `REVIT_MCP_SSH_OPTIONS` | Unset | Extra SSH arguments, parsed with shell quoting and appended after built-in options, before the host. Example: `-o ServerAliveInterval=30 -p 2222`. |
