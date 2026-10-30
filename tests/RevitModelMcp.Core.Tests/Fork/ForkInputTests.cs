@@ -154,4 +154,42 @@ public sealed class ForkInputTests
         await Assert.That(parsed.Fields).IsEquivalentTo(["category", "id"]);
         await Assert.That(parsed.SaveTo).IsEqualTo("C:/out/ids.xlsx");
     }
+
+    // The layer must not claim anything upstream answers. If the registry ever listed an upstream command,
+    // it would shadow that command's arm in the executor; if it ever missed a fork command, its tools
+    // would fail in the add-in with "Unknown command". Both directions are the same assertion.
+    [Test]
+    public async Task TheRegistryClaimsOnlyItsOwnCommands()
+    {
+        string[] upstream = ["move", "delete", "set-parameter", "create-wall", "batch", "export-view"];
+        foreach (var command in upstream)
+        {
+            await Assert.That(Core.Fork.ForkRegistry.IsAction(command)).IsFalse();
+        }
+
+        foreach (var command in Core.Fork.ForkRegistry.Commands)
+        {
+            await Assert.That(Core.Fork.ForkRegistry.IsAction(command)).IsTrue();
+            await Assert.That(upstream).DoesNotContain(command);
+        }
+
+        await Assert.That(Core.Fork.ForkRegistry.Commands).IsEquivalentTo(
+        [
+            "set-view-lighting", "create-level", "create-floor", "set-phase", "merge-phases",
+            "reset-element-ids", "rebuild-model-ids"
+        ]);
+    }
+
+    // An upstream action keeps parsing exactly as it did: the fork adds a bag reader that returns for a
+    // command it does not own, so the upstream initializer is the only thing that fills the contract.
+    [Test]
+    public async Task AnUpstreamActionParsesWithoutForkInputs()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"move","elementIds":[7],"dxMm":100,"dyMm":0,"dzMm":0}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.DxMm).IsEqualTo(100);
+        await Assert.That(parsed.Action!.Options.Shadows).IsNull();
+        await Assert.That(parsed.Action!.Options.DestinationPath).IsNull();
+    }
 }
