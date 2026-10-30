@@ -50,7 +50,7 @@ Model MCP is an open-source add-in and a local server. There is no hosted servic
 | Secure development lifecycle | Public repository, pull request checks, CODEOWNERS, release-please, CodeQL, Scorecard. | Met |
 | Dependency management | Lock files, Dependabot, SHA-pinned CI actions. No vulnerability scan gate and no SBOM yet. | Partial |
 | Vulnerability disclosure | Private advisory form and email in the [security policy](../security-policy.md). No response-time commitment. | Partial |
-| Patch process | New releases through GitHub, PyPI and WinGet. Per-machine installs are updated by the administrator; per-user installs can update themselves. | Documented |
+| Patch process | New releases through GitHub Releases; this fork publishes nothing to PyPI or WinGet. Per-machine installs are updated by the administrator; per-user installs can update themselves. | Documented |
 | Penetration test, SOC 2, ISO 27001 | None. Open source: the code can be reviewed. | N/A |
 | Threat model | The whitepaper lists trust boundaries and residual risks. | Documented |
 
@@ -88,6 +88,6 @@ Model MCP is an open-source add-in and a local server. There is no hosted servic
 
 | Question | Answer | Status |
 | --- | --- | --- |
-| Can the tool change models? | Yes by default. Read-only mode and policy turn this off. | Documented |
+| Can the tool change models? | Only when an administrator allows it: the installer ships the machine policy `ReadOnly=1`. Read-only mode, policy and the workstation file refuse it. | Documented |
 | Can changes be undone? | Each change is one named undo entry, and `revit_undo_last` exists. Link removal and document-level operations (open, close, save, synchronize) have no undo entry. | Documented |
 | Can arbitrary code run? | Yes through `revit_execute_code`, unsandboxed, with a confirmation token. Policy can disable it. | Documented |

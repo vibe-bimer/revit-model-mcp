@@ -47,7 +47,7 @@ Switches and properties:
 
 See [policy properties and Group Policy](#policy-properties-and-group-policy) for how `READONLY` and `EXECUTECODE` behave on upgrade, repair and uninstall. `ToolDeny`, `ToolAllow` and the other policy values cannot be set through the MSI: use Group Policy, Intune or `policy.json`.
 
-The MultiUser MSI also creates `%ProgramData%\RevitModelMcp` as SYSTEM with a protected ACL (Administrators and SYSTEM full control, Users read and execute) on every install, because that folder holds `policy.json` and `settings.json`. If the folder already exists as a link or is owned by someone other than Administrators or SYSTEM, the install stops before it changes anything. The verbose log (`/l*v`) has a line that starts with `Model MCP:` (copied from the check by the WiX quiet-exec action) and names the folder and the reason, and an interactive install shows the same text in a message box. The check exit codes are 20 (link or not a folder), 21 (wrong owner) and 22 (could not be checked). For a wrong owner run `takeown /a /f "%ProgramData%\RevitModelMcp"` in an elevated prompt (or delete the folder) and install again; for a link delete it. See [the policy folder](policy-reference.md#the-policy-folder).
+The MultiUser MSI also creates `%ProgramData%\RevitModelMcp` as SYSTEM with a protected ACL (Administrators and SYSTEM full control, Users read and execute) on every install, because that folder holds `policy.json` and `settings.json`. It also writes the default `policy.json` (`{"ReadOnly": true}`) into that folder when the file is absent, so a machine that never passes `READONLY=1` is still read-only; an existing `policy.json` is never overwritten. If the folder already exists as a link or is owned by someone other than Administrators or SYSTEM, the install stops before it changes anything. The verbose log (`/l*v`) has a line that starts with `Revit Model MCP (vibe-bimer):` (copied from the check by the WiX quiet-exec action) and names the folder and the reason, and an interactive install shows the same text in a message box. The check exit codes are 20 (link or not a folder), 21 (wrong owner) and 22 (could not be checked). For a wrong owner run `takeown /a /f "%ProgramData%\RevitModelMcp"` in an elevated prompt (or delete the folder) and install again; for a link delete it. See [the policy folder](policy-reference.md#the-policy-folder).
 
 Example for a locked-down fleet:
 
@@ -69,7 +69,7 @@ Exit codes follow Windows Installer:
 
 Upgrades within the same scope run in place, also for the same version. Repair with `msiexec /fa <msi>`. Uninstall with `msiexec /x <msi> /qn`.
 Uninstall leaves settings, logs and the channel folder; see [data retention](../privacy.md#data-retention) for the folders.
-MultiUser uninstall (not the removal step of an upgrade) also cleans `%ProgramData%\RevitModelMcp`: it deletes `settings.json` only when it holds nothing but the keys the MSI writes (`updateCheck`, `updateMode`), then deletes the folder only when it is empty. `policy.json`, any other file, a link or a folder with other content stays untouched, so an administrator's policy is never removed.
+MultiUser uninstall (not the removal step of an upgrade) also cleans `%ProgramData%\RevitModelMcp`: it deletes `settings.json` only when it holds nothing but the keys the MSI writes (`updateCheck`, `updateMode`), and deletes `policy.json` only while it still holds exactly the shipped default (`{"ReadOnly": true}`), then deletes the folder only when it is empty. A `policy.json` an administrator edited, any other file, a link or a folder with other content stays untouched, so an administrator's policy is never removed.
 
 ### Policy properties and Group Policy
 
@@ -107,19 +107,19 @@ Environment variables for the Revit process, such as `REVIT_MCP_NO_UPDATE_CHECK`
 
 ### WinGet
 
-The package `Sharafutdinov.RevitModelMcp` is generated weekly for the latest stable release. For a managed fleet, prefer the MSI from your own software share so that you control the version.
+This fork publishes no WinGet package, and the manifest generator is gone with it: `Sharafutdinov.RevitModelMcp` belongs to upstream, so a submission from here would overwrite upstream's listing with this fork's installer. For a managed fleet, publish the MSI from your own software share so that you control the version.
 
 ## Server rollout
 
-The server is a Python package started by the MCP client through uv. The client machine needs Python 3.11 or newer, uv, and a way to fetch the package.
+The server is a Python package started by the MCP client through uv. The client machine needs Python 3.11 or newer, uv, and a way to fetch this fork's release wheel. The `revit-model-mcp` project on PyPI belongs to upstream, so a bare `uvx` of that name installs the wrong server.
 
 For a controlled fleet, pin the version and turn off the daily check:
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_NO_UPDATE_CHECK=1 -- uvx revit-model-mcp==<version>
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_NO_UPDATE_CHECK=1 -- uvx --from https://github.com/vibe-bimer/revit-model-mcp/releases/download/v<VERSION>/revit_model_mcp-<VERSION>-py3-none-any.whl revit-model-mcp
 ```
 
-Use the same `==<version>` pin in a JSON client configuration. The managed add-in bundle `revit-model-mcp-<version>-managed.bundle.zip` is built to never check for updates; see [managed installs](../install.md#managed-installs).
+Use the same `--from <wheel URL>` pair in a JSON client configuration. The managed add-in bundle `revit-model-mcp-<version>-managed.bundle.zip` is built to never check for updates; see [managed installs](../install.md#managed-installs).
 
 ### Offline or air-gapped install
 
@@ -127,7 +127,7 @@ The server does not need internet access once its packages are on the machine. B
 
 ```sh
 # connected machine
-python -m pip download revit-model-mcp==<version> -d wheelhouse
+python -m pip download -d wheelhouse https://github.com/vibe-bimer/revit-model-mcp/releases/download/v<VERSION>/revit_model_mcp-<VERSION>-py3-none-any.whl
 
 # offline machine
 uv tool install --offline --no-index --find-links wheelhouse revit-model-mcp==<version>

@@ -7,11 +7,10 @@
 
 Model MCP for Autodesk® Revit® connects Claude Desktop, Claude Code or any MCP client that starts a stdio server to a live Revit project.
 Ask questions about the model, check it, and change it in plain language.
-Every change is one named undo entry in Revit, and read-only mode is one switch away.
+Every change is one named undo entry in Revit, and a fresh install is read-only until an administrator allows actions.
 
 [![CI](https://img.shields.io/github/actions/workflow/status/vibe-bimer/revit-model-mcp/ci.yml?style=flat-square)](https://github.com/vibe-bimer/revit-model-mcp/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/vibe-bimer/revit-model-mcp?style=flat-square)](https://github.com/vibe-bimer/revit-model-mcp/releases/latest)
-[![PyPI](https://img.shields.io/pypi/v/revit-model-mcp?style=flat-square)](https://pypi.org/project/revit-model-mcp/)
 ![Revit 2022-2027](https://img.shields.io/badge/Revit-2022--2027-368EF5?style=flat-square)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/vibe-bimer/revit-model-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/vibe-bimer/revit-model-mcp)
 [![MIT](https://img.shields.io/badge/license-MIT-5C6F88?style=flat-square)](LICENSE)
@@ -41,11 +40,7 @@ Tested with Claude Desktop and Claude Code; other clients are listed on the [tes
 **1. Install the add-in.**
 On the Windows machine with Revit, download `RevitModelMcp-<version>-SingleUser.msi` (current user) or `RevitModelMcp-<version>-MultiUser.msi` (all users) from the [latest release](https://github.com/vibe-bimer/revit-model-mcp/releases/latest).
 Install only one of them.
-Alternatively, install with WinGet:
-
-```sh
-winget install Sharafutdinov.RevitModelMcp
-```
+This fork publishes no WinGet package: `Sharafutdinov.RevitModelMcp` is upstream's, and a fork submission would replace upstream's listing with this fork's installer.
 
 Keep Revit closed during installation, then start Revit and open a model.
 Revit asks whether to load the add-in, because release builds are not code-signed yet.
@@ -54,12 +49,12 @@ Revit asks whether to load the add-in, because release builds are not code-signe
 In Revit, Add-ins > MCP > Connect AI app registers the bundled server in Claude Desktop, Cursor, VS Code or Codex; Claude Code gets a copy-paste command.
 The MSI includes the server executable, so this path needs no separate Python or uv installation.
 
-If you prefer the PyPI server:
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then register the server.
+If you prefer to start the server through uv instead of the bundled executable:
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then register the server from this fork's own source. The `revit-model-mcp` project on PyPI belongs to upstream, so a bare `uvx` of that name installs the wrong server.
 For Claude Code on the same Windows machine:
 
 ```sh
-claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx revit-model-mcp
+claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp
 ```
 
 For Claude Desktop, open the `revit-model-mcp-<version>.mcpb` bundle from the latest release, or add this to its MCP configuration:
@@ -69,7 +64,7 @@ For Claude Desktop, open the `revit-model-mcp-<version>.mcpb` bundle from the la
   "mcpServers": {
     "revit-model-mcp": {
       "command": "uvx",
-      "args": ["revit-model-mcp"],
+      "args": ["--from", "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server", "revit-model-mcp"],
       "env": {
         "REVIT_MCP_HOST": "local",
         "REVIT_MCP_REDACT_PATHS": "1"
@@ -87,12 +82,12 @@ Restart the client, keep a model open in Revit and ask: "Call `revit_ping`, then
 `success: true` means both parts are connected.
 From a clone, `uv run --directory server revit-model-mcp` runs the same server without installing the package.
 
-For updates, the release add-in checks GitHub daily and notifies by default; the PyPI server checks PyPI, or install the newer MSI ([updates](https://vibe-bimer.github.io/revit-model-mcp/updates/)).
+For updates, the release add-in checks GitHub daily and notifies by default; the server checks for a newer package too, or install the newer MSI ([updates](https://vibe-bimer.github.io/revit-model-mcp/updates/)).
 Report bugs in [Issues](https://github.com/vibe-bimer/revit-model-mcp/issues/new/choose), ask questions in [Discussions](https://github.com/vibe-bimer/revit-model-mcp/discussions), and report vulnerabilities through [SECURITY.md](SECURITY.md).
 
 ## Why Model MCP
 
-- **Safe by design.** Each change is one named undo entry in Revit, and one setting makes the whole server read-only.
+- **Safe by design.** Each change is one named undo entry in Revit, and a fresh install is read-only until an administrator allows actions.
 - **Confirmation first.** Saving, syncing and other irreversible steps wait for your explicit approval.
 - **Installs like normal software.** MSI installers, with deployment guides for SCCM, Intune and Group Policy.
 - **Works from a Mac.** MCP stdio runs through SSH to the Windows workstation, so no port opens.
@@ -243,7 +238,7 @@ Install it the same way: copy `skills/iso19650-issue-register` into `~/.claude/s
 
 <a id="actions-opt-in"></a>
 
-- **Actions are on by default.** Set `REVIT_MCP_READ_ONLY=1` in the server environment, or create the workstation `read-only` file, to refuse every action. Action tools stay listed and return `errorCode: "read_only"` instead of running.
+- **Read-only by default.** The installer writes the machine policy `ReadOnly=1`, so actions are refused until an administrator allows them with `ReadOnly=false` in `%ProgramData%\RevitModelMcp\policy.json`. Action tools stay listed and return `errorCode: "policy_blocked"` instead of running. `REVIT_MCP_READ_ONLY=1` in the server environment, or the workstation `read-only` file, refuses them too.
 - **One undo per change.** A committed action is one named Revit undo entry, shown in Revit's Undo list and in the add-in's "MCP activity" pane. `revit_undo_last` undoes it while it is still Revit's last change.
 - **Confirmation tokens for irreversible actions.** Saving, synchronizing, removing links and running C# always need one. Closing with changes, deleting more than 500 elements, overwriting existing export files and in-place saves in batch runs need one too. The first call changes nothing and returns the text to show you; the retry needs your explicit agreement. A token is single use and expires after five minutes.
 - **Dry runs.** Model-changing tools such as `revit_move`, `revit_delete`, `revit_run_actions`, `revit_export` and `revit_process_models` accept `dry_run` to preview the result without committing it.
@@ -284,7 +279,7 @@ Revit 2022 to 2027 on Windows 10 and 11.
 The add-in targets .NET Framework 4.8 for Revit 2022-2024, .NET 8 for 2025 and 2026, and .NET 10 for 2027.
 Every year builds, installs and runs live reads and actions.
 The MSI bundles a server executable for Windows that needs no separate Python or uv installation.
-The PyPI server needs Python 3.11 or newer and runs on Windows, macOS or Linux; uv can start it with `uvx revit-model-mcp`.
+The server wheel needs Python 3.11 or newer and runs on Windows, macOS or Linux; uv can start it from this fork's release wheel or tag tarball. The `revit-model-mcp` project on PyPI belongs to upstream and would install the wrong server.
 See [validation evidence](https://vibe-bimer.github.io/revit-model-mcp/validation/) for dates and limits, and [known gaps](https://vibe-bimer.github.io/revit-model-mcp/roadmap/#known-gaps).
 
 ## Privacy

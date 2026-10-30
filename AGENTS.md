@@ -13,7 +13,7 @@ The Python server runs on the MCP client's machine and exposes stdio tools over 
 | `src/` | C# add-in and Revit-independent Core library |
 | `tests/` | C# Core tests |
 | `server/` | Python MCP server, tests, package metadata and registry manifest |
-| `build/` | Build orchestration, WixSharp packaging and WinGet manifests |
+| `build/` | Build orchestration, WixSharp packaging and the fork budget check |
 | `docs/` | Tool contracts, transports, architecture and validation evidence |
 | `.github/` | CI, release workflows, issue forms and PR template |
 
@@ -87,7 +87,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for packaging commands and test coverage.
 
 Follow the [release ritual](CONTRIBUTING.md#release-ritual).
 The version in `server/pyproject.toml` must equal the tag without its `v` prefix.
-Agents never edit `CHANGELOG.md`, the `server/pyproject.toml` version or either `server/server.json` version by hand.
+Agents never edit `CHANGELOG.md` or the `server/pyproject.toml` version by hand.
 release-please owns these files and version fields through its release PR.
 The maintainer merges the release PR to create the tag and publish the release.
 Verify assets and publishing jobs after the release workflow finishes.

@@ -63,7 +63,7 @@ function Get-Payload([string] $SelectedYear) {
         if ($asset -notin $script:releaseAssets) {
             throw "Release $releaseTag has no add-in package for Revit $SelectedYear (expected $asset). Install from a local build with -Source Build, or choose a release that includes R$yy."
         }
-        $url = "https://github.com/sharafutdinovdi/revit-model-mcp/releases/download/$releaseTag/$asset"
+        $url = "https://github.com/vibe-bimer/revit-model-mcp/releases/download/$releaseTag/$asset"
         $zip = Join-Path $tempRoot $asset
         Invoke-WebRequest -Uri $url -Headers $headers -OutFile $zip -UseBasicParsing
         if (!$script:checksums) {
@@ -75,7 +75,7 @@ function Get-Payload([string] $SelectedYear) {
             }
             else {
                 $checksumFile = Join-Path $tempRoot 'SHA256SUMS.txt'
-                $checksumUrl = "https://github.com/sharafutdinovdi/revit-model-mcp/releases/download/$releaseTag/SHA256SUMS.txt"
+                $checksumUrl = "https://github.com/vibe-bimer/revit-model-mcp/releases/download/$releaseTag/SHA256SUMS.txt"
                 try {
                     Invoke-WebRequest -Uri $checksumUrl -Headers $headers -OutFile $checksumFile -UseBasicParsing
                     $script:checksums = $checksumFile
@@ -257,14 +257,14 @@ try {
             [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
             $releaseTag = "v$Version"
             if ($Version -eq 'latest') {
-                $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/sharafutdinovdi/revit-model-mcp/releases/latest' -Headers $headers
+                $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/vibe-bimer/revit-model-mcp/releases/latest' -Headers $headers
                 $releaseTag = [string]$release.tag_name
             }
             if ($releaseTag -notmatch '^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') {
                 throw 'Expected a release version without v, such as 0.1.0, or latest.'
             }
             if ($Version -ne 'latest') {
-                $release = Invoke-RestMethod -Uri "https://api.github.com/repos/sharafutdinovdi/revit-model-mcp/releases/tags/$releaseTag" -Headers $headers
+                $release = Invoke-RestMethod -Uri "https://api.github.com/repos/vibe-bimer/revit-model-mcp/releases/tags/$releaseTag" -Headers $headers
             }
             $script:releaseAssets = @($release.assets | ForEach-Object { $_.name })
             $releaseVersion = $releaseTag.Substring(1)

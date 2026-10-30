@@ -61,8 +61,8 @@ Clients targeting the same PID have separate FIFO queues. The scheduler rotates 
 File watcher and timer callbacks request work through ExternalEvent.
 The event handler calls [ControlChannel.Tick](../src/RevitModelMcp.Addin/Control/ControlChannel.cs) in the Revit API context.
 The default MCP tools query the model and export images without editing model elements.
-Actions are enabled by default.
-The server setting and workstation file can independently refuse them.
+Actions are refused by default: the installer writes the machine policy `ReadOnly=1`.
+The server setting and workstation file can independently refuse them too, and no lower layer can turn policy read-only off.
 See [action behavior](actions.md) for transactions, warning resolution and dialog suppression.
 Image export uses `Document.ExportImage` with a selected view set.
 It does not change the active view.

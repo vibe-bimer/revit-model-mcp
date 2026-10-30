@@ -1,5 +1,9 @@
 # Validation evidence
 
+> This page is upstream's evidence for its own v0.9.0 release, kept here because it is upstream's record.
+> It does not describe this branch: this base serves 87 tools, and no fork action has been run against a live
+> Revit from here. The [feature pages](features/index.md) state what this branch can support.
+
 Validation status as of 2026-10-06; ✅ denotes a completed check and - denotes no validation evidence for that check.
 CI evidence includes the v0.1.0 release builds for R22-R26 and the R22/R26/R27 CI builds.
 Local build evidence includes `Release.R26` and `Release.R27`, plus the Revit 2024 build through `install.ps1 -Source Build`.

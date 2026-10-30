@@ -43,13 +43,27 @@ UPSTREAM_REFERENCES_ALLOWED = {
     "docs/roadmap.md": "upstream issue numbers in the inherited roadmap",
     "docs/validation.md": "cites the upstream validation branch, issues and pull requests",
     "docs/design/model-audit.md": "cites upstream issues for the inherited audit design",
+    "tools/check_fork_identity.py": "names upstream's repository because it is the check for that drift",
 }
 
 # Paths scanned for upstream repository claims. Generated docs, the site build
 # output, the vendored Revit corpus and this fork's own analysis notes are
 # excluded. Directories are pruned during the walk, not filtered afterwards,
 # because the corpus alone holds tens of thousands of files.
-SCAN_SUFFIXES = (".md", ".yml", ".yaml", ".json", ".toml", ".cs")
+SCAN_SUFFIXES = (
+    ".md",
+    ".yml",
+    ".yaml",
+    ".json",
+    ".toml",
+    ".cs",
+    ".cmd",
+    ".html",
+    ".ps1",
+    ".py",
+    ".txt",
+    ".xml",
+)
 PRUNED_DIRECTORIES = {
     ".git",
     ".venv",
@@ -76,15 +90,33 @@ PYPI_PUBLISH_ACTIONS = ("pypa/gh-action-pypi-publish", "mcp-publisher")
 # Any of these forms resolves upstream's package instead, because both projects
 # share version numbers: an exact pin, a version floor, a bare package name, or
 # an explicit PyPI index.
-FORK_WHEEL_URL = re.compile(
+FORK_SOURCE_URL = re.compile(
     r"https://github\.com/"
     + re.escape(FORK_REPO)
-    + r"/releases/download/v[0-9A-Za-z.\-]+/revit_model_mcp-[0-9A-Za-z.\-]+\.whl"
+    + r"/(?:releases/download/v[0-9A-Za-z.\-]+/revit_model_mcp-[0-9A-Za-z.\-]+\.whl"
+    r"|archive/refs/(?:tags/v[0-9A-Za-z.\-]+|heads/main)\.tar\.gz#subdirectory=server)"
 )
 PYPI_PACKAGE_SPEC = re.compile(
     r"\brevit-model-mcp(?:\[[^\]]*\])?\s*(?:==|>=|<=|~=|!=|>|<|\^>=|\^==)\s*\d"
 )
 BARE_PYPI_PACKAGE = re.compile(r"(?:^|[\s\"'])revit-model-mcp(?![\w.\-/])")
+
+# A document that tells a reader to run this package name installs upstream's
+# server, because both projects share version numbers and upstream owns the
+# PyPI project. The check reads prose, workflows and launchers, not source
+# tests: a fixture that asserts the validator rejects such a launcher is
+# allowed to contain one.
+PYPI_LAUNCHER = re.compile(r"\buvx\s+revit-model-mcp\b")
+PYPI_VERSION_SPEC = re.compile(r"\brevit-model-mcp\s*(?:==|>=|<=|~=|!=)\s*\S")
+PYPI_PROJECT_PAGE = re.compile(r"pypi\.org/project/revit-model-mcp")
+PACKAGE_NAME_ALLOWED = {
+    "CHANGELOG.md": "historical release notes name the package as it was published",
+    "docs/admin/deployment.md": "an offline --no-index wheelhouse install cannot reach PyPI",
+    "docs/validation.md": "upstream's own v0.9.0 evidence, framed as such",
+    "server/tests/test_validate_bundle.py": "a negative fixture asserts the validator rejects this launcher",
+    "tests/RevitModelMcp.Core.Tests/Connect/McpClientConfiguratorTests.cs": "negative fixtures assert the editor leaves a foreign launcher alone",
+    "tools/check_fork_identity.py": "the patterns themselves",
+}
 
 
 class IdentityError(Exception):
@@ -136,6 +168,10 @@ def check_installer_upgrade_code(problems: list[str]) -> None:
 
 
 def check_registry_manifest(problems: list[str]) -> None:
+    if not (REPO_ROOT / "server/server.json").is_file():
+        # This fork publishes no registry package, so no manifest is the
+        # expected state; one that appears must not claim upstream's identity.
+        return
     manifest = read_json("server/server.json")
     name = str(manifest.get("name", ""))
     if UPSTREAM_OWNER in name:
@@ -195,7 +231,9 @@ def check_bundle_manifest(problems: list[str]) -> None:
                 "version numbers; point at this fork's release wheel instead"
             )
             continue
-        if FORK_WHEEL_URL.search(command) is None and BARE_PYPI_PACKAGE.search(command):
+        if FORK_SOURCE_URL.search(command) is None and BARE_PYPI_PACKAGE.search(
+            command
+        ):
             problems.append(
                 f"bundle/manifest.json: {name} install the bare package "
                 "'revit-model-mcp', which uvx resolves on PyPI to upstream's "
@@ -240,6 +278,45 @@ def check_release_workflow(problems: list[str]) -> None:
             )
 
 
+def check_package_launchers(problems: list[str]) -> None:
+    """Fail when a shipped document starts the server by the bare package name."""
+    for path in iter_scanned_files():
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        if relative in PACKAGE_NAME_ALLOWED:
+            continue
+        if Path(relative).suffix not in (
+            ".md",
+            ".yml",
+            ".yaml",
+            ".json",
+            ".txt",
+            ".ps1",
+            ".cmd",
+            ".cs",
+        ):
+            continue
+        text = path.read_text(encoding="utf-8")
+        for number, line in enumerate(text.splitlines(), start=1):
+            # A line that names upstream is explaining the trap, not falling into it.
+            if "upstream" in line.lower():
+                continue
+            if PYPI_PROJECT_PAGE.search(line):
+                problems.append(
+                    f"{relative}:{number}: links upstream's PyPI project, which publishes "
+                    "a different server under the same name"
+                )
+                continue
+            if "--from" in line:
+                continue
+            match = PYPI_LAUNCHER.search(line) or PYPI_VERSION_SPEC.search(line)
+            if match is not None:
+                problems.append(
+                    f"{relative}:{number}: starts the server with {match.group(0)!r}, "
+                    "which uvx resolves on PyPI to upstream's server; use "
+                    "--from with this fork's release wheel or tag archive"
+                )
+
+
 def check_stray_references(problems: list[str]) -> None:
     for path in iter_scanned_files():
         relative = path.relative_to(REPO_ROOT).as_posix()
@@ -267,6 +344,7 @@ def main() -> int:
         check_vendor_settings,
         check_glama,
         check_release_workflow,
+        check_package_launchers,
         check_stray_references,
     )
     try:

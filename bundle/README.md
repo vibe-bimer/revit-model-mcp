@@ -11,7 +11,7 @@ The optional HTTP bearer token field is sensitive and maps to `REVIT_MCP_TOKEN`.
 See [transport setup](https://vibe-bimer.github.io/revit-model-mcp/transport/) for workstation configuration.
 
 Path redaction defaults to enabled.
-Actions run by default; check Read-only mode to disable them without hiding the action tools.
+Read-only mode is the default: the machine policy refuses actions until an administrator allows them. The Read-only mode switch refuses them for this client too, without hiding the action tools.
 Redaction leaves model names, parameter values, errors and exported image `localPath` values visible.
 
 ## Privacy policy
@@ -32,7 +32,7 @@ uv run python ../build/bundle_manifest.py
 
 The committed manifest lists every tool but omits `inputSchema` because MCPB rejects that field.
 The binary command is the external `uvx` executable on PATH.
-The bundle contains metadata and the icon; uv downloads the Python package and dependencies at first launch.
+The bundle contains metadata and the icon; uv downloads this fork's release wheel and its dependencies at first launch.
 The server accepts boolean environment values directly, with `1` and `0` as the canonical values.
 User settings pass through environment variables.
 The manifest declares a Claude Desktop minimum of `0.10.0`; Linux compatibility describes the server client platform, not availability of Claude Desktop for Linux.
@@ -46,11 +46,10 @@ unzip -l /tmp/revit-model-mcp.mcpb
 ```
 
 CI validates and packs the `0.0.0` placeholder and uploads the `bundle` artifact.
-That artifact validates packaging and is not installable from PyPI.
+That artifact validates packaging only and is not a release bundle.
 CI also checks tool coverage, boolean forwarding and host/token forwarding with the MCPB configuration resolver.
-The release workflow replaces both the manifest version and the package pin with the tag version.
-Prerelease bundles reference the release wheel URL because prereleases are not published to PyPI.
-Stable bundles require the corresponding PyPI publishing job to finish before first launch.
+The release workflow replaces the manifest version and the wheel URL with the tag version.
+Every bundle, stable or prerelease, starts this fork's server from the release wheel URL, so nothing resolves the package name from PyPI.
 The workflow includes the bundle in `SHA256SUMS.txt` and attests all staged release assets.
 For stable releases, the Smithery job copies the released desktop bundle into a separate ZIP archive with full tool input schemas, then publishes it as `vibe-bimer/revit-model-mcp` after the GitHub Release is published.
 The Smithery archive is built with `build/bundle_manifest.py --smithery <output.mcpb> --from <desktop.mcpb>`.

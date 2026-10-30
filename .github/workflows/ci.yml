@@ -98,6 +98,9 @@ jobs:
           version: '0.12.22'
           enable-cache: true
           cache-dependency-glob: server/uv.lock
+      - name: Check the fork identity
+        working-directory: .
+        run: python tools/check_fork_identity.py
       - name: Test server
         run: uv run --frozen --with pytest==9.1.1 pytest -q
       - name: Check Python
@@ -538,17 +541,6 @@ jobs:
           name: installers
           path: output/*.msi
           if-no-files-found: error
-      - name: Verify WinGet manifest generation
-        shell: pwsh
-        run: |
-          ./build/winget/New-WingetManifests.ps1 -Version $env:CI_VERSION -ReleaseTag "v$env:CI_VERSION" -OutputDir artifacts/winget -SkipDownload
-          winget --version
-          $output = winget validate --manifest artifacts/winget --disable-interactivity 2>&1 | Out-String
-          Write-Host $output
-          # winget exits non-zero for "succeeded with warnings"; only a hard failure must fail the job.
-          if ($output -notmatch 'Manifest validation succeeded') { throw 'WinGet validation failed' }
-          # The pwsh shell wrapper exits with the last native exit code; reset it after the check above.
-          $global:LASTEXITCODE = 0
       - name: Stage add-in artifacts
         shell: pwsh
         run: |

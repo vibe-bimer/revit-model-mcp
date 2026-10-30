@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace RevitModelMcp.Core.Connect;
 
 /// <summary>
@@ -21,11 +23,34 @@ public sealed record McpServerSpec(string Command, IReadOnlyList<string> Args)
     ///     <c>uvx revit-model-mcp</c> would fetch upstream's package from PyPI, and both projects publish the same
     ///     version numbers, so that form would install upstream's server while appearing to work.
     /// </summary>
-    public const string ForkSource =
-        "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/heads/main.tar.gz#subdirectory=server";
+    public static string ForkSource => ForkSourceFor(InformationalVersion());
+
+    /// <summary>
+    ///     The source for one release version. A release build carries the tag's version, so it installs the tag;
+    ///     a development build carries a prerelease suffix that no tag matches, so it follows the main archive.
+    /// </summary>
+    /// <param name="version">The version the build reports, with or without a prerelease suffix.</param>
+    public static string ForkSourceFor(string version) =>
+        string.IsNullOrWhiteSpace(version) || version.Contains('-') || version == "0.0.0"
+            ? "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/heads/main.tar.gz#subdirectory=server"
+            : $"https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v{version}.tar.gz#subdirectory=server";
 
     /// <summary>The documented local registration through uv, resolved from this fork's own source.</summary>
-    public static McpServerSpec Uvx { get; } = new("uvx", ["--from", ForkSource, Name]);
+    public static McpServerSpec Uvx => UvxFor(InformationalVersion());
+
+    /// <summary>The local registration for one release version.</summary>
+    /// <param name="version">The version the build reports.</param>
+    public static McpServerSpec UvxFor(string version) => new("uvx", ["--from", ForkSourceFor(version), Name]);
+
+    /// <summary>The version this assembly reports, without the build metadata after <c>+</c>.</summary>
+    private static string InformationalVersion()
+    {
+        var text = typeof(McpServerSpec).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+        if (string.IsNullOrWhiteSpace(text)) return "0.0.0";
+        var plus = text.IndexOf('+');
+        return plus < 0 ? text : text[..plus];
+    }
 
     /// <summary>The environment the server needs to talk to the Revit on this workstation.</summary>
     public static IReadOnlyList<KeyValuePair<string, string>> Env { get; } =

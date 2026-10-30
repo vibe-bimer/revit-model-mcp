@@ -186,7 +186,7 @@ Automated tests do not validate live Revit behavior; see [validation evidence](d
 2. release-please maintains a `chore(main): release X.Y.Z` PR with generated changelog entries and version updates.
 3. Releases ship on Monday (Europe/Moscow). The maintainer merges the release PR on Monday after required checks pass.
 4. Check the Release please workflow, both MSI assets, six ZIPs, wheel, source distribution and `SHA256SUMS.txt`. If a job fails with `The job was not acquired by Runner`, that is a GitHub infrastructure failure: rerun it with `gh run rerun <run id> --failed`.
-5. Check PyPI, MCP Registry and Smithery job results for stable releases. Check the weekly WinGet run separately; download its manifests if submission is not configured.
+5. Check the release assets and `SHA256SUMS.txt`. This fork publishes nothing to PyPI, the MCP Registry, Smithery or WinGet: upstream owns those names, and both projects share version numbers, so a release from here that claimed one of them would install upstream's code while appearing to work.
 
 When the `SIGNPATH_API_TOKEN` secret and the `SIGNPATH_ORGANIZATION_ID` variable are set, the release job submits the MSIs and ZIPs to SignPath and waits up to 90 minutes for the approval of the signing request. Without them the job skips signing and publishes unsigned assets. Optional variables `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_SIGNING_POLICY_SLUG` and `SIGNPATH_ARTIFACT_CONFIGURATION_SLUG` override the defaults `revit-model-mcp`, `release-signing` and `release`. The artifact configuration lives in `.signpath/artifact-configuration.xml`; keep the copy in SignPath identical.
 
@@ -195,8 +195,7 @@ A scheduled run refreshes it when Monday starts and when it ends.
 For an urgent fix, the maintainer adds the `hotfix-release` label to the release PR, which turns the check green and allows a release on another day.
 The size of the change, not the calendar, decides the version bump: `feat` bumps the minor version and `fix` the patch version, as described below.
 
-release-please owns [CHANGELOG.md](CHANGELOG.md), the version in `server/pyproject.toml` and both versions in `server/server.json`.
-The manifest starts at `0.3.0`; `server/pyproject.toml` remains the package version checked by the build.
+release-please owns [CHANGELOG.md](CHANGELOG.md) and the version in `server/pyproject.toml`, which the build checks.
 The simple strategy skips its absent default `version.txt`; no separate version file is maintained.
 Before 1.0, `feat` and breaking changes bump the minor version, while `fix` bumps the patch version.
 Visible documentation and dependency changes can also produce a patch release.
@@ -244,23 +243,10 @@ Multi-user installation uses `%ProgramData%\Autodesk\Revit\Addins\<year>` throug
 CI runs both after the six Revit builds and uploads the zip as the `revit-model-mcp-bundle` artifact.
 CI and the release workflow also rebuild the six years with `-p:ManagedInstall=true`, run the bundle step with `Bundle__Managed=true` and validate `revit-model-mcp-<version>-managed.bundle.zip` with `--managed-version`. The release attaches that zip.
 
-Stable releases publish the wheel and source distribution to PyPI through GitHub OIDC in the `pypi` environment.
-The pending publisher configuration is listed above the `pypi` job in `.github/workflows/release.yml`.
-PyPI failure does not block the GitHub Release.
-After PyPI succeeds, the workflow updates both versions in `server/server.json` and publishes to the official MCP Registry through GitHub OIDC.
-Registry publishing is best-effort and its response appears in the job log.
-Prerelease tags containing `-` skip PyPI and MCP Registry publishing.
+The release attaches the wheel and the source distribution to the GitHub Release and publishes nothing else; `uvx --from <wheel> revit-model-mcp` installs that wheel, while a bare `uvx` of that name resolves upstream's PyPI project instead.
 
-`release-please.yml` dispatches `release.yml` for the new tag (a top-level run, which PyPI trusted publishing requires). To start the same pipeline by hand from the Actions tab, select the existing tag under "Use workflow from" and enter that same tag as the input.
-The calling job grants `id-token: write`; the PyPI job retains the `pypi` environment and both publishers retain OIDC permissions.
-WinGet runs weekly on Monday at 06:00 UTC for the latest published stable release, or manually with an optional stable release tag.
-It waits without replacing an open package submission PR while moderation continues. A maintainer can manually select `force_replace` to replace older open PRs after the new PR is submitted.
-Eligible runs generate and validate manifests for `Sharafutdinov.RevitModelMcp` and upload a `winget-manifests` artifact.
-After successful submission, the workflow posts the Microsoft CLA agreement automatically.
-Submission requires the optional `WINGET_TOKEN` repository secret, a classic PAT with `public_repo` and `workflow` scopes.
-The `workflow` scope lets the workflow sync the token owner's `winget-pkgs` fork.
-Without the token, eligible runs still generate and upload manifests.
-On Windows, `build/winget/New-WingetManifests.ps1 -Version 0.2.0 -ReleaseTag v0.2.0 -OutputDir artifacts/winget` downloads the MSIs and reads their hashes and product codes.
-`-SkipDownload` uses matching MSIs already in `output/`.
+`release-please.yml` dispatches `release.yml` for the new tag. To start the same pipeline by hand from the Actions tab, select the existing tag under "Use workflow from" and enter that same tag as the input.
+This fork does not submit to WinGet, and it ships no manifest generator: `Sharafutdinov.RevitModelMcp` is upstream's package, so a submission from here would overwrite upstream's listing with this fork's installer.
+A fork-owned package identifier is a separate decision; until then, install from the MSI on the GitHub Release.
 
 Contributions are licensed under the [MIT license](LICENSE).

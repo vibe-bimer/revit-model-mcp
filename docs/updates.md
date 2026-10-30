@@ -27,7 +27,7 @@ Each build carries a channel, set at build time with the MSBuild property `Updat
 
 | Channel | Network access for updates | Updater | Use |
 | --- | --- | --- | --- |
-| `release` | Yes, subject to the mode | Included | MSI, WinGet and zip downloads from GitHub. |
+| `release` | Yes, subject to the mode | Included | MSI and zip downloads from GitHub. |
 | `managed` | Never | Not copied | Your deployment tool delivers updates. `-p:ManagedInstall=true` is an alias. |
 | `store` | Never | Not copied | Autodesk App Store builds. Updates arrive through the Autodesk App Manager. The build also ships the bundled server, which never checks for updates, and keeps C# code execution off by default (see below). |
 | `dev` | Only when policy or settings turn it on, and then notify only | Included | Builds whose version contains `-dev`. They are never installed over. |

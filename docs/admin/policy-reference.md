@@ -56,7 +56,7 @@ Unknown setting names are the exception: a newer `policy.json` can carry setting
 - is not owned by Administrators, SYSTEM or TrustedInstaller, or
 - grants a write, append, delete, change-permissions or take-ownership right to anyone else.
 
-The MultiUser MSI creates the folder as SYSTEM with a protected ACL: Administrators and SYSTEM full control, Users read and execute, no inheritance from `%ProgramData%`. It refuses (the install fails with a message in the log) a folder that already exists as a link or is owned by someone other than Administrators or SYSTEM; remove that folder and install again. An existing folder owned by an administrator gets its ACL reset. A folder you create by hand inherits write rights for Users from `%ProgramData%`, so protect it before you add `policy.json`:
+The MultiUser MSI creates the folder as SYSTEM with a protected ACL: Administrators and SYSTEM full control, Users read and execute, no inheritance from `%ProgramData%`. It refuses (the install fails with a message in the log) a folder that already exists as a link or is owned by someone other than Administrators or SYSTEM; remove that folder and install again. An existing folder owned by an administrator gets its ACL reset. The same step writes the default `policy.json` holding `{"ReadOnly": true}` when the file does not exist yet, so an install is read-only even without `READONLY=1`; an existing `policy.json` is never overwritten, and uninstall deletes the file only while it still holds that default. A folder you create by hand inherits write rights for Users from `%ProgramData%`, so protect it before you add `policy.json`:
 
 ```bat
 icacls "%ProgramData%\RevitModelMcp" /inheritance:r /grant:r *S-1-5-32-544:(OI)(CI)F *S-1-5-18:(OI)(CI)F *S-1-5-32-545:(OI)(CI)RX

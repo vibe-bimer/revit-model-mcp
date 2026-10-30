@@ -1,8 +1,10 @@
-# Actions (enabled by default)
+# Actions (read-only by default)
 
-Actions run unless read-only mode is active: `REVIT_MCP_READ_ONLY=1` in the Python server environment, or the
-workstation `%LOCALAPPDATA%\RevitModelMcp\read-only` file. Action tools stay listed either way; a refused call
-returns `success:false`, `error:"read-only mode"` and `errorCode:"read_only"` instead of running. See [Read-only mode](#read-only-mode) and [Errors and refusals](tools.md#errors-and-refusals).
+Read-only is the default: the installer writes the machine policy `ReadOnly=1` and ships a default
+`%ProgramData%\RevitModelMcp\policy.json` with `{"ReadOnly": true}`. An administrator allows actions with
+`ReadOnly=false`, or by clearing the value. Action tools stay listed either way; a refused call returns
+`success:false`, `error:"read-only mode"` and `errorCode:"read_only"`, or `errorCode:"policy_blocked"` when the
+machine policy refuses it. See [Read-only mode](#read-only-mode) and [Errors and refusals](tools.md#errors-and-refusals).
 Transaction warnings are dismissed and reported in `warningsDismissed` (omitted when empty); errors that cannot be safely resolved roll back the action.
 
 Every action result carries a `summary`: one human sentence describing what changed, how many elements, and in
@@ -294,8 +296,10 @@ For a family name alone, `type_name=null` selects the first loaded type.
 
 ### Read-only mode
 
-Actions run by default. Either gate below independently switches Revit into read-only mode, with the action
-tools still listed and returning `success:false`, `error:"read-only mode"` and `errorCode:"read_only"` instead of running:
+Read-only is the default, from the machine policy `ReadOnly=1` that the installer writes. An administrator allows
+actions with `ReadOnly=false` in `%ProgramData%\RevitModelMcp\policy.json`, or by clearing the value.
+Each gate below also refuses actions on its own, with the tools still listed and returning `success:false`,
+`error:"read-only mode"` and `errorCode:"read_only"` instead of running:
 
 1. Set `REVIT_MCP_READ_ONLY=1` in the Python server process environment and restart the server.
    Every action call short-circuits before it reaches Revit, including `revit_undo_last`.
@@ -306,7 +310,7 @@ tools still listed and returning `success:false`, `error:"read-only mode"` and `
    New-Item -ItemType File -Force "$env:LOCALAPPDATA\RevitModelMcp\read-only" | Out-Null
    ```
 
-3. An administrator can enforce read-only mode for the whole machine with the `ReadOnly` machine policy.
+3. The machine policy `ReadOnly=1`, which the installer writes by default, refuses actions for the whole machine.
    Users cannot lift it, and the refusal text is `Blocked by organization policy: the workstation is read-only.`
    See the [policy reference](admin/policy-reference.md).
 

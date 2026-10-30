@@ -3,16 +3,17 @@
 See the [privacy policy](privacy.md) for data handling, retention and contact information.
 
 The model read API is always available.
-Action tools are enabled by default; either `REVIT_MCP_READ_ONLY=1` in the Python server environment or the
-workstation `%LOCALAPPDATA%\RevitModelMcp\read-only` file switches them to read-only mode without hiding them,
-described in [actions](actions.md).
+Action tools are refused by default: the installer writes the machine policy `ReadOnly=1` and ships a default
+`%ProgramData%\RevitModelMcp\policy.json` with `{"ReadOnly": true}`. An administrator allows actions with `ReadOnly=false`.
+`REVIT_MCP_READ_ONLY=1` in the Python server environment or the workstation `%LOCALAPPDATA%\RevitModelMcp\read-only` file
+also refuses them without hiding them, described in [actions](actions.md).
 `revit_execute_code` runs arbitrary C# with the Revit user's rights. It can read or write files and call network APIs. The read-only gates refuse this action. Every call except `dry_run` needs a five-minute, single-use confirmation token bound to the code hash, the transaction mode and the target document, and `transaction="none"`, which can change the model without a single undo entry, is refused by default. The token cannot make the code safe: it only forces a pause so that the user sees what will run. Submitted source is saved in the local audit directory and must be treated as sensitive.
 `revit_export_nwc` may write to a drive path or a UNC path on a trusted share unless read-only mode is active. It never transfers the NWC file to the client; logging omits the export path.
 UNC shares are denied by default for export, save, open, shared parameter files and NWC settings XML. Add approved `\\server\share` roots to the `trustedNetworkRoots` string array in `%LOCALAPPDATA%\RevitModelMcp\settings.json` and restart Revit; mapped drives remain allowed as drive paths.
 `RSN://` paths use Revit Server and are not restricted by `trustedNetworkRoots`.
 The default read surface covers ping, active document information, the open document list, instance information, catalogs, element queries and aggregates, views and their elements, element parameters, warnings, relations, PNG view export and the four coordinator tools for model health, links, shared coordinates and parameter fill.
 The [command executor](../src/RevitModelMcp.Addin/Control/ReadCommandExecutor.cs) and readers open no Revit transactions and expose no element creation, deletion, parameter setters or model save operations.
-Action tools are a separate surface. They create, change, delete, save, sync, close and export, and they are enabled by default unless read-only mode is on.
+Action tools are a separate surface. They create, change, delete, save, sync, close and export, and they stay refused until an administrator allows them.
 Irreversible or file-overwriting calls need a [confirmation token](actions.md#confirmation-tokens-for-irreversible-actions).
 View export calls `Document.ExportImage` and writes an image file.
 Channel jobs, responses, heartbeats and diagnostic logs also write files outside the model.

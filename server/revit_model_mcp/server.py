@@ -329,18 +329,20 @@ class RevitMCPServer(MCPServer):
 
 
 mcp = RevitMCPServer(
-    "Model MCP",
+    "Revit Model MCP (vibe-bimer)",
     version=package_version(),
     instructions=(
-        "Actions are enabled by default. Every change runs inside one named Revit undo entry, is "
-        "listed in the add-in's MCP activity pane and returns a `summary` sentence and the changed "
-        "element IDs. Only the last action can be undone with revit_undo_last, and only while it is "
+        "Actions are opt-in: a fresh install is read-only until an administrator allows writes "
+        "through the machine policy, and REVIT_MCP_READ_ONLY=1 forces read-only. Every change runs "
+        "inside one named Revit undo entry, is listed in the add-in's MCP activity pane and "
+        "returns a `summary` sentence and the changed element IDs. Only the last action can be "
+        "undone with revit_undo_last, and only while it is "
         "still the most recent change in Revit. Save, sync and close-with-loss tools return a "
         "confirmation token first and perform nothing until a second call with identical arguments "
         "carries it; dry_run needs no token. With several Revit instances running, document or "
-        "process_id selects one. REVIT_MCP_TOOLSETS limits which tools are listed. Setting "
-        "REVIT_MCP_READ_ONLY=1 in this server's environment, or adding the workstation read-only "
-        "file, disables actions without hiding them; they then return `read-only mode`. Every read "
+        "process_id selects one. REVIT_MCP_TOOLSETS limits which tools are listed. A read-only "
+        "machine policy, or REVIT_MCP_READ_ONLY=1 in this server's environment, disables actions "
+        "without hiding them; they then return `read-only mode`. Every read "
         "result has skipped and skippedCount; a non-empty skipped list means the answer is "
         "incomplete. The guide revit://guides/coordinator describes the recommended tool order."
     ),

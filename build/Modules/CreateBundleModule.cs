@@ -68,8 +68,8 @@ public sealed partial class CreateBundleModule(IOptions<BuildOptions> buildOptio
                 Update it by deploying a newer package.
 
                 The server is not part of this package. Pin the server launcher to the same release.
-                This fork publishes no PyPI package, so a bare `uvx revit-model-mcp` would install
-                upstream's server instead:
+                This fork publishes no PyPI package. A bare `uvx revit-model-mcp` would install upstream's
+                server instead, so start it from the source below:
 
                     {serverLauncher}
 

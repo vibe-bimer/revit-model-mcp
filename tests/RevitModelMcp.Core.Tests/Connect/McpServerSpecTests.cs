@@ -7,10 +7,43 @@ public sealed class McpServerSpecTests
 {
     private const string BundledPath = @"C:\Program Files\Revit Model MCP (vibe-bimer)\server\revit-model-mcp.exe";
 
+    // Pinned on purpose: these two literals are the only place the launcher is written out, so a changed URL, a
+    // reordered argument or a dropped --from fails here instead of passing everywhere that reads the spec.
+    private const string ReleaseSource =
+        "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v1.0.0.tar.gz#subdirectory=server";
+
+    private const string DevelopmentSource =
+        "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/heads/main.tar.gz#subdirectory=server";
+
+    [Test]
+    public async Task ReleaseBuildInstallsTheTagThatCarriesItsVersion()
+    {
+        await Assert.That(McpServerSpec.ForkSourceFor("1.0.0")).IsEqualTo(ReleaseSource);
+        await Assert.That(string.Join("|", McpServerSpec.UvxFor("1.0.0").Args)).IsEqualTo("--from|" + ReleaseSource + "|revit-model-mcp");
+    }
+
+    [Test]
+    public async Task DevelopmentBuildFollowsTheMainArchiveBecauseNoTagMatchesItsVersion()
+    {
+        await Assert.That(McpServerSpec.ForkSourceFor("1.0.1-dev+abc123")).IsEqualTo(DevelopmentSource);
+        await Assert.That(string.Join("|", McpServerSpec.UvxFor("1.0.1-dev").Args)).IsEqualTo("--from|" + DevelopmentSource + "|revit-model-mcp");
+    }
+
+    [Test]
+    public async Task TheShippedLauncherAlwaysNamesThisForkAndNeverThePackageNameAlone()
+    {
+        await Assert.That(McpServerSpec.Uvx.Command).IsEqualTo("uvx");
+        await Assert.That(McpServerSpec.Uvx.Args.Count).IsEqualTo(3);
+        await Assert.That(McpServerSpec.Uvx.Args[0]).IsEqualTo("--from");
+        await Assert.That(McpServerSpec.Uvx.Args[1]).StartsWith("https://github.com/vibe-bimer/revit-model-mcp/archive/refs/");
+        await Assert.That(McpServerSpec.Uvx.Args[1]).EndsWith("#subdirectory=server");
+        await Assert.That(McpServerSpec.Uvx.Args[2]).IsEqualTo("revit-model-mcp");
+    }
+
     [Test]
     public async Task ClaudeCodeCommandMatchesTheDocumentedLocalRegistration() =>
-        await Assert.That(McpServerSpec.Uvx.ClaudeCodeCommand)
-            .IsEqualTo("claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from " + McpServerSpec.ForkSource + " revit-model-mcp");
+        await Assert.That(McpServerSpec.UvxFor("1.0.0").ClaudeCodeCommand)
+            .IsEqualTo("claude mcp add revit-model-mcp -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from " + ReleaseSource + " revit-model-mcp");
 
     [Test]
     public async Task ClaudeCodeCommandQuotesTheBundledPathWithSpaces() =>

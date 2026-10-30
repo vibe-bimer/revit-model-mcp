@@ -532,4 +532,4 @@ jobs:
   #
   # Install the wheel attached to the release instead. To publish this fork
   # under its own names, register a pending publisher for a fork-owned project,
-  # point server/server.json at the fork namespace, and add the jobs back.
+  # add a registry manifest, and add the jobs back.

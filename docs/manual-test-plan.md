@@ -24,7 +24,7 @@ Ideally test on **two machines**:
 | Claude Code (`claude --version`) | | |
 | Release under test (add-in / server / mcpb) | | |
 
-Record the exact release tag being tested (e.g. `v0.5.0`) and confirm all three artifacts are the same version: the `.msi`/add-in zip, the PyPI `revit-model-mcp`, and the `.mcpb`.
+Record the exact release tag being tested (e.g. `v0.5.0`) and confirm all three artifacts are the same version: the `.msi`/add-in zip, the server wheel `revit_model_mcp-<version>-py3-none-any.whl`, and the `.mcpb`.
 
 ---
 
@@ -51,12 +51,12 @@ Do this with **Revit closed**. Repeat the whole section for each Revit year pres
 ## 2. Server + client wiring (every documented method)
 
 ### 2.1 Local server via `uvx` (Windows workstation)
-- [ ] `uvx revit-model-mcp` resolves and installs the package from PyPI on first run (record package count + time).
-- [ ] Server starts and reports `serverInfo: { name: "Model MCP", version: "<ver>" }` on `initialize`.
+- [ ] `uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp` resolves the tag tarball and installs this fork's server on first run (record package count + time). Confirm that it did not install upstream's package from PyPI.
+- [ ] Server starts and reports `serverInfo: { name: "Revit Model MCP (vibe-bimer)", version: "<ver>" }` on `initialize`.
 - [ ] `tools/list` returns **19 read tools** (enumerate — see §3).
 
 ### 2.2 Claude Code registration (`claude mcp add`)
-- [ ] `claude mcp add revit-model-mcp -s user -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx revit-model-mcp` writes to `~/.claude.json`.
+- [ ] `claude mcp add revit-model-mcp -s user -e REVIT_MCP_HOST=local -e REVIT_MCP_REDACT_PATHS=1 -- uvx --from "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v<VERSION>.tar.gz#subdirectory=server" revit-model-mcp` writes to `~/.claude.json`.
 - [ ] `claude mcp list` shows `revit-model-mcp: ... ✓ Connected`.
 - [ ] `claude -p "what model is open in Revit?"` (headless) returns real model data (capture stdout to a file — headless output can be lost over a raw pipe).
 - [ ] **App local agent**: in Claude Desktop's Code surface with the **"Local"** chip, ask a Revit question → agent calls `mcp__revit-model-mcp__*` and answers with real data.
@@ -121,7 +121,7 @@ Model open on the workstation. Call **`revit_list_catalog` first, `revit_aggrega
 - [ ] Cause the first family edit to fail with `stop_on_error=true`. Verify `success:false`, `committed:false`, `failedFamily`, and `rolledBack:true`; confirm the project is unchanged.
 - [ ] Audit enough families for the call to take over 60 seconds. Verify the complete audit returns `success:true` within the configured response timeout.
 
-Actions run by default; either `REVIT_MCP_READ_ONLY=1` **or** the workstation `read-only` file independently switches them off. Direct HTTP callers also need the bearer token.
+Actions are refused by default by the machine policy `ReadOnly=1` that the installer writes; an administrator allows them with `ReadOnly=false`. Either `REVIT_MCP_READ_ONLY=1` **or** the workstation `read-only` file independently switches them off. Direct HTTP callers also need the bearer token.
 
 ### NWC export
 
