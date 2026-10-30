@@ -8,6 +8,7 @@ state root, the ``current`` symlink and the recorded status.
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -101,7 +102,7 @@ class PublishHarness(unittest.TestCase):
 
     # -- publisher invocation ----------------------------------------------
 
-    def publish(self, **overrides):
+    def publish(self, *arguments, **overrides):
         env = {
             **os.environ,
             "SITE_SKIP_PULL": "1",
@@ -112,7 +113,13 @@ class PublishHarness(unittest.TestCase):
         }
         env.update({key: str(value) for key, value in overrides.items()})
         return subprocess.run(
-            [sys.executable, str(PUBLISH_SCRIPT), "--repo", str(self.repo)],
+            [
+                sys.executable,
+                str(PUBLISH_SCRIPT),
+                "--repo",
+                str(self.repo),
+                *arguments,
+            ],
             capture_output=True,
             text=True,
             env=env,
@@ -503,3 +510,80 @@ class CronTests(PublishHarness):
         self.assertIn("publish failed (exit 1)", log)
         self.assertIn("run failed", log)
         self.assertNotIn("publish ok", log)
+
+
+class AdoptTests(PublishHarness):
+    """The migration path: an existing real directory becomes a release."""
+
+    def legacy_site(self):
+        legacy = self.publish_root
+        legacy.mkdir(parents=True)
+        (legacy / "index.html").write_text(
+            '<html><body><div data-md-component="announce">Revit Model MCP</div>legacy</body></html>'
+        )
+        (legacy / "404.html").write_text("legacy 404")
+        return legacy
+
+    def test_adopt_moves_a_legacy_directory_into_a_release(self):
+        self.legacy_site()
+        result = self.publish("--adopt")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(self.publish_root.is_symlink())
+        adopted = Path(self.current_target()).name
+        self.assertTrue(adopted.endswith("-adopted"), adopted)
+        self.assertTrue((self.state / "releases" / adopted / "index.html").is_file())
+        self.assertIn("legacy", (self.publish_root / "index.html").read_text())
+        status = self.status()
+        self.assertEqual(status["last_attempt"]["outcome"], "adopt")
+        self.assertEqual(status["current_release"], adopted)
+        # The old directory is gone from the served path but kept as a release.
+        self.assertTrue(self.publish_root.is_symlink())
+        # A normal publish then works on top of the adopted release.
+        self.commit("v1")
+        self.assertEqual(self.publish().returncode, 0)
+        self.assertIn("v1", (self.publish_root / "index.html").read_text())
+
+    def test_adopt_refuses_when_the_publish_root_is_already_a_symlink(self):
+        self.commit("v1")
+        self.assertEqual(self.publish().returncode, 0)
+        releases_before = self.release_ids()
+        refused = self.publish("--adopt")
+        self.assertEqual(refused.returncode, 1)
+        self.assertIn("already a symlink", refused.stdout + refused.stderr)
+        self.assertEqual(self.release_ids(), releases_before)
+
+
+def find_real_mkdocs():
+    candidates = [
+        REPO_ROOT / ".venv-docs" / "bin" / "mkdocs",
+        Path.home() / ".venv-docs" / "bin" / "mkdocs",
+    ]
+    for candidate in candidates:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate
+    found = shutil.which("mkdocs")
+    return Path(found) if found else None
+
+
+class RealMkdocsSmokeTests(PublishHarness):
+    """One real mkdocs build through the publisher; skipped when mkdocs is absent."""
+
+    def setUp(self):
+        super().setUp()
+        self.mkdocs = find_real_mkdocs()
+        if self.mkdocs is None:
+            self.skipTest("mkdocs is not installed; the fake builder covers the rest")
+
+    def test_a_real_build_produces_a_release_with_real_tool_versions(self):
+        self.commit("smoke v1")
+        result = self.publish(MKDOCS=str(self.mkdocs))
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        page = (self.publish_root / "index.html").read_text()
+        # Any theme renders the source heading and the mkdocs footer.
+        self.assertIn("Revit Model MCP", page)
+        self.assertIn("MkDocs", page)
+        manifest = self.status()["current_manifest"]
+        self.assertEqual(manifest["verification"]["health_probe"], "pass")
+        self.assertRegex(manifest["tools"]["builder"], r"\d+\.\d+")
+        self.assertEqual(len(manifest["config"]["sha256"]), 64)
+        self.assertEqual(len(manifest["tree_sha"]), 64)

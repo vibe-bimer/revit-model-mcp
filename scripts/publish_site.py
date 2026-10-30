@@ -33,6 +33,7 @@ import fcntl
 import hashlib
 import json
 import os
+import platform
 import re
 import shlex
 import shutil
@@ -371,6 +372,95 @@ def load_release_manifest(state: Path, release_id: str) -> dict | None:
         return None
 
 
+def adopt(repo: Path, state: Path, publish_root: Path) -> int:
+    """Turn an existing real publish root into the first immutable release.
+
+    The migration keeps the served bytes: they move into releases/<id>-adopted,
+    the publish root becomes a symlink to current, and the previous directory is
+    never deleted, so a rollback is a symlink flip away.
+    """
+    if publish_root.is_symlink():
+        raise SystemExitMessage(
+            EXIT_FAILED,
+            f"publish root {publish_root} is already a symlink; nothing to adopt",
+            "adopt",
+        )
+    if not publish_root.is_dir():
+        raise SystemExitMessage(
+            EXIT_FAILED,
+            f"publish root {publish_root} is not a directory; nothing to adopt",
+            "adopt",
+        )
+    state.mkdir(parents=True, exist_ok=True)
+    releases = state / "releases"
+    releases.mkdir(exist_ok=True)
+    lock_path = state / "publish.lock"
+    lock_handle = lock_path.open("w")
+    try:
+        fcntl.flock(lock_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as error:
+        if error.errno in (errno.EACCES, errno.EAGAIN):
+            log("another publisher holds the lock; leaving the site unchanged")
+            return EXIT_LOCKED
+        raise
+    status = Status(state / "manifest.json")
+    try:
+        stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        release_id = f"{stamp}-adopted"
+        release_dir = releases / release_id
+        parked = publish_root.parent / f".{publish_root.name}-adopt-{os.getpid()}"
+        if parked.exists():
+            raise SystemExitMessage(
+                EXIT_FAILED, f"temporary path {parked} already exists", "adopt"
+            )
+        # Two renames and one symlink: the served path is missing only between
+        # them, instead of for the whole copy.
+        os.rename(publish_root, parked)
+        os.symlink(state / "current", publish_root)
+        try:
+            os.rename(parked, release_dir)
+        except OSError:
+            shutil.move(str(parked), str(release_dir))
+        manifest = {
+            "schema": MANIFEST_SCHEMA,
+            "release_id": release_id,
+            "source_commit": None,
+            "source_resolution": "adopt",
+            "tree_sha256": tree_sha256(release_dir),
+            "config": {"name": None, "sha256": None},
+            "tools": {"python": platform.python_version(), "builder": None},
+            "built_utc": utc_now(),
+            "verification": {"adopted_from": publish_root.name},
+        }
+        (release_dir / "manifest.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+        )
+        make_read_only(release_dir)
+        previous = switch_current(state, release_id)
+        problem = probe_current(
+            state, os.environ.get("SITE_HEALTH_MARKER", "Revit Model MCP")
+        )
+        if problem:
+            if previous:
+                restore_current(state, previous)
+            raise SystemExitMessage(EXIT_HEALTH, problem, "health")
+        utc = utc_now()
+        status.attempt(utc, None, release_id, "adopt", "adopt")
+        status.succeeded(utc, release_id, None, False, manifest)
+        status.save()
+        log(f"adopted {publish_root} as {release_id}")
+        return EXIT_OK
+    except SystemExitMessage as failure:
+        utc = utc_now()
+        status.attempt(utc, None, None, "failure", failure.stage)
+        status.failed(utc, failure.stage, failure.reason)
+        status.save()
+        log(f"adopt failed at {failure.stage}: {failure.reason}")
+        return failure.code
+    finally:
+        lock_handle.close()
+
+
 def publish(repo: Path, state: Path, publish_root: Path) -> int:
     state.mkdir(parents=True, exist_ok=True)
     (state / "releases").mkdir(exist_ok=True)
@@ -569,6 +659,11 @@ def main() -> int:
     parser.add_argument(
         "--repo", default=str(default_repo), help="git repository to publish from"
     )
+    parser.add_argument(
+        "--adopt",
+        action="store_true",
+        help="migrate an existing real publish root into the release layout",
+    )
     args = parser.parse_args()
     repo = Path(args.repo).resolve()
     state = Path(
@@ -582,6 +677,8 @@ def main() -> int:
     # symlink chain the server resolves per request, and the publisher must
     # keep flipping the link, not write into its target.
     publish_root = Path(os.environ.get("SITE_PUBLISH_ROOT") or repo / "site")
+    if args.adopt:
+        return adopt(repo, state, publish_root)
     return publish(repo, state, publish_root)
 
 
