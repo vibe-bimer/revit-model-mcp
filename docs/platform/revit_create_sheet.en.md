@@ -10,18 +10,26 @@ description: "Create a sheet with the first loaded or a named title block."
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | No | `false` | boolean |  |
 | `name` | Yes | — | string |  |
 | `number` | Yes | — | string |  |
 | `title_block` | No | `null` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

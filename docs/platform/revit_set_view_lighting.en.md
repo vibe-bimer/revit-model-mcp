@@ -23,7 +23,9 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `background` | No | `null` | any |  |
 | `background_colors` | No | `null` | any |  |
@@ -40,11 +42,17 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 | `sunlight_intensity` | No | `null` | any |  |
 | `view` | Yes | — | string |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

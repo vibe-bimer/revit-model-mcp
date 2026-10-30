@@ -10,16 +10,24 @@ description: "Request cancellation of an action jobId. Process-models stops befo
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `job_id` | Yes | — | string |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 | `process_id` | No | `null` | any |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

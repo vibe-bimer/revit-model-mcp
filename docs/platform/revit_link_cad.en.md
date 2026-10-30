@@ -10,7 +10,9 @@ description: "Link or import a DWG into a plan view on the Revit workstation. Re
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | No | `false` | boolean |  |
 | `layers` | No | `null` | any |  |
@@ -21,12 +23,18 @@ description: "Link or import a DWG into a plan view on the Revit workstation. Re
 | `units` | No | `"auto"` | string |  |
 | `view` | No | `null` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 | `timeout_seconds` | No | `600` | integer |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

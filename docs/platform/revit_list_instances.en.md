@@ -20,9 +20,13 @@ No additional business parameters; use the common parameters below.
 
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

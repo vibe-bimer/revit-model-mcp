@@ -10,7 +10,9 @@ description: "Open a local, UNC or RSN model. Central models open detached by de
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `activate` | No | `false` | boolean |  |
 | `audit` | No | `false` | boolean |  |
@@ -18,11 +20,17 @@ description: "Open a local, UNC or RSN model. Central models open detached by de
 | `path` | Yes | — | string |  |
 | `worksets` | No | `"all"` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `process_id` | No | `null` | any |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

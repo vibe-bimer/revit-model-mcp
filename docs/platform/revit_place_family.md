@@ -18,7 +18,9 @@ description: "在指定标高上放置已载入的非宿主族；`family` 可以
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `family` | 是 | — | string |  |
@@ -28,11 +30,17 @@ description: "在指定标高上放置已载入的非宿主族；`family` 可以
 | `x_mm` | 是 | — | number |  |
 | `y_mm` | 是 | — | number |  |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

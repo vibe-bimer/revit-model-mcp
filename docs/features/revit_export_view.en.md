@@ -31,17 +31,25 @@ Export the 1F plan as a PNG, 2000 pixels wide
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `view` | Yes | — | `string` | view name (or its Revit id) |
 | `pixel_size` | No | `1600` | `integer` | pixels along the fitted image dimension (1–4000) |
 | `save_to` | No | `null` | `string / null` | New PNG path on the MCP client machine, not the Revit workstation; an existing file is an error |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | `string / null` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected |
+
+</div>
 
 ## Behavior and returned data {#contract}
 

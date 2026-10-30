@@ -10,18 +10,26 @@ description: "Read displayed schedule header and body cell text, with paging. A 
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `max_rows` | No | `500` | integer |  |
 | `offset` | No | `0` | integer |  |
 | `schedule` | Yes | — | string | Exact schedule name or decimal Revit view ID. (Use the id when two schedules share a name.) |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
 | `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

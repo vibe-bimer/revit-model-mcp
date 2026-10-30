@@ -10,7 +10,9 @@ description: "Create 1 to 100 successive copies at multiples of the model-axis o
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `count` | No | `1` | integer |  |
 | `dry_run` | No | `false` | boolean |  |
@@ -19,11 +21,17 @@ description: "Create 1 to 100 successive copies at multiples of the model-axis o
 | `dz_mm` | No | `0` | number |  |
 | `element_ids` | Yes | — | array |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

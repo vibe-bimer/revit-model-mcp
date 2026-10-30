@@ -29,18 +29,26 @@ description: "列出视图，可按视图类型与名称过滤"
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `name_contains` | 否 | `null` | `string / null` | 按名称子串过滤 |
 | `view_type` | 否 | `null` | `string / null` | 视图类型（如 FloorPlan、ThreeD） |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
 | `pickup_timeout_seconds` | 否 | `300` | `integer` | local / SSH 等待插件拾取任务的预算（正整数秒，默认 300）；HTTP 忽略。拾取超时后待处理任务仍可能执行 |
 | `timeout_seconds` | 否 | `120` | `integer` | 拾取任务后的结果等待预算（正整数秒，默认 120）；HTTP 使用它作为响应预算，不能覆盖插件内部执行上限。超时不代表待处理动作已取消 |
+
+</div>
 
 ## 功能说明与返回结果 {#contract}
 

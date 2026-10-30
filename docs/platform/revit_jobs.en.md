@@ -10,18 +10,26 @@ description: "List recent jobs, or wait up to wait_seconds (0 to 50, default 40)
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `job_id` | No | `null` | any |  |
 | `wait_seconds` | No | `40` | integer | Seconds to wait, 0 through 50. |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
 | `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
 | `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

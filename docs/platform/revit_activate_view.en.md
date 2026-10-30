@@ -10,19 +10,27 @@ description: "Activate a non-template view. Zoom to fit, preserve zoom, or frame
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `activate_document` | No | `false` | boolean |  |
 | `view` | Yes | — | string |  |
 | `view_type` | No | `null` | any |  |
 | `zoom` | No | `"fit"` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Target document title or path reference. |
 | `process_id` | No | `null` | any |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

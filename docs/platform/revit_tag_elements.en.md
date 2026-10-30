@@ -10,7 +10,9 @@ description: "Tag elements in a view, chosen by category names or by element IDs
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `categories` | No | `null` | any |  |
 | `dry_run` | No | `false` | boolean |  |
@@ -22,11 +24,17 @@ description: "Tag elements in a view, chosen by category names or by element IDs
 | `tag_type` | No | `null` | any |  |
 | `view` | Yes | — | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

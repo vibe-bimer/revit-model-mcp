@@ -12,7 +12,9 @@ description: "在视图中按类目名称或构件 ID 标注构件，两者只�
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `categories` | 否 | `null` | any |  |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
@@ -24,11 +26,17 @@ description: "在视图中按类目名称或构件 ID 标注构件，两者只�
 | `tag_type` | 否 | `null` | any |  |
 | `view` | 是 | — | any | 视图的准确名称或十进制视图 ID。 |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

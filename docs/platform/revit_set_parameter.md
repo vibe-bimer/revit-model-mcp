@@ -23,7 +23,9 @@ description: "写入一个实例或类型参数，可用参数 ID、共享参数
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_id` | 是 | — | integer |  |
@@ -31,11 +33,17 @@ description: "写入一个实例或类型参数，可用参数 ID、共享参数
 | `parameter_id` | 否 | `null` | any |  |
 | `value` | 是 | — | any |  |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

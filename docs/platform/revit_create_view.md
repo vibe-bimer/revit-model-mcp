@@ -12,7 +12,9 @@ description: "创建平面、剖面、三维或绘图视图；无边界三维视
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `box` | 否 | `null` | any |  |
 | `detail_level` | 否 | `null` | any |  |
@@ -26,11 +28,17 @@ description: "创建平面、剖面、三维或绘图视图；无边界三维视
 | `template` | 否 | `null` | any |  |
 | `view_family_type` | 否 | `null` | any |  |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

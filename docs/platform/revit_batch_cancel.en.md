@@ -10,9 +10,13 @@ description: "Persist cancellation and prevent unstarted models from running."
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `run_id` | Yes | — | string |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

@@ -10,7 +10,9 @@ description: "Bridge openings, pair parallel CAD lines and join basic walls in o
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `cad_id` | Yes | — | integer |  |
 | `dry_run` | No | `false` | boolean |  |
@@ -24,12 +26,18 @@ description: "Bridge openings, pair parallel CAD lines and join basic walls in o
 | `min_thickness_mm` | No | `80` | number |  |
 | `wall_type` | No | `null` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 | `timeout_seconds` | No | `600` | integer |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

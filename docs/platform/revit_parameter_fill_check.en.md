@@ -21,7 +21,9 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `categories` | Yes | — | array | Category names (1 to 20) from the categories catalog; matches any listed category. |
 | `include_types` | No | `true` | boolean |  |
@@ -31,13 +33,19 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 | `view` | No | `null` | any | Exact non-template view name; limits the search to that view. |
 | `workset` | No | `null` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
 | `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
 | `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

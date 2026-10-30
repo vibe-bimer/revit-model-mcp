@@ -10,19 +10,27 @@ description: "Save a document. Needs confirm_token from a first call, which chan
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `compact` | No | `false` | boolean |  |
 | `confirm_token` | No | `null` | any |  |
 | `overwrite` | No | `false` | boolean |  |
 | `save_as` | No | `null` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | Yes | — | string |  |
 | `process_id` | No | `null` | any |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

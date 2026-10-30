@@ -27,6 +27,19 @@ def _default_edit(relative):
     return f"{REPO}/edit/main/docs/{rel.removesuffix('index.html')}index.md"
 
 
+def _skip_link(lang):
+    text = "Skip to content" if lang == "en" else "跳转至内容"
+    return f'<body><a class="md-skip" href="#rmc-main">{text}</a>'
+
+
+def _write_error_page(site):
+    (site / "404.html").write_text(
+        '<html lang="zh"><body><a class="md-skip" href="#rmc-main">跳转至内容</a>'
+        '<div id="rmc-main" tabindex="-1">页面不存在</div></body></html>',
+        encoding="utf-8",
+    )
+
+
 class SiteAuditTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -34,6 +47,7 @@ class SiteAuditTests(unittest.TestCase):
         self.site = Path(self.temp.name)
         self.make_page("index.html", "zh")
         self.make_page("en/index.html", "en")
+        _write_error_page(self.site)
 
     def make_page(
         self,
@@ -77,7 +91,8 @@ class SiteAuditTests(unittest.TestCase):
             f'<link rel="canonical" href="{canonical}">'
             f'<link rel="alternate" hreflang="zh" href="{zh}">'
             f'<link rel="alternate" hreflang="en" href="{en}">'
-            f'</head><body><article><h1 id="heading">{text}</h1>{extra}</article>{edit_html}</body></html>',
+            f"</head>{_skip_link(lang)}"
+            f'<body><article id="rmc-main" tabindex="-1"><h1 id="heading">{text}</h1>{extra}</article>{edit_html}</body></html>',
             encoding="utf-8",
         )
         return destination

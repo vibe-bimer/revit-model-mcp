@@ -1097,3 +1097,24 @@
 .md-typeset .rmc-404__links a:hover {
   color: var(--rmc-brand);
 }
+
+@media print {
+  /* A sheet has no sideways scroll, and the band's two tracks collapsed to a zero-width
+     second column, which pushed the prompt's copy past the margin. One column instead. */
+  .rmc-band,
+  .md-typeset .rmc-band .rmc-prompt {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rmc-band .rmc-copy,
+  .md-typeset .rmc-band .rmc-prompt__foot,
+  .md-typeset .rmc-band .rmc-prompt__kind {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .rmc-prompt__go {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+}

@@ -10,7 +10,9 @@ description: "Create a schedule for one category with the named fields in the gi
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `category` | Yes | — | string |  |
 | `dry_run` | No | `false` | boolean |  |
@@ -20,11 +22,17 @@ description: "Create a schedule for one category with the named fields in the gi
 | `name` | No | `null` | any |  |
 | `sort` | No | `null` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

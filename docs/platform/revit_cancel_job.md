@@ -12,16 +12,24 @@ description: "请求取消某个 `jobId`；批处理在下一个模型前停止�
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `job_id` | 是 | — | string |  |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 | `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

@@ -28,7 +28,9 @@ Rehearse the rebuild first: how many components, which new id range, write nothi
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `destination_path` | Yes | — | `string` | new model path (.rvt); {n} numbers the copies |
 | `copies` | No | `1` | `integer` | how many copies one new model produces (1–50), each in an id block of its own |
@@ -40,11 +42,17 @@ Rehearse the rebuild first: how many components, which new id range, write nothi
 | `template_path` | No | `null` | `string / null` | starting template (.rte/.rvt); the metric template is used when omitted |
 | `view` | No | `null` | `string / null` | view name (or its Revit id) |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | `string / null` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected |
+
+</div>
 
 ## Behavior and returned data {#contract}
 

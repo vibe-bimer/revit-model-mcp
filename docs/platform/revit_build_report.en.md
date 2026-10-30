@@ -10,12 +10,16 @@ description: "Build a local Excel report from snapshots without contacting Revit
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `findings` | No | `null` | any | Optional findings with model, severity, rule, element_ids (or elementIds), and recommendation. |
 | `output_path` | Yes | — | string | New .xlsx file path, resolved on the machine running this server; existing files are never replaced. |
 | `previous_dir` | No | `null` | any | Optional directory of earlier snapshots matched by model title for the Changes sheet. |
 | `snapshots_dir` | Yes | — | string | Directory of schema-version-1 JSON snapshots on the MCP client machine. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

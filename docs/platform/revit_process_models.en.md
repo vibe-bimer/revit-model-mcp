@@ -10,7 +10,9 @@ description: "Open each model in the interactive session, run steps and C# code,
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `code` | No | `null` | any |  |
 | `confirm_token` | No | `null` | any |  |
@@ -25,12 +27,18 @@ description: "Open each model in the interactive session, run steps and C# code,
 | `steps` | No | `null` | any |  |
 | `stop_on_error` | No | `false` | boolean |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `process_id` | No | `null` | any |  |
 | `timeout_seconds` | No | `14400` | integer |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

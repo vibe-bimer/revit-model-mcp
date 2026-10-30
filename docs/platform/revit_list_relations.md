@@ -23,19 +23,27 @@ description: "读取模型对象的归属或依赖关系，如标高与房间、
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `relation` | 是 | — | string |  |
 | `source_id` | 否 | `null` | any | Revit ID of the source group (group-elements) or family instance (nested-family). |
 | `source_name` | 否 | `null` | any | Source name, case-insensitive: a level (level-rooms), area scheme (area-scheme-elements) or view template (view-template-dependents). |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 | `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 | `timeout_seconds` | 否 | `120` | integer | 本次调用的等待上限（秒）。 |
+
+</div>
 
 ## 功能说明（注册表原文） {#behavior}
 

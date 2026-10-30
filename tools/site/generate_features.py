@@ -24,6 +24,9 @@ import tomllib
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+
+# Wide tables sit in this wrapper so only the table scrolls, never the page.
+WRAPPER_CLASS = "rmc-tablewrap"
 CONTENT = ROOT / "tools/site/content"
 TOOLS_JSON = CONTENT / "tools.json"
 CAPABILITIES = CONTENT / "capabilities.yaml"
@@ -320,8 +323,30 @@ def table_rows(tool: dict, common: bool, capabilities: dict, lang: str) -> list[
 
 def table_heading(labels: dict) -> list[str]:
     return [
-        f"| {labels['name']} | {labels['required']} | {labels['default']} | {labels['type']} | {labels['meaning']} |",
+        (
+            f"| {labels['name']} {{scope=col}} | {labels['required']} {{scope=col}} | "
+            f"{labels['default']} {{scope=col}} | {labels['type']} {{scope=col}} | "
+            f"{labels['meaning']} {{scope=col}} |"
+        ),
         "| --- | :--: | --- | --- | --- |",
+    ]
+
+
+def parameter_table(labels: dict, rows: list[str]) -> list[str]:
+    """A parameter table inside the wrapper that may scroll sideways on a phone.
+
+    The wrapper is the only thing that scrolls; the script gives it the keyboard and
+    screen-reader affordances once it actually overflows.
+    """
+    if not rows:
+        return [labels["no_specific"]]
+    return [
+        f'<div class="{WRAPPER_CLASS}" markdown="1">',
+        "",
+        *table_heading(labels),
+        *rows,
+        "",
+        "</div>",
     ]
 
 
@@ -420,14 +445,11 @@ def tool_page(
         out += ["```text", prompt[lang], "```", ""]
     out += [f"## {labels['parameters']} {{#parameters}}", ""]
     rows = table_rows(tool, False, capabilities, lang)
-    out += table_heading(labels) + rows if rows else [labels["no_specific"]]
+    out += parameter_table(labels, rows)
     common = table_rows(tool, True, capabilities, lang)
     if common:
-        out += (
-            ["", f"### {labels['common']} {{#common-parameters}}", ""]
-            + table_heading(labels)
-            + common
-        )
+        out += ["", f"### {labels['common']} {{#common-parameters}}", ""]
+        out += parameter_table(labels, common)
     description = contracts[name]["zh"] if lang == "zh" else tool["description"]
     description = "\n".join(line.strip() for line in description.strip().splitlines())
     out += ["", f"## {labels['contract']} {{#contract}}", ""]

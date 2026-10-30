@@ -14,9 +14,13 @@ No additional business parameters; use the common parameters below.
 
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

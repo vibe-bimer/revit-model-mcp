@@ -10,7 +10,9 @@ description: "Edit an open family in place, or named project families (exact nam
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | No | `false` | boolean |  |
 | `families` | No | `null` | any |  |
@@ -18,12 +20,18 @@ description: "Edit an open family in place, or named project families (exact nam
 | `overwrite_parameter_values` | No | `false` | boolean |  |
 | `stop_on_error` | No | `true` | boolean |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 | `timeout_seconds` | No | `1800` | integer |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

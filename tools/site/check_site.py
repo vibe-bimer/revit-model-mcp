@@ -101,9 +101,149 @@ class PageParser(HTMLParser):
 
 
 def parse_page(path: Path) -> PageInfo:
+    return parse_page_text(path.read_text(encoding="utf-8"))
+
+
+def parse_page_text(text: str) -> PageInfo:
     parser = PageParser()
-    parser.feed(path.read_text(encoding="utf-8"))
+    parser.feed(text)
     return parser.info
+
+
+# The wrapper the generators put around wide tables, and the script's fallback for the rest.
+WRAPPER_CLASS = "rmc-tablewrap"
+# Pages the generators own: they can be told to wrap every wide table at the source.
+GENERATED_PREFIXES = ("features/", "platform/")
+# A table this wide cannot fit a phone, so it has to sit in a wrapper that may scroll.
+WIDE_TABLE_COLUMNS = 5
+CJK_RANGE = ("\u4e00", "\u9fff")
+
+
+def has_chinese(text: str) -> bool:
+    return any(CJK_RANGE[0] <= char <= CJK_RANGE[1] for char in text)
+
+
+@dataclass
+class TableShape:
+    header_cells: int = 0
+    scoped_cells: int = 0
+    wrapped: bool = False
+
+
+class A11yParser(HTMLParser):
+    """Collect the accessibility facts the gates assert: skip link, ids, table shape."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.language = ""
+        self.first_link: dict | None = None
+        self.skip_links: list[tuple[str, str]] = []
+        self.ids: dict[str, dict] = {}
+        self.tables: list[TableShape] = []
+        self._divs: list[bool] = []
+        self._table: TableShape | None = None
+        self._in_thead = False
+        self._in_skip = False
+        self._skip_text: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        values = {name: value or "" for name, value in attrs}
+        classes = values.get("class", "").split()
+        if tag == "html":
+            self.language = values.get("lang", "")
+        if "id" in values:
+            self.ids[values["id"]] = values
+        if tag == "a":
+            link = {"classes": classes, "href": values.get("href", "")}
+            if self.first_link is None:
+                self.first_link = link
+            if "md-skip" in classes:
+                self.skip_links.append((link["href"], ""))
+                self._in_skip = True
+                self._skip_text = []
+        if tag == "div":
+            self._divs.append(WRAPPER_CLASS in classes)
+        if tag == "table":
+            self._table = TableShape(wrapped=any(self._divs))
+        if tag == "thead" and self._table is not None:
+            self._in_thead = True
+        if tag == "th" and self._table is not None and self._in_thead:
+            self._table.header_cells += 1
+            if values.get("scope") == "col":
+                self._table.scoped_cells += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "div" and self._divs:
+            self._divs.pop()
+        if tag == "table" and self._table is not None:
+            self.tables.append(self._table)
+            self._table = None
+        if tag == "thead":
+            self._in_thead = False
+        if tag == "a" and self._in_skip:
+            self._in_skip = False
+            href, _ = self.skip_links[-1]
+            self.skip_links[-1] = (href, " ".join("".join(self._skip_text).split()))
+
+    def handle_data(self, data: str) -> None:
+        if self._in_skip:
+            self._skip_text.append(data)
+
+
+def audit_skip_link(relative: str, html: str) -> list[str]:
+    """A page must open with a skip link that lands on a focusable content root."""
+    parser = A11yParser()
+    parser.feed(html)
+    if not parser.skip_links:
+        return [f"{relative}: missing skip link"]
+    errors = []
+    href, text = parser.skip_links[0]
+    if parser.first_link is not None and "md-skip" not in parser.first_link["classes"]:
+        errors.append(f"{relative}: skip link is not the first link on the page")
+    if not href.startswith("#"):
+        errors.append(f"{relative}: skip link href {href!r} is not a fragment")
+    else:
+        target = href[1:]
+        attrs = parser.ids.get(target)
+        if attrs is None:
+            errors.append(
+                f"{relative}: skip link target {href!r} is not an element on this page"
+            )
+        elif target == "rmc-main" and attrs.get("tabindex") != "-1":
+            errors.append(f'{relative}: skip target #{target} lacks tabindex="-1"')
+    # The page's own lang attribute is the truth: the error page is built in whichever locale the
+    # build wrote last, so a path prefix cannot say which language it speaks.
+    language = (parser.language or "").lower()
+    if language.startswith("en"):
+        english = True
+    elif language.startswith("zh"):
+        english = False
+    else:
+        english = relative.startswith("en/")
+    if english and has_chinese(text) or not english and not has_chinese(text):
+        errors.append(
+            f"{relative}: skip link text is not in the page language: {text!r}"
+        )
+    return errors
+
+
+def audit_table_semantics(relative: str, html: str) -> list[str]:
+    """Every table keeps its header association; wide tables may scroll from the keyboard."""
+    parser = A11yParser()
+    parser.feed(html)
+    generated = relative.removeprefix("en/").startswith(GENERATED_PREFIXES)
+    errors = []
+    for index, table in enumerate(parser.tables, 1):
+        where = f"{relative}: table {index}"
+        if not table.header_cells:
+            errors.append(f"{where} without a header row")
+        elif table.wrapped and table.scoped_cells != table.header_cells:
+            errors.append(f'{where} header cell without scope="col"')
+        elif (
+            generated and table.header_cells >= WIDE_TABLE_COLUMNS and not table.wrapped
+        ):
+            errors.append(f"{where} outside a scroll wrapper")
+    return errors
 
 
 def page_url(path: Path, site: Path) -> str:
@@ -146,15 +286,21 @@ def audit_site(
             "en": 0,
             "links": 0,
         }
-    parsed = {path: parse_page(path) for path in files}
+    texts = {path: path.read_text(encoding="utf-8") for path in files}
+    parsed = {path: parse_page_text(text) for path, text in texts.items()}
     base_url = (
         base_url or parsed[site / "index.html"].canonical or "http://docs.invalid/"
     )
     base_url = base_url.rstrip("/") + "/"
     errors, total_links = [], 0
+    error_page = site / "404.html"
+    if not error_page.is_file():
+        errors.append("404.html: missing error page")
     for path, info in parsed.items():
         relative = path.relative_to(site).as_posix()
         english = relative.startswith("en/")
+        errors.extend(audit_skip_link(relative, texts[path]))
+        errors.extend(audit_table_semantics(relative, texts[path]))
         expected_lang = "en" if english else "zh"
         origin = urljoin(base_url, page_url(path, site).lstrip("/"))
         if info.language != expected_lang:
@@ -277,6 +423,11 @@ def audit_site(
             errors.append(f"{relative}: excessive Chinese prose ({ratio:.1%})")
         elif not english and ratio < 0.05:
             errors.append(f"{relative}: too little Chinese prose ({ratio:.1%})")
+    if error_page.is_file():
+        # The error page is not an `index.html`, so it is outside the loop above.
+        error_text = error_page.read_text(encoding="utf-8")
+        errors.extend(audit_skip_link("404.html", error_text))
+        errors.extend(audit_table_semantics("404.html", error_text))
     zh = sum(not path.relative_to(site).as_posix().startswith("en/") for path in files)
     return sorted(set(errors)), {
         "pages": len(files),

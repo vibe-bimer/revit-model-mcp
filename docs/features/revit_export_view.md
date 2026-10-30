@@ -31,17 +31,25 @@ description: "把视图导出成 PNG 图片（1–4000 像素）"
 
 ## 参数 {#parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `view` | 是 | — | `string` | 视图名称（或视图 ID） |
 | `pixel_size` | 否 | `1600` | `integer` | 输出图片长边像素（1–4000） |
 | `save_to` | 否 | `null` | `string / null` | MCP 客户端机器上的新 PNG 文件路径，不是 Revit 工作站路径；文件已存在会报错 |
 
+</div>
+
 ### 通用参数 {#common-parameters}
 
-| 参数 | 必填 | 默认值 | 类型 | 说明 |
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+
+</div>
 
 ## 功能说明与返回结果 {#contract}
 

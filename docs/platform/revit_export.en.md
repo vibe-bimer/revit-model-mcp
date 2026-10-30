@@ -10,7 +10,9 @@ description: "Export PDF, DWG, IFC or schedule CSV files on the Revit workstatio
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `all_sheets` | No | `false` | boolean |  |
 | `confirm_token` | No | `null` | any |  |
@@ -23,12 +25,18 @@ description: "Export PDF, DWG, IFC or schedule CSV files on the Revit workstatio
 | `sheets` | No | `null` | any |  |
 | `views` | No | `null` | any |  |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 | `timeout_seconds` | No | `1800` | integer |  |
+
+</div>
 
 ## Behavior (registry text) {#behavior}
 

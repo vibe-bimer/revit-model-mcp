@@ -42,7 +42,9 @@ Fix the sun in lighting mode at azimuth 135° and altitude 45°, and turn on the
 
 ## Parameters {#parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `view` | Yes | — | `string` | view name as revit_list_views reports it, or its decimal view ID; a non-template view |
 | `background` | No | `null` | `string / null` | view background: sky or gradient, on 3D, section and elevation views only |
@@ -59,11 +61,17 @@ Fix the sun in lighting mode at azimuth 135° and altitude 45°, and turn on the
 | `sun_time` | No | `null` | `string / null` | still-image time as 24-hour HH:mm, handed to Revit as local time; the reading reports it as UTC with the time zone |
 | `sunlight_intensity` | No | `null` | `integer / null` | simulated sunlight intensity from 0 to 100 |
 
+</div>
+
 ### Common parameters {#common-parameters}
 
-| Parameter | Required | Default | Type | Meaning |
+<div class="rmc-tablewrap" markdown="1">
+
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | `string / null` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected |
+
+</div>
 
 ## Behavior and returned data {#contract}
 
