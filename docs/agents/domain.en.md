@@ -6,7 +6,8 @@ How the engineering skills should consume this repo's domain documentation when 
 
 - **`CONTEXT.md`** at the repo root, or
 - **`CONTEXT-MAP.md`** at the repo root if it exists — it points at one `CONTEXT.md` per context. Read each one relevant to the topic.
-- **`docs/adr/`** — read ADRs that touch the area you're about to work in. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
+- **`adr/`** — read ADRs that touch the area you're about to work in. This repository keeps decision records at `adr/` in the repository root, not at `docs/adr/`: every page under `docs/` is a published bilingual site page, while an ADR is an engineering record, written in English and kept out of the navigation. Read the `docs/adr/` paths in the diagrams below as `adr/`.
+- **`docs/adr/`** — neither upstream nor this fork uses that location; treat anything found there as context-specific decisions. In multi-context repos, also check `src/<context>/docs/adr/` for context-scoped decisions.
 
 If any of these files don't exist, **proceed silently**. Don't flag their absence; don't suggest creating them upfront. The `/domain-modeling` skill (reached via `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or decisions actually get resolved.
 
