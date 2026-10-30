@@ -5,7 +5,7 @@ hide:
   - toc
 ---
 
-<div class="rmc-landing">
+<div class="rmc-landing" id="rmc-main" tabindex="-1">
 
 <section class="rmc-hero">
   <div class="rmc-hero__grid" aria-hidden="true"></div>
