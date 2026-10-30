@@ -42,6 +42,9 @@
     <link rel="alternate" href="{{ (site_base ~ alt_path) | url }}" hreflang="{{ lang }}">
   {% endfor %}
   <link rel="icon" href="{{ config.theme.favicon | url }}">
+  {#- Browsers and crawlers ask for /favicon.ico by convention whatever the icon links say.
+      docs/hooks.py writes that alias after the build, in both sizes the ico carries. -#}
+  <link rel="icon" href="{{ 'assets/favicon.ico' | url }}" sizes="16x16 32x32" type="image/x-icon">
   <meta name="generator" content="mkdocs-{{ mkdocs_version }}">
   {% set social_image = site_base ~ "assets/social-card.png" %}
   <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">

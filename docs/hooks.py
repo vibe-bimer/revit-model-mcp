@@ -1,10 +1,13 @@
 """Resolve included Markdown links relative to their repository source."""
 
 import importlib.util
+import ipaddress
 import json
 import posixpath
 import re
+import struct
 import sys
+import zlib
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -129,13 +132,16 @@ _URL_BLOCK = re.compile(r"<url>.*?</url>", re.DOTALL)
 _LOC = re.compile(r"<loc>([^<]+)</loc>")
 
 
-def _write_directory_sitemaps(site: Path) -> int:
+def _write_directory_sitemaps(site: Path, site_url: str = "") -> int:
     """Give every directory with a page its own sitemap.
 
     Material resolves the alternate-language lookup as `new URL("sitemap.xml", pageUrl)`, so a page at
     /features/revit_ping/ asks for /features/revit_ping/sitemap.xml and gets a 404. Every directory
     that holds a page therefore gets its own sitemap containing that directory's entries, so the
     lookup succeeds and stays truthful.
+
+    A deployment under a path — a GitHub Pages project site, for one — prefixes every location with
+    that path, so it is stripped before the directory is resolved against the build tree.
     """
     sitemap = site / "sitemap.xml"
     if not sitemap.is_file():
@@ -147,11 +153,14 @@ def _write_directory_sitemaps(site: Path) -> int:
     head, open_end = text[:start], text.find(">", start) + 1
     preamble, open_tag = head, text[start:open_end]
     groups: dict[str, list[str]] = {}
+    base = urlsplit(site_url).path.rstrip("/") if site_url else ""
     for block in _URL_BLOCK.findall(text):
         found = _LOC.search(block)
         if not found:
             continue
         path = urlsplit(found.group(1)).path
+        if base and (path == base or path.startswith(base + "/")):
+            path = path[len(base) :] or "/"
         directory = path if path.endswith("/") else posixpath.dirname(path) + "/"
         if directory != "/":
             groups.setdefault(directory, []).append(block.strip())
@@ -166,6 +175,202 @@ def _write_directory_sitemaps(site: Path) -> int:
         )
         written += 1
     return written
+
+
+# -- deployment surface ------------------------------------------------------
+#
+# Three files depend on where the site is deployed rather than on any page, so they cannot be
+# templates: robots.txt, the root favicon.ico alias and the English variant of the error page.
+
+_POLYGON = re.compile(r'<polygon\b[^>]*?points="([^"]+)"[^>]*?fill="(#[0-9A-Fa-f]{6})"')
+_POINT = re.compile(r"(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)")
+_VIEWBOX = re.compile(r'viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)"')
+_ZH_GROUP = re.compile(r"<!--rmc:404:zh-->.*?<!--/rmc:404:zh-->", re.DOTALL)
+_EN_GROUP = re.compile(r"<!--rmc:404:en-->.*?<!--/rmc:404:en-->", re.DOTALL)
+FAVICON_SOURCE = ROOT / "docs" / "assets" / "favicon.svg"
+
+
+def robots_txt(site_url: str) -> str:
+    """Return robots.txt for the deployment origin.
+
+    Only a publicly reachable origin advertises its sitemap; a private or loopback origin asks
+    crawlers to stay out. This file is an indexing hint and never access control: the server
+    answers every page and every error surface whatever it says.
+    """
+    host = (urlsplit(site_url or "").hostname or "").lower()
+    if not host or _private_host(host):
+        return "User-agent: *\nDisallow: /\n"
+    return f"User-agent: *\nAllow: /\nSitemap: {site_url.rstrip('/')}/sitemap.xml\n"
+
+
+def _private_host(host: str) -> bool:
+    if host in {"localhost", "localhost.localdomain"} or host.endswith(".local"):
+        return True
+    try:
+        return not ipaddress.ip_address(host).is_global
+    except ValueError:
+        # A public name, not an address literal.
+        return False
+
+
+def svg_polygons(
+    svg: str,
+) -> list[tuple[list[tuple[float, float]], tuple[int, int, int]]]:
+    """Read the filled polygons of an icon mark, in paint order."""
+    polygons = []
+    for points, fill in _POLYGON.findall(svg):
+        ring = [(float(x), float(y)) for x, y in _POINT.findall(points)]
+        red, green, blue = (int(fill[index : index + 2], 16) for index in (1, 3, 5))
+        polygons.append((ring, (red, green, blue)))
+    return polygons
+
+
+def rasterize(
+    polygons: list[tuple[list[tuple[float, float]], tuple[int, int, int]]],
+    size: int,
+    viewbox: tuple[float, float] = (64.0, 64.0),
+) -> list[list[tuple[int, int, int, int]]]:
+    """Sample the mark at pixel centres, painting the polygons in order."""
+    width, height = viewbox
+    scale_x, scale_y = width / size, height / size
+    pixels = []
+    for row in range(size):
+        y = (row + 0.5) * scale_y
+        line = []
+        for column in range(size):
+            x = (column + 0.5) * scale_x
+            colour = (0, 0, 0, 0)
+            for ring, fill in polygons:
+                if _inside(ring, x, y):
+                    colour = (*fill, 255)
+            line.append(colour)
+        pixels.append(line)
+    return pixels
+
+
+def _inside(ring: list[tuple[float, float]], x: float, y: float) -> bool:
+    """Even-odd test against one closed ring."""
+    inside = False
+    count = len(ring)
+    for index in range(count):
+        x1, y1 = ring[index]
+        x2, y2 = ring[(index + 1) % count]
+        if (y1 > y) != (y2 > y):
+            crossing = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+            if x < crossing:
+                inside = not inside
+    return inside
+
+
+def png_bytes(pixels: list[list[tuple[int, int, int, int]]]) -> bytes:
+    """Encode an RGBA raster as a PNG, so one ico entry can carry it as-is."""
+    size = len(pixels)
+    raw = bytearray()
+    for line in pixels:
+        raw.append(0)
+        for pixel in line:
+            raw.extend(pixel)
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + _chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0))
+        + _chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        + _chunk(b"IEND", b"")
+    )
+
+
+def _chunk(tag: bytes, data: bytes) -> bytes:
+    crc = zlib.crc32(tag + data) & 0xFFFFFFFF
+    return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", crc)
+
+
+def ico_bytes(images: dict[int, bytes]) -> bytes:
+    """Wrap PNG payloads as a multi-size Windows icon."""
+    entries = bytearray()
+    payload = bytearray()
+    offset = 6 + 16 * len(images)
+    for size in sorted(images):
+        data = images[size]
+        entries.extend(
+            struct.pack(
+                "<BBBBHHII",
+                size & 0xFF,
+                size & 0xFF,
+                0,
+                0,
+                1,
+                32,
+                len(data),
+                offset + len(payload),
+            )
+        )
+        payload.extend(data)
+    return struct.pack("<HHH", 0, 1, len(images)) + bytes(entries) + bytes(payload)
+
+
+def favicon_ico(svg: str, sizes: tuple[int, ...] = (16, 32)) -> bytes:
+    """Render the shipped SVG mark into an ico, so /favicon.ico needs no renderer at build time."""
+    polygons = svg_polygons(svg)
+    found = _VIEWBOX.search(svg)
+    viewbox = (float(found.group(1)), float(found.group(2))) if found else (64.0, 64.0)
+    return ico_bytes(
+        {size: png_bytes(rasterize(polygons, size, viewbox)) for size in sizes}
+    )
+
+
+def english_error_variant(html: str) -> str:
+    """Put the English entry group first in the error page, keeping every other byte."""
+    chinese, english = _ZH_GROUP.search(html), _EN_GROUP.search(html)
+    if chinese is None or english is None or english.start() < chinese.start():
+        return html
+    return (
+        html[: chinese.start()]
+        + english.group(0)
+        + html[chinese.end() : english.start()]
+        + chinese.group(0)
+        + html[english.end() :]
+    )
+
+
+def write_deployment_files(site: Path, site_url: str) -> list[str]:
+    """Write the files that follow the deployment origin instead of the page tree."""
+    written = ["robots.txt"]
+    (site / "robots.txt").write_text(
+        robots_txt(site_url), encoding="utf-8", newline="\n"
+    )
+    icon = favicon_ico(FAVICON_SOURCE.read_text(encoding="utf-8"))
+    for relative in ("favicon.ico", "assets/favicon.ico"):
+        target = site / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(icon)
+        written.append(relative)
+    return written
+
+
+_ERROR_MARKER = re.compile(r"<!--/?rmc:404:(?:zh|en)-->")
+
+
+def strip_error_markers(html: str) -> str:
+    """Remove the build markers, so the shipped page carries no internal bookkeeping."""
+    return _ERROR_MARKER.sub("", html)
+
+
+def write_english_error_page(site: Path) -> bool:
+    """Write the English variant of the error page and clean both copies.
+
+    The markers only exist so the variant can be derived here; the shipped pages do not need
+    them, and the root page is rewritten in place to keep the two copies consistent.
+    """
+    page = site / "404.html"
+    if not page.is_file():
+        return False
+    source = page.read_text(encoding="utf-8")
+    target = site / "en" / "404.html"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        strip_error_markers(english_error_variant(source)), encoding="utf-8"
+    )
+    page.write_text(strip_error_markers(source), encoding="utf-8")
+    return True
 
 
 def _catalog_module():
@@ -259,7 +464,11 @@ def on_shutdown() -> None:
 
 def on_post_build(config) -> None:
     site = Path(config.site_dir)
-    _write_directory_sitemaps(site)
+    _write_directory_sitemaps(site, config.site_url or "")
+    # The deployment surface and the English error page follow the build configuration, not any
+    # page, so they are written here rather than rendered from a template.
+    write_deployment_files(site, config.site_url or "")
+    write_english_error_page(site)
     # Source maps are a debugging aid for the theme bundle, not site content: shipping them adds
     # 1.2 MB to every deploy for files no visitor requests.
     for source_map in site.rglob("*.map"):
