@@ -35,8 +35,12 @@ public sealed record McpServerSpec(string Command, IReadOnlyList<string> Args)
             ? "https://github.com/vibe-bimer/revit-model-mcp/archive/refs/heads/main.tar.gz#subdirectory=server"
             : $"https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v{version}.tar.gz#subdirectory=server";
 
-    /// <summary>The documented local registration through uv, resolved from this fork's own source.</summary>
-    public static McpServerSpec Uvx => UvxFor(InformationalVersion());
+    /// <summary>
+    ///     The documented local registration through uv, resolved from this fork's own source. Cached because a
+    ///     record compares its argument list by reference: a fresh instance would never equal the one the add-in
+    ///     writes, so callers that compare specs would report a difference that does not exist.
+    /// </summary>
+    public static McpServerSpec Uvx { get; } = UvxFor(InformationalVersion());
 
     /// <summary>The local registration for one release version.</summary>
     /// <param name="version">The version the build reports.</param>

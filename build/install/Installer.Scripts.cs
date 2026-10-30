@@ -99,9 +99,9 @@ static class InstallerScripts
     {
         static string Quoted(string text) => "'" + text.Replace("'", "''") + "'";
         string Refuse(string reasonExpression, int exitCode) =>
-            $"$reason = {reasonExpression}; Write-Output ('" + Quoted(ProductName) + " + ': ' + $reason); " +
+            $"$reason = {reasonExpression}; Write-Output (" + Quoted(ProductName + ": ") + " + $reason); " +
             (showMessage
-                ? "Add-Type -AssemblyName System.Windows.Forms; [void][System.Windows.Forms.MessageBox]::Show($reason, '" + Quoted(ProductName) + " + ' installer', 'OK', 'Error'); "
+                ? "Add-Type -AssemblyName System.Windows.Forms; [void][System.Windows.Forms.MessageBox]::Show($reason, " + Quoted(ProductName + " installer") + ", 'OK', 'Error'); "
                 : string.Empty) +
             $"exit {exitCode}";
         return
