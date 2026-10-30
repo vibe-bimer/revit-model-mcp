@@ -1,0 +1,39 @@
+# Documentation accuracy review
+
+Scope: docs factual accuracy against code. Methods: (a) dumped live `tools/list` schemas from `server/` and from the integration worktree `/tmp/revit-fork-work` (commit `55d6ea5`, the exact commit pinned in `tools/site/content/platform-tools.json` provenance); (b) diffed those against `tools/site/content/tools.json` and `platform-tools.json`; (c) diffed every doc parameter table against the schema; (d) `python3 tools/site/generate_features.py --check`; (e) read the gates, transport and channel code paths.
+
+Headline: **the documentation is substantially truthful.** The 35-tool contract set has **zero** parameter mismatches, the 80 platform pages have **zero** schema mismatches against the branch they claim to describe, all landing counts are correct, and every setup command and env default I checked matches the code. No P0. The findings below are omissions and stale evidence, not invented contracts.
+
+## Findings
+
+| # | Severity | Doc claim | Code truth | Fix |
+| --- | --- | --- | --- | --- |
+| 1 | P1 | The env table documents 8 variables and never mentions dialog answering: `server/README.zh.md:72-79` (rendered as `docs/server.md`). Yet `docs/rebuild-performance.md:29-31` and `docs/actions.md:105` tell users to run multi-instance parallel copy farms unattended. | `src/RevitModelMcp.Addin/Control/DialogOverride.cs:16` defines `AnswerEverythingVariable = "REVIT_MCP_ANSWER_DIALOGS"`; `:26` `_answerEverything = ... == "1"`. Its own doc comment (`:22-24`) says Revit "asks about an already open file before any job runs" and blocks the external event. A farm built from the docs alone stalls on that modal. | Add a row to the env table: `REVIT_MCP_ANSWER_DIALOGS` — unset; `1` answers every dialog of that instance, only for unattended hosts. |
+| 2 | P2 | `docs/validation.md:36` puts the live-run evidence at an external `validation-assets` branch; `docs/rebuild-performance.md:7` states outright that the Chinese page was a summary and "这里不补造缺失的原始会话、日志或新测量证据". | No measurement artifacts in-repo: `analysis/` holds only planning docs and `bench/` holds only `rebuild-farm.ps1`. The asserted numbers (165 s / 10 copies; 286→185 s; 25 min for 21 copies) have no committed log or harness output backing them. | Commit the session logs and the `rebuild-farm.ps1` output under `analysis/`, or mark the tables "unbacked measurement, single session". |
+| 3 | P3 | `docs/validation.md:7` "CI 证据包括 v0.1.0 发布时的 R22–R26 构建，以及 R22 / R26 / R27 的 CI 构建" — R20 missing from the CI list, while `:9` marks 2020 CI ✅. | `.github/workflows/ci.yml:76-83` builds `Release.R26`, `R20`, `R22`, `R27` — four years including 2020. | Add R20 to the sentence. |
+| 4 | P3 | `docs/platform/revit_align_link_datums.md:24,26` and the matching `prefix`/`suffix` rows in `docs/platform/revit_compare_link_datums.md` document the default as `—` (the site's "no default" glyph). | Schema has a real default: `platform-tools.json` → those tools → `properties.prefix/suffix` = `{"default": "", "type": "string"}`, identical in the live branch dump. Root cause `tools/site/platform_catalog.py:662` `default = spec.get("default", "")` plus `:671` rendering `'—'` when `default == ''` — an empty-string default is indistinguishable from an absent one. | Test `"default" in spec` instead of truthiness. |
+| 5 | P3 | `docs/roadmap.md:25` "MCP Registry 和 PyPI 发布尚不可用". | `server/server.json` is a populated registry manifest (`io.github.vibe-bimer/revit-model-mcp`, `0.9.0`, uvx stdio, 3 env vars) and is version-locked to `server/pyproject.toml:5`. Manifest presence is not proof of publication, so the line may still be true — but it is unverifiable from the repo and the page only disclaims scope generically (`:5-8`). | Restate as "registry manifest exists; publication state not asserted here". |
+| 6 | P3 | `server/server.json` marks `REVIT_MCP_HOST` `"isRequired": true`, while `server/README.zh.md:72` documents it as optional with default `local`. | `server/revit_model_mcp/revit_channel.py:14` `DEFAULT_HOST = "local"` and `server.py:781` `os.environ.get("REVIT_MCP_HOST", DEFAULT_HOST)` — the server starts fine without it. | Set `isRequired: false`. |
+
+## Parameter mismatch table
+
+**35 shipped tools: 0 mismatches.** All 35 doc pages (`docs/features/revit_*.md` and `.en.md`) were diffed row-by-row against `tools/site/content/tools.json`, which is byte-identical to the live `tools/list` schemas. Zero diffs in parameter names, required flags, types, or defaults after two normalizations (`—` = no default; string defaults quoted). The two enum-bearing params (`revit_set_view_lighting.background`, `.lighting_scheme`) omit the enum from the type column but enumerate every value in prose at `docs/features/revit_set_view_lighting.md:65-66`.
+
+**80 platform tools: 0 schema mismatches.** All 80 names and all 80 full `inputSchema` objects in `platform-tools.json` are byte-identical to the live branch server; the doc pages are exactly what `generate_features.py --check` emits from that JSON (247 files, 0 changed). Only the rendering defect in finding 4 leaks:
+
+| Tool | Param | Doc says | Schema says | Fix |
+| --- | --- | --- | --- | --- |
+| `revit_align_link_datums` | `prefix` | default `—` (`:24`) | `default: ""` | generator fix |
+| `revit_align_link_datums` | `suffix` | default `—` (`:26`) | `default: ""` | generator fix |
+| `revit_compare_link_datums` | `prefix` | default `—` | `default: ""` | generator fix |
+| `revit_compare_link_datums` | `suffix` | default `—` | `default: ""` | generator fix |
+
+## Verified accurate (do not regress)
+
+- **Registry integrity.** `tools.json` is byte-identical to live `tools/list`; 19 read-only / 16 write = 35. Landing "19 读取 / 16 动作 / 35 功能" (`docs/index.md:80-88`) correct. `revit_batch` `max_length=50` (`actions.py:687`) matches "1–50 步" (`docs/actions.md:54,154`).
+- **Year support.** "2020 · 2022–2027" is real: `src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj:15-16` defines R20/R22–R27; `.github/workflows/release.yml:51-63` builds all seven. README's framework table matches the SDK mapping exactly (`Nice3point.Revit.Common.props:45-48`: net47→net48→net8.0→net10.0).
+- **Setup.** `uvx revit-model-mcp` is explicitly warned against as upstream (`server/README.zh.md:13-17`) and pinned to `git+...@v<version>` — the fork-identity hazard is closed, `tools/check_fork_identity.py` passes. All 8 documented env defaults match code: `DEFAULT_HOST='local'`, timeouts 120/300 (`revit_channel.py:14-16`), `env_flag` accepting 1/true/yes/on (`actions.py:196-208`), `ACTIVATION_DELAY_SECONDS=60.0` (`ssh_host.py:33`), mux on unless `=0` (`ssh_host.py:323`).
+- **Security.** Loopback `127.0.0.1:53110`, `httpEnabled`, `REVIT_MCP_HTTP_ENABLED` (`HttpChannel.cs:343-345,388-391`); 32-byte token (`:379-382`); `/health` the only unauthenticated route (`:100,229`); workstation gate `%LOCALAPPDATA%\RevitModelMcp\allow-write` checked per action and independent of `REVIT_MCP_CHANNEL_DIR` (`ActionCommandExecutor.cs:17-19,35`); direct-HTTP actions bypass the Python flag but still require token+gate, exactly as `docs/security.md:32` says.
+- **Mechanism.** Lock (`revit_channel.py:347,360`), 5 s heartbeat / 10 s timer (`Application.cs:123,46`), 60 s stale (`ssh_host.py:34`), `File.Replace`→`File.Move` (`Application.cs:222,226`), `/jobs/{id}` with ten-minute expiry (`http_host.py:220`), `TransactionGroup` for batch (`BatchActionExecutor.cs:20`), `zoomToFit:true` (`revit_channel.py:112`). `feed-format.md:5` "协议没有 schemaVersion 字段" — no such key in code.
+- **Generated pages.** No hand edits: 247 generated files, 0 changed.
+- **Honest caveats.** Feature pages admit the file channel may return `success:false`/`partial:true` instead of raising — real (`revit_channel.py:482,531`). `fork-tools.md` marks 7 of 8 fork tools pending; the branch really exposes only `revit_set_view_lighting` of the eight.
