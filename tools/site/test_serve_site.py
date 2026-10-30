@@ -241,5 +241,94 @@ class CanonicalRedirectTests(ServeSiteTestCase):
         self.assertNotIn("location", headers)
 
 
+class EncodingNegotiationTests(ServeSiteTestCase):
+    def test_gzip_disabled_by_q0_falls_back_to_identity(self):
+        status, headers, body = self.request(
+            "GET", "/big.html", {"Accept-Encoding": "gzip;q=0"}
+        )
+        self.assertEqual(status, 200)
+        self.assertNotIn("content-encoding", headers)
+        self.assertEqual(body.decode("utf-8"), BIG_PAGE)
+
+    def test_identity_disabled_prefers_gzip_for_compressible(self):
+        status, headers, body = self.request(
+            "GET", "/big.html", {"Accept-Encoding": "identity;q=0"}
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(headers.get("content-encoding"), "gzip")
+        self.assertEqual(gzip.decompress(body).decode("utf-8"), BIG_PAGE)
+
+    def test_all_representations_excluded_answers_406(self):
+        cases = [
+            ("/big.html", "gzip;q=0, identity;q=0"),
+            ("/assets/logo.png", "identity;q=0"),
+            ("/assets/logo.png", "*;q=0"),
+            ("/assets/logo.png", "gzip;q=0, *;q=0"),
+        ]
+        for target, encoding in cases:
+            with self.subTest(target=target, encoding=encoding):
+                status, _, _ = self.request(
+                    "GET", target, {"Accept-Encoding": encoding}
+                )
+                self.assertEqual(status, 406)
+
+    def test_star_q0_with_explicit_gzip_still_serves_gzip(self):
+        status, headers, _ = self.request(
+            "GET", "/big.html", {"Accept-Encoding": "*;q=0, gzip"}
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(headers.get("content-encoding"), "gzip")
+
+    def test_x_gzip_is_accepted(self):
+        status, headers, _ = self.request(
+            "GET", "/big.html", {"Accept-Encoding": "x-gzip"}
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(headers.get("content-encoding"), "gzip")
+
+    def test_small_compressible_file_stays_identity(self):
+        status, headers, body = self.request("GET", "/", {"Accept-Encoding": "gzip"})
+        self.assertEqual(status, 200)
+        self.assertNotIn("content-encoding", headers)
+        self.assertIn("home", body.decode("utf-8"))
+
+    def test_missing_accept_encoding_serves_identity(self):
+        status, headers, body = self.request("GET", "/big.html")
+        self.assertEqual(status, 200)
+        self.assertNotIn("content-encoding", headers)
+        self.assertEqual(body.decode("utf-8"), BIG_PAGE)
+
+    def test_head_selects_the_same_gzip_representation_as_get(self):
+        get = self.request("GET", "/big.html", {"Accept-Encoding": "gzip"})
+        head = self.request("HEAD", "/big.html", {"Accept-Encoding": "gzip"})
+        self.assertEqual(head[0], 200)
+        self.assertEqual(head[2], b"")
+        self.assertEqual(head[1].get("content-encoding"), "gzip")
+        self.assertEqual(head[1]["content-length"], get[1]["content-length"])
+        self.assertEqual(int(get[1]["content-length"]), len(get[2]))
+        self.assertEqual(head[1]["etag"], get[1]["etag"])
+
+    def test_etag_differs_between_encodings(self):
+        _, gzipped, _ = self.request("GET", "/big.html", {"Accept-Encoding": "gzip"})
+        _, plain, _ = self.request("GET", "/big.html", {"Accept-Encoding": "identity"})
+        self.assertNotEqual(gzipped["etag"], plain["etag"])
+        self.assertTrue(gzipped["etag"].startswith('"'))
+        self.assertIn('-gzip"', gzipped["etag"])
+
+    def test_vary_present_for_compressible_representations(self):
+        for encoding in ("gzip", "identity"):
+            with self.subTest(encoding=encoding):
+                _, headers, _ = self.request(
+                    "GET", "/big.html", {"Accept-Encoding": encoding}
+                )
+                self.assertEqual(headers.get("vary"), "Accept-Encoding")
+
+    def test_no_vary_for_incompressible_assets(self):
+        _, headers, _ = self.request(
+            "GET", "/assets/logo.png", {"Accept-Encoding": "gzip"}
+        )
+        self.assertNotIn("vary", headers)
+
+
 if __name__ == "__main__":
     unittest.main()

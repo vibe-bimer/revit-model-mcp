@@ -55,6 +55,78 @@ def cache_control(path: Path) -> str:
     return "no-cache"
 
 
+def parse_accept_encoding(header: str | None) -> tuple[dict[str, float], float | None]:
+    """Split an Accept-Encoding header into named codings and the star quality.
+
+    Codings that are not named inherit the star quality when present, and the
+    default of 1.0 otherwise, per RFC 9110 section 12.5.3.
+    """
+    entries: dict[str, float] = {}
+    star: float | None = None
+    for item in (header or "").split(","):
+        parts = item.strip().split(";")
+        coding = parts[0].strip().lower()
+        quality = 1.0
+        for param in parts[1:]:
+            name, _, value = param.strip().partition("=")
+            if name.strip().lower() == "q":
+                try:
+                    quality = float(value)
+                except ValueError:
+                    pass
+        if not coding:
+            continue
+        if coding == "*":
+            star = quality
+        else:
+            entries[coding] = quality
+    return entries, star
+
+
+def _quality(coding: str, entries: dict[str, float], star: float | None) -> float:
+    if coding in entries:
+        return entries[coding]
+    return star if star is not None else 1.0
+
+
+def _gzip_quality(entries: dict[str, float], star: float | None) -> float:
+    if "gzip" in entries:
+        return entries["gzip"]
+    if "x-gzip" in entries:
+        return entries["x-gzip"]
+    return star if star is not None else 1.0
+
+
+def select_encoding(suffix: str, size: int, header: str | None) -> str | None:
+    """Choose the representation to serve, or None when none is acceptable.
+
+    Unlisted codings default to quality 1, so excluding identity with
+    ``identity;q=0`` still allows the (implicit) gzip representation, and a
+    star rule excludes everything it covers. The server only compresses on
+    its own initiative when the client explicitly named gzip, x-gzip or *.
+    """
+    entries, star = parse_accept_encoding(header)
+    identity_ok = _quality("identity", entries, star) > 0
+    gzip_ok = _gzip_quality(entries, star) > 0
+    gzip_endorsed = any(k in entries for k in ("gzip", "x-gzip")) or star is not None
+    if (
+        suffix in COMPRESSIBLE
+        and size >= MIN_GZIP_BYTES
+        and gzip_ok
+        and (gzip_endorsed or not identity_ok)
+    ):
+        return "gzip"
+    if identity_ok:
+        return "identity"
+    return None
+
+
+def etag_for(stat, encoding: str) -> str:
+    """Strong validator of one representation, distinct per content coding."""
+    base = f"{stat.st_mtime_ns:x}-{stat.st_size:x}"
+    return f'"{base}-gzip"' if encoding == "gzip" else f'"{base}"'
+
+
 class _BadRequest(Exception):
     """The request target cannot be decoded into a safe path."""
 
@@ -145,6 +217,12 @@ class DocsHandler(BaseHTTPRequestHandler):
                 self._cache[key] = cached
         return cached
 
+    def _representation(self, path: Path, encoding: str) -> bytes:
+        data = path.read_bytes()
+        if encoding == "gzip":
+            data = self._compressed(path, data)
+        return data
+
     def _respond(self, body: bool) -> None:
         try:
             path, redirect = self._resolve()
@@ -159,41 +237,41 @@ class DocsHandler(BaseHTTPRequestHandler):
             return
 
         stat = path.stat()
-        etag = f'"{stat.st_mtime_ns:x}-{stat.st_size:x}"'
-        last_modified = formatdate(stat.st_mtime, usegmt=True)
+        encoding = select_encoding(
+            path.suffix, stat.st_size, self.headers.get("Accept-Encoding")
+        )
+        if encoding is None:
+            self.send_error(HTTPStatus.NOT_ACCEPTABLE, "No acceptable representation")
+            return
+        etag = etag_for(stat, encoding)
 
         if self._is_fresh(etag, stat.st_mtime):
             self.send_response(HTTPStatus.NOT_MODIFIED)
             self.send_header("ETag", etag)
             self.send_header("Cache-Control", cache_control(path))
+            if path.suffix in COMPRESSIBLE:
+                self.send_header("Vary", "Accept-Encoding")
             self.send_header("Content-Length", "0")
             self.end_headers()
             return
 
-        data = path.read_bytes() if body else b""
-        encoding = None
-        if (
-            body
-            and path.suffix in COMPRESSIBLE
-            and stat.st_size >= MIN_GZIP_BYTES
-            and "gzip" in self.headers.get("Accept-Encoding", "")
-        ):
-            data = self._compressed(path, data)
-            encoding = "gzip"
-
+        # GET and HEAD under identical headers must see the same
+        # representation, so the payload is built regardless of the method.
+        payload = self._representation(path, encoding)
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", self._content_type(path))
-        self.send_header("Content-Length", str(stat.st_size if not body else len(data)))
-        self.send_header("Last-Modified", last_modified)
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Last-Modified", formatdate(stat.st_mtime, usegmt=True))
         self.send_header("ETag", etag)
         self.send_header("Cache-Control", cache_control(path))
         self.send_header("X-Content-Type-Options", "nosniff")
-        if encoding:
-            self.send_header("Content-Encoding", encoding)
+        if encoding == "gzip":
+            self.send_header("Content-Encoding", "gzip")
+        if path.suffix in COMPRESSIBLE:
             self.send_header("Vary", "Accept-Encoding")
         self.end_headers()
         if body:
-            self.wfile.write(data)
+            self.wfile.write(payload)
 
     def _is_fresh(self, etag: str, mtime: float) -> bool:
         if self.headers.get("If-None-Match"):
