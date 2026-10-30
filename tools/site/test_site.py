@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import check_site
 import generate_features
+import platform_catalog
 
 
 class SiteAuditTests(unittest.TestCase):
@@ -204,6 +205,45 @@ class FeatureGeneratorTests(unittest.TestCase):
         )
         self.assertIn("此工具没有额外业务参数", page)
         self.assertIn("### 通用参数", page)
+
+    def test_released_page_names_the_release_version_and_status(self):
+        tool = self.tools[0]
+        cap = self.capabilities["tools"][tool["name"]]
+        page = generate_features.tool_page(
+            tool, cap, "zh", self.capabilities, self.contracts
+        )
+        self.assertIn(generate_features.RELEASE_VERSION, page)
+        self.assertIn("已发布", page)
+
+    def test_released_page_links_and_diffs_its_integration_twin(self):
+        platform_tools, _ = platform_catalog.load_platform()
+        integration = {t["name"]: t["inputSchema"] for t in platform_tools}
+        tool = next(t for t in self.tools if t["name"] == "revit_export_view")
+        page = generate_features.tool_page(
+            tool,
+            self.capabilities["tools"][tool["name"]],
+            "zh",
+            self.capabilities,
+            self.contracts,
+            integration["revit_export_view"],
+        )
+        self.assertIn("(../platform/revit_export_view.md)", page)
+        self.assertIn("{#contract-diff}", page)
+        self.assertIn("output_path", page)
+        self.assertIn("save_to", page)
+
+    def test_released_page_without_twin_has_no_diff_section(self):
+        platform_tools, _ = platform_catalog.load_platform()
+        integration = {t["name"] for t in platform_tools}
+        tool = next(t for t in self.tools if t["name"] not in integration)
+        page = generate_features.tool_page(
+            tool,
+            self.capabilities["tools"][tool["name"]],
+            "zh",
+            self.capabilities,
+            self.contracts,
+        )
+        self.assertNotIn("{#contract-diff}", page)
 
     def test_regenerated_navigation_covers_each_tool_once(self):
         nav = generate_features.nav_block(self.tools, self.capabilities)

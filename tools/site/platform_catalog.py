@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the platform catalog: the integration branch's 80 tools, split by origin.
+"""Generate the platform catalog: the integration branch, split by origin.
 
 The released tool pages under docs/features come from tools.json, which is dumped from the
 released server. This module documents the other catalog: the tool surface of branch
@@ -18,6 +18,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import catalogs
+import contract_diff
+
 ROOT = Path(__file__).resolve().parents[2]
 CONTENT = ROOT / "tools/site/content"
 PLATFORM_JSON = CONTENT / "platform-tools.json"
@@ -26,7 +29,11 @@ PAGES = ROOT / "docs/platform"
 NAV_START = "  # >>> platform-nav"
 NAV_END = "  # <<< platform-nav"
 
-BRANCH = "integration/upstream-1.0"
+INTEGRATION = catalogs.integration()
+BRANCH = INTEGRATION.branch
+PROVENANCE = catalogs.provenance()
+COMMIT = PROVENANCE["commit"]
+RELEASE_VERSION = catalogs.release().version
 
 GROUP_LABELS = {
     "zh": {
@@ -383,71 +390,14 @@ ZH = {
 }
 
 # Tools this fork owns. Only the grafted ones exist on the integration branch.
-FORK_TOOLS = {
-    "revit_set_view_lighting": {
-        "status": "grafted",
-        "zh": "设置视图光照",
-        "en": "Set view lighting",
-        "zh_note": "已通过 fork 注册表接上七个兜底钩子，Python 工具注册与单元测试通过；C# 编译与真机验证仍在 Windows CI 与工作站上。",
-        "en_note": "Attached through the fork registry and the seven fallback hooks; the Python tool and its unit tests pass. C# compilation and live validation still happen on Windows CI and the workstation.",
-    },
-    "revit_create_level": {
-        "status": "pending",
-        "zh": "创建标高",
-        "en": "Create level",
-        "zh_note": "已有本地实现（含 dry_run 与验证块），待按新契约重映射到 fork 注册表。",
-        "en_note": "The local implementation exists with dry_run and a verification block; it still has to be remapped onto the fork registry.",
-    },
-    "revit_create_floor": {
-        "status": "pending",
-        "zh": "创建楼板",
-        "en": "Create floor",
-        "zh_note": "已有本地实现，待重映射。",
-        "en_note": "The local implementation exists; it still has to be remapped.",
-    },
-    "revit_set_phase": {
-        "status": "pending",
-        "zh": "设置阶段",
-        "en": "Set phase",
-        "zh_note": "已有本地实现；Revit 阶段不能创建或改名，只能写入既有阶段。",
-        "en_note": "The local implementation exists; Revit cannot create or rename phases, so it only assigns existing ones.",
-    },
-    "revit_merge_phases": {
-        "status": "pending",
-        "zh": "合并阶段",
-        "en": "Merge phases",
-        "zh_note": "已有本地实现；该命令不进批量步骤词表。",
-        "en_note": "The local implementation exists; the command is excluded from the batch step vocabulary.",
-    },
-    "revit_export_element_ids": {
-        "status": "pending",
-        "zh": "导出元素 ID 台账",
-        "en": "Export element ID register",
-        "zh_note": "已有本地实现，输出 xlsx 台账，含系统成员与连接器读取。",
-        "en_note": "The local implementation writes an xlsx register and reads system members and connectors.",
-    },
-    "revit_reset_element_ids": {
-        "status": "pending",
-        "zh": "重置元素 ID",
-        "en": "Reset element IDs",
-        "zh_note": "已有本地实现，可排练（dry_run 报出代价），每元素独立子事务。",
-        "en_note": "The local implementation is rehearsable, reports the cost in dry_run, and commits each element in its own subtransaction.",
-    },
-    "revit_rebuild_model_ids": {
-        "status": "pending",
-        "zh": "重建模型 ID",
-        "en": "Rebuild model IDs",
-        "zh_note": "已有本地实现（约一千行），支持模板、副本与重名策略；是最后一个移植项，工作量约等于前五项之和。",
-        "en_note": "The local implementation is about a thousand lines and supports templates, copies and duplicate-name policies; it is the last item to migrate and roughly equals the first five together.",
-    },
-}
+FORK_TOOLS = catalogs.fork_tools()
 
 LABELS = {
     "zh": {
         "title": "新版基座工具目录",
-        "intro": "这一节记录集成分支上的工具面，与「功能」一节的现有版本分开。分支上的工具尚未发布，其中七个自研工具还没移植，所以目录不是可交付清单，而是移植进度表。",
+        "intro": "这一节记录集成分支上的工具面，与「功能」一节的现有版本分开。分支上的工具尚未发布，其中 {pending} 个自研工具还没移植，所以目录不是可交付清单，而是移植进度表。",
         "catalogs": "两套工具面",
-        "catalogs_intro": "现有版本是已经发布的 0.9.0，集成分支是以上游一零版为底座的新线。两者的工具数量与清单都不同，不能混用。",
+        "catalogs_intro": "现有版本是已经发布的 {version}，集成分支是以上游一零版为底座的新线。两者的工具数量与清单都不同，不能混用。",
         "current": "现有版本",
         "platform": "集成分支",
         "released": "已发布",
@@ -455,7 +405,7 @@ LABELS = {
         "branch": "分支",
         "base": "底座提交",
         "origin": "基座与自研的区分",
-        "origin_intro": "每个工具在页面上都带来源标记：基座表示随上游底座而来，自研表示本仓库自己设计。自研工具在分支上只移植了光照一项。",
+        "origin_intro": "每个工具在页面上都带来源标记：基座表示随上游底座而来，自研表示本仓库自己设计。自研工具在分支上目前只移植了 {grafted} 项。",
         "base_origin": "基座（上游）",
         "fork_origin": "自研（本仓库）",
         "grafted": "已移植",
@@ -475,6 +425,22 @@ LABELS = {
         "include_release": "当前版本是否已有",
         "yes": "有",
         "no": "没有",
+        "page_status": "状态",
+        "unreleased_fact": "未发布（集成分支）",
+        "branch_fact": "来源分支",
+        "commit_fact": "来源提交",
+        "release_version_fact": "发布版版本",
+        "same_name_fact": "发布版有同名工具",
+        "applies_release_fact": "本页契约适用于发布版",
+        "same_name_yes": "有，但参数不同",
+        "same_name_same": "有，参数一致",
+        "same_name_no": "没有",
+        "applies_no": "否",
+        "twin_link": "同名发布版页面",
+        "contract_diff": "与发布版的契约差异",
+        "contract_diff_intro": "下表由注册表 inputSchema 自动比较得出，不是手写清单。",
+        "contract_diff_warning": "本页契约适用于集成分支，不适用于发布版 {version}；照抄分支参数会在发布版上失败。",
+        "contract_diff_none": "同名工具的契约与发布版 {version} 一致。",
         "parameters": "参数",
         "common": "通用参数",
         "name": "参数",
@@ -493,9 +459,9 @@ LABELS = {
     },
     "en": {
         "title": "Platform tool catalog",
-        "intro": "This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and seven fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.",
+        "intro": "This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and {pending} fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.",
         "catalogs": "Two catalogs",
-        "catalogs_intro": "The current release is 0.9.0. The integration branch is the new line built on the upstream 1.0 base. Their tool counts and names differ, so they are not interchangeable.",
+        "catalogs_intro": "The current release is {version}. The integration branch is the new line built on the upstream 1.0 base. Their tool counts and names differ, so they are not interchangeable.",
         "current": "Current release",
         "platform": "Integration branch",
         "released": "Released",
@@ -503,7 +469,7 @@ LABELS = {
         "branch": "Branch",
         "base": "Base commit",
         "origin": "Base and fork tools",
-        "origin_intro": "Every page carries an origin marker: base means the tool came with the upstream base, fork means this repository designed it. Only one fork tool is grafted so far.",
+        "origin_intro": "Every page carries an origin marker: base means the tool came with the upstream base, fork means this repository designed it. Only {grafted} fork tool is grafted so far.",
         "base_origin": "Base (upstream)",
         "fork_origin": "Fork (this repository)",
         "grafted": "Grafted",
@@ -523,6 +489,22 @@ LABELS = {
         "include_release": "In the current release",
         "yes": "Yes",
         "no": "No",
+        "page_status": "Status",
+        "unreleased_fact": "Unreleased (integration branch)",
+        "branch_fact": "Source branch",
+        "commit_fact": "Source commit",
+        "release_version_fact": "Release version",
+        "same_name_fact": "Same-name tool in the release",
+        "applies_release_fact": "This contract applies to the release",
+        "same_name_yes": "Yes, but the parameters differ",
+        "same_name_same": "Yes, with identical parameters",
+        "same_name_no": "No",
+        "applies_no": "No",
+        "twin_link": "Same-name release page",
+        "contract_diff": "Contract differences from the release",
+        "contract_diff_intro": "The table below is computed from the registry inputSchema; it is not a hand-written list.",
+        "contract_diff_warning": "This contract belongs to the integration branch, not to release {version}; copying the branch parameters fails on the release.",
+        "contract_diff_none": "The same-name tool has an identical contract to release {version}.",
         "parameters": "Parameters",
         "common": "Common parameters",
         "name": "Parameter",
@@ -681,19 +663,47 @@ def table_heading(lang: str) -> list[str]:
     ]
 
 
-def tool_page(tool: dict, released_names: set[str], lang: str) -> str:
+def _release_view(released) -> tuple[set[str], dict[str, dict]]:
+    """Accept a list of released tools (for schema diffs) or a bare set of names."""
+    items = list(released)
+    if items and isinstance(items[0], dict):
+        names = {tool["name"] for tool in items}
+        schemas = {tool["name"]: tool.get("inputSchema", {}) for tool in items}
+        return names, schemas
+    return set(items), {}
+
+
+def tool_page(tool: dict, released, lang: str) -> str:
     labels = LABELS[lang]
     name = tool["name"]
     origin = origin_of(name)
+    released_names, release_schemas = _release_view(released)
+    same_name = name in released_names
+    changes = (
+        contract_diff.diff_schemas(release_schemas[name], tool["inputSchema"])
+        if same_name
+        else []
+    )
     if lang == "zh":
         title, summary = ZH[name]
     else:
         title, summary = tool["title"] or name, " ".join(tool["description"].split())
+    if not same_name:
+        same_name_text = labels["same_name_no"]
+    elif changes:
+        same_name_text = labels["same_name_yes"]
+    else:
+        same_name_text = labels["same_name_same"]
     facts = [
         f"<b>{labels['group']}</b> {GROUP_LABELS[lang][tool['toolset']]}",
         f"<b>{labels['kind']}</b> {labels['read'] if tool['readOnly'] else labels['action']}",
         f"<b>{labels['origin']}</b> {origin_text(origin, name, lang)}",
-        f"<b>{labels['include_release']}</b> {labels['yes'] if name in released_names else labels['no']}",
+        f"<b>{labels['page_status']}</b> {labels['unreleased_fact']}",
+        f"<b>{labels['release_version_fact']}</b> {RELEASE_VERSION}",
+        f"<b>{labels['branch_fact']}</b> <code>{BRANCH}</code>",
+        f"<b>{labels['commit_fact']}</b> <code>{COMMIT}</code>",
+        f"<b>{labels['same_name_fact']}</b> {same_name_text}",
+        f"<b>{labels['applies_release_fact']}</b> {labels['applies_no']}",
     ]
     out = [
         f"# {title}",
@@ -710,6 +720,9 @@ def tool_page(tool: dict, released_names: set[str], lang: str) -> str:
         out += [f'!!! note "{labels["notes"]}"', f"    {note}", ""]
     if lang == "zh":
         out += [summary, ""]
+    if same_name:
+        out += [f"[{labels['twin_link']}](../features/{name}.md)", ""]
+        out += _contract_diff_section(changes, lang)
     out += [f"## {labels['parameters']} {{#parameters}}", ""]
     rows = parameter_rows(tool, False, lang)
     out += (table_heading(lang) + rows) if rows else [labels["no_specific"]]
@@ -736,22 +749,37 @@ def tool_page(tool: dict, released_names: set[str], lang: str) -> str:
     return "\n".join(out)
 
 
+def _contract_diff_section(changes: list[dict], lang: str) -> list[str]:
+    labels = LABELS[lang]
+    out = [f"## {labels['contract_diff']} {{#contract-diff}}", ""]
+    if changes:
+        out += [labels["contract_diff_intro"], ""]
+        out += [f"- {line}" for line in contract_diff.render_changes(changes, lang)]
+        out += ["", labels["contract_diff_warning"].format(version=RELEASE_VERSION), ""]
+    else:
+        out += [labels["contract_diff_none"].format(version=RELEASE_VERSION), ""]
+    return out
+
+
 def index_page(tools: list[dict], released: list[dict], lang: str) -> str:
     labels = LABELS[lang]
     numbers = counts(tools)
+    pending = sum(1 for item in FORK_TOOLS.values() if item["status"] == "pending")
+    grafted = sum(1 for item in FORK_TOOLS.values() if item["status"] == "grafted")
+    fmt = {"version": RELEASE_VERSION, "pending": pending, "grafted": grafted}
     groups = {}
     for tool in sorted(tools, key=sort_key):
         groups.setdefault(tool["toolset"], []).append(tool)
     out = [
         f"# {labels['title']}",
         "",
-        labels["intro"],
+        labels["intro"].format(**fmt),
         "",
         labels["count_line"].format(**numbers),
         "",
         f"## {labels['catalogs']} {{#catalogs}}",
         "",
-        labels["catalogs_intro"],
+        labels["catalogs_intro"].format(**fmt),
         "",
         f"| | {labels['current']} | {labels['platform']} |",
         "| --- | --- | --- |",
@@ -763,7 +791,7 @@ def index_page(tools: list[dict], released: list[dict], lang: str) -> str:
         "",
         f"## {labels['origin']} {{#origin}}",
         "",
-        labels["origin_intro"],
+        labels["origin_intro"].format(**fmt),
         "",
         f"| {labels['group']} | {labels['base_origin']} | {labels['fork_origin']} |",
         "| --- | --- | --- |",
@@ -872,13 +900,12 @@ def nav_block(tools: list[dict]) -> str:
 
 def generate() -> dict[Path, str]:
     tools, released = load_platform()
-    released_names = {tool["name"] for tool in released}
     files: dict[Path, str] = {}
     for lang, suffix in (("zh", ""), ("en", ".en")):
         files[PAGES / f"index{suffix}.md"] = index_page(tools, released, lang)
         files[PAGES / f"fork-tools{suffix}.md"] = fork_page(tools, lang)
         for tool in tools:
             files[PAGES / f"{tool['name']}{suffix}.md"] = tool_page(
-                tool, released_names, lang
+                tool, released, lang
             )
     return files

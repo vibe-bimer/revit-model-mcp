@@ -277,24 +277,24 @@ def _prompt_card(text: dict, capabilities: dict, name: str, kind: str) -> str:
       </figure>"""
 
 
-def render_development(lang: str) -> str:
+def render_development(lang: str, released_count: int, branch_count: int) -> str:
     """Describe the integration branch separately from the released tool catalog."""
     if lang == "zh":
         title = "新版底座与移植进展"
-        intro = "当前网站的 35 个工具对应现有版本。新版正在独立分支上集成，尚未作为当前版本发布。"
-        base = "上游底座包含文档管理、视图与图纸、族和链接、模型导出、批处理等能力；集成分支的工具清单目前有 80 项。"
+        intro = f"当前网站的 {released_count} 个工具对应现有版本。新版正在独立分支上集成，尚未作为当前版本发布。"
+        base = f"上游底座包含文档管理、视图与图纸、族和链接、模型导出、批处理等能力；集成分支的工具清单目前有 {branch_count} 项。"
         sample = "视图光照工具已完成 Python 工具注册和测试；C# 编译与 Revit 真机验证尚待完成。"
         pending = "楼板、标高、阶段设置与合并、元素 ID 导出、重置和模型重建仍待移植。Revit 2020 和 2026 均为目标工作站年份。"
         source = "查看集成规格与进展"
-        catalog = "按基座与自研查阅 80 个工具"
+        catalog = f"按基座与自研查阅 {branch_count} 个工具"
     else:
         title = "New platform and migration progress"
-        intro = "The 35 tools on this site describe the current release. The new platform is being integrated on a separate branch and is not yet released."
-        base = "The upstream platform adds document management, views and sheets, families and links, export, and batch processing. The integration branch currently lists 80 tools."
+        intro = f"The {released_count} tools on this site describe the current release. The new platform is being integrated on a separate branch and is not yet released."
+        base = f"The upstream platform adds document management, views and sheets, families and links, export, and batch processing. The integration branch currently lists {branch_count} tools."
         sample = "The view-lighting tool is registered and tested in Python; C# compilation and live Revit validation remain outstanding."
         pending = "Floor, level, phase setting and merging, element ID export and reset, and model rebuilding remain to be migrated. Revit 2020 and 2026 are both target workstation versions."
         source = "View the integration specification and progress"
-        catalog = "Browse the 80 tools by origin"
+        catalog = f"Browse the {branch_count} tools by origin"
     catalog_href = "platform/"
     return f'''<section class="rmc-section rmc-reveal" id="development-status">
   <header class="rmc-section__head">
@@ -476,7 +476,13 @@ def render_entries(text: dict) -> str:
 </section>"""
 
 
-def home_page(tools: list[dict], capabilities: dict, version: str, lang: str) -> str:
+def home_page(
+    tools: list[dict],
+    capabilities: dict,
+    version: str,
+    lang: str,
+    branch_count: int | None = None,
+) -> str:
     """Return the landing page for one language, ending with the literal text of its anchors."""
     text = dict(TEXT[lang], lang=lang)
     read, write = count_tools(tools)
@@ -485,7 +491,11 @@ def home_page(tools: list[dict], capabilities: dict, version: str, lang: str) ->
     body = "\n\n".join(
         [
             render_hero(text, version, read, write, total, art),
-            render_development(lang),
+            render_development(
+                lang,
+                len(tools),
+                branch_count if branch_count is not None else len(tools),
+            ),
             render_prompts(text, capabilities),
             render_capabilities(text, tools, capabilities, total),
             render_output(text),

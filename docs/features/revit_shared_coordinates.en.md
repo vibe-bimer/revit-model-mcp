@@ -2,9 +2,20 @@
 
 `revit_shared_coordinates`
 
-<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.2.0</span></p>
+<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.2.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> Yes</span><span><b>This contract applies to the release</b> Yes</span></p>
 
 Read base/survey points, sites and link offsets in mm and degrees
+
+[Same-name integration branch page](../platform/revit_shared_coordinates.md)
+
+## Contract differences from the integration branch {#contract-diff}
+
+The list below is computed from the registry inputSchema; it is not a hand-written list.
+
+- Parameter pickup_timeout_seconds exists only in the release
+- Parameter process_id exists only on the integration branch
+
+This page is the contract of release 0.9.0; the same-name tool on the integration branch takes different parameters, so do not mix them.
 
 ## Copyable prompts {#prompts}
 

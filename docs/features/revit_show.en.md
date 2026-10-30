@@ -2,7 +2,7 @@
 
 `revit_show`
 
-<p class="facts"><span><b>Group</b> Selection and display</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.2.0</span><span><b>Effect</b> Selection / view state</span></p>
+<p class="facts"><span><b>Group</b> Selection and display</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.2.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> Yes</span><span><b>This contract applies to the release</b> Yes</span><span><b>Effect</b> Selection / view state</span></p>
 
 Locate and highlight elements, opening a suitable view when needed
 
@@ -11,6 +11,8 @@ Locate and highlight elements, opening a suitable view when needed
 
 !!! note "Usage notes"
     Does not change the model
+
+[Same-name integration branch page](../platform/revit_show.md)
 
 ## Copyable prompts {#prompts}
 

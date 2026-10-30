@@ -1,6 +1,6 @@
 # Platform tool catalog
 
-This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and seven fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.
+This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and 7 fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.
 
 80 tools: 79 base and 1 fork; 34 read and 46 action.
 
@@ -18,7 +18,7 @@ The current release is 0.9.0. The integration branch is the new line built on th
 
 ## Base and fork tools {#origin}
 
-Every page carries an origin marker: base means the tool came with the upstream base, fork means this repository designed it. Only one fork tool is grafted so far.
+Every page carries an origin marker: base means the tool came with the upstream base, fork means this repository designed it. Only 1 fork tool is grafted so far.
 
 | Group | Base (upstream) | Fork (this repository) |
 | --- | --- | --- |

@@ -2,9 +2,22 @@
 
 `revit_export_view`
 
-<p class="facts"><span><b>分组</b> 视图与截图</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.3.0</span></p>
+<p class="facts"><span><b>分组</b> 视图与截图</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.3.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span></p>
 
 把视图导出成 PNG 图片（1–4000 像素）
+
+[同名集成分支页面](../platform/revit_export_view.md)
+
+## 与集成分支的契约差异 {#contract-diff}
+
+下表由注册表 inputSchema 自动比较得出，不是手写清单。
+
+- 仅集成分支有参数 output_path
+- 参数 pixel_size 约束 minimum：发布版 1 / 集成分支 32
+- 仅集成分支有参数 process_id
+- 仅发布版有参数 save_to
+
+本页是发布版 0.9.0 的契约；集成分支上的同名工具参数不同，请勿混用。
 
 ## 可复制提示词 {#prompts}
 

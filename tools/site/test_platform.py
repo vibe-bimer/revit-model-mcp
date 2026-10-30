@@ -98,7 +98,7 @@ class PageTests(unittest.TestCase):
 
     def test_the_chinese_page_shows_the_chinese_text_and_the_facts_strip(self):
         tool = next(t for t in self.tools if t["name"] == "revit_set_view_lighting")
-        page = platform_catalog.tool_page(tool, self.released_names, "zh")
+        page = platform_catalog.tool_page(tool, self.released, "zh")
         title, summary = platform_catalog.ZH[tool["name"]]
         self.assertTrue(page.startswith(f"# {title}"))
         self.assertIn(summary, page)
@@ -107,7 +107,7 @@ class PageTests(unittest.TestCase):
 
     def test_the_english_page_is_english(self):
         tool = next(t for t in self.tools if t["name"] == "revit_set_view_lighting")
-        page = platform_catalog.tool_page(tool, self.released_names, "en")
+        page = platform_catalog.tool_page(tool, self.released, "en")
         for line in page.splitlines():
             self.assertFalse(
                 any("\u4e00" <= char <= "\u9fff" for char in line),
@@ -152,6 +152,29 @@ class PageTests(unittest.TestCase):
             for key in platform_catalog.GROUP_LABELS["zh"]
         ]
         self.assertEqual([g for g in groups if g in expected], expected)
+
+    def test_a_same_name_page_shows_unreleased_status_and_links_its_twin(self):
+        tool = next(t for t in self.tools if t["name"] == "revit_export_view")
+        page = platform_catalog.tool_page(tool, self.released, "zh")
+        self.assertIn("未发布", page)
+        self.assertIn("integration/upstream-1.0", page)
+        self.assertIn(platform_catalog.COMMIT, page)
+        self.assertIn("(../features/revit_export_view.md)", page)
+        self.assertIn("{#contract-diff}", page)
+        self.assertIn("output_path", page)
+        self.assertIn("save_to", page)
+
+    def test_a_branch_only_tool_has_no_release_twin_section(self):
+        name = next(
+            tool["name"]
+            for tool in self.tools
+            if tool["name"] not in self.released_names
+        )
+        tool = next(t for t in self.tools if t["name"] == name)
+        page = platform_catalog.tool_page(tool, self.released, "zh")
+        self.assertIn("未发布", page)
+        self.assertNotIn("{#contract-diff}", page)
+        self.assertNotIn(f"(../features/{name}.md)", page)
 
     def test_generate_is_deterministic(self):
         self.assertEqual(platform_catalog.generate(), platform_catalog.generate())

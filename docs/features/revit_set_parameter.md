@@ -2,7 +2,7 @@
 
 `revit_set_parameter`
 
-<p class="facts"><span><b>分组</b> 编辑</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.1.0</span><span><b>影响范围</b> 模型构件 / 参数</span></p>
+<p class="facts"><span><b>分组</b> 编辑</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.1.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 模型构件 / 参数</span></p>
 
 按参数名写值（长度 mm、面积 m²，其余按内部单位）
 
@@ -11,6 +11,17 @@
 
 !!! note "使用提示"
     支持 dry_run
+
+[同名集成分支页面](../platform/revit_set_parameter.md)
+
+## 与集成分支的契约差异 {#contract-diff}
+
+下表由注册表 inputSchema 自动比较得出，不是手写清单。
+
+- 仅集成分支有参数 parameter_id
+- 参数 value 类型：发布版 string / 集成分支 integer|number|string
+
+本页是发布版 0.9.0 的契约；集成分支上的同名工具参数不同，请勿混用。
 
 ## 可复制提示词 {#prompts}
 

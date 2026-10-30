@@ -2,12 +2,25 @@
 
 `revit_aggregate_elements`
 
-<p class="facts"><span><b>分组</b> 查询与统计</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.1.0</span></p>
+<p class="facts"><span><b>分组</b> 查询与统计</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.1.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span></p>
 
 按 1–2 个字段分组统计数量，可附加求和与平均（mm / m² / m³）
 
 !!! note "使用提示"
     回答“有多少”的首选，比逐条取明细快得多
+
+[同名集成分支页面](../platform/revit_aggregate_elements.md)
+
+## 与集成分支的契约差异 {#contract-diff}
+
+下表由注册表 inputSchema 自动比较得出，不是手写清单。
+
+- 参数 group_by 约束 minItems：发布版 — / 集成分支 1
+- 参数 group_by 约束 maxItems：发布版 — / 集成分支 2
+- 仅发布版有参数 pickup_timeout_seconds
+- 仅集成分支有参数 process_id
+
+本页是发布版 0.9.0 的契约；集成分支上的同名工具参数不同，请勿混用。
 
 ## 可复制提示词 {#prompts}
 

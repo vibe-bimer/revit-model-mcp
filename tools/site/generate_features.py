@@ -16,6 +16,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import catalogs
+import contract_diff
 import landing
 import platform_catalog
 import tomllib
@@ -34,6 +36,8 @@ PLATFORM_JSON = platform_catalog.PLATFORM_JSON
 PLATFORM_NAV_START = platform_catalog.NAV_START
 PLATFORM_NAV_END = platform_catalog.NAV_END
 COMMON_PARAMETERS = {"document", "timeout_seconds", "pickup_timeout_seconds"}
+RELEASE_VERSION = catalogs.release().version
+RELEASE_STATUS = catalogs.release().status
 LABELS = {
     "zh": {
         "group": "分组",
@@ -76,6 +80,17 @@ LABELS = {
         "file": "新模型文件；源模型不变",
         "model": "模型构件 / 参数",
         "no_specific": "此工具没有额外业务参数，使用下列通用参数即可。",
+        "version": "版本",
+        "released": "已发布",
+        "twin_fact": "集成分支有同名工具",
+        "applies_fact": "本页契约适用于发布版",
+        "applies_yes": "是",
+        "twin_yes": "有",
+        "twin_no": "没有",
+        "twin_link": "同名集成分支页面",
+        "contract_diff": "与集成分支的契约差异",
+        "contract_diff_intro": "下表由注册表 inputSchema 自动比较得出，不是手写清单。",
+        "contract_diff_note": "本页是发布版 {version} 的契约；集成分支上的同名工具参数不同，请勿混用。",
         "legend": "已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。",
     },
     "en": {
@@ -119,6 +134,17 @@ LABELS = {
         "file": "New model files; source unchanged",
         "model": "Model elements / parameters",
         "no_specific": "No additional business parameters; use the common parameters below.",
+        "version": "Version",
+        "released": "Released",
+        "twin_fact": "Same-name tool on the integration branch",
+        "applies_fact": "This contract applies to the release",
+        "applies_yes": "Yes",
+        "twin_yes": "Yes",
+        "twin_no": "No",
+        "twin_link": "Same-name integration branch page",
+        "contract_diff": "Contract differences from the integration branch",
+        "contract_diff_intro": "The list below is computed from the registry inputSchema; it is not a hand-written list.",
+        "contract_diff_note": "This page is the contract of release {version}; the same-name tool on the integration branch takes different parameters, so do not mix them.",
         "legend": "Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.",
     },
 }
@@ -239,7 +265,12 @@ def year_counts(tools: list[dict], capabilities: dict, year: str, lang: str) -> 
 
 
 def tool_page(
-    tool: dict, cap: dict, lang: str, capabilities: dict, contracts: dict
+    tool: dict,
+    cap: dict,
+    lang: str,
+    capabilities: dict,
+    contracts: dict,
+    twin: dict | None = None,
 ) -> str:
     labels, name = LABELS[lang], tool["name"]
     read_only = bool(tool["annotations"].get("readOnlyHint"))
@@ -247,6 +278,9 @@ def tool_page(
         f"<b>{labels['group']}</b> {capabilities['groups'][cap['group']][lang]}",
         f"<b>{labels['kind']}</b> {labels['read' if read_only else 'write']}",
         f"<b>{labels['since']}</b> {cap['since']}",
+        f"<b>{labels['version']}</b> {labels['released']} {RELEASE_VERSION}",
+        f"<b>{labels['twin_fact']}</b> {labels['twin_yes'] if twin is not None else labels['twin_no']}",
+        f"<b>{labels['applies_fact']}</b> {labels['applies_yes']}",
     ]
     if not read_only:
         effect = (
@@ -278,6 +312,18 @@ def tool_page(
         out += [f'!!! warning "{labels["gate"]}"', f"    {labels['gate_body']}", ""]
     if cap.get("note", {}).get(lang):
         out += [f'!!! note "{labels["notes"]}"', f"    {cap['note'][lang]}", ""]
+    if twin is not None:
+        changes = contract_diff.diff_schemas(tool["inputSchema"], twin)
+        out += [f"[{labels['twin_link']}](../platform/{name}.md)", ""]
+        if changes:
+            out += [f"## {labels['contract_diff']} {{#contract-diff}}", ""]
+            out += [labels["contract_diff_intro"], ""]
+            out += [f"- {line}" for line in contract_diff.render_changes(changes, lang)]
+            out += [
+                "",
+                labels["contract_diff_note"].format(version=RELEASE_VERSION),
+                "",
+            ]
     out += [f"## {labels['prompts']} {{#prompts}}", ""]
     for prompt in cap["prompts"]:
         out += ["```text", prompt[lang], "```", ""]
@@ -333,16 +379,23 @@ def origin_badge(cap: dict, lang: str) -> str:
     return f'<span class="state part">{text}</span> '
 
 
-def index_page(tools: list[dict], capabilities: dict, lang: str) -> str:
+def index_page(
+    tools: list[dict], capabilities: dict, lang: str, branch_count: int | None = None
+) -> str:
     labels = LABELS[lang]
-    pointer = (
-        "这一节是现有版本的 35 个工具。集成分支的 80 个工具按基座与自研分开，见"
-        " [新版基座工具目录](../platform/index.md)。"
-        if lang == "zh"
-        else "This section covers the 35 tools of the current release. The integration branch's"
-        " 80 tools, split into base and fork, are in the"
-        " [platform tool catalog](../platform/index.md)."
-    )
+    if branch_count is None:
+        branch_count = platform_catalog.snapshot()["count"]
+    if lang == "zh":
+        pointer = (
+            f"这一节是现有版本的 {len(tools)} 个工具。集成分支的 {branch_count} 个工具按基座与自研分开，见"
+            " [新版基座工具目录](../platform/index.md)。"
+        )
+    else:
+        pointer = (
+            f"This section covers the {len(tools)} tools of the current release. The integration branch's"
+            f" {branch_count} tools, split into base and fork, are in the"
+            " [platform tool catalog](../platform/index.md)."
+        )
     out = [
         f"# {labels['index']}",
         "",
@@ -484,12 +537,16 @@ def version_page(tools: list[dict], capabilities: dict, lang: str, year: str) ->
     return "\n".join(out)
 
 
-def home_page(tools: list[dict], capabilities: dict, lang: str) -> str:
+def home_page(
+    tools: list[dict], capabilities: dict, lang: str, branch_count: int | None = None
+) -> str:
     """Render the landing page; the layout lives in landing.py so this file stays registry logic."""
     version = tomllib.loads((ROOT / "server/pyproject.toml").read_text())["project"][
         "version"
     ]
-    return landing.home_page(tools, capabilities, version, lang)
+    if branch_count is None:
+        branch_count = platform_catalog.snapshot()["count"]
+    return landing.home_page(tools, capabilities, version, lang, branch_count)
 
 
 def nav_block(tools: list[dict], capabilities: dict) -> str:
@@ -522,21 +579,30 @@ def nav_block(tools: list[dict], capabilities: dict) -> str:
 
 def generate(tools: list[dict], capabilities: dict, contracts: dict) -> dict[Path, str]:
     platform_tools, _ = platform_catalog.load_platform()
+    integration_schemas = {tool["name"]: tool["inputSchema"] for tool in platform_tools}
+    branch_count = len(platform_tools)
     files = {}
     for lang, suffix in (("zh", ""), ("en", ".en")):
 
         def page(name: str, suffix: str = suffix) -> Path:
             return PAGES / f"{name}{suffix}.md"
 
-        files[ROOT / f"docs/index{suffix}.md"] = home_page(tools, capabilities, lang)
-        files[page("index")] = index_page(tools, capabilities, lang)
+        files[ROOT / f"docs/index{suffix}.md"] = home_page(
+            tools, capabilities, lang, branch_count
+        )
+        files[page("index")] = index_page(tools, capabilities, lang, branch_count)
         files[page("matrix")] = matrix_page(tools, capabilities, lang)
         files[page("prompts")] = prompts_page(tools, capabilities, lang)
         for year in ("2020", "2026"):
             files[page(f"v{year}")] = version_page(tools, capabilities, lang, year)
         for tool in tools:
             files[page(tool["name"])] = tool_page(
-                tool, capabilities["tools"][tool["name"]], lang, capabilities, contracts
+                tool,
+                capabilities["tools"][tool["name"]],
+                lang,
+                capabilities,
+                contracts,
+                integration_schemas.get(tool["name"]),
             )
     text = MKDOCS.read_text(encoding="utf-8")
     files[MKDOCS] = re.sub(

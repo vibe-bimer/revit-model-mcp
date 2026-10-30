@@ -2,7 +2,7 @@
 
 `revit_rebuild_model_ids`
 
-<p class="facts"><span><b>Group</b> Batch and ids</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.8.0</span><span><b>Effect</b> New model files; source unchanged</span><span><b>Origin</b> Fork (this repository)</span></p>
+<p class="facts"><span><b>Group</b> Batch and ids</span><span><b>Kind</b> Action (opt-in)</span><span><b>Since</b> 0.8.0</span><span><b>Version</b> Released 0.9.0</span><span><b>Same-name tool on the integration branch</b> No</span><span><b>This contract applies to the release</b> Yes</span><span><b>Effect</b> New model files; source unchanged</span><span><b>Origin</b> Fork (this repository)</span></p>
 
 Copy selectable 3D-view components into one or more new models with fresh IDs
 
