@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from dataclasses import dataclass, field
@@ -11,6 +12,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlsplit
 
+import catalogs
+import contract_diff
 import yaml
 
 
@@ -223,6 +226,52 @@ def audit_source_anchors(root: Path) -> list[str]:
     return errors
 
 
+def _catalog_dirs(root: Path) -> set[str] | None:
+    """Directories governed by the catalog manifest, or None when the root has no manifest."""
+    try:
+        data = catalogs.load(root)
+    except FileNotFoundError:
+        return None
+    return {data["release"]["directory"], data["integration"]["directory"]}
+
+
+def audit_twin_hints(root: Path) -> list[str]:
+    """Every same-name pair whose schemas differ must carry the auto diff hint on both pages.
+
+    The hint anchors on "{#contract-diff}". Its absence means a reader could copy a released
+    contract onto the branch (or the reverse) without seeing the difference.
+    """
+    content = root / "tools/site/content"
+    if (
+        not (content / "tools.json").is_file()
+        or not (content / "platform-tools.json").is_file()
+    ):
+        return []
+    released = json.loads((content / "tools.json").read_text(encoding="utf-8"))
+    platform = json.loads((content / "platform-tools.json").read_text(encoding="utf-8"))
+    release_schemas = {tool["name"]: tool["inputSchema"] for tool in released}
+    integration_schemas = {
+        tool["name"]: tool["inputSchema"] for tool in platform["tools"]
+    }
+    directories = _catalog_dirs(root) or set()
+    errors = []
+    for name in sorted(set(release_schemas) & set(integration_schemas)):
+        if not contract_diff.diff_schemas(
+            release_schemas[name], integration_schemas[name]
+        ):
+            continue
+        for directory in sorted(directories):
+            page = root / "docs" / directory / f"{name}.md"
+            if not page.is_file():
+                errors.append(f"Twin page missing: docs/{directory}/{name}.md")
+            elif "{#contract-diff}" not in page.read_text(encoding="utf-8"):
+                errors.append(
+                    f"docs/{directory}/{name}.md: missing contract-diff hint for the "
+                    f"same-name tool {name}"
+                )
+    return errors
+
+
 def audit_sources(root: Path) -> list[str]:
     docs = root / "docs"
     config = yaml.safe_load((root / "mkdocs.yml").read_text(encoding="utf-8"))
@@ -240,17 +289,30 @@ def audit_sources(root: Path) -> list[str]:
     navigation = list(flatten(config["nav"]))
     errors = []
     pages = {p.relative_to(docs).as_posix() for p in docs.rglob("*.md")}
-    chinese = {p for p in pages if not p.endswith(".en.md")}
-    english = {p.removesuffix(".en.md") + ".md" for p in pages if p.endswith(".en.md")}
+    catalog_dirs = _catalog_dirs(root)
+    if catalog_dirs is None:
+        managed: tuple[str, ...] = ()
+        coverage_errors: list[str] = []
+    else:
+        managed = tuple(f"{directory}/" for directory in catalog_dirs)
+        coverage_errors = catalogs.coverage_errors(root)
+    unmanaged = {p for p in pages if not p.startswith(managed)}
+    chinese = {p for p in unmanaged if not p.endswith(".en.md")}
+    english = {
+        p.removesuffix(".en.md") + ".md" for p in unmanaged if p.endswith(".en.md")
+    }
     for missing in sorted(chinese ^ english):
         errors.append(f"Unpaired source page: {missing}")
-    for orphan in sorted(chinese - set(navigation)):
+    chinese_all = {p for p in pages if not p.endswith(".en.md")}
+    for orphan in sorted(chinese_all - set(navigation)):
         errors.append(f"Page missing from navigation: {orphan}")
     for target in navigation:
-        if target not in chinese:
+        if target not in chinese_all:
             errors.append(f"Navigation references missing source: {target}")
         if navigation.count(target) > 1:
             errors.append(f"Duplicate navigation entry: {target}")
+    errors += coverage_errors
+    errors += audit_twin_hints(root)
     errors += audit_source_anchors(root)
     return sorted(set(errors))
 

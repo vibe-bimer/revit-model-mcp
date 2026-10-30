@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the platform catalog: the integration branch's 80 tools, split by origin.
+"""Generate the platform catalog: the integration branch, split by origin.
 
 The released tool pages under docs/features come from tools.json, which is dumped from the
 released server. This module documents the other catalog: the tool surface of branch
@@ -395,9 +395,9 @@ FORK_TOOLS = catalogs.fork_tools()
 LABELS = {
     "zh": {
         "title": "新版基座工具目录",
-        "intro": "这一节记录集成分支上的工具面，与「功能」一节的现有版本分开。分支上的工具尚未发布，其中七个自研工具还没移植，所以目录不是可交付清单，而是移植进度表。",
+        "intro": "这一节记录集成分支上的工具面，与「功能」一节的现有版本分开。分支上的工具尚未发布，其中 {pending} 个自研工具还没移植，所以目录不是可交付清单，而是移植进度表。",
         "catalogs": "两套工具面",
-        "catalogs_intro": "现有版本是已经发布的 0.9.0，集成分支是以上游一零版为底座的新线。两者的工具数量与清单都不同，不能混用。",
+        "catalogs_intro": "现有版本是已经发布的 {version}，集成分支是以上游一零版为底座的新线。两者的工具数量与清单都不同，不能混用。",
         "current": "现有版本",
         "platform": "集成分支",
         "released": "已发布",
@@ -405,7 +405,7 @@ LABELS = {
         "branch": "分支",
         "base": "底座提交",
         "origin": "基座与自研的区分",
-        "origin_intro": "每个工具在页面上都带来源标记：基座表示随上游底座而来，自研表示本仓库自己设计。自研工具在分支上只移植了光照一项。",
+        "origin_intro": "每个工具在页面上都带来源标记：基座表示随上游底座而来，自研表示本仓库自己设计。自研工具在分支上目前只移植了 {grafted} 项。",
         "base_origin": "基座（上游）",
         "fork_origin": "自研（本仓库）",
         "grafted": "已移植",
@@ -459,9 +459,9 @@ LABELS = {
     },
     "en": {
         "title": "Platform tool catalog",
-        "intro": "This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and seven fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.",
+        "intro": "This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and {pending} fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.",
         "catalogs": "Two catalogs",
-        "catalogs_intro": "The current release is 0.9.0. The integration branch is the new line built on the upstream 1.0 base. Their tool counts and names differ, so they are not interchangeable.",
+        "catalogs_intro": "The current release is {version}. The integration branch is the new line built on the upstream 1.0 base. Their tool counts and names differ, so they are not interchangeable.",
         "current": "Current release",
         "platform": "Integration branch",
         "released": "Released",
@@ -469,7 +469,7 @@ LABELS = {
         "branch": "Branch",
         "base": "Base commit",
         "origin": "Base and fork tools",
-        "origin_intro": "Every page carries an origin marker: base means the tool came with the upstream base, fork means this repository designed it. Only one fork tool is grafted so far.",
+        "origin_intro": "Every page carries an origin marker: base means the tool came with the upstream base, fork means this repository designed it. Only {grafted} fork tool is grafted so far.",
         "base_origin": "Base (upstream)",
         "fork_origin": "Fork (this repository)",
         "grafted": "Grafted",
@@ -764,19 +764,22 @@ def _contract_diff_section(changes: list[dict], lang: str) -> list[str]:
 def index_page(tools: list[dict], released: list[dict], lang: str) -> str:
     labels = LABELS[lang]
     numbers = counts(tools)
+    pending = sum(1 for item in FORK_TOOLS.values() if item["status"] == "pending")
+    grafted = sum(1 for item in FORK_TOOLS.values() if item["status"] == "grafted")
+    fmt = {"version": RELEASE_VERSION, "pending": pending, "grafted": grafted}
     groups = {}
     for tool in sorted(tools, key=sort_key):
         groups.setdefault(tool["toolset"], []).append(tool)
     out = [
         f"# {labels['title']}",
         "",
-        labels["intro"],
+        labels["intro"].format(**fmt),
         "",
         labels["count_line"].format(**numbers),
         "",
         f"## {labels['catalogs']} {{#catalogs}}",
         "",
-        labels["catalogs_intro"],
+        labels["catalogs_intro"].format(**fmt),
         "",
         f"| | {labels['current']} | {labels['platform']} |",
         "| --- | --- | --- |",
@@ -788,7 +791,7 @@ def index_page(tools: list[dict], released: list[dict], lang: str) -> str:
         "",
         f"## {labels['origin']} {{#origin}}",
         "",
-        labels["origin_intro"],
+        labels["origin_intro"].format(**fmt),
         "",
         f"| {labels['group']} | {labels['base_origin']} | {labels['fork_origin']} |",
         "| --- | --- | --- |",

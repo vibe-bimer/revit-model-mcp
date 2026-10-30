@@ -379,16 +379,23 @@ def origin_badge(cap: dict, lang: str) -> str:
     return f'<span class="state part">{text}</span> '
 
 
-def index_page(tools: list[dict], capabilities: dict, lang: str) -> str:
+def index_page(
+    tools: list[dict], capabilities: dict, lang: str, branch_count: int | None = None
+) -> str:
     labels = LABELS[lang]
-    pointer = (
-        "这一节是现有版本的 35 个工具。集成分支的 80 个工具按基座与自研分开，见"
-        " [新版基座工具目录](../platform/index.md)。"
-        if lang == "zh"
-        else "This section covers the 35 tools of the current release. The integration branch's"
-        " 80 tools, split into base and fork, are in the"
-        " [platform tool catalog](../platform/index.md)."
-    )
+    if branch_count is None:
+        branch_count = platform_catalog.snapshot()["count"]
+    if lang == "zh":
+        pointer = (
+            f"这一节是现有版本的 {len(tools)} 个工具。集成分支的 {branch_count} 个工具按基座与自研分开，见"
+            " [新版基座工具目录](../platform/index.md)。"
+        )
+    else:
+        pointer = (
+            f"This section covers the {len(tools)} tools of the current release. The integration branch's"
+            f" {branch_count} tools, split into base and fork, are in the"
+            " [platform tool catalog](../platform/index.md)."
+        )
     out = [
         f"# {labels['index']}",
         "",
@@ -530,12 +537,16 @@ def version_page(tools: list[dict], capabilities: dict, lang: str, year: str) ->
     return "\n".join(out)
 
 
-def home_page(tools: list[dict], capabilities: dict, lang: str) -> str:
+def home_page(
+    tools: list[dict], capabilities: dict, lang: str, branch_count: int | None = None
+) -> str:
     """Render the landing page; the layout lives in landing.py so this file stays registry logic."""
     version = tomllib.loads((ROOT / "server/pyproject.toml").read_text())["project"][
         "version"
     ]
-    return landing.home_page(tools, capabilities, version, lang)
+    if branch_count is None:
+        branch_count = platform_catalog.snapshot()["count"]
+    return landing.home_page(tools, capabilities, version, lang, branch_count)
 
 
 def nav_block(tools: list[dict], capabilities: dict) -> str:
@@ -569,14 +580,17 @@ def nav_block(tools: list[dict], capabilities: dict) -> str:
 def generate(tools: list[dict], capabilities: dict, contracts: dict) -> dict[Path, str]:
     platform_tools, _ = platform_catalog.load_platform()
     integration_schemas = {tool["name"]: tool["inputSchema"] for tool in platform_tools}
+    branch_count = len(platform_tools)
     files = {}
     for lang, suffix in (("zh", ""), ("en", ".en")):
 
         def page(name: str, suffix: str = suffix) -> Path:
             return PAGES / f"{name}{suffix}.md"
 
-        files[ROOT / f"docs/index{suffix}.md"] = home_page(tools, capabilities, lang)
-        files[page("index")] = index_page(tools, capabilities, lang)
+        files[ROOT / f"docs/index{suffix}.md"] = home_page(
+            tools, capabilities, lang, branch_count
+        )
+        files[page("index")] = index_page(tools, capabilities, lang, branch_count)
         files[page("matrix")] = matrix_page(tools, capabilities, lang)
         files[page("prompts")] = prompts_page(tools, capabilities, lang)
         for year in ("2020", "2026"):
