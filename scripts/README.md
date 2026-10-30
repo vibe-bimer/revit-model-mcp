@@ -148,6 +148,21 @@ systemctl --user status revit-model-mcp-serve.service   # is the site up? / 站�
 
 `serve-site.py` 以 HTTP/1.1 提供构建产物：已存在的目录在缺少尾斜杠或使用显式 `index.html` 地址时以 301 跳转到规范目录地址并保留查询串；按 `Accept-Encoding` 协商 gzip，全部表示被排除时返回 406；响应带按编码区分的强 ETag、`Vary: Accept-Encoding`，304 同样重复这两项；存储的 `*.xml.gz` 以 `application/gzip` 下载且不二次压缩；仅文件名含内容哈希的资源缓存一年，其余走重新验证。页面缺失返回站点自己的 `404.html`，`/en/` 下缺失返回 `en/404.html`（英文入口在前）；资源缺失（资源后缀或资源目录）只返回 14 字节 `text/plain` 并带 `no-store`，不再回一整页。`robots.txt` 不参与该判断：它是索引提示，不是访问控制。
 
+### Merge gate / 合并门禁
+
+Both deployment configs are gated, not just the Pages one. `tools/site/verify_dual_build.py` builds `mkdocs.yml` and `mkdocs-lan.yml` under `--strict`, runs `check_site.py` on each output with that config's own `--base-url`, then compares the two trees file for file after normalizing the deployment base (absolute `site_url`, root-relative prefixes, robots policy, gzip streams, and the volatile timestamp and release ids inside manifests). CI runs it in place of a single `mkdocs build --strict`; a local run is the same command.
+
+两份部署配置都受门禁约束，不只是 Pages 那份。`tools/site/verify_dual_build.py` 以 `--strict` 分别构建 `mkdocs.yml` 与 `mkdocs-lan.yml`，对两份产物各带自己的 `--base-url` 跑 `check_site.py`，再把两棵树按部署基址归一化（绝对 `site_url`、根相对前缀、robots 策略、gzip 流、清单里的时间戳与发布 id）后逐文件比对。CI 用它取代单份 `mkdocs build --strict`；本地复核就是同一条命令。
+
+```bash
+python tools/site/verify_dual_build.py              # build both, check both, compare
+python tools/site/verify_dual_build.py --skip-build # compare existing site/ and site-lan/
+```
+
+The comparison asserts no fixed page, asset or tool count: it asserts that the two outputs agree once the deployment difference is erased. `site-lan/` is build output and is ignored by Git.
+
+比对不断言固定的页面、资源或工具数量，只断言「抹掉部署差异后两份产物一致」。`site-lan/` 是构建产物，已加入 `.gitignore`。
+
 When tools change, run `python tools/site/generate_features.py --dump`, review both languages in `capabilities.yaml` and the complete Chinese contracts in `contracts.yaml`, then run `--write`. A stale registry, translation hash, generated page, language pair or link blocks publication and leaves the old site online. Those gates now run on the exported tree, and each one is recorded in the release manifest.
 
 工具变化后运行 `python tools/site/generate_features.py --dump`，审核 `capabilities.yaml` 的双语内容与 `contracts.yaml` 的完整中文契约，再运行 `--write`。集成分支的 80 个工具页在 `docs/platform/`，由 `platform_catalog.py` 从 `platform-tools.json` 生成；刷新快照用 `python tools/site/generate_features.py --dump-platform /path/to/branch/worktree`，不要手改。注册表、译文哈希、生成页面、语言配对或链接未通过检查时，发布会被阻止，旧站点仍在线；这些校验现在跑在导出树上，结论逐项写进发布清单。

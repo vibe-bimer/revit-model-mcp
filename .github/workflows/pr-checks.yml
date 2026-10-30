@@ -56,8 +56,7 @@ jobs:
         run: |
           python tools/site/generate_features.py --verify-registry --check
           python -m unittest discover -s tools/site -p 'test_*.py'
-          mkdocs build --strict
-          python tools/site/check_site.py --site-dir site
+          python tools/site/verify_dual_build.py
       - name: Install Ruff
         run: pip install ruff==0.16.7
       - name: Check Python
@@ -83,7 +82,7 @@ jobs:
           "Check workflows with actionlint": "actionlint",
           "Verify C# formatting": "$env:Configuration = 'Debug.R26'; $env:DeployAddin = 'false'; dotnet format RevitModelMcp.sln --verify-no-changes --verbosity minimal",
           "Install documentation dependencies": "pip install -r docs/requirements.txt",
-          "Build documentation": "mkdocs build --strict",
+          "Build documentation": "python tools/site/verify_dual_build.py",
           "Install Ruff": "pip install ruff==0.16.7",
           "Check Python": "cd server; uvx ruff==0.16.7 check .",
           "Verify Python formatting": "cd server; uvx ruff==0.16.7 format --check ."
