@@ -4,6 +4,7 @@ Review date: 2026-09-12.
 
 !!! note "Historical review, not a current feature list"
     This page preserves the review's scope. Correlation IDs and atomic response publication were added in 0.6.0; package and registry publishing also changed later. Other bullets have not all been re-audited here. Check the [changelog](changelog.md) and [validation evidence](validation.md) before treating a historical gap as current.
+    The 2026-09-12 review date is the authoring date itself, set in commit `1fb31ad` on 2026-09-12; it is not a separately recorded live validation, and the live checks on the validation page ran on 2026-09-28 and 2026-09-29. The "2026-09-12 validation pass" below refers to that documentation review and has no matching live log.
 
 ## Known gaps
 
