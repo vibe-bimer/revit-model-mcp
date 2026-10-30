@@ -293,6 +293,115 @@ def test_fork_tools_are_listed_by_the_server():
     assert tools["revit_export_element_ids"].annotations.read_only_hint is True
 
 
+# A fork action is also a legal step of revit_run_actions, so the step table and the tool of the same
+# name must describe the same inputs; drift between them is the failure this test exists for.
+def test_step_fields_match_the_tool_of_the_same_name():
+    from revit_model_mcp import server as revit_server
+    from revit_model_mcp.fork_actions import STEP_FIELDS
+
+    tools = {tool.name: tool for tool in asyncio.run(revit_server.mcp.list_tools())}
+    for action, fields in STEP_FIELDS.items():
+        tool_names = set(tools[f"revit_{action}"].input_schema["properties"])
+        assert set(fields) | {"dry_run"} == tool_names - {"document"}, action
+
+
+def test_a_fork_action_runs_as_a_batch_step():
+    from revit_model_mcp.actions import ActionStep
+
+    step = ActionStep(
+        action="create_level",
+        args={"name": "L2", "elevation_mm": 4000, "create_view": True},
+    )
+    assert step.payload() == {
+        "command": "create-level",
+        "name": "L2",
+        "dryRun": False,
+        "fork": {"elevationMm": 4000.0, "createView": True},
+    }
+
+
+def test_a_lighting_step_sends_a_sparse_fork_bag():
+    from revit_model_mcp.actions import ActionStep
+
+    step = ActionStep(
+        action="set_view_lighting",
+        args={"view": "L1", "shadows": True, "sun_date": "2026-03-01"},
+    )
+    assert step.payload() == {
+        "command": "set-view-lighting",
+        "view": "L1",
+        "dryRun": False,
+        "fork": {"shadows": True, "sunDate": "2026-03-01"},
+    }
+
+
+def test_a_reset_step_takes_no_fork_bag():
+    from revit_model_mcp.actions import ActionStep
+
+    step = ActionStep(action="reset_element_ids", args={"element_ids": [42, 43]})
+    assert step.payload() == {
+        "command": "reset-element-ids",
+        "elementIds": [42, 43],
+        "dryRun": False,
+    }
+
+
+def test_a_rebuild_step_names_its_destination_in_the_fork_bag():
+    from revit_model_mcp.actions import ActionStep
+
+    step = ActionStep(
+        action="rebuild_model_ids",
+        args={"destination_path": r"C:\out\model.rvt", "copies": 2},
+    )
+    payload = step.payload()
+    assert payload["view"] == ""
+    assert payload["fork"] == {
+        "destinationPath": r"C:\out\model.rvt",
+        "overwrite": False,
+        "removeTemplateLevels": True,
+        "seed": 0,
+        "duplicateNames": "override",
+        "copies": 2,
+    }
+
+
+@pytest.mark.parametrize(
+    "action,args,message",
+    [
+        (
+            "set_view_lighting",
+            {"view": "L1"},
+            "Provide at least one lighting setting to change.",
+        ),
+        (
+            "set_view_lighting",
+            {"view": "L1", "sun_azimuth_deg": 90},
+            "sun_azimuth_deg and sun_altitude_deg must be provided together.",
+        ),
+        (
+            "create_floor",
+            {"points_mm": [[0, 0], [0, 0], [100, 0]], "level": "L1"},
+            "Floor boundary points must not repeat consecutively.",
+        ),
+        (
+            "set_phase",
+            {"element_ids": [42]},
+            "At least one of created_phase or demolished_phase is required.",
+        ),
+        (
+            "merge_phases",
+            {"source_phase": "Phase 1", "target_phase": "phase 1"},
+            "source_phase and target_phase must differ.",
+        ),
+    ],
+)
+def test_a_fork_step_makes_the_same_refusals_as_its_tool(action, args, message):
+    from revit_model_mcp.actions import ActionStep
+
+    with pytest.raises(ValueError, match=message):
+        ActionStep(action=action, args=args)
+
+
 @pytest.fixture
 def anyio_backend():
     return "asyncio"

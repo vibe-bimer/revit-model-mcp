@@ -11,6 +11,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, create_model, model_validator
 
+from revit_model_mcp import fork_actions
 from revit_model_mcp.errors import unavailable
 from revit_model_mcp.fork_actions import register_fork_actions
 from revit_model_mcp.policy import policy_gate
@@ -312,6 +313,10 @@ _BATCH_MODELS = {
     action: create_model(action, __config__=ConfigDict(extra="forbid"), **fields)
     for action, fields in _BATCH_FIELDS.items()
 }
+# A fork action is a legal step name too: its models come from the fork layer, so the step vocabulary
+# is extended in one place rather than copied (adr/0004, adr/0008).
+_BATCH_MODELS.update(fork_actions.step_models())
+_FORK_ACTIONS = frozenset(fork_actions.STEP_FIELDS)
 
 
 def validate_mep_run(
@@ -361,12 +366,22 @@ class ActionStep(BaseModel):
         "apply_view_template",
         "create_sheet",
         "override_graphics",
+        # The fork's own actions, listed once here so a batch step can name them (adr/0004).
+        "set_view_lighting",
+        "create_level",
+        "create_floor",
+        "set_phase",
+        "merge_phases",
+        "reset_element_ids",
+        "rebuild_model_ids",
     ]
     args: dict
 
     @model_validator(mode="after")
     def validate_args(self):
         self.args = _BATCH_MODELS[self.action].model_validate(self.args).model_dump(by_alias=True)
+        if self.action in _FORK_ACTIONS:
+            fork_actions.check_step(self.action, self.args, ValueError)
         if self.action == "isolate" and not self.args["reset"] and not self.args["element_ids"]:
             raise ValueError("element_ids must not be empty unless reset is true.")
         if self.action == "create_wall" and self.args["start_mm"] == self.args["end_mm"]:
@@ -401,6 +416,10 @@ class ActionStep(BaseModel):
         return self
 
     def payload(self) -> dict:
+        fork_payload = fork_actions.step_payload(self.action, self.args)
+        if fork_payload is not None:
+            return fork_payload
+
         def camel(key):
             first, *rest = key.split("_")
             return first + "".join(part.title() for part in rest)

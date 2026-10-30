@@ -4228,7 +4228,14 @@
               "duplicate_view",
               "apply_view_template",
               "create_sheet",
-              "override_graphics"
+              "override_graphics",
+              "set_view_lighting",
+              "create_level",
+              "create_floor",
+              "set_phase",
+              "merge_phases",
+              "reset_element_ids",
+              "rebuild_model_ids"
             ],
             "type": "string"
           },
@@ -5021,7 +5028,14 @@
               "duplicate_view",
               "apply_view_template",
               "create_sheet",
-              "override_graphics"
+              "override_graphics",
+              "set_view_lighting",
+              "create_level",
+              "create_floor",
+              "set_phase",
+              "merge_phases",
+              "reset_element_ids",
+              "rebuild_model_ids"
             ],
             "type": "string"
           },

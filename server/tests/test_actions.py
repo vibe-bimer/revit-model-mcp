@@ -1872,9 +1872,11 @@ def test_create_mep_run_rejects_invalid_geometry_and_sizes(arguments):
 def test_batch_actions_and_process_models_schema_match():
     import asyncio
 
-    from revit_model_mcp.actions import _BATCH_FIELDS, ActionStep
+    from revit_model_mcp.actions import _BATCH_MODELS, ActionStep
 
-    actions = set(_BATCH_FIELDS)
+    # The vocabulary and the models that validate each step must not drift apart. The fork adds models
+    # of its own, so the check reads the table the validator actually indexes (adr/0008).
+    actions = set(_BATCH_MODELS)
     assert set(ActionStep.model_json_schema()["properties"]["action"]["enum"]) == actions
     assert {"override_graphics", "create_mep_run"} <= actions
     server, _, _ = action_server()
