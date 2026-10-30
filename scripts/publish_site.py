@@ -145,6 +145,20 @@ def git(repo: Path, *args: str) -> subprocess.CompletedProcess:
     )
 
 
+def remote_ref(merge: str) -> str:
+    """The branch path a merge config names, without the local ``refs/heads/`` namespace.
+
+    ``git config branch.<b>.merge`` is a full source ref such as
+    ``refs/heads/docs/spec-28-integration``. Only the ``refs/heads/`` prefix is local and has
+    to go; the rest of the path, slashes included, names the branch, so the remote-tracking
+    ref keeps its directory (``origin/docs/spec-28-integration``).
+    """
+    prefix = "refs/heads/"
+    if merge.startswith(prefix):
+        return merge[len(prefix) :]
+    return merge
+
+
 def resolve_target(repo: Path, skip_pull: bool, pinned: str | None) -> tuple[str, str]:
     """Return (commit sha, resolution mode) or raise with a sync failure."""
     if pinned:
@@ -169,7 +183,7 @@ def resolve_target(repo: Path, skip_pull: bool, pinned: str | None) -> tuple[str
             f"git fetch {remote} failed: {fetched.stderr.strip()}",
             "sync",
         )
-    tip = git(repo, "rev-parse", f"refs/remotes/{remote}/{merge.rsplit('/', 1)[-1]}")
+    tip = git(repo, "rev-parse", f"refs/remotes/{remote}/{remote_ref(merge)}")
     if tip.returncode != 0:
         raise SystemExitMessage(
             EXIT_SYNC,

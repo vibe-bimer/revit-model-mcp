@@ -623,3 +623,26 @@ class EnvironmentLinkTests(unittest.TestCase):
         source.mkdir()
         self.assertEqual(self.module.link_build_environment(source, repo), [])
         self.assertFalse((source / "server" / ".venv").exists())
+
+
+class MergeRefTests(unittest.TestCase):
+    """The upstream branch comes from ``branch.<b>.merge``, whose path may contain slashes."""
+
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location(
+            "publish_site_under_test", PUBLISH_SCRIPT
+        )
+        self.module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.module)
+
+    def test_a_slashed_branch_keeps_its_directories(self):
+        self.assertEqual(
+            self.module.remote_ref("refs/heads/docs/spec-28-integration"),
+            "docs/spec-28-integration",
+        )
+
+    def test_a_plain_branch_drops_only_the_prefix(self):
+        self.assertEqual(self.module.remote_ref("refs/heads/main"), "main")
+
+    def test_an_unexpected_ref_is_used_verbatim(self):
+        self.assertEqual(self.module.remote_ref("refs/tags/v1.0.0"), "refs/tags/v1.0.0")
