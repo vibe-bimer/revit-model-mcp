@@ -46,7 +46,12 @@
   var config = readConfig();
   var lang = document.documentElement.lang === "en" ? "en" : "zh";
   var labels = TEXT[lang];
+  // Material hands out the site root relative to the current page ("../.."), without a trailing
+  // slash, so every path built from it needs one.
   var base = config.base || "/";
+  if (base.charAt(base.length - 1) !== "/") {
+    base += "/";
+  }
   var catalog = window.__RMM_CATALOG__ || { release: {}, branch: {} };
   var pages = null;
   var pending = null;
@@ -171,7 +176,9 @@
       if (!surface.tools || !surface.tools[name]) {
         return;
       }
-      var path = surface.directory + "/" + name + "/";
+      // The index stores one page per language, so the synthesized entry has to point at the
+      // page written in the language the reader is in.
+      var path = (lang === "en" ? "en/" : "") + surface.directory + "/" + name + "/";
       var known = (pages || []).filter(function (entry) {
         return entry.path === path;
       })[0];

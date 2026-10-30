@@ -70,6 +70,7 @@ LABELS = {
         "versions": "版本入口",
         "versions_intro": "本目录记录的是已发布的现有版本；集成分支尚未发布，两者工具数量与清单都不同。下表的状态、版本号与数量都从注册表读取。",
         "entry": "目录",
+        "platform_page": "新版基座工具目录",
         "objects": "按模型对象浏览",
         "objects_intro": "视图相关工具按操作的模型对象再分一次：视图、图纸、明细表与视口显示。现有版本没有图纸和明细表的工具，对应位置指向集成分支的同类工具。",
         "branch_tools": "集成分支有 {count} 个同类工具",
@@ -134,6 +135,7 @@ LABELS = {
         "versions": "Version entries",
         "versions_intro": "This catalog records the released version. The integration branch is unreleased, and the two differ in both count and tool list. The status, version number and counts below are read from the registries.",
         "entry": "Catalog",
+        "platform_page": "Platform tool catalog",
         "objects": "Browse by model object",
         "objects_intro": "The view-related tools are split again by the model object they act on: views, sheets, schedules and viewport display. The release has no sheet or schedule tools, so those rows point at the same-named tools on the integration branch.",
         "branch_tools": "The integration branch has {count} tools of this kind",
@@ -441,7 +443,7 @@ def index_page(
         f"| {labels['version']} | {RELEASE_VERSION} | {platform_catalog.LABELS[lang]['unreleased_fact']} |",
         f"| {platform_catalog.LABELS[lang]['branch']} | main | `{platform_catalog.BRANCH}` |",
         f"| {labels['tools']} | {len(tools)} | {branch_count} |",
-        f"| {labels['entry']} | index.md | [../platform/index.md](../platform/index.md) |",
+        f"| {labels['entry']} | index.md | [{labels['platform_page']}](../platform/index.md) |",
         "",
         f"## {labels['by_version']} {{#by-version}}",
         "",
@@ -478,18 +480,19 @@ def index_page(
     out += [f"## {labels['objects']} {{#objects}}", "", labels["objects_intro"], ""]
     for object_key, object_group in object_groups.items():
         members = [t for t in tools if t["name"] in object_group["tools"]]
-        out += [
-            f"### {object_group[lang]} {{#objects-{object_key}}}",
-            "",
-            f"| {labels['tools']} | {labels['summary']} |",
-            "| --- | --- |",
-        ]
-        for tool in members:
-            cap = capabilities["tools"][tool["name"]]
-            out.append(
-                f"| {origin_badge(cap, lang)}[{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {cap['summary'][lang]} |"
-            )
-        if not members:
+        out.append(f"### {object_group[lang]} {{#objects-{object_key}}}")
+        out.append("")
+        if members:
+            out += [
+                f"| {labels['tools']} | {labels['summary']} |",
+                "| --- | --- |",
+            ]
+            for tool in members:
+                cap = capabilities["tools"][tool["name"]]
+                out.append(
+                    f"| {origin_badge(cap, lang)}[{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {cap['summary'][lang]} |"
+                )
+        else:
             # The release has no tool for this object; the branch does, so point at it instead of
             # leaving an empty table with no way forward.
             branch_count_for_group = sum(

@@ -443,6 +443,9 @@ body {
 
 /* Version-aware results: a result states its language, its tool name and its catalog status. */
 .rmm-search-toggle {
+  /* The options row that hosts the switch passes clicks through to the search input. */
+  pointer-events: auto;
+  background: var(--rmc-paper, #fff);
   border: 1px solid var(--rmc-rule);
   border-radius: var(--rmc-radius);
   color: var(--rmc-ink-3);

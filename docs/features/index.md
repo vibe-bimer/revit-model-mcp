@@ -17,7 +17,7 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | 版本 | 0.9.0 | 未发布（集成分支） |
 | 分支 | main | `integration/upstream-1.0` |
 | 工具 | 35 | 80 |
-| 目录 | index.md | [../platform/index.md](../platform/index.md) |
+| 目录 | index.md | [新版基座工具目录](../platform/index.md) |
 
 ## 按 Revit 年份查阅 {#by-version}
 
@@ -123,16 +123,12 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 
 ### 图纸 {#objects-sheets}
 
-| 工具 | 用途 |
-| --- | --- |
 
 集成分支有 2 个同类工具：[图纸](../platform/index.md#objects-sheets)。
 
 
 ### 明细表 {#objects-schedules}
 
-| 工具 | 用途 |
-| --- | --- |
 
 集成分支有 2 个同类工具：[明细表](../platform/index.md#objects-schedules)。
 

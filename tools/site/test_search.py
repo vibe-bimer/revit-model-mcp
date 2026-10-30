@@ -98,6 +98,17 @@ class FeatureIndexTests(unittest.TestCase):
             self.assertIn("(../platform/index.md#objects-sheets)", page)
             self.assertIn("(../platform/index.md#objects-schedules)", page)
 
+    def test_an_empty_object_group_does_not_emit_a_header_only_table(self):
+        # A table with nothing but its header reads as a defect; the pointer to the branch catalog
+        # is the whole content of that section.
+        for lang in ("zh", "en"):
+            page = self.page(lang)
+            for key in ("sheets", "schedules"):
+                start = page.index(f"{{#objects-{key}}}")
+                end = page.index("###", start)
+                section = page[start:end]
+                self.assertNotIn("| --- | --- |", section, section)
+
     def test_object_groups_list_every_grouped_release_tool(self):
         page = self.page("zh")
         grouped = [

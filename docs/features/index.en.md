@@ -17,7 +17,7 @@ This catalog records the released version. The integration branch is unreleased,
 | Version | 0.9.0 | Unreleased (integration branch) |
 | Branch | main | `integration/upstream-1.0` |
 | Tool | 35 | 80 |
-| Catalog | index.md | [../platform/index.md](../platform/index.md) |
+| Catalog | index.md | [Platform tool catalog](../platform/index.md) |
 
 ## Browse by Revit year {#by-version}
 
@@ -123,16 +123,12 @@ The view-related tools are split again by the model object they act on: views, s
 
 ### Sheets {#objects-sheets}
 
-| Tool | Purpose |
-| --- | --- |
 
 The integration branch has 2 tools of this kind: [Sheets](../platform/index.md#objects-sheets).
 
 
 ### Schedules {#objects-schedules}
 
-| Tool | Purpose |
-| --- | --- |
 
 The integration branch has 2 tools of this kind: [Schedules](../platform/index.md#objects-schedules).
 

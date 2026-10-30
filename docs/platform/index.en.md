@@ -17,7 +17,7 @@ Each catalog records one version: the current release is published and the integ
 | Status | Released 0.9.0 | Unreleased (integration branch) |
 | Branch | main | `integration/upstream-1.0` |
 | Tools | 35 | 80 |
-| Catalog | [../features/index.md](../features/index.md) | index.md |
+| Catalog | [Feature overview](../features/index.md) | index.md |
 
 ## Two catalogs {#catalogs}
 

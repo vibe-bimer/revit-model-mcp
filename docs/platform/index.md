@@ -17,7 +17,7 @@ description: "集成分支（上游 1.0 基座加本仓库自研工具）的完�
 | 状态 | 已发布 0.9.0 | 未发布（集成分支） |
 | 分支 | main | `integration/upstream-1.0` |
 | 工具数 | 35 | 80 |
-| 目录 | [../features/index.md](../features/index.md) | index.md |
+| 目录 | [功能总览](../features/index.md) | index.md |
 
 ## 两套工具面 {#catalogs}
 
