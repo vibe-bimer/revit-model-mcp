@@ -861,6 +861,10 @@ internal static class ActionCommandExecutor
             return viewData;
         }
 
+        // A rebuild writes a second document and manages its own transactions there, so it runs outside this one.
+        if (Fork.ForkActions.TryRunBeforeTransaction(document, command, action, out var forkRebuild))
+            return forkRebuild!;
+
         var skips = new SkippedByReason();
         var transform = TransformSkipPolicy.Supports(command, action.Copy);
         var requestedCount = ids.Count;

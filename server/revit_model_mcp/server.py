@@ -23,6 +23,7 @@ from revit_model_mcp import package_version
 from revit_model_mcp.actions import env_flag, redact_model_paths, register_actions
 from revit_model_mcp.batch import register_batch
 from revit_model_mcp.errors import unavailable
+from revit_model_mcp.fork_actions import register_fork_reads
 from revit_model_mcp.http_host import HttpHost
 from revit_model_mcp.pipe_host import LocalPipeHost
 from revit_model_mcp.policy import policy_refusal
@@ -1173,6 +1174,7 @@ async def revit_family_audit(
 
 
 register_actions(mcp, _execute, lambda: host)
+register_fork_reads(mcp, _execute)
 register_batch(mcp, lambda: host, lambda: channel)
 
 

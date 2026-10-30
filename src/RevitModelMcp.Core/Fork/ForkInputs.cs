@@ -18,19 +18,50 @@ public static class ForkInputs
         {
             ["set-view-lighting"] = new(StringComparer.Ordinal)
             {
-                ["shadows"] = (action, value) => action.Shadows = Flag("shadows", value),
-                ["shadowIntensity"] = (action, value) => action.ShadowIntensity = Whole("shadowIntensity", value),
-                ["sunlightIntensity"] = (action, value) => action.SunlightIntensity = Whole("sunlightIntensity", value),
-                ["sunDate"] = (action, value) => action.SunDate = Text("sunDate", value),
-                ["sunTime"] = (action, value) => action.SunTime = Text("sunTime", value),
-                ["sunAzimuthDeg"] = (action, value) => action.SunAzimuthDeg = Number("sunAzimuthDeg", value),
-                ["sunAltitudeDeg"] = (action, value) => action.SunAltitudeDeg = Number("sunAltitudeDeg", value),
-                ["groundPlane"] = (action, value) => action.GroundPlane = Flag("groundPlane", value),
-                ["groundPlaneLevel"] = (action, value) => action.GroundPlaneLevel = Text("groundPlaneLevel", value),
-                ["background"] = (action, value) => action.Background = Text("background", value),
-                ["backgroundColors"] = (action, value) => action.BackgroundColors = Texts("backgroundColors", value),
-                ["lightingScheme"] = (action, value) => action.LightingScheme = Text("lightingScheme", value)
-            }
+                ["shadows"] = (action, value) => action.Options.Shadows = Flag("shadows", value),
+                ["shadowIntensity"] = (action, value) => action.Options.ShadowIntensity = Whole("shadowIntensity", value),
+                ["sunlightIntensity"] = (action, value) => action.Options.SunlightIntensity = Whole("sunlightIntensity", value),
+                ["sunDate"] = (action, value) => action.Options.SunDate = Text("sunDate", value),
+                ["sunTime"] = (action, value) => action.Options.SunTime = Text("sunTime", value),
+                ["sunAzimuthDeg"] = (action, value) => action.Options.SunAzimuthDeg = Number("sunAzimuthDeg", value),
+                ["sunAltitudeDeg"] = (action, value) => action.Options.SunAltitudeDeg = Number("sunAltitudeDeg", value),
+                ["groundPlane"] = (action, value) => action.Options.GroundPlane = Flag("groundPlane", value),
+                ["groundPlaneLevel"] = (action, value) => action.Options.GroundPlaneLevel = Text("groundPlaneLevel", value),
+                ["background"] = (action, value) => action.Options.Background = Text("background", value),
+                ["backgroundColors"] = (action, value) => action.Options.BackgroundColors = Texts("backgroundColors", value),
+                ["lightingScheme"] = (action, value) => action.Options.LightingScheme = Text("lightingScheme", value)
+            },
+            ["create-level"] = new(StringComparer.Ordinal)
+            {
+                ["elevationMm"] = (action, value) => action.Options.ElevationMm = Number("elevationMm", value),
+                ["createView"] = (action, value) => action.Options.CreateView = Flag("createView", value)
+            },
+            ["create-floor"] = new(StringComparer.Ordinal)
+            {
+                ["floorType"] = (action, value) => action.Options.FloorType = Text("floorType", value)
+            },
+            ["set-phase"] = new(StringComparer.Ordinal)
+            {
+                ["createdPhase"] = (action, value) => action.Options.CreatedPhase = Text("createdPhase", value),
+                ["demolishedPhase"] = (action, value) => action.Options.DemolishedPhase = Text("demolishedPhase", value)
+            },
+            ["merge-phases"] = new(StringComparer.Ordinal)
+            {
+                ["sourcePhase"] = (action, value) => action.Options.SourcePhase = Text("sourcePhase", value),
+                ["targetPhase"] = (action, value) => action.Options.TargetPhase = Text("targetPhase", value)
+            },
+            ["reset-element-ids"] = new(StringComparer.Ordinal),
+            ["rebuild-model-ids"] = new(StringComparer.Ordinal)
+            {
+                ["destinationPath"] = (action, value) => action.Options.DestinationPath = Text("destinationPath", value),
+                ["templatePath"] = (action, value) => action.Options.TemplatePath = Text("templatePath", value),
+                ["overwrite"] = (action, value) => action.Options.Overwrite = Flag("overwrite", value),
+                ["removeTemplateLevels"] = (action, value) =>
+                    action.Options.RemoveTemplateLevels = Flag("removeTemplateLevels", value),
+                ["seed"] = (action, value) => action.Options.Seed = Whole("seed", value),
+                ["duplicateNames"] = (action, value) => action.Options.DuplicateNames = Text("duplicateNames", value),
+                ["copies"] = (action, value) => action.Options.Copies = Whole("copies", value)
+            },
         };
 
     /// <summary>Copies the bag onto the action's fork inputs and refuses a key the command does not accept.</summary>

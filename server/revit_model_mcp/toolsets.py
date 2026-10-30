@@ -43,6 +43,12 @@ TOOLSETS: dict[str, tuple[str, ...]] = {
         "revit_change_type",
         "revit_delete",
         "revit_run_actions",
+        "revit_create_level",
+        "revit_create_floor",
+        "revit_set_phase",
+        "revit_merge_phases",
+        "revit_reset_element_ids",
+        "revit_rebuild_model_ids",
     ),
     "documents": (
         "revit_open_document",
@@ -99,6 +105,7 @@ TOOLSETS: dict[str, tuple[str, ...]] = {
         "revit_export_nwc",
         "revit_nwc_settings_check",
         "revit_issue_register",
+        "revit_export_element_ids",
     ),
     "batch": (
         "revit_batch_start",

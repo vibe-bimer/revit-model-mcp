@@ -985,19 +985,9 @@ public sealed class ActionJobContract
     public double? DiameterMm { get; set; }
     public double? OffsetMm { get; set; }
     public long? ConnectTo { get; set; }
-    // Fork action inputs (adr/0005): carried on the shared contract so the fork registry can read them.
-    public bool? Shadows { get; set; }
-    public int? ShadowIntensity { get; set; }
-    public int? SunlightIntensity { get; set; }
-    public string? SunDate { get; set; }
-    public string? SunTime { get; set; }
-    public double? SunAzimuthDeg { get; set; }
-    public double? SunAltitudeDeg { get; set; }
-    public bool? GroundPlane { get; set; }
-    public string? GroundPlaneLevel { get; set; }
-    public string? Background { get; set; }
-    public List<string>? BackgroundColors { get; set; }
-    public string? LightingScheme { get; set; }
+    // The fork's own action inputs live on this one fork-owned object, so a fork action adds an input
+    // without an upstream field (adr/0005).
+    public Fork.ForkOptions Options { get; set; } = new();
 }
 
 [DataContract]
@@ -1836,6 +1826,9 @@ public sealed class ActionResultData
 
     /// <summary>Circumstance notes a fork action adds, such as a shared sun-settings warning.</summary>
     [DataMember(Name = "notes", EmitDefaultValue = false)] public List<string>? Notes { get; set; }
+
+    /// <summary>The fork's own result block, so a fork action reports fields upstream has no place for.</summary>
+    [DataMember(Name = "fork", EmitDefaultValue = false)] public Fork.ForkOutcome? ForkOutcome { get; set; }
     [DataMember(Name = "steps", EmitDefaultValue = false)] public List<BatchStepResult>? Steps { get; set; }
     [DataMember(Name = "undoName", EmitDefaultValue = false)] public string? UndoName { get; set; }
     [DataMember(Name = "committed", EmitDefaultValue = false)] public bool? Committed { get; set; }

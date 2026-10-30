@@ -933,6 +933,93 @@
     ],
     "type": "object"
   },
+  "revit_create_floor": {
+    "properties": {
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "floor_type": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "level": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "points_mm": {
+        "items": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "minItems": 3,
+        "type": "array"
+      }
+    },
+    "required": [
+      "level",
+      "points_mm"
+    ],
+    "type": "object"
+  },
+  "revit_create_level": {
+    "properties": {
+      "create_view": {
+        "default": false,
+        "type": "boolean"
+      },
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "elevation_mm": {
+        "type": "number"
+      },
+      "name": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "elevation_mm",
+      "name"
+    ],
+    "type": "object"
+  },
   "revit_create_mep_run": {
     "properties": {
       "connect_to": {
@@ -2142,6 +2229,53 @@
     ],
     "type": "object"
   },
+  "revit_export_element_ids": {
+    "properties": {
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "fields": {
+        "anyOf": [
+          {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "path": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "timeout_seconds": {
+        "default": 120,
+        "maximum": 600,
+        "minimum": 1,
+        "type": "integer"
+      }
+    },
+    "type": "object"
+  },
   "revit_export_nwc": {
     "properties": {
       "confirm_token": {
@@ -3063,6 +3197,38 @@
     },
     "required": [
       "paths"
+    ],
+    "type": "object"
+  },
+  "revit_merge_phases": {
+    "properties": {
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "source_phase": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "target_phase": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "required": [
+      "source_phase",
+      "target_phase"
     ],
     "type": "object"
   },
@@ -4595,6 +4761,78 @@
     },
     "type": "object"
   },
+  "revit_rebuild_model_ids": {
+    "properties": {
+      "copies": {
+        "default": 1,
+        "type": "integer"
+      },
+      "destination_path": {
+        "type": "string"
+      },
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "duplicate_names": {
+        "default": "override",
+        "enum": [
+          "override",
+          "rename"
+        ],
+        "type": "string"
+      },
+      "overwrite": {
+        "default": false,
+        "type": "boolean"
+      },
+      "remove_template_levels": {
+        "default": true,
+        "type": "boolean"
+      },
+      "seed": {
+        "default": 0,
+        "type": "integer"
+      },
+      "template_path": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "view": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "destination_path"
+    ],
+    "type": "object"
+  },
   "revit_remove_links": {
     "properties": {
       "confirm_token": {
@@ -4671,6 +4909,38 @@
     },
     "required": [
       "links"
+    ],
+    "type": "object"
+  },
+  "revit_reset_element_ids": {
+    "properties": {
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "element_ids": {
+        "items": {
+          "exclusiveMinimum": 0,
+          "maximum": 9223372036854775807,
+          "type": "integer"
+        },
+        "minItems": 1,
+        "type": "array"
+      }
+    },
+    "required": [
+      "element_ids"
     ],
     "type": "object"
   },
@@ -4980,6 +5250,60 @@
       "element_id",
       "parameter",
       "value"
+    ],
+    "type": "object"
+  },
+  "revit_set_phase": {
+    "properties": {
+      "created_phase": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "demolished_phase": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "element_ids": {
+        "items": {
+          "exclusiveMinimum": 0,
+          "maximum": 9223372036854775807,
+          "type": "integer"
+        },
+        "minItems": 1,
+        "type": "array"
+      }
+    },
+    "required": [
+      "element_ids"
     ],
     "type": "object"
   },

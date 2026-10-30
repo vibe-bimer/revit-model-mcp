@@ -96,7 +96,7 @@ public static class ActionSummaryBuilder
             "execute-code" when context.CodeFailure == CodeFailureKind.Execution => $"Code failed in {doc}.",
             "execute-code" when context.NoChanges && !context.DryRun => $"Executed code in {doc}. It changed nothing, so no undo entry was kept.",
             "execute-code" => $"{(context.DryRun ? "Ran a code preview" : "Executed code")} in {doc}.",
-            _ => Fork.ForkRegistry.TrySummarize(context.Command, doc, context.ViewName, context.DryRun, out var forkSummary) ? forkSummary : $"Ran {context.Command} in {doc}."
+            _ => Fork.ForkRegistry.TrySummarize(context, out var forkSummary) ? forkSummary : $"Ran {context.Command} in {doc}."
         };
     }
 

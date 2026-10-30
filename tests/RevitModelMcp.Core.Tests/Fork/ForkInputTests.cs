@@ -14,8 +14,8 @@ public sealed class ForkInputTests
         var parsed = ControlJobParser.Parse(
             """{"command":"set-view-lighting","view":"L1","fork":{"shadows":true,"shadowIntensity":40}}""");
         await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
-        await Assert.That(parsed.Action!.Shadows).IsTrue();
-        await Assert.That(parsed.Action!.ShadowIntensity).IsEqualTo(40);
+        await Assert.That(parsed.Action!.Options.Shadows).IsTrue();
+        await Assert.That(parsed.Action!.Options.ShadowIntensity).IsEqualTo(40);
     }
 
     [Test]
@@ -23,16 +23,16 @@ public sealed class ForkInputTests
     {
         var parsed = ControlJobParser.Parse(
             """{"command":"set-view-lighting","view":"L1","fork":{"sunAzimuthDeg":"135.5","background":"gradient","backgroundColors":["#C8DEF0","#F5F5F5","#BFBFBF"]}}""");
-        await Assert.That(parsed.Action!.SunAzimuthDeg).IsEqualTo(135.5);
-        await Assert.That(parsed.Action!.BackgroundColors).IsEquivalentTo(["#C8DEF0", "#F5F5F5", "#BFBFBF"]);
+        await Assert.That(parsed.Action!.Options.SunAzimuthDeg).IsEqualTo(135.5);
+        await Assert.That(parsed.Action!.Options.BackgroundColors).IsEquivalentTo(["#C8DEF0", "#F5F5F5", "#BFBFBF"]);
     }
 
     [Test]
     public async Task ForkBag_AbsentLeavesEveryForkInputEmpty()
     {
         var parsed = ControlJobParser.Parse("""{"command":"set-view-lighting","view":"L1"}""");
-        await Assert.That(parsed.Action!.Shadows).IsNull();
-        await Assert.That(parsed.Action!.BackgroundColors).IsNull();
+        await Assert.That(parsed.Action!.Options.Shadows).IsNull();
+        await Assert.That(parsed.Action!.Options.BackgroundColors).IsNull();
     }
 
     [Test]

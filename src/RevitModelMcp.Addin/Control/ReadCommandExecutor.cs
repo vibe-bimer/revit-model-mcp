@@ -162,6 +162,9 @@ internal static class ReadCommandExecutor
                 case ControlJobKind.CaptureElements:
                     WriteSuccess(output, job.Command, CaptureElements(document, job, startedAt.LocalDateTime), stopwatch);
                     break;
+                case ControlJobKind.ExportElementIds:
+                    WriteSuccess(output, job.Command, Fork.ForkElementIds.Read(document, job), stopwatch);
+                    break;
                 case ControlJobKind.ExportView:
                     ExecuteExportView(output, document, job, stopwatch, startedAt.LocalDateTime);
                     break;

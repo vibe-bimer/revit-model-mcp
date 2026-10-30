@@ -29,6 +29,7 @@ MCP_DIRECTORY = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = MCP_DIRECTORY.parent
 EXPECTED_TOOLS = {
     "revit_issue_register",
+    "revit_export_element_ids",
     "revit_capture_elements",
     "revit_build_report",
     "revit_jobs",
@@ -108,6 +109,12 @@ ACTION_TOOL_NAMES = {
     "revit_sync_document",
     "revit_set_view_visibility",
     "revit_set_view_lighting",
+    "revit_create_level",
+    "revit_create_floor",
+    "revit_set_phase",
+    "revit_merge_phases",
+    "revit_reset_element_ids",
+    "revit_rebuild_model_ids",
     "revit_remove_links",
     "revit_undo_last",
 }

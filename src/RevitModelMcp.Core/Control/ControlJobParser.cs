@@ -26,6 +26,7 @@ public enum ControlJobKind
     ViewWarnings,
     ScheduleData,
     ExportView,
+    ExportElementIds,
     CaptureElements,
     QueryElements,
     AggregateElements,
@@ -70,6 +71,7 @@ public sealed class ControlJobParseResult
     public long? ElementId { get; internal set; }
     public ElementFilterSpec Filters { get; internal set; } = new();
     public IReadOnlyList<string> Fields { get; internal set; } = Array.Empty<string>();
+    public string? SaveTo { get; internal set; }
     public QuerySortSpec Sort { get; internal set; } = new();
     public IReadOnlyList<string> GroupBy { get; internal set; } = Array.Empty<string>();
     public string? NumericField { get; internal set; }
@@ -152,6 +154,14 @@ public sealed class ControlJobParseResult
         return result;
     }
 
+    private static ControlJobParseResult ExportElementIds(ControlJobContract job)
+    {
+        var result = Create(ControlJobKind.ExportElementIds, "export-element-ids");
+        result.Fields = job.Fields ?? [];
+        result.SaveTo = Normalize(job.SaveTo);
+        return result;
+    }
+
     private static string? Normalize(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value!.Trim();
@@ -196,6 +206,7 @@ public sealed class ControlJobParseResult
             "view-warnings" => RequireView(ControlJobKind.ViewWarnings, command, view),
             "capture-elements" => ParseCaptureElements(job),
             "export-view" => ParseExportView(command, view, job.PixelSize, job.ZoomToFit),
+            "export-element-ids" => ExportElementIds(job),
             "schedule-data" => view is null ? Invalid(command, "schedule is required.") : ParseScheduleData(job, view),
             "query-elements" => UniversalJobParser.ParseQuery(job),
             "aggregate-elements" => UniversalJobParser.ParseAggregate(job),
@@ -510,6 +521,8 @@ public sealed partial class ControlJobContract
     public List<string>? Categories { get; set; }
     [DataMember(Name = "offset")]
     public int? Offset { get; set; }
+    [DataMember(Name = "saveTo")] public string? SaveTo { get; set; }
+
     [DataMember(Name = "limit")]
     public int? Limit { get; set; }
     [DataMember(Name = "id")]

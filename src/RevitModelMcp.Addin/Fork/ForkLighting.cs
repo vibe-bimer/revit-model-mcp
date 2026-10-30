@@ -53,45 +53,45 @@ internal static class ForkLighting
     /// <summary>Rejects an input the wire contract cannot judge: one change at least, and paired sun angles.</summary>
     internal static void Validate(ActionJobContract action)
     {
-        Require(action.Shadows.HasValue || action.ShadowIntensity.HasValue || action.SunlightIntensity.HasValue
-                || action.SunDate is not null || action.SunTime is not null
-                || action.SunAzimuthDeg.HasValue || action.SunAltitudeDeg.HasValue
-                || action.GroundPlane.HasValue || action.GroundPlaneLevel is not null
-                || action.Background is not null || action.LightingScheme is not null,
+        Require(action.Options.Shadows.HasValue || action.Options.ShadowIntensity.HasValue || action.Options.SunlightIntensity.HasValue
+                || action.Options.SunDate is not null || action.Options.SunTime is not null
+                || action.Options.SunAzimuthDeg.HasValue || action.Options.SunAltitudeDeg.HasValue
+                || action.Options.GroundPlane.HasValue || action.Options.GroundPlaneLevel is not null
+                || action.Options.Background is not null || action.Options.LightingScheme is not null,
             "Provide at least one lighting setting to change.");
-        Require(action.ShadowIntensity is null or (>= 0 and <= 100), "shadowIntensity must be between 0 and 100.");
-        Require(action.SunlightIntensity is null or (>= 0 and <= 100), "sunlightIntensity must be between 0 and 100.");
-        if (action.SunDate is not null)
+        Require(action.Options.ShadowIntensity is null or (>= 0 and <= 100), "shadowIntensity must be between 0 and 100.");
+        Require(action.Options.SunlightIntensity is null or (>= 0 and <= 100), "sunlightIntensity must be between 0 and 100.");
+        if (action.Options.SunDate is not null)
         {
-            Require(DateTime.TryParseExact(action.SunDate.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
+            Require(DateTime.TryParseExact(action.Options.SunDate.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out _), "sunDate must use yyyy-MM-dd.");
         }
 
-        if (action.SunTime is not null)
+        if (action.Options.SunTime is not null)
         {
-            Require(DateTime.TryParseExact(action.SunTime.Trim(), "HH:mm", CultureInfo.InvariantCulture,
+            Require(DateTime.TryParseExact(action.Options.SunTime.Trim(), "HH:mm", CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out _), "sunTime must use 24-hour HH:mm.");
         }
 
-        Require(action.SunAzimuthDeg.HasValue == action.SunAltitudeDeg.HasValue,
+        Require(action.Options.SunAzimuthDeg.HasValue == action.Options.SunAltitudeDeg.HasValue,
             "sunAzimuthDeg and sunAltitudeDeg must be provided together.");
-        Require(action.SunAzimuthDeg is null or (>= 0 and <= 360), "sunAzimuthDeg must be between 0 and 360.");
-        Require(action.SunAltitudeDeg is null or (>= -90 and <= 90), "sunAltitudeDeg must be between -90 and 90.");
-        if (action.Background is not null)
+        Require(action.Options.SunAzimuthDeg is null or (>= 0 and <= 360), "sunAzimuthDeg must be between 0 and 360.");
+        Require(action.Options.SunAltitudeDeg is null or (>= -90 and <= 90), "sunAltitudeDeg must be between -90 and 90.");
+        if (action.Options.Background is not null)
         {
-            Require(action.Background.Trim().ToLowerInvariant() is "sky" or "gradient", "background must be 'sky' or 'gradient'.");
+            Require(action.Options.Background.Trim().ToLowerInvariant() is "sky" or "gradient", "background must be 'sky' or 'gradient'.");
         }
 
-        if (action.BackgroundColors is not null)
+        if (action.Options.BackgroundColors is not null)
         {
-            Require(action.Background?.Trim().ToLowerInvariant() == "gradient", "backgroundColors requires background 'gradient'.");
-            Require(action.BackgroundColors.Count == 3 && action.BackgroundColors.All(IsHexColor),
+            Require(action.Options.Background?.Trim().ToLowerInvariant() == "gradient", "backgroundColors requires background 'gradient'.");
+            Require(action.Options.BackgroundColors.Count == 3 && action.Options.BackgroundColors.All(IsHexColor),
                 "backgroundColors must hold three '#RRGGBB' colors: sky, horizon, ground.");
         }
 
-        if (action.LightingScheme is not null)
+        if (action.Options.LightingScheme is not null)
         {
-            Require(action.LightingScheme.Trim().ToLowerInvariant() is "exterior-sun" or "exterior-sun-and-artificial"
+            Require(action.Options.LightingScheme.Trim().ToLowerInvariant() is "exterior-sun" or "exterior-sun-and-artificial"
                     or "exterior-artificial" or "interior-sun" or "interior-sun-and-artificial" or "interior-artificial",
                 "lightingScheme must be exterior-sun, exterior-sun-and-artificial, exterior-artificial, interior-sun, interior-sun-and-artificial or interior-artificial.");
         }
@@ -171,64 +171,64 @@ internal static class ForkLighting
         var notes = new List<string>();
         var changes = 0;
         var sunChanged = false;
-        if (action.Shadows.HasValue)
+        if (action.Options.Shadows.HasValue)
         {
-            SetShadows(settings, action.Shadows.Value);
+            SetShadows(settings, action.Options.Shadows.Value);
             changes++;
         }
 
-        if (action.ShadowIntensity.HasValue)
+        if (action.Options.ShadowIntensity.HasValue)
         {
-            view.ShadowIntensity = action.ShadowIntensity.Value;
+            view.ShadowIntensity = action.Options.ShadowIntensity.Value;
             changes++;
         }
 
-        if (action.SunlightIntensity.HasValue)
+        if (action.Options.SunlightIntensity.HasValue)
         {
-            view.SunlightIntensity = action.SunlightIntensity.Value;
+            view.SunlightIntensity = action.Options.SunlightIntensity.Value;
             changes++;
         }
 
-        if (action.SunDate is not null || action.SunTime is not null)
+        if (action.Options.SunDate is not null || action.Options.SunTime is not null)
         {
             ApplySunDateAndTime(settings, action);
             sunChanged = true;
             changes++;
         }
 
-        if (action.SunAzimuthDeg.HasValue)
+        if (action.Options.SunAzimuthDeg.HasValue)
         {
             // A fixed sun position is the lighting study type: date and time no longer drive the sun.
             settings.SunAndShadowType = SunAndShadowType.Lighting;
-            settings.Azimuth = DegreesToRadians(action.SunAzimuthDeg.Value);
-            settings.Altitude = DegreesToRadians(action.SunAltitudeDeg!.Value);
+            settings.Azimuth = DegreesToRadians(action.Options.SunAzimuthDeg.Value);
+            settings.Altitude = DegreesToRadians(action.Options.SunAltitudeDeg!.Value);
             sunChanged = true;
             changes++;
         }
 
-        if (action.GroundPlane.HasValue)
+        if (action.Options.GroundPlane.HasValue)
         {
-            settings.UsesGroundPlane = action.GroundPlane.Value;
+            settings.UsesGroundPlane = action.Options.GroundPlane.Value;
             sunChanged = true;
             changes++;
         }
 
-        if (action.GroundPlaneLevel is not null)
+        if (action.Options.GroundPlaneLevel is not null)
         {
-            SetGroundPlaneLevel(settings, ResolveLevel(document, action.GroundPlaneLevel), notes);
+            SetGroundPlaneLevel(settings, ResolveLevel(document, action.Options.GroundPlaneLevel), notes);
             sunChanged = true;
             changes++;
         }
 
-        if (action.Background is not null)
+        if (action.Options.Background is not null)
         {
             ApplyBackground(view, action);
             changes++;
         }
 
-        if (action.LightingScheme is not null)
+        if (action.Options.LightingScheme is not null)
         {
-            ApplyLightingScheme(view, action.LightingScheme);
+            ApplyLightingScheme(view, action.Options.LightingScheme);
             changes++;
         }
 
@@ -249,12 +249,12 @@ internal static class ForkLighting
     private static void ApplySunDateAndTime(SunAndShadowSettings settings, ActionJobContract action)
     {
         var local = ProjectLocalTime(settings);
-        var date = action.SunDate is null
+        var date = action.Options.SunDate is null
             ? local.Date
-            : DateTime.ParseExact(action.SunDate.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture).Date;
-        var time = action.SunTime is null
+            : DateTime.ParseExact(action.Options.SunDate.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture).Date;
+        var time = action.Options.SunTime is null
             ? local.TimeOfDay
-            : TimeSpan.ParseExact(action.SunTime.Trim(), @"hh\:mm", CultureInfo.InvariantCulture);
+            : TimeSpan.ParseExact(action.Options.SunTime.Trim(), @"hh\:mm", CultureInfo.InvariantCulture);
         // Revit reads a still image from one point in time, so a study type that spans a range is switched first.
         settings.SunAndShadowType = SunAndShadowType.StillImage;
         var requested = date.Add(time);
@@ -338,13 +338,13 @@ internal static class ForkLighting
     {
         try
         {
-            if (action.Background!.Trim().ToLowerInvariant() == "sky")
+            if (action.Options.Background!.Trim().ToLowerInvariant() == "sky")
             {
                 view.SetBackground(ViewDisplayBackground.CreateSky());
                 return;
             }
 
-            var colors = action.BackgroundColors ?? CurrentGradientColors(view);
+            var colors = action.Options.BackgroundColors ?? CurrentGradientColors(view);
             view.SetBackground(ViewDisplayBackground.CreateGradient(
                 ParseColor(colors[0]), ParseColor(colors[1]), ParseColor(colors[2])));
         }

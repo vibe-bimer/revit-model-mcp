@@ -69,6 +69,12 @@ ACTION_TOOLS = {
     "revit_sync_document",
     "revit_set_view_visibility",
     "revit_set_view_lighting",
+    "revit_create_level",
+    "revit_create_floor",
+    "revit_set_phase",
+    "revit_merge_phases",
+    "revit_reset_element_ids",
+    "revit_rebuild_model_ids",
     "revit_remove_links",
     "revit_undo_last",
 }

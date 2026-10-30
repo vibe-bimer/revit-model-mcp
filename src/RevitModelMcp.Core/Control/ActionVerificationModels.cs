@@ -34,6 +34,9 @@ public sealed class ActionFacts
 
     /// <summary>Lighting readings of the addressed view, before and after a fork lighting change.</summary>
     [DataMember(Name = "lighting", EmitDefaultValue = false)] public Core.Fork.ViewLightingFacts? Lighting { get; set; }
+
+    /// <summary>The fork's own element facts, so a fork action adds a fact without widening this contract.</summary>
+    [DataMember(Name = "fork", EmitDefaultValue = false)] public Core.Fork.ForkFacts? Fork { get; set; }
 }
 
 [DataContract]
