@@ -392,5 +392,30 @@ class ConditionalRequestTests(ServeSiteTestCase):
         self.assertEqual(body, b"")
 
 
+class SitemapTests(ServeSiteTestCase):
+    def test_gzipped_sitemap_downloads_as_application_gzip(self):
+        status, headers, body = self.request("GET", "/sitemap.xml.gz")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["content-type"], "application/gzip")
+        self.assertNotIn("content-encoding", headers)
+        self.assertEqual(gzip.decompress(body).decode("utf-8"), SITEMAP_XML)
+
+    def test_gzipped_sitemap_is_never_recompressed(self):
+        status, headers, body = self.request(
+            "GET", "/sitemap.xml.gz", {"Accept-Encoding": "gzip"}
+        )
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["content-type"], "application/gzip")
+        self.assertNotIn("content-encoding", headers)
+        self.assertEqual(gzip.decompress(body).decode("utf-8"), SITEMAP_XML)
+
+    def test_plain_sitemap_serves_as_xml(self):
+        status, headers, body = self.request("GET", "/sitemap.xml")
+        self.assertEqual(status, 200)
+        self.assertTrue(headers["content-type"].startswith("application/xml"))
+        self.assertNotIn("content-encoding", headers)
+        self.assertEqual(body.decode("utf-8"), SITEMAP_XML)
+
+
 if __name__ == "__main__":
     unittest.main()

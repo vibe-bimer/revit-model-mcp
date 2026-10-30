@@ -295,6 +295,8 @@ class DocsHandler(BaseHTTPRequestHandler):
         ".json": "application/json; charset=utf-8",
         ".svg": "image/svg+xml",
         ".xml": "application/xml; charset=utf-8",
+        # A stored *.xml.gz file is a gzip download, not XML with a coding.
+        ".gz": "application/gzip",
         ".webmanifest": "application/manifest+json",
     }
 
