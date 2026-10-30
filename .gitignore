@@ -47,6 +47,7 @@ revit-corpus/
 
 # Documentation build output (tools/site is tracked source).
 /site/
+/site-lan/
 /site.new/
 /site.prev/
 /.site-build.lock

@@ -375,6 +375,8 @@ class ZeroWindowTests(PublishHarness):
             server.server_close()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue(results, "the probe requests never ran")
+        # Recorded so a drill log shows how much traffic the switch carried.
+        print(f"\nzero-window drill: {len(results)} requests during the switch")
         failures = [entry for entry in results if entry[0] != 200]
         self.assertEqual(
             failures, [], f"{len(failures)} failed requests during the switch"

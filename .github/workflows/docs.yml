@@ -6,6 +6,7 @@ on:
     paths:
       - 'docs/**'
       - mkdocs.yml
+      - mkdocs-lan.yml
       - 'tools/site/**'
       - README.md
       - 'server/revit_model_mcp/**'
@@ -40,8 +41,7 @@ jobs:
         run: |
           python tools/site/generate_features.py --verify-registry --check
           python -m unittest discover -s tools/site -p 'test_*.py'
-          mkdocs build --strict
-          python tools/site/check_site.py --site-dir site
+          python tools/site/verify_dual_build.py
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site
