@@ -1,0 +1,43 @@
+# 批处理模型
+
+`revit_process_models`
+
+<p class="facts"><span><b>分组</b> 批处理与报告</span><span><b>类型</b> 动作</span><span><b>基座与自研的区分</b> 基座（上游）</span><span><b>当前版本是否已有</b> 没有</span></p>
+
+在同一会话中逐个打开模型，执行步骤与 C# 代码、导出、按需保存后关闭；就地保存和代码需要确认令牌。
+
+## 参数 {#parameters}
+
+| 参数 | 必填 | 默认值 | 类型 | 说明 |
+| --- | :--: | --- | --- | --- |
+| `code` | 否 | None | any |  |
+| `confirm_token` | 否 | None | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
+| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `exports` | 否 | None | any |  |
+| `folder` | 否 | None | any |  |
+| `open` | 否 | None | any |  |
+| `paths` | 否 | None | any |  |
+| `pattern` | 否 | *.rvt | string |  |
+| `recursive` | 否 | False | boolean |  |
+| `save` | 否 | None | any |  |
+| `steps` | 否 | None | any |  |
+| `stop_on_error` | 否 | False | boolean |  |
+
+### 通用参数 {#common-parameters}
+
+| 参数 | 必填 | 默认值 | 类型 | 说明 |
+| --- | :--: | --- | --- | --- |
+| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
+| `timeout_seconds` | 否 | 14400 | integer | 本次调用的等待上限（秒）。 |
+
+## 功能说明（注册表原文） {#behavior}
+
+以下保留工具在注册表中声明的英文原文，作为契约来源。
+
+```text
+Open each model in the interactive session, run steps and C# code, export, save as requested, and close. In-place saves and code need a confirm_token from the preview response. dry_run forces code.transaction="auto" and reports the override in warnings. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action.
+```
+
+---
+
+[返回目录](index.md) · [自研工具的移植状态](fork-tools.md)

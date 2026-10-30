@@ -2,7 +2,7 @@
 
 `revit_merge_phases`
 
-<p class="facts"><span><b>分组</b> 阶段</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.3.0</span><span><b>影响范围</b> 模型构件 / 参数</span></p>
+<p class="facts"><span><b>分组</b> 阶段</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.3.0</span><span><b>影响范围</b> 模型构件 / 参数</span><span><b>来源</b> 自研（本仓库）</span></p>
 
 把一个阶段的引用并入另一个阶段并删除空阶段
 

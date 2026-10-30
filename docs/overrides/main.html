@@ -1,0 +1,70 @@
+{#-
+  Theme override.
+
+  Adds the head metadata the stock theme omits (description, Open Graph, Twitter card, theme colour
+  and structured data), preloads the two fonts that paint the first screen, and hangs a reading
+  progress bar off the header. Everything else is inherited unchanged, so an upstream theme update
+  cannot silently drop page furniture.
+-#}
+{% extends "base.html" %}
+
+{% block site_meta %}
+  {{ super() }}
+  {% set page_description = page.meta.description if page.meta and page.meta.description
+    else config.site_description %}
+  {% set social_image = config.site_url ~ "assets/social-card.png" %}
+  {% if page_description %}
+    <meta name="description" content="{{ page_description }}">
+  {% endif %}
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070d18" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ page.title | striptags | e if page.title else config.site_name }}">
+  {% if page_description %}
+    <meta property="og:description" content="{{ page_description }}">
+  {% endif %}
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  <meta property="og:image" content="{{ social_image }}">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="{{ config.site_name }}">
+  <meta property="og:locale" content="zh_CN">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page.title | striptags | e if page.title else config.site_name }}">
+  {% if page_description %}
+    <meta name="twitter:description" content="{{ page_description }}">
+  {% endif %}
+  <meta name="twitter:image" content="{{ social_image }}">
+{% endblock %}
+
+{% block extrahead %}
+  <link rel="preload" href="{{ 'assets/fonts/inter-latin.woff2' | url }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ 'assets/fonts/space-grotesk-latin.woff2' | url }}" as="font" type="font/woff2" crossorigin>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": {{ config.site_name | tojson }},
+      "description": {{ (config.site_description or config.site_name) | tojson }},
+      "url": {{ config.site_url | tojson }},
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows",
+      "softwareVersion": {{ config.extra.mcp_version | default('', true) | tojson }},
+      "license": "https://opensource.org/licenses/MIT",
+      "codeRepository": {{ config.repo_url | tojson }},
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+  </script>
+{% endblock %}
+
+{% block header %}
+  {% include "partials/header.html" %}
+  <div class="rmc-progress" aria-hidden="true"><span class="rmc-progress__bar"></span></div>
+{% endblock %}
+
+{% block footer %}
+  {% include "partials/footer.html" %}
+{% endblock %}

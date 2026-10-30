@@ -1,0 +1,30 @@
+# Change Element Type
+
+`revit_change_type`
+
+<p class="facts"><span><b>Group</b> Editing primitives</span><span><b>Kind</b> Action</span><span><b>Base and fork tools</b> Base (upstream)</span><span><b>In the current release</b> No</span></p>
+
+## Parameters {#parameters}
+
+| Parameter | Required | Default | Type | Meaning |
+| --- | :--: | --- | --- | --- |
+| `dry_run` | No | False | boolean |  |
+| `element_ids` | Yes | — | array |  |
+| `family` | No | None | any |  |
+| `type_name` | Yes | — | string |  |
+
+### Common parameters {#common-parameters}
+
+| Parameter | Required | Default | Type | Meaning |
+| --- | :--: | --- | --- | --- |
+| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+
+## Behavior (registry text) {#behavior}
+
+```text
+Change each element to one compatible type; family resolves duplicate type names. dry_run rolls back. Group members are reported in skipped.inGroup; the call is refused if every element is a group member.
+```
+
+---
+
+[Back to the catalog](index.md) · [Fork tool migration status](fork-tools.md)

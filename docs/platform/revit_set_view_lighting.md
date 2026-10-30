@@ -1,0 +1,60 @@
+# 设置视图光照
+
+`revit_set_view_lighting`
+
+<p class="facts"><span><b>分组</b> 视图、图纸与明细表</span><span><b>类型</b> 动作</span><span><b>基座与自研的区分</b> 自研（本仓库） · 已移植</span><span><b>当前版本是否已有</b> 有</span></p>
+
+!!! note "使用提示"
+    已通过 fork 注册表接上七个兜底钩子，Python 工具注册与单元测试通过；C# 编译与真机验证仍在 Windows CI 与工作站上。
+
+设置一个视图的阴影、太阳位置、地平面、背景与渲染光照方案；响应给出改动前后的读数与变化项清单。
+
+## 参数 {#parameters}
+
+| 参数 | 必填 | 默认值 | 类型 | 说明 |
+| --- | :--: | --- | --- | --- |
+| `background` | 否 | None | any |  |
+| `background_colors` | 否 | None | any |  |
+| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `ground_plane` | 否 | None | any |  |
+| `ground_plane_level` | 否 | None | any |  |
+| `lighting_scheme` | 否 | None | any |  |
+| `shadow_intensity` | 否 | None | any |  |
+| `shadows` | 否 | None | any |  |
+| `sun_altitude_deg` | 否 | None | any |  |
+| `sun_azimuth_deg` | 否 | None | any |  |
+| `sun_date` | 否 | None | any |  |
+| `sun_time` | 否 | None | any |  |
+| `sunlight_intensity` | 否 | None | any |  |
+| `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |
+
+### 通用参数 {#common-parameters}
+
+| 参数 | 必填 | 默认值 | 类型 | 说明 |
+| --- | :--: | --- | --- | --- |
+| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+
+## 功能说明（注册表原文） {#behavior}
+
+以下保留工具在注册表中声明的英文原文，作为契约来源。
+
+```text
+Set the lighting of one view: shadows, sun position, ground plane, background and the rendering lighting scheme.
+
+`view` is an exact non-template view name or its decimal view ID, as revit_list_views reports it; a view without sun and shadow settings is refused.
+Every other argument is optional and only the ones you pass change; the response reports the readings before and after under verification.before.lighting and verification.after.lighting, and names what moved in changedSettings.
+`shadows` switches the view's per-view sun and shadow display: with it off Revit draws neither the sun path nor cast shadows, so the intensity settings stop showing; Revit exposes no API for the Graphic Display Options Shadows checkbox, so this per-view switch is the only shadow switch the tool can write, and a view whose sun and shadow settings are shared is refused.
+`shadow_intensity` is 0 (no cast shadow) to 100 (black) and `sunlight_intensity` is 0 to 100.
+`sun_date` (yyyy-MM-dd) and `sun_time` (24-hour HH:mm) fix a still-image sun position and are handed to Revit as local time; the readings report the stored instant as sunDateAndTimeUtc with the project time zone. Passing one keeps the other half, and both switch a sun study back to a still image.
+`sun_azimuth_deg` (clockwise from north) and `sun_altitude_deg` (degrees above the horizon) set a fixed lighting-study sun instead, and must be passed together.
+`ground_plane` uses the ground plane and `ground_plane_level` names its level; a level Revit does not already hold as a ground plane is marked as one and the response says so.
+`background` is `sky` or `gradient` and works on 3D, section and elevation views; `background_colors` gives the three gradient colors as #RRGGBB (sky, horizon, ground).
+`lighting_scheme` sets the rendering lighting source: exterior-sun, exterior-sun-and-artificial, exterior-artificial, interior-sun, interior-sun-and-artificial or interior-artificial.
+Sun and shadow settings belong to the view; a view that shares them reports sunSettingsShared true and passes the change on to every view that shares them.
+dry_run executes and rolls back, returning the same verification block without changing the model.
+`document` addresses one specific open model when several are open; an unknown or ambiguous reference is rejected.
+```
+
+---
+
+[返回目录](index.md) · [自研工具的移植状态](fork-tools.md)

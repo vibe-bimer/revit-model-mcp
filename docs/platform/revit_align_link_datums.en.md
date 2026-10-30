@@ -1,0 +1,42 @@
+# Align Link Datums
+
+`revit_align_link_datums`
+
+<p class="facts"><span><b>Group</b> Links and datums</span><span><b>Kind</b> Action</span><span><b>Base and fork tools</b> Base (upstream)</span><span><b>In the current release</b> No</span></p>
+
+## Parameters {#parameters}
+
+| Parameter | Required | Default | Type | Meaning |
+| --- | :--: | --- | --- | --- |
+| `create_missing` | No | True | boolean |  |
+| `create_plan_views` | No | False | boolean |  |
+| `dry_run` | No | False | boolean |  |
+| `grid_type` | No | None | any |  |
+| `include_pinned` | No | False | boolean |  |
+| `kinds` | No | None | any |  |
+| `level_offset_mm` | No | 0 | number |  |
+| `level_type` | No | None | any |  |
+| `link` | Yes | — | string |  |
+| `name_map` | No | None | any |  |
+| `plan_view_type` | No | None | any |  |
+| `prefix` | No | — | string |  |
+| `reuse_matching` | No | True | boolean |  |
+| `suffix` | No | — | string |  |
+| `tolerance_mm` | No | 0.5 | number |  |
+
+### Common parameters {#common-parameters}
+
+| Parameter | Required | Default | Type | Meaning |
+| --- | :--: | --- | --- | --- |
+| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | 600 | integer |  |
+
+## Behavior (registry text) {#behavior}
+
+```text
+Align host grids and levels to a loaded link, with optional creation and rollback preview. Does not create a monitor relationship.
+```
+
+---
+
+[Back to the catalog](index.md) · [Fork tool migration status](fork-tools.md)

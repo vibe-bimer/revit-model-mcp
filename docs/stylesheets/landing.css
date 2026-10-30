@@ -1,0 +1,1086 @@
+/* ==========================================================================
+   Landing page
+   --------------------------------------------------------------------------
+   The homepage is a composed layout rather than an article: a hero carrying the
+   axonometric frame, a prompt showcase, the capability map, the request path,
+   the gate model and the setup steps. Sections are numbered like drawing
+   sheets and separated by hairline rules on a modular grid.
+
+   Only this page loads these rules; every class is prefixed `rmc-` so it cannot
+   collide with the theme.
+   ========================================================================== */
+
+/* Break the landing out of the article gutter so sections can run full width. */
+.rmc-landing {
+  margin: 0 -0.8rem;
+}
+
+/* The landing page is assembled from tools/site/landing.py and content/tools.json rather than from
+   one editable page, and the pencil floats over the hero on a narrow screen. Keep it on content
+   pages, where it points at a file a reader can actually change. */
+.md-content:has(.rmc-landing) .md-content__button {
+  display: none;
+}
+
+.rmc-landing .rmc-section {
+  border-top: 1px solid var(--rmc-rule);
+  margin: 0 auto;
+  max-width: 62rem;
+  padding: 2.4rem 1.4rem;
+}
+
+.rmc-section__head {
+  margin-bottom: 1.4rem;
+  max-width: 44rem;
+}
+
+.rmc-section__num {
+  color: var(--rmc-brand);
+  display: block;
+  font-family: var(--rmc-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  margin-bottom: 0.35rem;
+}
+
+.rmc-section__title {
+  border: 0 !important;
+  color: var(--rmc-ink);
+  font-family: var(--rmc-display);
+  font-size: 1.5rem !important;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 0.4rem !important;
+  padding: 0 !important;
+}
+
+.rmc-section__lede {
+  color: var(--rmc-ink-2);
+  font-size: 0.78rem;
+  line-height: 1.65;
+  margin: 0 0 0.5rem;
+}
+
+.rmc-section__link {
+  color: var(--rmc-brand);
+  font-family: var(--rmc-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.rmc-section__link::after {
+  content: " →";
+  transition: transform 0.15s var(--rmc-ease);
+}
+
+.rmc-section__link:hover {
+  color: var(--rmc-brand-ink);
+}
+
+/* --------------------------------------------------------------------------
+   Hero
+   -------------------------------------------------------------------------- */
+
+.rmc-hero {
+  overflow: hidden;
+  padding: 2.6rem 1.4rem 0;
+  position: relative;
+}
+
+.rmc-hero__inner,
+.rmc-spec {
+  margin: 0 auto;
+  max-width: 62rem;
+  position: relative;
+}
+
+.rmc-hero__grid {
+  background-image: linear-gradient(var(--rmc-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rmc-grid) 1px, transparent 1px);
+  background-size: 1.7rem 1.7rem;
+  inset: 0;
+  -webkit-mask-image: radial-gradient(ellipse 72% 68% at 32% 26%, #000 0%, transparent 78%);
+  mask-image: radial-gradient(ellipse 72% 68% at 32% 26%, #000 0%, transparent 78%);
+  pointer-events: none;
+  position: absolute;
+}
+
+.rmc-hero__inner {
+  align-items: center;
+  display: grid;
+  gap: 1.6rem 2.4rem;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr);
+}
+
+.rmc-hero__copy {
+  min-width: 0;
+}
+
+.rmc-eyebrow {
+  align-items: center;
+  color: var(--rmc-ink-3);
+  display: inline-flex;
+  font-family: var(--rmc-mono);
+  font-size: 0.6rem;
+  gap: 0.45rem;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.7rem;
+  text-transform: uppercase;
+}
+
+.rmc-eyebrow__dot {
+  animation: rmc-pulse 2.6s var(--rmc-ease) infinite;
+  background: var(--rmc-ok);
+  border-radius: 50%;
+  height: 0.34rem;
+  width: 0.34rem;
+}
+
+@keyframes rmc-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--rmc-ok) 45%, transparent);
+    opacity: 1;
+  }
+  60% {
+    box-shadow: 0 0 0 0.34rem transparent;
+    opacity: 0.75;
+  }
+}
+
+.rmc-hero__title {
+  color: var(--rmc-ink);
+  font-family: var(--rmc-display);
+  font-size: clamp(2.1rem, 4.4vw, 3.1rem) !important;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  margin: 0 0 0.7rem !important;
+}
+
+.rmc-hero__lede {
+  color: var(--rmc-ink-2);
+  font-size: 0.84rem;
+  line-height: 1.7;
+  margin: 0 0 1.3rem;
+  max-width: 30rem;
+}
+
+.rmc-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.rmc-btn {
+  align-items: center;
+  background: var(--rmc-paper);
+  border: 1px solid var(--rmc-rule-strong);
+  border-radius: var(--rmc-radius);
+  color: var(--rmc-ink) !important;
+  display: inline-flex;
+  font-family: var(--rmc-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  gap: 0.4rem;
+  letter-spacing: -0.005em;
+  padding: 0.5rem 0.9rem;
+  text-decoration: none !important;
+  transition: background-color 0.18s var(--rmc-ease), border-color 0.18s var(--rmc-ease),
+    box-shadow 0.18s var(--rmc-ease), transform 0.18s var(--rmc-ease);
+}
+
+.rmc-btn:hover {
+  border-color: var(--rmc-ink-3);
+  box-shadow: var(--rmc-shadow-2);
+  transform: translateY(-1px);
+}
+
+.rmc-btn--primary {
+  background: var(--rmc-brand);
+  border-color: var(--rmc-brand);
+  color: #ffffff !important;
+}
+
+.rmc-btn--primary:hover {
+  background: var(--rmc-brand-ink);
+  border-color: var(--rmc-brand-ink);
+}
+
+/* Artwork ---------------------------------------------------------------- */
+
+.rmc-hero__art {
+  min-width: 0;
+}
+
+.rmc-frame {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.rmc-frame__ground {
+  fill: none;
+}
+
+.rmc-frame__col {
+  stroke: var(--rmc-rule-strong);
+  stroke-width: 1.3;
+}
+
+.rmc-frame__deck {
+  fill: var(--rmc-brand-wash);
+  stroke: var(--rmc-brand);
+  stroke-width: 1.5;
+}
+
+.rmc-frame__edge {
+  fill: color-mix(in oklab, var(--rmc-brand) 22%, var(--rmc-paper));
+  stroke: var(--rmc-brand);
+  stroke-width: 1.2;
+}
+
+.rmc-frame__line {
+  fill: none;
+  stroke: var(--rmc-accent);
+  stroke-width: 1;
+}
+
+.rmc-frame__dot {
+  fill: var(--rmc-accent);
+}
+
+.rmc-frame__key {
+  fill: var(--rmc-ink-3);
+  font-family: var(--rmc-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+}
+
+.rmc-frame__val {
+  fill: var(--rmc-ink);
+  font-family: var(--rmc-display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Draw-in: every stroke is measured, then revealed in the order it would be drawn. */
+.rmc-hero:not(.is-drawn) .rmc-frame__col,
+.rmc-hero:not(.is-drawn) .rmc-frame__deck,
+.rmc-hero:not(.is-drawn) .rmc-frame__edge,
+.rmc-hero:not(.is-drawn) .rmc-frame__leader,
+.rmc-hero:not(.is-drawn) .rmc-frame__note {
+  opacity: 0;
+}
+
+.rmc-frame__col,
+.rmc-frame__deck,
+.rmc-frame__edge,
+.rmc-frame__leader,
+.rmc-frame__note {
+  transition: opacity 0.7s var(--rmc-ease-out);
+  transition-delay: calc(var(--i, 0) * 130ms + 180ms);
+}
+
+.rmc-frame__leader {
+  transition-duration: 0.5s;
+  transition-delay: calc(var(--i, 0) * 130ms + 720ms);
+}
+
+.rmc-frame__note {
+  transition-duration: 0.6s;
+  transition-delay: calc(var(--i, 0) * 130ms + 900ms);
+}
+
+/* Spec strip ------------------------------------------------------------- */
+
+.rmc-spec {
+  border-top: 1px solid var(--rmc-rule);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-top: 2.2rem;
+}
+
+.rmc-spec__cell {
+  border-left: 1px solid var(--rmc-rule);
+  padding: 0.95rem 0.9rem 1.05rem;
+}
+
+.rmc-spec__cell:first-child {
+  border-left: 0;
+  padding-left: 0;
+}
+
+.md-typeset dt {
+  color: var(--rmc-ink-3);
+  font-family: var(--rmc-mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+}
+
+/* Material sets `[dir="ltr"] .md-typeset dd` (specificity 0,2,1), so the element-qualified
+   selector here ties with it and, loading later, wins. */
+.md-typeset .rmc-spec dd {
+  color: var(--rmc-ink);
+  font-family: var(--rmc-display);
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0 0 0.3rem;
+}
+
+.md-typeset .rmc-spec dd.rmc-spec__text {
+  font-size: 0.82rem;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  padding: 0.28rem 0;
+}
+
+.md-typeset .rmc-spec p {
+  color: var(--rmc-ink-3);
+  font-size: 0.62rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Prompt showcase
+   -------------------------------------------------------------------------- */
+
+.rmc-prompts {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+}
+
+/* Read prompts tile; the action prompt sits in its own band, because the read/write split is the
+   first thing a visitor needs to understand about this server. */
+.rmc-band {
+  align-items: center;
+  display: grid;
+  gap: 0.7rem;
+  /* The label sizes to its own text; a fractional column left a dead gap beside it. */
+  grid-template-columns: auto minmax(0, 1fr);
+  margin-top: 0.7rem;
+}
+
+.rmc-band__label {
+  color: var(--rmc-accent);
+  font-family: var(--rmc-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-right: 0.6rem;
+}
+
+.md-typeset .rmc-band .rmc-prompt {
+  background: var(--rmc-accent-wash);
+  border-color: color-mix(in oklab, var(--rmc-accent) 24%, transparent);
+  display: grid;
+  gap: 0.4rem 1.4rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  padding: 0.85rem 1rem;
+}
+
+.md-typeset .rmc-band .rmc-prompt__text {
+  align-self: center;
+  grid-column: 1;
+  grid-row: 2;
+  margin: 0;
+}
+
+.md-typeset .rmc-band .rmc-prompt__foot {
+  align-items: flex-end;
+  border-top: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+  grid-column: 2;
+  grid-row: 2;
+  justify-content: flex-end;
+  padding-top: 0;
+  text-align: right;
+}
+
+.md-typeset .rmc-band .rmc-prompt__go {
+  flex: none;
+  max-width: 16rem;
+}
+
+.md-typeset .rmc-band .rmc-prompt__kind {
+  grid-column: 1;
+}
+
+.rmc-band .rmc-prompt__mark {
+  display: none;
+}
+
+.rmc-band .rmc-copy {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  opacity: 1;
+  position: static;
+  width: fit-content;
+}
+
+.md-typeset .rmc-prompt {
+  background: var(--rmc-paper);
+  border: 1px solid var(--rmc-rule);
+  border-radius: var(--rmc-radius-lg);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  overflow: hidden;
+  padding: 0.9rem 1rem 0.8rem;
+  position: relative;
+  transition: border-color 0.2s var(--rmc-ease), box-shadow 0.2s var(--rmc-ease),
+    transform 0.2s var(--rmc-ease);
+}
+
+.md-typeset .rmc-prompt:hover {
+  border-color: var(--rmc-rule-strong);
+  box-shadow: var(--rmc-shadow-2);
+  transform: translateY(-2px);
+}
+
+.rmc-prompt__kind {
+  background: var(--rmc-brand-wash);
+  border-radius: 1rem;
+  color: var(--rmc-brand);
+  font-family: var(--rmc-mono);
+  font-size: 0.52rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 0.1rem 0.45rem;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.rmc-prompt--action .rmc-prompt__kind {
+  background: var(--rmc-accent-wash);
+  color: var(--rmc-accent);
+}
+
+.rmc-prompt__mark {
+  color: var(--rmc-rule-strong);
+  font-family: var(--rmc-display);
+  font-size: 2.4rem;
+  line-height: 0.6;
+  position: absolute;
+  right: 0.85rem;
+  top: 1.1rem;
+}
+
+/* Three classes deep: Material's `[dir="ltr"] .md-typeset blockquote` sets border-left and
+   padding-left at a specificity a two-class selector cannot beat. */
+.md-typeset .rmc-prompt .rmc-prompt__text {
+  border: 0 !important;
+  color: var(--rmc-ink);
+  flex: 1;
+  font-size: 0.84rem;
+  font-weight: 500;
+  line-height: 1.55;
+  margin: 0.6rem 0 0.8rem;
+  padding: 0 !important;
+}
+
+.md-typeset .rmc-prompt__foot {
+  align-items: baseline;
+  border-top: 1px solid var(--rmc-rule);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  padding-top: 0.6rem;
+}
+
+.rmc-prompt__foot code {
+  background: none !important;
+  border: 0 !important;
+  color: var(--rmc-brand) !important;
+  font-size: 0.6rem !important;
+  padding: 0 !important;
+}
+
+.rmc-prompt__go {
+  color: var(--rmc-ink-3);
+  flex: 1;
+  font-size: 0.62rem;
+  line-height: 1.4;
+  min-width: 8rem;
+}
+
+/* Integration progress stays visually distinct from the released tool catalog. */
+.md-typeset ul.rmc-development {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.md-typeset ul.rmc-development li {
+  background: var(--rmc-paper);
+  border: 1px solid var(--rmc-rule);
+  border-radius: var(--rmc-radius-lg);
+  line-height: 1.65;
+  margin: 0;
+  padding: 1rem;
+}
+
+/* Copy button, injected by site.js. */
+.rmc-copy {
+  background: var(--rmc-paper);
+  border: 1px solid var(--rmc-rule);
+  border-radius: var(--rmc-radius);
+  color: var(--rmc-ink-3);
+  cursor: pointer;
+  font-family: var(--rmc-mono);
+  font-size: 0.54rem;
+  letter-spacing: 0.08em;
+  opacity: 0;
+  padding: 0.18rem 0.45rem;
+  position: absolute;
+  right: 0.7rem;
+  text-transform: uppercase;
+  top: 0.7rem;
+  transition: opacity 0.18s var(--rmc-ease), color 0.18s var(--rmc-ease),
+    border-color 0.18s var(--rmc-ease);
+}
+
+.rmc-prompt:hover .rmc-copy,
+.rmc-copy:focus-visible {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .rmc-copy {
+    opacity: 1;
+  }
+}
+
+.rmc-copy:hover {
+  border-color: var(--rmc-brand);
+  color: var(--rmc-brand);
+}
+
+.rmc-copy.is-copied {
+  border-color: var(--rmc-ok);
+  color: var(--rmc-ok);
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Capability map
+   -------------------------------------------------------------------------- */
+
+.rmc-caps {
+  border-top: 1px solid var(--rmc-rule);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+}
+
+.md-typeset .rmc-cap {
+  align-items: baseline;
+  border-bottom: 1px solid var(--rmc-rule);
+  color: var(--rmc-ink) !important;
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.75rem 1.1rem 0.75rem 0;
+  text-decoration: none !important;
+  transition: background-color 0.18s var(--rmc-ease);
+}
+
+.rmc-cap:hover {
+  background: var(--rmc-paper-2);
+}
+
+.rmc-cap__num {
+  color: var(--rmc-rule-strong);
+  font-family: var(--rmc-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding-top: 0.1rem;
+  transition: color 0.18s var(--rmc-ease);
+}
+
+.rmc-cap:hover .rmc-cap__num {
+  color: var(--rmc-brand);
+}
+
+.rmc-cap__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.rmc-cap__name {
+  font-family: var(--rmc-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.rmc-cap__desc {
+  color: var(--rmc-ink-3);
+  font-size: 0.62rem;
+  line-height: 1.45;
+}
+
+.rmc-cap__count {
+  color: var(--rmc-ink-2);
+  font-family: var(--rmc-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Exported view
+   -------------------------------------------------------------------------- */
+
+.md-typeset .rmc-shot {
+  border: 1px solid var(--rmc-rule);
+  border-radius: var(--rmc-radius-lg);
+  margin: 0;
+  overflow: hidden;
+}
+
+.md-typeset .rmc-shot img {
+  border: 0;
+  border-radius: 0;
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.md-typeset .rmc-shot figcaption {
+  background: var(--rmc-paper-2);
+  border-top: 1px solid var(--rmc-rule);
+  color: var(--rmc-ink-3);
+  font-family: var(--rmc-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.01em;
+  padding: 0.55rem 0.9rem;
+}
+
+/* --------------------------------------------------------------------------
+   Request path
+   -------------------------------------------------------------------------- */
+
+.md-typeset ol.rmc-flow {
+  counter-reset: none;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.md-typeset .rmc-flow__step {
+  background: var(--rmc-paper-2);
+  border: 1px solid var(--rmc-rule);
+  border-radius: var(--rmc-radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  position: relative;
+}
+
+.md-typeset .rmc-flow__step::before {
+  display: none;
+}
+
+.rmc-flow__num {
+  align-items: center;
+  background: var(--rmc-brand);
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  font-family: var(--rmc-mono);
+  font-size: 0.54rem;
+  font-weight: 700;
+  height: 1.1rem;
+  justify-content: center;
+  margin-bottom: 0.2rem;
+  width: 1.1rem;
+}
+
+.rmc-flow__name {
+  font-family: var(--rmc-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.rmc-flow__detail {
+  color: var(--rmc-ink-3);
+  font-size: 0.62rem;
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------------------------
+   Gates and safety
+   -------------------------------------------------------------------------- */
+
+.rmc-gates {
+  align-items: center;
+  background: var(--rmc-accent-wash);
+  border: 1px solid color-mix(in oklab, var(--rmc-accent) 26%, transparent);
+  border-radius: var(--rmc-radius-lg);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-bottom: 1.1rem;
+  padding: 0.8rem 1rem;
+}
+
+.rmc-gates__gate {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.rmc-gates__mark {
+  align-items: center;
+  background: var(--rmc-accent);
+  border-radius: 50%;
+  color: var(--rmc-paper);
+  display: flex;
+  font-family: var(--rmc-mono);
+  font-size: 0.54rem;
+  font-weight: 700;
+  height: 1.05rem;
+  justify-content: center;
+  width: 1.05rem;
+}
+
+.rmc-gates code {
+  background: color-mix(in oklab, var(--rmc-paper) 70%, transparent) !important;
+  border-color: color-mix(in oklab, var(--rmc-accent) 26%, transparent) !important;
+  color: var(--rmc-accent) !important;
+  font-size: 0.64rem !important;
+}
+
+.rmc-gates__and {
+  color: var(--rmc-accent);
+  font-family: var(--rmc-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.md-typeset ul.rmc-safety {
+  display: grid;
+  gap: 0.55rem 1.4rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.md-typeset .rmc-safety__item {
+  border-left: 2px solid var(--rmc-rule);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 0.75rem;
+}
+
+.md-typeset .rmc-safety__item::before {
+  display: none;
+}
+
+.rmc-safety__name {
+  font-family: var(--rmc-display);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.rmc-safety__detail {
+  color: var(--rmc-ink-2);
+  font-size: 0.66rem;
+  line-height: 1.6;
+}
+
+/* --------------------------------------------------------------------------
+   Getting started
+   -------------------------------------------------------------------------- */
+
+.md-typeset ol.rmc-steps {
+  counter-reset: none;
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.md-typeset .rmc-steps__item {
+  align-items: flex-start;
+  border-bottom: 1px solid var(--rmc-rule);
+  display: flex;
+  gap: 0.85rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.8rem 0;
+}
+
+.md-typeset .rmc-steps__item::before {
+  display: none;
+}
+
+.md-typeset .rmc-steps__item:last-child {
+  border-bottom: 0;
+}
+
+.rmc-steps__num {
+  color: var(--rmc-brand);
+  flex: none;
+  font-family: var(--rmc-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.62;
+  width: 1rem;
+}
+
+.md-typeset .rmc-steps__item p {
+  color: var(--rmc-ink);
+  font-size: 0.78rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Further reading
+   -------------------------------------------------------------------------- */
+
+.rmc-entries {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+}
+
+.md-typeset .rmc-entry {
+  border: 1px solid var(--rmc-rule);
+  border-radius: var(--rmc-radius-lg);
+  color: var(--rmc-ink) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.9rem 1rem;
+  text-decoration: none !important;
+  transition: border-color 0.2s var(--rmc-ease), box-shadow 0.2s var(--rmc-ease),
+    transform 0.2s var(--rmc-ease);
+}
+
+.rmc-entry:hover {
+  border-color: var(--rmc-rule-strong);
+  box-shadow: var(--rmc-shadow-2);
+  transform: translateY(-2px);
+}
+
+.rmc-entry__name {
+  font-family: var(--rmc-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.rmc-entry__desc {
+  color: var(--rmc-ink-3);
+  flex: 1;
+  font-size: 0.64rem;
+  line-height: 1.5;
+}
+
+.rmc-entry__link {
+  color: var(--rmc-brand);
+  font-family: var(--rmc-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+@media screen and (max-width: 76.234375em) {
+  .rmc-hero__inner {
+    gap: 1.2rem;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rmc-hero__art {
+    margin: 0 auto;
+    max-width: 30rem;
+    order: 2;
+  }
+
+  .rmc-hero__lede {
+    max-width: none;
+  }
+}
+
+@media screen and (max-width: 44.984375em) {
+  .rmc-hero {
+    padding-top: 1.6rem;
+  }
+
+  .rmc-landing .rmc-section {
+    padding: 1.7rem 0.9rem;
+  }
+
+  .rmc-hero {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .rmc-spec {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rmc-spec__cell:nth-child(3) {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .rmc-spec__cell:nth-child(n + 3) {
+    border-top: 1px solid var(--rmc-rule);
+  }
+
+  .rmc-hero__title {
+    font-size: clamp(1.85rem, 9vw, 2.3rem) !important;
+  }
+
+  .rmc-prompts,
+  .rmc-caps,
+  .rmc-flow,
+  .rmc-entries,
+  .md-typeset ul.rmc-safety,
+  .rmc-band {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .md-typeset .rmc-band .rmc-prompt {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rmc-copy {
+    opacity: 1;
+  }
+
+  .rmc-band .rmc-copy {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .md-typeset .rmc-band .rmc-prompt__foot {
+    align-items: flex-start;
+    grid-column: 1;
+    grid-row: auto;
+    text-align: left;
+  }
+
+  .rmc-band__label {
+    padding-right: 0;
+  }
+
+  /* Wrapping left the "+" dangling at the end of the first gate line. */
+  .rmc-gates {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .rmc-gates__and {
+    padding-left: 0.15rem;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   404
+   -------------------------------------------------------------------------- */
+
+.rmc-404 {
+  padding: 1.6rem 0 3rem;
+}
+
+.rmc-404__code {
+  color: var(--rmc-rule-strong);
+  font-family: var(--rmc-display);
+  font-size: clamp(3.4rem, 11vw, 6.5rem);
+  font-weight: 700;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  margin: 0 0 0.5rem;
+}
+
+.rmc-404__title {
+  border: 0 !important;
+  font-size: 1.35rem !important;
+  margin: 0 0 0.7rem !important;
+  padding: 0 !important;
+}
+
+.md-typeset .rmc-404__lede {
+  color: var(--rmc-ink-2);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  margin: 0 0 1.3rem;
+  max-width: 40rem;
+}
+
+.md-typeset .rmc-404__lede span[lang="en"] {
+  color: var(--rmc-ink-3);
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 0.45rem;
+}
+
+.rmc-404__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.6rem;
+}
+
+.md-typeset .rmc-404__links {
+  border-top: 1px solid var(--rmc-rule);
+  display: grid;
+  gap: 0.1rem 1.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  padding-top: 0.9rem;
+}
+
+.md-typeset .rmc-404__links a {
+  border-bottom: 1px solid var(--rmc-rule);
+  color: var(--rmc-ink-2);
+  font-size: 0.68rem;
+  padding: 0.4rem 0;
+  text-decoration: none;
+}
+
+.md-typeset .rmc-404__links a:hover {
+  color: var(--rmc-brand);
+}

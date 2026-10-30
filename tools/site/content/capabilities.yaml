@@ -68,7 +68,7 @@ tools:
       en: Which model is open, and which levels does it have?
   revit_model_health:
     group: export
-    since: 0.5.0
+    since: 0.2.0
     title:
       zh: "模型检查"
       en: "Model health"
@@ -87,7 +87,7 @@ tools:
       en: 'Run a pre-handover health check: size, counts, units, top warnings'
   revit_links_status:
     group: export
-    since: 0.5.0
+    since: 0.2.0
     title:
       zh: "链接状态"
       en: "Link status"
@@ -106,7 +106,7 @@ tools:
       en: 'Check every link: RVT, CAD and images'
   revit_shared_coordinates:
     group: export
-    since: 0.6.0
+    since: 0.2.0
     title:
       zh: "共享坐标"
       en: "Shared coordinates"
@@ -125,7 +125,7 @@ tools:
       en: Report the shared coordinates and link offsets
   revit_parameter_fill_check:
     group: export
-    since: 0.6.0
+    since: 0.2.0
     title:
       zh: "参数填充检查"
       en: "Parameter fill check"
@@ -266,6 +266,7 @@ tools:
       en: Export the 1F plan as a PNG, 2000 pixels wide
   revit_export_element_ids:
     group: export
+    origin: fork
     since: 0.8.0
     title:
       zh: "导出构件 ID 清单"
@@ -534,6 +535,7 @@ tools:
       en: Draw a 200 mm wall on 1F from 0,0 to 6000,0
   revit_create_floor:
     group: edit
+    origin: fork
     since: 0.2.0
     title:
       zh: "创建楼板"
@@ -556,6 +558,7 @@ tools:
       en: On 2020 it uses Document.Create.NewFloor, from 2022 Floor.Create
   revit_create_level:
     group: edit
+    origin: fork
     since: 0.10.0
     title:
       zh: "创建标高"
@@ -578,6 +581,7 @@ tools:
       en: An existing level with the same name is refused, so a later tool never resolves an ambiguous level
   revit_set_phase:
     group: phases
+    origin: fork
     since: 0.3.0
     title:
       zh: "设置构件阶段"
@@ -600,6 +604,7 @@ tools:
       en: The phase order API exists from 2022; 2020 uses a fallback
   revit_merge_phases:
     group: phases
+    origin: fork
     since: 0.3.0
     title:
       zh: "合并项目阶段"
@@ -666,6 +671,7 @@ tools:
       en: Supports dry_run
   revit_reset_element_ids:
     group: ids
+    origin: fork
     since: 0.8.0
     title:
       zh: "同文档替换 ID"
@@ -688,6 +694,7 @@ tools:
       en: Run dry_run first; hosted, dependent, grouped and MEP-system elements are refused
   revit_rebuild_model_ids:
     group: ids
+    origin: fork
     since: 0.8.0
     title:
       zh: "新模型重建 ID"
@@ -736,6 +743,7 @@ tools:
       en: Rolls the whole batch back when a step fails
   revit_set_view_lighting:
     group: views
+    origin: fork
     since: 0.10.0
     title:
       zh: "设置视图光照"

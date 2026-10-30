@@ -20,8 +20,7 @@ if command -v ss >/dev/null 2>&1 && ss -ltn | awk '{print $4}' | grep -q ":$PORT
   exit 1
 fi
 
-cd "$SITE"
-python3 -m http.server "$PORT" --bind 0.0.0.0 &
+python3 "$ROOT/scripts/serve-site.py" "$PORT" "$SITE" &
 server=$!
 sleep 2
 if ! curl -fsS "http://127.0.0.1:$PORT/" | grep -q "$TITLE"; then

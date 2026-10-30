@@ -2,6 +2,8 @@
 
 19 个读取 + 16 个动作，共 35 个工具
 
+这一节是现有版本的 35 个工具。集成分支的 80 个工具按基座与自研分开，见 [新版基座工具目录](../platform/index.md)。
+
 ## 按 Revit 年份查阅 {#by-version}
 
 | Revit 年份 | 验证状态 |
@@ -41,7 +43,7 @@
 | [导出视图图片](revit_export_view.md)<br>`revit_export_view` | 把视图导出成 PNG 图片（1–4000 像素） |
 | [视图构件明细](revit_view_elements.md)<br>`revit_view_elements` | 分页读取视图中的构件（可按类别过滤） |
 | [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关元素的警告 |
-| [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案 |
+| <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案 |
 
 ### 导出与检验 (6) {#group-export}
 
@@ -51,7 +53,7 @@
 | [链接状态](revit_links_status.md)<br>`revit_links_status` | RVT / CAD / 图片链接的状态、路径与实例数 |
 | [共享坐标](revit_shared_coordinates.md)<br>`revit_shared_coordinates` | 项目基点、测量点、场地与链接的位移（mm）/旋转（°） |
 | [参数填充检查](revit_parameter_fill_check.md)<br>`revit_parameter_fill_check` | 参数的填充率：有值 / 空 / 缺失，并给出抽样 ID |
-| [导出构件 ID 清单](revit_export_element_ids.md)<br>`revit_export_element_ids` | 把模型中已绘制构件的 ID 清单写成 Excel（类别/族/类型/标高/构件ID/名称/工作集） |
+| <span class="state part">自研</span> [导出构件 ID 清单](revit_export_element_ids.md)<br>`revit_export_element_ids` | 把模型中已绘制构件的 ID 清单写成 Excel（类别/族/类型/标高/构件ID/名称/工作集） |
 | [模型警告](revit_list_warnings.md)<br>`revit_list_warnings` | 全模型警告按文本分组，可展开受影响构件 |
 
 ### 选中与显示 (3) {#group-display}
@@ -69,8 +71,8 @@
 | [移动构件](revit_move.md)<br>`revit_move` | 按模型轴平移构件（mm） |
 | [放置非宿主族](revit_place_family.md)<br>`revit_place_family` | 在指定标高放置已载入的非宿主族实例，可绕 Z 旋转 |
 | [创建直墙](revit_create_wall.md)<br>`revit_create_wall` | 按两点建直墙（mm，指定标高、墙类型、高度） |
-| [创建楼板](revit_create_floor.md)<br>`revit_create_floor` | 按闭合轮廓建楼板（至少 3 个顶点，mm） |
-| [创建标高](revit_create_level.md)<br>`revit_create_level` | 在指定高程新建标高（mm） |
+| <span class="state part">自研</span> [创建楼板](revit_create_floor.md)<br>`revit_create_floor` | 按闭合轮廓建楼板（至少 3 个顶点，mm） |
+| <span class="state part">自研</span> [创建标高](revit_create_level.md)<br>`revit_create_level` | 在指定高程新建标高（mm） |
 | [修改参数](revit_set_parameter.md)<br>`revit_set_parameter` | 按参数名写值（长度 mm、面积 m²，其余按内部单位） |
 | [删除构件](revit_delete.md)<br>`revit_delete` | 删除构件及其依赖 |
 
@@ -78,15 +80,15 @@
 
 | 工具 | 用途 |
 | --- | --- |
-| [设置构件阶段](revit_set_phase.md)<br>`revit_set_phase` | 赋创建阶段 / 拆除阶段（空串清除，null 不变） |
-| [合并项目阶段](revit_merge_phases.md)<br>`revit_merge_phases` | 把一个阶段的引用并入另一个阶段并删除空阶段 |
+| <span class="state part">自研</span> [设置构件阶段](revit_set_phase.md)<br>`revit_set_phase` | 赋创建阶段 / 拆除阶段（空串清除，null 不变） |
+| <span class="state part">自研</span> [合并项目阶段](revit_merge_phases.md)<br>`revit_merge_phases` | 把一个阶段的引用并入另一个阶段并删除空阶段 |
 
 ### 批量与 ID (3) {#group-ids}
 
 | 工具 | 用途 |
 | --- | --- |
-| [同文档替换 ID](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | 同文档内换 ID：只对无宿主、无依赖的独立构件有效 |
-| [新模型重建 ID](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | 整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型 |
+| <span class="state part">自研</span> [同文档替换 ID](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | 同文档内换 ID：只对无宿主、无依赖的独立构件有效 |
+| <span class="state part">自研</span> [新模型重建 ID](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | 整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型 |
 | [批量动作](revit_batch.md)<br>`revit_batch` | 1–50 步动作合并成一次撤销（revit_batch） |
 
 !!! warning "动作工具需要双门禁"

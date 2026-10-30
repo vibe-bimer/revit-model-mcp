@@ -2,7 +2,7 @@
 
 `revit_parameter_fill_check`
 
-<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.6.0</span></p>
+<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.2.0</span></p>
 
 Count filled, empty and missing parameter values and sample element IDs
 

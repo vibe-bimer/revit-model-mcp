@@ -2,7 +2,7 @@
 
 `revit_links_status`
 
-<p class="facts"><span><b>分组</b> 导出与检验</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.5.0</span></p>
+<p class="facts"><span><b>分组</b> 导出与检验</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.2.0</span></p>
 
 RVT / CAD / 图片链接的状态、路径与实例数
 

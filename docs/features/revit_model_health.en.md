@@ -2,7 +2,7 @@
 
 `revit_model_health`
 
-<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.5.0</span></p>
+<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.2.0</span></p>
 
 Check file size, model counts, units and frequent warnings
 

@@ -2,7 +2,7 @@
 
 `revit_parameter_fill_check`
 
-<p class="facts"><span><b>分组</b> 导出与检验</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.6.0</span></p>
+<p class="facts"><span><b>分组</b> 导出与检验</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.2.0</span></p>
 
 参数的填充率：有值 / 空 / 缺失，并给出抽样 ID
 

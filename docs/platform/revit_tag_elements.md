@@ -1,0 +1,39 @@
+# 标注构件
+
+`revit_tag_elements`
+
+<p class="facts"><span><b>分组</b> 视图、图纸与明细表</span><span><b>类型</b> 动作</span><span><b>基座与自研的区分</b> 基座（上游）</span><span><b>当前版本是否已有</b> 没有</span></p>
+
+在视图中按类目名称或构件 ID 标注构件，两者只能选一个；已标注构件默认跳过。
+
+## 参数 {#parameters}
+
+| 参数 | 必填 | 默认值 | 类型 | 说明 |
+| --- | :--: | --- | --- | --- |
+| `categories` | 否 | None | any |  |
+| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `element_ids` | 否 | None | any | 要处理的构件 Revit ID 列表。 |
+| `leader` | 否 | False | boolean |  |
+| `max_elements` | 否 | 5000 | integer |  |
+| `orientation` | 否 | horizontal | string |  |
+| `skip_tagged` | 否 | True | boolean |  |
+| `tag_type` | 否 | None | any |  |
+| `view` | 是 | — | any | 视图的准确名称或十进制视图 ID。 |
+
+### 通用参数 {#common-parameters}
+
+| 参数 | 必填 | 默认值 | 类型 | 说明 |
+| --- | :--: | --- | --- | --- |
+| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+
+## 功能说明（注册表原文） {#behavior}
+
+以下保留工具在注册表中声明的英文原文，作为契约来源。
+
+```text
+Tag elements in a view, chosen by category names or by element IDs (exactly one of the two). Returns created tag IDs in createdElementIds; already tagged elements are skipped unless skip_tagged is false, and untaggable inputs are listed in skipped. tag_type matches a tag type name, a family name or "Family: Type"; the default tag type is used otherwise. Room tags need a plan view. dry_run rolls back and returns the tags that would be created.
+```
+
+---
+
+[返回目录](index.md) · [自研工具的移植状态](fork-tools.md)

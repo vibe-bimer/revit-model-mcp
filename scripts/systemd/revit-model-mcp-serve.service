@@ -8,7 +8,7 @@ Wants=network-online.target
 Type=simple
 WorkingDirectory=@ROOT@
 ExecStartPre=/usr/bin/test -f @ROOT@/site/index.html
-ExecStart=/usr/bin/python3 -m http.server @PORT@ --bind 0.0.0.0 --directory @ROOT@/site
+ExecStart=/usr/bin/python3 @ROOT@/scripts/serve-site.py @PORT@ @ROOT@/site
 Restart=always
 RestartSec=5
 

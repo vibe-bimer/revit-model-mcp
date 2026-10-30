@@ -2,7 +2,7 @@
 
 `revit_shared_coordinates`
 
-<p class="facts"><span><b>分组</b> 导出与检验</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.6.0</span></p>
+<p class="facts"><span><b>分组</b> 导出与检验</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.2.0</span></p>
 
 项目基点、测量点、场地与链接的位移（mm）/旋转（°）
 

@@ -16,6 +16,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import landing
+import platform_catalog
 import tomllib
 import yaml
 
@@ -28,6 +30,9 @@ PAGES = ROOT / "docs/features"
 MKDOCS = ROOT / "mkdocs.yml"
 NAV_START = "  # >>> features-nav"
 NAV_END = "  # <<< features-nav"
+PLATFORM_JSON = platform_catalog.PLATFORM_JSON
+PLATFORM_NAV_START = platform_catalog.NAV_START
+PLATFORM_NAV_END = platform_catalog.NAV_END
 COMMON_PARAMETERS = {"document", "timeout_seconds", "pickup_timeout_seconds"}
 LABELS = {
     "zh": {
@@ -252,6 +257,11 @@ def tool_page(
             else "model"
         )
         facts.append(f"<b>{labels['effect']}</b> {labels[effect]}")
+    if cap.get("origin") == "fork":
+        facts.append(
+            f"<b>{'来源' if lang == 'zh' else 'Origin'}</b> "
+            + ("自研（本仓库）" if lang == "zh" else "Fork (this repository)")
+        )
     out = [
         f"# {cap['title'][lang]}",
         "",
@@ -315,12 +325,30 @@ def tool_page(
     return "\n".join(out)
 
 
+def origin_badge(cap: dict, lang: str) -> str:
+    """Mark the tools this repository designed, so the base and the fork stay distinguishable."""
+    if cap.get("origin") != "fork":
+        return ""
+    text = "自研" if lang == "zh" else "Fork"
+    return f'<span class="state part">{text}</span> '
+
+
 def index_page(tools: list[dict], capabilities: dict, lang: str) -> str:
     labels = LABELS[lang]
+    pointer = (
+        "这一节是现有版本的 35 个工具。集成分支的 80 个工具按基座与自研分开，见"
+        " [新版基座工具目录](../platform/index.md)。"
+        if lang == "zh"
+        else "This section covers the 35 tools of the current release. The integration branch's"
+        " 80 tools, split into base and fork, are in the"
+        " [platform tool catalog](../platform/index.md)."
+    )
     out = [
         f"# {labels['index']}",
         "",
         LABELS[lang]["counts"].format(**counts(tools)),
+        "",
+        pointer,
         "",
         f"## {labels['by_version']} {{#by-version}}",
         "",
@@ -350,7 +378,7 @@ def index_page(tools: list[dict], capabilities: dict, lang: str) -> str:
         for tool in members:
             cap = capabilities["tools"][tool["name"]]
             out.append(
-                f"| [{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {cap['summary'][lang]} |"
+                f"| {origin_badge(cap, lang)}[{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {cap['summary'][lang]} |"
             )
         out.append("")
     out += [f'!!! warning "{labels["gate"]}"', f"    {labels['gate_body']}", ""]
@@ -370,7 +398,7 @@ def matrix_page(tools: list[dict], capabilities: dict, lang: str) -> str:
             else ("Read tools" if read_only else "Action tools")
         )
         out += [
-            f"## {title} ({len(members)}) {{'#read-tools' if read_only else '#action-tools'}}",
+            f"## {title} ({len(members)}) {{#{'read-tools' if read_only else 'action-tools'}}}",
             "",
             f"| {labels['tools']} | 2020 | 2026 | {labels['other']} |",
             "| --- | :--: | :--: | :--: |",
@@ -382,7 +410,7 @@ def matrix_page(tools: list[dict], capabilities: dict, lang: str) -> str:
                 for year in ("2020", "2026", "other")
             ]
             out.append(
-                f"| [{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {' | '.join(cells)} |"
+                f"| {origin_badge(cap, lang)}[{cap['title'][lang]}]({tool['name']}.md)<br>`{tool['name']}` | {' | '.join(cells)} |"
             )
         out.append("")
     return "\n".join(out)
@@ -405,7 +433,7 @@ def prompts_page(tools: list[dict], capabilities: dict, lang: str) -> str:
             if cap["group"] != key:
                 continue
             out += [
-                f"### [{cap['title'][lang]}]({tool['name']}.md)",
+                f"### {origin_badge(cap, lang)}[{cap['title'][lang]}]({tool['name']}.md)",
                 "",
                 f"`{tool['name']}` — {cap['summary'][lang]}",
                 "",
@@ -456,122 +484,12 @@ def version_page(tools: list[dict], capabilities: dict, lang: str, year: str) ->
     return "\n".join(out)
 
 
-def home_page(tools: list[dict], lang: str) -> str:
+def home_page(tools: list[dict], capabilities: dict, lang: str) -> str:
+    """Render the landing page; the layout lives in landing.py so this file stays registry logic."""
     version = tomllib.loads((ROOT / "server/pyproject.toml").read_text())["project"][
         "version"
     ]
-    info = LABELS[lang]["counts"].format(**counts(tools))
-    if lang == "zh":
-        return f"""# Revit Model MCP
-
-<p class="facts"><span><b>插件 / MCP 版本 {version}</b></span><span>Revit <b>2020 / 2022–2027</b></span><span>{info}</span></p>
-
-面向 Revit 技术人员的功能手册：查参数与几何、统计构件、检查模型、导出清单、编辑构件，以及复制模型并换新 ID。默认只读，动作需要双门禁。**Revit 年份**与**插件发布版本**是两种不同的版本；实测覆盖以支持矩阵为准。
-
-## 选择查阅入口 {{#entry-points}}
-
-<div class="grid cards" markdown>
-
-- **确认 Revit 年份支持**
-
-    [Revit 2020](features/v2020.md) · [Revit 2026](features/v2026.md) · [支持矩阵](features/matrix.md)
-
-- **查某个功能和参数**
-
-    [功能总览](features/index.md)：按场景分类，每项都有用途、参数、返回结果与限制。
-
-- **复制提示词使用**
-
-    [提示词库](features/prompts.md)：按功能分组，复制后替换模型、标高、构件 ID 和文件路径。
-
-- **安装并连接 MCP**
-
-    [安装与配置](server.md) · [传输与接入](transport.md) · [动作门禁](actions.md#gates)
-
-</div>
-
-## 三步上手 {{#get-started}}
-
-1. 在 Windows Revit 工作站安装插件，在 AI 客户端配置 MCP 服务器；具体步骤见[安装与配置](server.md)。
-2. 先做只读查询，例如 `统计 1F 上各种墙类型各有多少个`。过滤名称应先从模型目录获取。
-3. 需要动作时再打开双门禁。修改前优先使用支持该参数的工具做 `dry_run`；超时后先核对模型，不要盲目重试。
-
-## 常用提示词 {{#common-prompts}}
-
-| 场景 | 提示词 |
-| --- | --- |
-| 统计 | `统计 1F 上各种墙类型各有多少个` |
-| 检查 | `做一次交付前体检：文件大小、各类数量、单位设置、最多的警告` |
-| 导出 | `把模型中已绘制构件的 ID 清单导出成 Excel，按类别、族、类型排序` |
-| 移动 | `把 ID 为 123456 的构件沿 X 移动 500 mm，先彩排` |
-| 新模型 ID | `把当前三维视图里能选中的构件重建到 E:\\out\\copy-{{n}}.rvt，出 10 份，逐份检查构件数量和 ID 映射` |
-
-## 进一步查阅 {{#further-reading}}
-
-<a id="tools"></a>
-<a id="actions-opt-in"></a>
-
-- 功能用法：[功能总览](features/index.md) · [提示词库](features/prompts.md)
-- 跨工具契约：[读取契约](tools.md) · [动作契约](actions.md)
-- 项目信息：[更新记录](changelog.md) · [隐私说明](privacy.md)
-
-右上角切换中文 / English 和浅色 / 深色；同一页面切换语言后保留对应内容。
-"""
-    return f"""# Revit Model MCP
-
-<p class="facts"><span><b>Add-in / MCP version {version}</b></span><span>Revit <b>2020 / 2022–2027</b></span><span>{info}</span></p>
-
-A feature handbook for Revit technical users: inspect parameters and geometry, count elements, check models, export registers, edit elements, and copy models with new IDs. Read-only by default; actions require both gates. **Revit years** and **add-in release versions** are different version axes. See the support matrix for live validation coverage.
-
-## Choose an entry point {{#entry-points}}
-
-<div class="grid cards" markdown>
-
-- **Check your Revit year**
-
-    [Revit 2020](features/v2020.md) · [Revit 2026](features/v2026.md) · [Support matrix](features/matrix.md)
-
-- **Look up a feature and its parameters**
-
-    [Feature overview](features/index.md): grouped by task, with behavior, parameters, returned data and limits.
-
-- **Copy a prompt**
-
-    [Prompt library](features/prompts.md): replace the model, level, element IDs and file paths with your own.
-
-- **Install and connect MCP**
-
-    [Installation and configuration](server.md) · [Transport and connection](transport.md) · [Action gates](actions.md#gates)
-
-</div>
-
-## Get started in three steps {{#get-started}}
-
-1. Install the add-in on the Windows Revit workstation and configure the MCP server in your AI client. See [installation and configuration](server.md).
-2. Start with a read-only query, such as `How many of each wall type are on 1F?` Discover filter names from the model catalog first.
-3. Enable both gates only when actions are needed. Preview edits with tools supporting `dry_run`; after a timeout, inspect the model before retrying.
-
-## Common prompts {{#common-prompts}}
-
-| Task | Prompt |
-| --- | --- |
-| Count | `How many of each wall type are on 1F?` |
-| Check | `Run a pre-handover health check: size, category counts, units and top warnings` |
-| Export | `Export the ID register of the drawn model components to Excel, ordered by category, family and type` |
-| Move | `Move element 123456 by 500 mm along X, dry run first` |
-| New-model IDs | `Rebuild selectable components from the current 3D view into E:\\out\\copy-{{n}}.rvt, ten copies; check each copy's count and ID mapping` |
-
-## Further reading {{#further-reading}}
-
-<a id="tools"></a>
-<a id="actions-opt-in"></a>
-
-- Feature usage: [overview](features/index.md) · [prompts](features/prompts.md)
-- Cross-tool contracts: [read contracts](tools.md) · [action contracts](actions.md)
-- Project information: [changelog](changelog.md) · [privacy](privacy.md)
-
-Use the top-right controls for Chinese / English and light / dark. Switching language keeps you on the corresponding page.
-"""
+    return landing.home_page(tools, capabilities, version, lang)
 
 
 def nav_block(tools: list[dict], capabilities: dict) -> str:
@@ -603,13 +521,14 @@ def nav_block(tools: list[dict], capabilities: dict) -> str:
 
 
 def generate(tools: list[dict], capabilities: dict, contracts: dict) -> dict[Path, str]:
+    platform_tools, _ = platform_catalog.load_platform()
     files = {}
     for lang, suffix in (("zh", ""), ("en", ".en")):
 
         def page(name: str, suffix: str = suffix) -> Path:
             return PAGES / f"{name}{suffix}.md"
 
-        files[ROOT / f"docs/index{suffix}.md"] = home_page(tools, lang)
+        files[ROOT / f"docs/index{suffix}.md"] = home_page(tools, capabilities, lang)
         files[page("index")] = index_page(tools, capabilities, lang)
         files[page("matrix")] = matrix_page(tools, capabilities, lang)
         files[page("prompts")] = prompts_page(tools, capabilities, lang)
@@ -624,6 +543,13 @@ def generate(tools: list[dict], capabilities: dict, contracts: dict) -> dict[Pat
         re.escape(NAV_START) + r".*?" + re.escape(NAV_END),
         nav_block(tools, capabilities),
         text,
+        flags=re.DOTALL,
+    )
+    files.update(platform_catalog.generate())
+    files[MKDOCS] = re.sub(
+        re.escape(PLATFORM_NAV_START) + r".*?" + re.escape(PLATFORM_NAV_END),
+        platform_catalog.nav_block(platform_tools),
+        files[MKDOCS],
         flags=re.DOTALL,
     )
     return files
@@ -694,9 +620,129 @@ def dump_registry() -> list[dict]:
             proc.terminate()
 
 
+def dump_platform(worktree: Path, branch: str) -> dict:
+    """Snapshot the integration branch's registry without checking the branch out.
+
+    The toolset and access flags are not in the MCP payload, so they are joined from the branch's
+    generated manifest. The two name sets must agree, or the snapshot would describe a registry
+    nobody is running.
+    """
+    server = worktree / "server"
+    if not (server / "pyproject.toml").is_file():
+        raise SystemExit(f"Not a server worktree: {server}")
+    command = ["uv", "run", "revit-model-mcp"]
+    env = dict(
+        os.environ,
+        REVIT_MCP_HOST="http://127.0.0.1:53110",
+        REVIT_MCP_TOKEN="dump",
+        REVIT_MCP_READ_ONLY="0",
+    )
+    with subprocess.Popen(
+        command,
+        cwd=server,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+        text=True,
+        bufsize=1,
+    ) as proc:
+
+        def call(method: str, rid: int, params: dict | None = None) -> dict:
+            proc.stdin.write(
+                json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": rid,
+                        "method": method,
+                        "params": params or {},
+                    }
+                )
+                + "\n"
+            )
+            proc.stdin.flush()
+            while line := proc.stdout.readline():
+                try:
+                    message = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if message.get("id") == rid:
+                    return message
+            raise SystemExit("The MCP server closed the connection while listing tools")
+
+        try:
+            call(
+                "initialize",
+                1,
+                {
+                    "protocolVersion": "2024-11-05",
+                    "capabilities": {},
+                    "clientInfo": {"name": "docs", "version": "1"},
+                },
+            )
+            proc.stdin.write(
+                json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"})
+                + "\n"
+            )
+            proc.stdin.flush()
+            tools = call("tools/list", 2)["result"]["tools"]
+        finally:
+            proc.terminate()
+
+    manifest = subprocess.run(
+        ["git", "-C", str(worktree), "show", f"{branch}:docs/tool-manifest.json"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    declared = {item["name"]: item for item in json.loads(manifest)["tools"]}
+    names = {tool["name"] for tool in tools}
+    if names != set(declared):
+        raise SystemExit(
+            "The branch registry and its manifest disagree: "
+            f"only in registry={sorted(names - set(declared))}, "
+            f"only in manifest={sorted(set(declared) - names)}"
+        )
+    commit = subprocess.run(
+        ["git", "-C", str(worktree), "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    payload = {
+        "count": len(tools),
+        "provenance": {
+            "branch": branch,
+            "commit": commit,
+            "source": "server tools/list plus docs/tool-manifest.json on the branch",
+        },
+        "tools": [
+            {
+                "name": tool["name"],
+                "title": tool.get("title") or "",
+                "description": tool.get("description") or "",
+                "toolset": declared[tool["name"]]["toolset"],
+                "readOnly": bool(tool["annotations"].get("readOnlyHint")),
+                "destructive": bool(tool["annotations"].get("destructiveHint")),
+                "inputSchema": tool["inputSchema"],
+            }
+            for tool in sorted(
+                tools,
+                key=lambda item: (declared[item["name"]]["toolset"], item["name"]),
+            )
+        ],
+    }
+    return payload
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dump", action="store_true")
+    parser.add_argument(
+        "--dump-platform",
+        metavar="WORKTREE",
+        help="snapshot the integration branch registry from a checkout of that branch",
+    )
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument(
@@ -705,6 +751,16 @@ def main() -> int:
         help="fail if tools.json differs from the current MCP tool registry",
     )
     args = parser.parse_args()
+    if args.dump_platform:
+        payload = dump_platform(Path(args.dump_platform), platform_catalog.BRANCH)
+        PLATFORM_JSON.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        print(
+            f"platform-tools.json: {payload['count']} tools from {payload['provenance']['commit'][:7]}"
+        )
+        return 0
     if args.dump:
         tools = dump_registry()
         TOOLS_JSON.write_text(

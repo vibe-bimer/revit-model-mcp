@@ -2,7 +2,7 @@
 
 `revit_shared_coordinates`
 
-<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.6.0</span></p>
+<p class="facts"><span><b>Group</b> Export and checks</span><span><b>Kind</b> Read (read-only)</span><span><b>Since</b> 0.2.0</span></p>
 
 Read base/survey points, sites and link offsets in mm and degrees
 

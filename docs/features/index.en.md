@@ -2,6 +2,8 @@
 
 19 read + 16 action tools, 35 in total
 
+This section covers the 35 tools of the current release. The integration branch's 80 tools, split into base and fork, are in the [platform tool catalog](../platform/index.md).
+
 ## Browse by Revit year {#by-version}
 
 | Revit year | Validation |
@@ -41,7 +43,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Export view image](revit_export_view.md)<br>`revit_export_view` | Export a view as a PNG, from 1 to 4000 pixels |
 | [View element rows](revit_view_elements.md)<br>`revit_view_elements` | Page through elements in a selected view, optionally filtered by category |
 | [View warnings](revit_view_warnings.md)<br>`revit_view_warnings` | Read warnings involving elements present in a selected view |
-| [Set view lighting](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme |
+| <span class="state part">Fork</span> [Set view lighting](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme |
 
 ### Export and checks (6) {#group-export}
 
@@ -51,7 +53,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Link status](revit_links_status.md)<br>`revit_links_status` | Inspect RVT, CAD and image link status, paths and instance counts |
 | [Shared coordinates](revit_shared_coordinates.md)<br>`revit_shared_coordinates` | Read base/survey points, sites and link offsets in mm and degrees |
 | [Parameter fill check](revit_parameter_fill_check.md)<br>`revit_parameter_fill_check` | Count filled, empty and missing parameter values and sample element IDs |
-| [Export element ID register](revit_export_element_ids.md)<br>`revit_export_element_ids` | Write the ID register of drawn model components to an Excel workbook |
+| <span class="state part">Fork</span> [Export element ID register](revit_export_element_ids.md)<br>`revit_export_element_ids` | Write the ID register of drawn model components to an Excel workbook |
 | [Model warnings](revit_list_warnings.md)<br>`revit_list_warnings` | Group model warnings by description and inspect affected elements |
 
 ### Selection and display (3) {#group-display}
@@ -69,8 +71,8 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Move elements](revit_move.md)<br>`revit_move` | Move elements by offsets along model axes in millimetres |
 | [Place unhosted family](revit_place_family.md)<br>`revit_place_family` | Place a loaded unhosted family on a named level with optional Z rotation |
 | [Create straight wall](revit_create_wall.md)<br>`revit_create_wall` | Create a wall from two XY points, a level, type and height |
-| [Create floor](revit_create_floor.md)<br>`revit_create_floor` | Create a floor from a closed XY boundary with at least three vertices |
-| [Create level](revit_create_level.md)<br>`revit_create_level` | Create a level at a given elevation in millimetres |
+| <span class="state part">Fork</span> [Create floor](revit_create_floor.md)<br>`revit_create_floor` | Create a floor from a closed XY boundary with at least three vertices |
+| <span class="state part">Fork</span> [Create level](revit_create_level.md)<br>`revit_create_level` | Create a level at a given elevation in millimetres |
 | [Edit parameter](revit_set_parameter.md)<br>`revit_set_parameter` | Set a named parameter; lengths use mm, areas m² and other doubles internal units |
 | [Delete elements](revit_delete.md)<br>`revit_delete` | Delete selected elements and their Revit dependencies |
 
@@ -78,15 +80,15 @@ Validated live means an execution was recorded on a real workstation. Build only
 
 | Tool | Purpose |
 | --- | --- |
-| [Set element phases](revit_set_phase.md)<br>`revit_set_phase` | Assign created/demolished phases; an empty string clears and null leaves unchanged |
-| [Merge project phases](revit_merge_phases.md)<br>`revit_merge_phases` | Reassign references to another phase and attempt to delete the emptied phase |
+| <span class="state part">Fork</span> [Set element phases](revit_set_phase.md)<br>`revit_set_phase` | Assign created/demolished phases; an empty string clears and null leaves unchanged |
+| <span class="state part">Fork</span> [Merge project phases](revit_merge_phases.md)<br>`revit_merge_phases` | Reassign references to another phase and attempt to delete the emptied phase |
 
 ### Batch and ids (3) {#group-ids}
 
 | Tool | Purpose |
 | --- | --- |
-| [Replace IDs in place](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | Replace eligible standalone elements with copies to obtain new IDs |
-| [Rebuild IDs in new models](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | Copy selectable 3D-view components into one or more new models with fresh IDs |
+| <span class="state part">Fork</span> [Replace IDs in place](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | Replace eligible standalone elements with copies to obtain new IDs |
+| <span class="state part">Fork</span> [Rebuild IDs in new models](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | Copy selectable 3D-view components into one or more new models with fresh IDs |
 | [Batch actions](revit_batch.md)<br>`revit_batch` | Execute 1–50 actions as one undo step and roll back on the first failed step |
 
 !!! warning "Actions require both write gates"

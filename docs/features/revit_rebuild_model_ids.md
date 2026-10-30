@@ -2,7 +2,7 @@
 
 `revit_rebuild_model_ids`
 
-<p class="facts"><span><b>分组</b> 批量与 ID</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.8.0</span><span><b>影响范围</b> 新模型文件；源模型不变</span></p>
+<p class="facts"><span><b>分组</b> 批量与 ID</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.8.0</span><span><b>影响范围</b> 新模型文件；源模型不变</span><span><b>来源</b> 自研（本仓库）</span></p>
 
 整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型
 

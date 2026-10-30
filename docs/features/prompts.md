@@ -118,7 +118,7 @@
 这个视图里有哪些警告？
 ```
 
-### [设置视图光照](revit_set_view_lighting.md)
+### <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)
 
 `revit_set_view_lighting` — 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案
 
@@ -168,7 +168,7 @@
 检查墙的防火等级填充率，给出空值的构件 ID
 ```
 
-### [导出构件 ID 清单](revit_export_element_ids.md)
+### <span class="state part">自研</span> [导出构件 ID 清单](revit_export_element_ids.md)
 
 `revit_export_element_ids` — 把模型中已绘制构件的 ID 清单写成 Excel（类别/族/类型/标高/构件ID/名称/工作集）
 
@@ -236,7 +236,7 @@
 在 1F 从 (0,0) 到 (6000,0) 建一道 200mm 墙
 ```
 
-### [创建楼板](revit_create_floor.md)
+### <span class="state part">自研</span> [创建楼板](revit_create_floor.md)
 
 `revit_create_floor` — 按闭合轮廓建楼板（至少 3 个顶点，mm）
 
@@ -244,7 +244,7 @@
 用这四个点在 2F 建一块楼板
 ```
 
-### [创建标高](revit_create_level.md)
+### <span class="state part">自研</span> [创建标高](revit_create_level.md)
 
 `revit_create_level` — 在指定高程新建标高（mm）
 
@@ -270,7 +270,7 @@
 
 ## 阶段 {#group-phases}
 
-### [设置构件阶段](revit_set_phase.md)
+### <span class="state part">自研</span> [设置构件阶段](revit_set_phase.md)
 
 `revit_set_phase` — 赋创建阶段 / 拆除阶段（空串清除，null 不变）
 
@@ -278,7 +278,7 @@
 把这些构件标成在“现有”阶段拆除
 ```
 
-### [合并项目阶段](revit_merge_phases.md)
+### <span class="state part">自研</span> [合并项目阶段](revit_merge_phases.md)
 
 `revit_merge_phases` — 把一个阶段的引用并入另一个阶段并删除空阶段
 
@@ -288,7 +288,7 @@
 
 ## 批量与 ID {#group-ids}
 
-### [同文档替换 ID](revit_reset_element_ids.md)
+### <span class="state part">自研</span> [同文档替换 ID](revit_reset_element_ids.md)
 
 `revit_reset_element_ids` — 同文档内换 ID：只对无宿主、无依赖的独立构件有效
 
@@ -296,7 +296,7 @@
 给选中的这 27 个独立构件换新 ID
 ```
 
-### [新模型重建 ID](revit_rebuild_model_ids.md)
+### <span class="state part">自研</span> [新模型重建 ID](revit_rebuild_model_ids.md)
 
 `revit_rebuild_model_ids` — 整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型
 

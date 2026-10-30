@@ -118,7 +118,7 @@ Page through the elements of the 3D view, 200 at a time
 Which warnings touch this view?
 ```
 
-### [Set view lighting](revit_set_view_lighting.md)
+### <span class="state part">Fork</span> [Set view lighting](revit_set_view_lighting.md)
 
 `revit_set_view_lighting` — Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme
 
@@ -168,7 +168,7 @@ Report the shared coordinates and link offsets
 How well is the fire rating filled in on walls? Give me the empty ids
 ```
 
-### [Export element ID register](revit_export_element_ids.md)
+### <span class="state part">Fork</span> [Export element ID register](revit_export_element_ids.md)
 
 `revit_export_element_ids` — Write the ID register of drawn model components to an Excel workbook
 
@@ -236,7 +236,7 @@ Place an instance of a loaded unhosted furniture family at 3000,4000 on 1F, dry 
 Draw a 200 mm wall on 1F from 0,0 to 6000,0
 ```
 
-### [Create floor](revit_create_floor.md)
+### <span class="state part">Fork</span> [Create floor](revit_create_floor.md)
 
 `revit_create_floor` — Create a floor from a closed XY boundary with at least three vertices
 
@@ -244,7 +244,7 @@ Draw a 200 mm wall on 1F from 0,0 to 6000,0
 Create a floor on 2F from these four points
 ```
 
-### [Create level](revit_create_level.md)
+### <span class="state part">Fork</span> [Create level](revit_create_level.md)
 
 `revit_create_level` — Create a level at a given elevation in millimetres
 
@@ -270,7 +270,7 @@ Delete these two elements, dry run first
 
 ## Phases {#group-phases}
 
-### [Set element phases](revit_set_phase.md)
+### <span class="state part">Fork</span> [Set element phases](revit_set_phase.md)
 
 `revit_set_phase` — Assign created/demolished phases; an empty string clears and null leaves unchanged
 
@@ -278,7 +278,7 @@ Delete these two elements, dry run first
 Mark these elements as demolished in the Existing phase
 ```
 
-### [Merge project phases](revit_merge_phases.md)
+### <span class="state part">Fork</span> [Merge project phases](revit_merge_phases.md)
 
 `revit_merge_phases` — Reassign references to another phase and attempt to delete the emptied phase
 
@@ -288,7 +288,7 @@ Merge phase 1 into New Construction
 
 ## Batch and ids {#group-ids}
 
-### [Replace IDs in place](revit_reset_element_ids.md)
+### <span class="state part">Fork</span> [Replace IDs in place](revit_reset_element_ids.md)
 
 `revit_reset_element_ids` — Replace eligible standalone elements with copies to obtain new IDs
 
@@ -296,7 +296,7 @@ Merge phase 1 into New Construction
 Give these 27 standalone components new ids
 ```
 
-### [Rebuild IDs in new models](revit_rebuild_model_ids.md)
+### <span class="state part">Fork</span> [Rebuild IDs in new models](revit_rebuild_model_ids.md)
 
 `revit_rebuild_model_ids` — Copy selectable 3D-view components into one or more new models with fresh IDs
 

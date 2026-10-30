@@ -6,15 +6,23 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  custom_dir: docs/overrides
   logo: assets/logo-white.svg
   favicon: assets/favicon.svg
+  # The three faces are self-hosted from assets/fonts, so the site renders identically on a network
+  # without Google Fonts and never sends a request to a third party.
+  font: false
   palette:
-    - scheme: default
+    # `media` makes the first visit follow the operating system instead of always starting light; the
+    # toggle keeps working and the choice is remembered per page path.
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: custom
       toggle:
         icon: material/brightness-7
         name: 切换到深色
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
       primary: custom
       toggle:
         icon: material/brightness-4
@@ -23,12 +31,25 @@ theme:
     - navigation.indexes
     - navigation.top
     - navigation.tracking
+    - navigation.path
+    - navigation.footer
+    - header.autohide
+    # search.suggest keeps header suggestions. The 0.9 MB search index is fetched either way, and it
+    # is requested after `load`, so it costs bandwidth rather than first paint.
     - search.suggest
+    - search.highlight
+    - search.share
     - content.code.copy
+    - content.code.select
+    - content.action.edit
     - toc.follow
 
 extra_css:
+  - stylesheets/fonts.css
   - stylesheets/extra.css
+  - stylesheets/landing.css
+extra_javascript:
+  - javascripts/site.js
 hooks:
   - docs/hooks.py
 watch:
@@ -85,12 +106,14 @@ plugins:
           build: true
           theme:
             palette:
-              - scheme: default
+              - media: "(prefers-color-scheme: light)"
+                scheme: default
                 primary: custom
                 toggle:
                   icon: material/brightness-7
                   name: Switch to dark
-              - scheme: slate
+              - media: "(prefers-color-scheme: dark)"
+                scheme: slate
                 primary: custom
                 toggle:
                   icon: material/brightness-4
@@ -109,6 +132,18 @@ plugins:
             编辑: Editing
             阶段: Phases
             批量与 ID: Batch and IDs
+            新版基座: New platform
+            自研工具的移植状态: Fork tool migration status
+            连接与实例: Connection and instances
+            编辑原语: Editing primitives
+            文档生命周期: Document lifecycle
+            视图、图纸与明细表: Views, sheets and schedules
+            族: Families
+            链接与基准: Links and datums
+            CAD 与 MEP: CAD and MEP
+            导出与登记: Export and registers
+            批处理与报告: Batch and reports
+            C# 逃生口: C# escape hatch
             接入与使用: Setup and use
             安装与配置: Installation and configuration
             传输与接入: Transport and connection
@@ -194,6 +229,102 @@ nav:
               - features/revit_batch.md
       - features/prompts.md
   # <<< features-nav
+  # >>> platform-nav
+  - 新版基座:
+      - platform/index.md
+      - 自研工具的移植状态: platform/fork-tools.md
+      - 连接与实例:
+          - platform/revit_cancel_job.md
+          - platform/revit_document_info.md
+          - platform/revit_documents.md
+          - platform/revit_jobs.md
+          - platform/revit_list_instances.md
+          - platform/revit_ping.md
+          - platform/revit_ui_state.md
+          - platform/revit_undo_last.md
+      - 查询与统计:
+          - platform/revit_aggregate_elements.md
+          - platform/revit_element_details.md
+          - platform/revit_links_status.md
+          - platform/revit_list_catalog.md
+          - platform/revit_list_relations.md
+          - platform/revit_list_warnings.md
+          - platform/revit_model_health.md
+          - platform/revit_model_snapshot.md
+          - platform/revit_parameter_fill_check.md
+          - platform/revit_query_elements.md
+          - platform/revit_schedule_data.md
+          - platform/revit_shared_coordinates.md
+      - 编辑原语:
+          - platform/revit_change_type.md
+          - platform/revit_copy.md
+          - platform/revit_delete.md
+          - platform/revit_mirror.md
+          - platform/revit_move.md
+          - platform/revit_rotate.md
+          - platform/revit_run_actions.md
+          - platform/revit_set_parameter.md
+          - platform/revit_update_parameters.md
+      - 文档生命周期:
+          - platform/revit_activate_document.md
+          - platform/revit_close_document.md
+          - platform/revit_new_document.md
+          - platform/revit_open_document.md
+          - platform/revit_save_document.md
+          - platform/revit_sync_document.md
+      - 视图、图纸与明细表:
+          - platform/revit_activate_view.md
+          - platform/revit_apply_view_template.md
+          - platform/revit_capture_elements.md
+          - platform/revit_close_views.md
+          - platform/revit_create_schedule.md
+          - platform/revit_create_sheet.md
+          - platform/revit_create_view.md
+          - platform/revit_duplicate_view.md
+          - platform/revit_export_view.md
+          - platform/revit_isolate.md
+          - platform/revit_list_views.md
+          - platform/revit_override_graphics.md
+          - platform/revit_place_views_on_sheet.md
+          - platform/revit_select.md
+          - platform/revit_set_view_lighting.md
+          - platform/revit_set_view_visibility.md
+          - platform/revit_show.md
+          - platform/revit_tag_elements.md
+          - platform/revit_view_elements.md
+          - platform/revit_view_info.md
+          - platform/revit_view_summary.md
+          - platform/revit_view_warnings.md
+      - 族:
+          - platform/revit_edit_families.md
+          - platform/revit_family_audit.md
+          - platform/revit_load_family.md
+          - platform/revit_place_families.md
+          - platform/revit_place_family.md
+      - 链接与基准:
+          - platform/revit_align_link_datums.md
+          - platform/revit_compare_link_datums.md
+          - platform/revit_remove_links.md
+      - CAD 与 MEP:
+          - platform/revit_create_mep_run.md
+          - platform/revit_create_wall.md
+          - platform/revit_link_cad.md
+          - platform/revit_walls_from_cad.md
+      - 导出与登记:
+          - platform/revit_export.md
+          - platform/revit_export_nwc.md
+          - platform/revit_issue_register.md
+          - platform/revit_nwc_settings_check.md
+      - 批处理与报告:
+          - platform/revit_batch_cancel.md
+          - platform/revit_batch_fetch.md
+          - platform/revit_batch_start.md
+          - platform/revit_batch_status.md
+          - platform/revit_build_report.md
+          - platform/revit_process_models.md
+      - C# 逃生口:
+          - platform/revit_execute_code.md
+  # <<< platform-nav
   - 接入与使用:
       - 安装与配置: server.md
       - 传输与接入: transport.md

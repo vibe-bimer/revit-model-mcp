@@ -2,7 +2,7 @@
 
 `revit_export_element_ids`
 
-<p class="facts"><span><b>分组</b> 导出与检验</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.8.0</span></p>
+<p class="facts"><span><b>分组</b> 导出与检验</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.8.0</span><span><b>来源</b> 自研（本仓库）</span></p>
 
 把模型中已绘制构件的 ID 清单写成 Excel（类别/族/类型/标高/构件ID/名称/工作集）
 
