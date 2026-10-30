@@ -66,6 +66,7 @@ TOOLSETS: dict[str, tuple[str, ...]] = {
         "revit_duplicate_view",
         "revit_apply_view_template",
         "revit_set_view_visibility",
+        "revit_set_view_lighting",
         "revit_override_graphics",
         "revit_tag_elements",
         "revit_create_schedule",

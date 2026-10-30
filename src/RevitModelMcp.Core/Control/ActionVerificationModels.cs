@@ -31,6 +31,9 @@ public sealed class ActionFacts
     [DataMember(Name = "requested", EmitDefaultValue = false)] public List<long>? Requested { get; set; }
     [DataMember(Name = "dependents", EmitDefaultValue = false)] public List<long>? Dependents { get; set; }
     [DataMember(Name = "stillPresent", EmitDefaultValue = false)] public List<long>? StillPresent { get; set; }
+
+    /// <summary>Lighting readings of the addressed view, before and after a fork lighting change.</summary>
+    [DataMember(Name = "lighting", EmitDefaultValue = false)] public Core.Fork.ViewLightingFacts? Lighting { get; set; }
 }
 
 [DataContract]

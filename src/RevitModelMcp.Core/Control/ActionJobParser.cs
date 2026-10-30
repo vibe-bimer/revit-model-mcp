@@ -984,6 +984,19 @@ public sealed class ActionJobContract
     public double? DiameterMm { get; set; }
     public double? OffsetMm { get; set; }
     public long? ConnectTo { get; set; }
+    // Fork action inputs (adr/0005): carried on the shared contract so the fork registry can read them.
+    public bool? Shadows { get; set; }
+    public int? ShadowIntensity { get; set; }
+    public int? SunlightIntensity { get; set; }
+    public string? SunDate { get; set; }
+    public string? SunTime { get; set; }
+    public double? SunAzimuthDeg { get; set; }
+    public double? SunAltitudeDeg { get; set; }
+    public bool? GroundPlane { get; set; }
+    public string? GroundPlaneLevel { get; set; }
+    public string? Background { get; set; }
+    public List<string>? BackgroundColors { get; set; }
+    public string? LightingScheme { get; set; }
 }
 
 [DataContract]
@@ -1816,6 +1829,12 @@ public sealed class ActionResultData
     [DataMember(Name = "dryRun", EmitDefaultValue = false)] public bool? DryRun { get; set; }
     [DataMember(Name = "rolledBack", EmitDefaultValue = false)] public bool? RolledBack { get; set; }
     [DataMember(Name = "verification", EmitDefaultValue = false)] public ActionVerification? Verification { get; set; }
+
+    /// <summary>Settings one fork call actually changed, for a view change that has no element id to report.</summary>
+    [DataMember(Name = "changedSettings", EmitDefaultValue = false)] public List<string>? ChangedSettings { get; set; }
+
+    /// <summary>Circumstance notes a fork action adds, such as a shared sun-settings warning.</summary>
+    [DataMember(Name = "notes", EmitDefaultValue = false)] public List<string>? Notes { get; set; }
     [DataMember(Name = "steps", EmitDefaultValue = false)] public List<BatchStepResult>? Steps { get; set; }
     [DataMember(Name = "undoName", EmitDefaultValue = false)] public string? UndoName { get; set; }
     [DataMember(Name = "committed", EmitDefaultValue = false)] public bool? Committed { get; set; }

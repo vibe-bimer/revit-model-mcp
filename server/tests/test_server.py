@@ -107,6 +107,7 @@ ACTION_TOOL_NAMES = {
     "revit_save_document",
     "revit_sync_document",
     "revit_set_view_visibility",
+    "revit_set_view_lighting",
     "revit_remove_links",
     "revit_undo_last",
 }
