@@ -393,11 +393,17 @@ class FrontmatterDescriptionTests(unittest.TestCase):
     def test_home_page_carries_a_frontmatter_description(self):
         for lang in ("zh", "en"):
             with self.subTest(lang=lang):
-                page = landing.home_page(self.tools, self.capabilities, "9.9.9", lang)
+                page = landing.home_page(
+                    self.tools, self.capabilities, "9.9.9", lang, len(self.tools)
+                )
                 description = _frontmatter(page)["description"]
                 self.assertTrue(description)
                 has_cjk = any("\u4e00" <= char <= "\u9fff" for char in description)
                 self.assertEqual(has_cjk, lang == "zh")
+
+    def test_home_page_requires_the_branch_count(self):
+        with self.assertRaises(TypeError):
+            landing.home_page(self.tools, self.capabilities, "9.9.9", "zh")
 
 
 if __name__ == "__main__":
