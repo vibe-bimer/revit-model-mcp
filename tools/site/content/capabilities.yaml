@@ -29,6 +29,7 @@ groups:
     en: Batch and ids
 tools:
   revit_ping:
+    source: c5046b264798
     group: connection
     since: 0.1.0
     title:
@@ -48,6 +49,7 @@ tools:
     - zh: 看看 Revit 插件在不在线
       en: Is the Revit add-in reachable?
   revit_document_info:
+    source: 82d16de3ed52
     group: connection
     since: 0.1.0
     title:
@@ -67,6 +69,7 @@ tools:
     - zh: 当前打开的是哪个模型？有哪些标高？
       en: Which model is open, and which levels does it have?
   revit_model_health:
+    source: 1f79b1381d6c
     group: export
     since: 0.2.0
     title:
@@ -86,6 +89,7 @@ tools:
     - zh: 做一次交付前体检：文件大小、各类数量、单位设置、最多的警告
       en: 'Run a pre-handover health check: size, counts, units, top warnings'
   revit_links_status:
+    source: 8ec51fdf6786
     group: export
     since: 0.2.0
     title:
@@ -105,6 +109,7 @@ tools:
     - zh: 检查所有链接是否正常
       en: 'Check every link: RVT, CAD and images'
   revit_shared_coordinates:
+    source: 68b9837c21dd
     group: export
     since: 0.2.0
     title:
@@ -124,6 +129,7 @@ tools:
     - zh: 报告项目的共享坐标和链接位移
       en: Report the shared coordinates and link offsets
   revit_parameter_fill_check:
+    source: 2b42f82c5af8
     group: export
     since: 0.2.0
     title:
@@ -143,6 +149,7 @@ tools:
     - zh: 检查墙的防火等级填充率，给出空值的构件 ID
       en: How well is the fire rating filled in on walls? Give me the empty ids
   revit_list_catalog:
+    source: 9b346ece1e14
     group: query
     since: 0.1.0
     title:
@@ -165,6 +172,7 @@ tools:
       zh: 查询与过滤都用这些名字
       en: Queries and filters use these exact names
   revit_aggregate_elements:
+    source: 526ca2e55260
     group: query
     since: 0.1.0
     title:
@@ -189,6 +197,7 @@ tools:
       zh: 回答“有多少”的首选，比逐条取明细快得多
       en: First choice for “how many” questions
   revit_query_elements:
+    source: 75aed63260b3
     group: query
     since: 0.1.0
     title:
@@ -208,6 +217,7 @@ tools:
     - zh: 列出 2F 上所有没填防火等级的门，给出 ID
       en: List the doors on 2F whose fire rating is empty, with ids
   revit_list_views:
+    source: 79ef41dc7de8
     group: views
     since: 0.1.0
     title:
@@ -227,6 +237,7 @@ tools:
     - zh: 列出所有平面视图
       en: List every floor plan view
   revit_view_summary:
+    source: 594ce2bbe1fb
     group: views
     since: 0.1.0
     title:
@@ -246,6 +257,7 @@ tools:
     - zh: 三维视图里各类构件分别有多少个？
       en: What does the 3D view hold, category by category?
   revit_export_view:
+    source: e1fd1638ac9e
     group: views
     since: 0.3.0
     title:
@@ -265,6 +277,7 @@ tools:
     - zh: 把 1F 平面导出成 PNG，宽度 2000 像素
       en: Export the 1F plan as a PNG, 2000 pixels wide
   revit_export_element_ids:
+    source: 59690caf9e5f
     group: export
     origin: fork
     since: 0.8.0
@@ -288,6 +301,7 @@ tools:
       zh: 文件写到 Revit 工作站上
       en: The workbook is written on the Revit workstation
   revit_view_elements:
+    source: 4c4f085ce46a
     group: views
     since: 0.2.0
     title:
@@ -307,6 +321,7 @@ tools:
     - zh: 把三维视图里的构件列表给我，每页 200 条
       en: Page through the elements of the 3D view, 200 at a time
   revit_element_details:
+    source: 434de3d148eb
     group: query
     since: 0.1.0
     title:
@@ -329,6 +344,7 @@ tools:
       zh: 房间还会返回面积、体积与边界
       en: Rooms also return area, volume and boundaries
   revit_view_warnings:
+    source: fccedefd55d6
     group: views
     since: 0.4.0
     title:
@@ -348,6 +364,7 @@ tools:
     - zh: 这个视图里有哪些警告？
       en: Which warnings touch this view?
   revit_list_warnings:
+    source: 1a1cf9bcbce7
     group: export
     since: 0.4.0
     title:
@@ -367,6 +384,7 @@ tools:
     - zh: 列出数量最多的警告
       en: Group the model warnings by text
   revit_list_relations:
+    source: 965fb8fc8e78
     group: query
     since: 0.7.0
     title:
@@ -386,6 +404,7 @@ tools:
     - zh: 1F 标高上都有哪些房间？
       en: Which rooms sit on level 1F?
   revit_list_instances:
+    source: cb2d527ff023
     group: connection
     since: 0.6.0
     title:
@@ -405,6 +424,7 @@ tools:
     - zh: 现在有几个 Revit 实例？各自打开什么模型？
       en: Which Revit instances are running, and what does each hold?
   revit_select:
+    source: 3b0ea70eb570
     group: display
     since: 0.1.0
     title:
@@ -427,6 +447,7 @@ tools:
       zh: 不改模型
       en: Does not change the model
   revit_show:
+    source: 3cdf84b8d9d1
     group: display
     since: 0.2.0
     title:
@@ -449,6 +470,7 @@ tools:
       zh: 不改模型
       en: Does not change the model
   revit_isolate:
+    source: 78e5d46528a3
     group: display
     since: 0.2.0
     title:
@@ -471,6 +493,7 @@ tools:
       zh: 临时效果，不写模型
       en: Temporary effect only
   revit_move:
+    source: 0bfded33b2f7
     group: edit
     since: 0.1.0
     title:
@@ -493,6 +516,7 @@ tools:
       zh: 支持 dry_run
       en: Supports dry_run
   revit_place_family:
+    source: 6383331ec37f
     group: edit
     since: 0.2.0
     title:
@@ -515,6 +539,7 @@ tools:
       zh: 2026 未真机验证
       en: Not run live on 2026
   revit_create_wall:
+    source: a47d1b8d9ac4
     group: edit
     since: 0.2.0
     title:
@@ -534,6 +559,7 @@ tools:
     - zh: 在 1F 从 (0,0) 到 (6000,0) 建一道 200mm 墙
       en: Draw a 200 mm wall on 1F from 0,0 to 6000,0
   revit_create_floor:
+    source: 1223d02fae21
     group: edit
     origin: fork
     since: 0.2.0
@@ -557,6 +583,7 @@ tools:
       zh: 2020 走 Document.Create.NewFloor，2022+ 走 Floor.Create
       en: On 2020 it uses Document.Create.NewFloor, from 2022 Floor.Create
   revit_create_level:
+    source: e8a985c864e7
     group: edit
     origin: fork
     since: 0.10.0
@@ -580,6 +607,7 @@ tools:
       zh: 同名标高会被拒绝，避免后续工具解析到有歧义的标高
       en: An existing level with the same name is refused, so a later tool never resolves an ambiguous level
   revit_set_phase:
+    source: d554282f0619
     group: phases
     origin: fork
     since: 0.3.0
@@ -603,6 +631,7 @@ tools:
       zh: 阶段顺序检查的 API 只在 2022+ ，2020 走兜底
       en: The phase order API exists from 2022; 2020 uses a fallback
   revit_merge_phases:
+    source: e15e02257c26
     group: phases
     origin: fork
     since: 0.3.0
@@ -626,6 +655,7 @@ tools:
       zh: 不可放进 batch
       en: Cannot run inside batch
   revit_set_parameter:
+    source: c3f91d6b805b
     group: edit
     since: 0.1.0
     title:
@@ -648,6 +678,7 @@ tools:
       zh: 支持 dry_run
       en: Supports dry_run
   revit_delete:
+    source: 925c54f302f6
     group: edit
     since: 0.1.0
     title:
@@ -670,6 +701,7 @@ tools:
       zh: 支持 dry_run
       en: Supports dry_run
   revit_reset_element_ids:
+    source: f77c44a94e42
     group: ids
     origin: fork
     since: 0.8.0
@@ -693,6 +725,7 @@ tools:
       zh: 先运行 dry_run；有宿主、有依赖、成组或属于 MEP 系统的构件会被拒绝
       en: Run dry_run first; hosted, dependent, grouped and MEP-system elements are refused
   revit_rebuild_model_ids:
+    source: 46f38a2677ec
     group: ids
     origin: fork
     since: 0.8.0
@@ -718,6 +751,7 @@ tools:
       zh: 源模型不变；仅复制三维视图可选构件及必要基准，不是完整项目克隆；逐份检查数量与 ID 映射
       en: The source stays unchanged; only selectable 3D-view elements and required datums are copied, not the full project; check every count and ID mapping
   revit_batch:
+    source: b18166af7437
     group: ids
     since: 0.2.0
     title:
@@ -742,6 +776,7 @@ tools:
       zh: 任一步首次失败都整体回滚
       en: Rolls the whole batch back when a step fails
   revit_set_view_lighting:
+    source: 61dd66225c75
     group: views
     origin: fork
     since: 0.10.0
@@ -785,6 +820,7 @@ year_notes:
     - Phases use the API that appears from 2022, with no order-check fallback
 param_notes:
   revit_rebuild_model_ids:
+    source: 46f38a2677ec
     destination_path:
       zh: 新模型路径（.rvt）；含 {n} 时按份编号
       en: new model path (.rvt); {n} numbers the copies
@@ -801,6 +837,7 @@ param_notes:
       zh: 彩排：在临时新文档中复制并给出映射，不保存目标文件；源模型始终不变
       en: 'rehearse in a temporary new document and report the mapping without saving; the source always stays unchanged'
   revit_batch:
+    source: b18166af7437
     steps:
       zh: 1–50 个动作步骤；任一步首次失败都整体回滚
       en: one to fifty action steps; the batch rolls back when a step fails
@@ -808,6 +845,7 @@ param_notes:
       zh: 彩排：执行后回滚，返回同样的校验块
       en: 'rehearse: execute, return the same verification block, then roll back'
   revit_aggregate_elements:
+    source: 526ca2e55260
     group_by:
       zh: 1–2 个分组字段（category/family/type/level 或参数名）
       en: 'one or two grouping fields: category, family, type, level or a parameter name'
@@ -830,6 +868,7 @@ param_notes:
       zh: 工作集过滤
       en: workset filter
   revit_query_elements:
+    source: 75aed63260b3
     fields:
       zh: 要返回的字段；缺省返回常用字段
       en: fields to return; the tool picks its usual ones by default
@@ -858,10 +897,12 @@ param_notes:
       zh: 工作集过滤
       en: workset filter
   revit_export_view:
+    source: e1fd1638ac9e
     save_to:
       zh: MCP 客户端机器上的新 PNG 文件路径，不是 Revit 工作站路径；文件已存在会报错
       en: New PNG path on the MCP client machine, not the Revit workstation; an existing file is an error
   revit_export_element_ids:
+    source: 59690caf9e5f
     fields:
       zh: 要写进表格的列；缺省为 类别/族/类型/标高/构件ID/名称/工作集
       en: columns to write; the defaults are category, family, type, level, component id, name and workset
@@ -869,6 +910,7 @@ param_notes:
       zh: 工作站上的 xlsx 绝对路径；文件已存在会报错
       en: absolute .xlsx path on the Revit workstation; an existing file is an error
   revit_reset_element_ids:
+    source: f77c44a94e42
     element_ids:
       zh: 要换 ID 的构件；有宿主、有依赖、成组或属于 MEP 系统的会被拒绝
       en: elements to replace; hosted, dependent, grouped or MEP system members are refused
@@ -876,6 +918,7 @@ param_notes:
       zh: 彩排：替换后回滚，先跑一次看哪些构件不合格
       en: 'rehearse: replace, report the mapping, then roll back'
   revit_parameter_fill_check:
+    source: 2b42f82c5af8
     include_types:
       zh: 实例上找不到参数时，是否回退到类型参数（默认 true）；不是把类型元素额外计数
       en: fall back to type parameters when absent on the instance (true by default); does not add type elements to the count
@@ -886,14 +929,17 @@ param_notes:
       zh: 只统计该工作集里的构件
       en: restrict to one workset
   revit_view_elements:
+    source: 4c4f085ce46a
     categories:
       zh: 只列出这些类别的构件
       en: only list these categories
   revit_select:
+    source: 3b0ea70eb570
     element_ids:
       zh: 要选中的构件 ID；传空列表清除选择
       en: element ids to select; an empty list clears the selection
   revit_show:
+    source: 3cdf84b8d9d1
     element_ids:
       zh: 要在视图里显示/选中的构件 ID
       en: element ids to show and select
@@ -901,14 +947,17 @@ param_notes:
       zh: false 时只定位不改变当前选择
       en: false locates the elements without changing the selection
   revit_isolate:
+    source: 78e5d46528a3
     element_ids:
       zh: 要隔离显示的构件 ID；配合 reset=true 恢复
       en: element ids to isolate; combine with reset=true to restore
   revit_move:
+    source: 0bfded33b2f7
     element_ids:
       zh: 要移动的构件 ID
       en: element ids to move
   revit_place_family:
+    source: 6383331ec37f
     x_mm:
       zh: 模型 X 坐标（mm）
       en: model X in millimetres
@@ -919,6 +968,7 @@ param_notes:
       zh: 绕 Z 轴旋转角度（°）
       en: rotation about Z in degrees
   revit_create_wall:
+    source: a47d1b8d9ac4
     start_mm:
       zh: 起点坐标 [x, y]（mm）
       en: start point [x, y] in millimetres
@@ -929,6 +979,7 @@ param_notes:
       zh: 墙高（mm，默认 3000）
       en: wall height in millimetres (3000 by default)
   revit_create_level:
+    source: e8a985c864e7
     name:
       zh: 标高名称
       en: level name
@@ -939,6 +990,7 @@ param_notes:
       zh: 同时创建对应的楼层平面视图
       en: also create the matching floor plan view
   revit_set_phase:
+    source: d554282f0619
     element_ids:
       zh: 要改阶段的构件 ID
       en: element ids whose phase changes
@@ -949,6 +1001,7 @@ param_notes:
       zh: 拆除阶段名；空串清除该标记、null 不变
       en: demolished phase name; an empty string clears it, null leaves it unchanged
   revit_merge_phases:
+    source: e15e02257c26
     source_phase:
       zh: 被合并掉的阶段名（合并后删除）
       en: the phase that is merged away and then deleted
@@ -956,6 +1009,7 @@ param_notes:
       zh: 接收引用的阶段名
       en: the phase that receives the references
   revit_set_view_lighting:
+    source: 61dd66225c75
     view:
       zh: 视图名称（与 revit_list_views 一致）或十进制视图 ID；非样板视图
       en: view name as revit_list_views reports it, or its decimal view ID; a non-template view
