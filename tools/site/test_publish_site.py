@@ -279,3 +279,111 @@ class HealthProbeTests(PublishHarness):
         ok = self.publish(SITE_HEALTH_MARKER="no such marker anywhere")
         self.assertEqual(ok.returncode, 4)
         self.assertEqual(Path(self.current_target()).name, self.first_release)
+
+
+class ConcurrencyTests(PublishHarness):
+    def setUp(self):
+        super().setUp()
+        self.commit("v1")
+        self.assertEqual(self.publish().returncode, 0)
+        self.first_release = self.current_target()
+
+    def test_a_second_publisher_is_rejected_by_the_lock(self):
+        import fcntl
+
+        self.write_source("v2")
+        self.commit("v2")
+        lock_path = self.state / "publish.lock"
+        with lock_path.open("a+") as held:
+            fcntl.flock(held.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            try:
+                rejected = self.publish()
+            finally:
+                fcntl.flock(held.fileno(), fcntl.LOCK_UN)
+        self.assertEqual(rejected.returncode, 3)
+        self.assertIn("another publish", rejected.stdout + rejected.stderr)
+        self.assertEqual(self.current_target(), self.first_release)
+        # The refused run must not corrupt the status of the running one.
+        self.assertEqual(
+            self.status()["current_release"], Path(self.first_release).name
+        )
+        # And a retry after the lock is free succeeds.
+        self.assertEqual(self.publish().returncode, 0)
+
+
+class ZeroWindowTests(PublishHarness):
+    def setUp(self):
+        super().setUp()
+        self.commit("v1")
+        self.assertEqual(self.publish().returncode, 0)
+
+    def test_requests_never_fail_while_a_new_release_switches_in(self):
+        import http.client
+        import importlib.util
+        import threading
+        import time
+
+        spec = importlib.util.spec_from_file_location(
+            "zero_window_serve_site",
+            Path(__file__).resolve().parent.parent.parent / "scripts" / "serve-site.py",
+        )
+        serve_site = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(serve_site)
+        serve_site.DocsHandler.log_message = lambda *args, **kwargs: None
+        # The live unit serves the publish root, which is a symlink to current.
+        serve_site.DocsHandler.root = self.publish_root
+        server = serve_site.Server(("127.0.0.1", 0), serve_site.DocsHandler)
+        port = server.server_address[1]
+        threading.Thread(target=server.serve_forever, daemon=True).start()
+        results = []
+        stop = threading.Event()
+
+        def hammer():
+            while not stop.is_set():
+                connection = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+                try:
+                    connection.request("GET", "/")
+                    response = connection.getresponse()
+                    body = response.read().decode("utf-8", "replace")
+                    results.append((response.status, body))
+                except OSError as error:  # pragma: no cover - failure detail
+                    results.append((0, str(error)))
+                finally:
+                    connection.close()
+                time.sleep(0.005)
+
+        worker = threading.Thread(target=hammer, daemon=True)
+        worker.start()
+        try:
+            self.write_source("v2")
+            self.commit("v2")
+            result = self.publish()
+        finally:
+            stop.set()
+            worker.join(timeout=10)
+            server.shutdown()
+            server.server_close()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(results, "the probe requests never ran")
+        failures = [entry for entry in results if entry[0] != 200]
+        self.assertEqual(
+            failures, [], f"{len(failures)} failed requests during the switch"
+        )
+        bodies = " ".join(body for _, body in results)
+        self.assertIn("v1", bodies)
+        self.assertIn("v2", bodies)
+
+
+class NoOpTests(PublishHarness):
+    def test_republishing_the_same_commit_is_a_recorded_no_op(self):
+        self.commit("v1")
+        self.assertEqual(self.publish().returncode, 0)
+        releases_before = self.release_ids()
+        again = self.publish()
+        self.assertEqual(again.returncode, 0)
+        self.assertIn("no-op", again.stdout)
+        self.assertEqual(self.release_ids(), releases_before)
+        status = self.status()
+        self.assertEqual(status["last_attempt"]["outcome"], "noop")
+        self.assertTrue(status["last_success"]["noop"])
+        self.assertNotIn("last_failure", status)
