@@ -25,26 +25,26 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `background` | No | None | any |  |
-| `background_colors` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `ground_plane` | No | None | any |  |
-| `ground_plane_level` | No | None | any |  |
-| `lighting_scheme` | No | None | any |  |
-| `shadow_intensity` | No | None | any |  |
-| `shadows` | No | None | any |  |
-| `sun_altitude_deg` | No | None | any |  |
-| `sun_azimuth_deg` | No | None | any |  |
-| `sun_date` | No | None | any |  |
-| `sun_time` | No | None | any |  |
-| `sunlight_intensity` | No | None | any |  |
+| `background` | No | `null` | any |  |
+| `background_colors` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `ground_plane` | No | `null` | any |  |
+| `ground_plane_level` | No | `null` | any |  |
+| `lighting_scheme` | No | `null` | any |  |
+| `shadow_intensity` | No | `null` | any |  |
+| `shadows` | No | `null` | any |  |
+| `sun_altitude_deg` | No | `null` | any |  |
+| `sun_azimuth_deg` | No | `null` | any |  |
+| `sun_date` | No | `null` | any |  |
+| `sun_time` | No | `null` | any |  |
+| `sunlight_intensity` | No | `null` | any |  |
 | `view` | Yes | — | string |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any |  |
+| `document` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

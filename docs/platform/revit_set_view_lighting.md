@@ -27,26 +27,26 @@ description: "设置一个视图的阴影、太阳位置、地平面、背景与
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `background` | 否 | None | any |  |
-| `background_colors` | 否 | None | any |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `ground_plane` | 否 | None | any |  |
-| `ground_plane_level` | 否 | None | any |  |
-| `lighting_scheme` | 否 | None | any |  |
-| `shadow_intensity` | 否 | None | any |  |
-| `shadows` | 否 | None | any |  |
-| `sun_altitude_deg` | 否 | None | any |  |
-| `sun_azimuth_deg` | 否 | None | any |  |
-| `sun_date` | 否 | None | any |  |
-| `sun_time` | 否 | None | any |  |
-| `sunlight_intensity` | 否 | None | any |  |
+| `background` | 否 | `null` | any |  |
+| `background_colors` | 否 | `null` | any |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `ground_plane` | 否 | `null` | any |  |
+| `ground_plane_level` | 否 | `null` | any |  |
+| `lighting_scheme` | 否 | `null` | any |  |
+| `shadow_intensity` | 否 | `null` | any |  |
+| `shadows` | 否 | `null` | any |  |
+| `sun_altitude_deg` | 否 | `null` | any |  |
+| `sun_azimuth_deg` | 否 | `null` | any |  |
+| `sun_date` | 否 | `null` | any |  |
+| `sun_time` | 否 | `null` | any |  |
+| `sunlight_intensity` | 否 | `null` | any |  |
 | `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

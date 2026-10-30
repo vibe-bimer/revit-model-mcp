@@ -12,12 +12,12 @@ description: "Start a persistent, read-only run over local, UNC or RSN models. o
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `folder` | No | None | any |  |
-| `open_timeout_minutes` | No | None | any |  |
-| `parameter_rules` | No | None | any |  |
-| `paths` | No | None | any |  |
-| `recursive` | No | False | boolean |  |
-| `years` | No | None | any |  |
+| `folder` | No | `null` | any |  |
+| `open_timeout_minutes` | No | `null` | any |  |
+| `parameter_rules` | No | `null` | any |  |
+| `paths` | No | `null` | any |  |
+| `recursive` | No | `false` | boolean |  |
+| `years` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

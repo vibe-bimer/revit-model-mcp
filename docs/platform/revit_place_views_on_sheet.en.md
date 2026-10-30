@@ -12,7 +12,7 @@ description: "Place views and schedules on a sheet. Coordinates are sheet mm."
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
 | `sheet` | Yes | — | string |  |
 | `views` | Yes | — | array |  |
 
@@ -20,7 +20,7 @@ description: "Place views and schedules on a sheet. Coordinates are sheet mm."
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

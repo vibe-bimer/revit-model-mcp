@@ -14,25 +14,25 @@ description: "在同一会话中逐个打开模型，执行步骤与 C# 代码�
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `code` | 否 | None | any |  |
-| `confirm_token` | 否 | None | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `exports` | 否 | None | any |  |
-| `folder` | 否 | None | any |  |
-| `open` | 否 | None | any |  |
-| `paths` | 否 | None | any |  |
-| `pattern` | 否 | *.rvt | string |  |
-| `recursive` | 否 | False | boolean |  |
-| `save` | 否 | None | any |  |
-| `steps` | 否 | None | any |  |
-| `stop_on_error` | 否 | False | boolean |  |
+| `code` | 否 | `null` | any |  |
+| `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `exports` | 否 | `null` | any |  |
+| `folder` | 否 | `null` | any |  |
+| `open` | 否 | `null` | any |  |
+| `paths` | 否 | `null` | any |  |
+| `pattern` | 否 | `"*.rvt"` | string |  |
+| `recursive` | 否 | `false` | boolean |  |
+| `save` | 否 | `null` | any |  |
+| `steps` | 否 | `null` | any |  |
+| `stop_on_error` | 否 | `false` | boolean |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
-| `timeout_seconds` | 否 | 14400 | integer | 本次调用的等待上限（秒）。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+| `timeout_seconds` | 否 | `14400` | integer | 本次调用的等待上限（秒）。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

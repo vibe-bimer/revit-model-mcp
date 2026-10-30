@@ -14,21 +14,21 @@ description: "在选定模型视图中给构件上色；`reset` 恢复本 Revit 
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `color` | 否 | #FF0000 | string |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `color` | 否 | `"#FF0000"` | string |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
-| `fill` | 否 | True | boolean |  |
-| `halftone_others` | 否 | False | boolean |  |
-| `line_weight` | 否 | None | any |  |
-| `reset` | 否 | False | boolean |  |
-| `transparency` | 否 | 0 | integer |  |
-| `views` | 否 | active | any |  |
+| `fill` | 否 | `true` | boolean |  |
+| `halftone_others` | 否 | `false` | boolean |  |
+| `line_weight` | 否 | `null` | any |  |
+| `reset` | 否 | `false` | boolean |  |
+| `transparency` | 否 | `0` | integer |  |
+| `views` | 否 | `"active"` | any |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

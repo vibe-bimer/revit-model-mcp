@@ -22,7 +22,7 @@ No additional business parameters; use the common parameters below.
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
 
 ## Behavior (registry text) {#behavior}
 

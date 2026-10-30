@@ -14,15 +14,15 @@ description: "读取 schema 版本 1 的项目快照，供批量审计使用；�
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `parameter_rules` | 否 | None | any |  |
+| `parameter_rules` | 否 | `null` | any |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
-| `timeout_seconds` | 否 | 120 | integer | 本次调用的等待上限（秒）。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+| `timeout_seconds` | 否 | `120` | integer | 本次调用的等待上限（秒）。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

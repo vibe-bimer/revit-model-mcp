@@ -23,16 +23,16 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `name_contains` | No | None | any | Case-insensitive substring of the view name. |
-| `view_type` | No | None | any | English ViewType name such as FloorPlan or ThreeD, case-insensitive. |
+| `name_contains` | No | `null` | any | Case-insensitive substring of the view name. |
+| `view_type` | No | `null` | any | English ViewType name such as FloorPlan or ThreeD, case-insensitive. |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
-| `timeout_seconds` | No | 120 | integer | Seconds to wait for a result (default 120). |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
+| `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
 
 ## Behavior (registry text) {#behavior}
 

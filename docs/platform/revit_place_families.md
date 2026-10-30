@@ -14,18 +14,18 @@ description: "载入可选族并在同一事务、同一次撤销内放置多个
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `at_rooms` | 否 | None | any |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `load` | 否 | None | any |  |
-| `placements` | 否 | None | any |  |
-| `stop_on_error` | 否 | True | boolean |  |
+| `at_rooms` | 否 | `null` | any |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `load` | 否 | `null` | any |  |
+| `placements` | 否 | `null` | any |  |
+| `stop_on_error` | 否 | `true` | boolean |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `timeout_seconds` | 否 | 600 | integer | 本次调用的等待上限（秒）。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `timeout_seconds` | 否 | `600` | integer | 本次调用的等待上限（秒）。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

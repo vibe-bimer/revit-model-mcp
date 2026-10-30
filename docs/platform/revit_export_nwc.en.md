@@ -12,35 +12,35 @@ description: "Export NWC on the Revit workstation; needs the Navisworks exporter
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `confirm_token` | No | None | any |  |
-| `convert_element_properties` | No | None | any |  |
-| `convert_lights` | No | None | any |  |
-| `convert_linked_cad_formats` | No | None | any |  |
-| `coordinates` | No | None | any |  |
-| `divide_file_into_levels` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `element_ids` | No | None | any |  |
-| `export_element_ids` | No | None | any |  |
-| `export_links` | No | None | any |  |
-| `export_parts` | No | None | any |  |
-| `export_room_as_attribute` | No | None | any |  |
-| `export_room_geometry` | No | None | any |  |
-| `export_urls` | No | None | any |  |
-| `faceting_factor` | No | None | any |  |
-| `find_missing_materials` | No | None | any |  |
-| `overwrite` | No | False | boolean |  |
-| `parameters` | No | None | any |  |
+| `confirm_token` | No | `null` | any |  |
+| `convert_element_properties` | No | `null` | any |  |
+| `convert_lights` | No | `null` | any |  |
+| `convert_linked_cad_formats` | No | `null` | any |  |
+| `coordinates` | No | `null` | any |  |
+| `divide_file_into_levels` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `element_ids` | No | `null` | any |  |
+| `export_element_ids` | No | `null` | any |  |
+| `export_links` | No | `null` | any |  |
+| `export_parts` | No | `null` | any |  |
+| `export_room_as_attribute` | No | `null` | any |  |
+| `export_room_geometry` | No | `null` | any |  |
+| `export_urls` | No | `null` | any |  |
+| `faceting_factor` | No | `null` | any |  |
+| `find_missing_materials` | No | `null` | any |  |
+| `overwrite` | No | `false` | boolean |  |
+| `parameters` | No | `null` | any |  |
 | `path` | Yes | — | string |  |
-| `scope` | No | None | any |  |
-| `settings_xml` | No | None | any |  |
-| `view` | No | None | any |  |
+| `scope` | No | `null` | any |  |
+| `settings_xml` | No | `null` | any |  |
+| `view` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | 1800 | integer |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | `1800` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

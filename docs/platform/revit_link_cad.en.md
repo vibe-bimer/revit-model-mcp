@@ -12,21 +12,21 @@ description: "Link or import a DWG into a plan view on the Revit workstation. Re
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
-| `layers` | No | None | any |  |
-| `level` | No | None | any |  |
-| `link` | No | True | boolean |  |
-| `origin` | No | internal | string |  |
+| `dry_run` | No | `false` | boolean |  |
+| `layers` | No | `null` | any |  |
+| `level` | No | `null` | any |  |
+| `link` | No | `true` | boolean |  |
+| `origin` | No | `"internal"` | string |  |
 | `path` | Yes | — | string |  |
-| `units` | No | auto | string |  |
-| `view` | No | None | any |  |
+| `units` | No | `"auto"` | string |  |
+| `view` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | 600 | integer |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | `600` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

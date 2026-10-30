@@ -14,23 +14,23 @@ description: "按模型毫米坐标点创建相连的风管、水管、桥架或
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `connect_to` | 否 | None | any |  |
-| `diameter_mm` | 否 | None | any |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `height_mm` | 否 | None | any |  |
+| `connect_to` | 否 | `null` | any |  |
+| `diameter_mm` | 否 | `null` | any |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `height_mm` | 否 | `null` | any |  |
 | `kind` | 是 | — | string |  |
 | `level` | 是 | — | string |  |
-| `offset_mm` | 否 | None | any |  |
+| `offset_mm` | 否 | `null` | any |  |
 | `points_mm` | 是 | — | array |  |
-| `system_type` | 否 | None | any |  |
-| `type_name` | 否 | None | any |  |
-| `width_mm` | 否 | None | any |  |
+| `system_type` | 否 | `null` | any |  |
+| `type_name` | 否 | `null` | any |  |
+| `width_mm` | 否 | `null` | any |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

@@ -12,15 +12,15 @@ description: "List every open document in one Revit process, including backgroun
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `include_linked` | No | False | boolean |  |
+| `include_linked` | No | `false` | boolean |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
-| `timeout_seconds` | No | 120 | integer | Seconds to wait for a result (default 120). |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
+| `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
 
 ## Behavior (registry text) {#behavior}
 

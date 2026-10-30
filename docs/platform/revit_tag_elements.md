@@ -14,21 +14,21 @@ description: "在视图中按类目名称或构件 ID 标注构件，两者只�
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `categories` | 否 | None | any |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `element_ids` | 否 | None | any | 要处理的构件 Revit ID 列表。 |
-| `leader` | 否 | False | boolean |  |
-| `max_elements` | 否 | 5000 | integer |  |
-| `orientation` | 否 | horizontal | string |  |
-| `skip_tagged` | 否 | True | boolean |  |
-| `tag_type` | 否 | None | any |  |
+| `categories` | 否 | `null` | any |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `element_ids` | 否 | `null` | any | 要处理的构件 Revit ID 列表。 |
+| `leader` | 否 | `false` | boolean |  |
+| `max_elements` | 否 | `5000` | integer |  |
+| `orientation` | 否 | `"horizontal"` | string |  |
+| `skip_tagged` | 否 | `true` | boolean |  |
+| `tag_type` | 否 | `null` | any |  |
 | `view` | 是 | — | any | 视图的准确名称或十进制视图 ID。 |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

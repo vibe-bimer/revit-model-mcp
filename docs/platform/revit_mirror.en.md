@@ -13,8 +13,8 @@ description: "Mirror across a model X or Y parallel line through point_mm; copy 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `axis` | Yes | — | string |  |
-| `copy` | No | True | boolean |  |
-| `dry_run` | No | False | boolean |  |
+| `copy` | No | `true` | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
 | `element_ids` | Yes | — | array |  |
 | `point_mm` | Yes | — | array |  |
 
@@ -22,7 +22,7 @@ description: "Mirror across a model X or Y parallel line through point_mm; copy 
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

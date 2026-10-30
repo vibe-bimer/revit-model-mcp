@@ -13,17 +13,17 @@ description: "Render a highlighted PNG that marks 1 to 500 elements, for issue e
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `element_ids` | Yes | — | array |  |
-| `mode` | No | 3d | string |  |
-| `output_path` | No | None | any | New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath. |
-| `padding_mm` | No | 1500 | number |  |
-| `pixel_size` | No | 1600 | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
+| `mode` | No | `"3d"` | string |  |
+| `output_path` | No | `null` | any | New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath. |
+| `padding_mm` | No | `1500` | number |  |
+| `pixel_size` | No | `1600` | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
 
 ## Behavior (registry text) {#behavior}
 

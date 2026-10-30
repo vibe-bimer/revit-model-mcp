@@ -15,17 +15,17 @@ description: "渲染带高亮的 PNG，标记 1 到 500 个构件作为问题证
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
-| `mode` | 否 | 3d | string |  |
-| `output_path` | 否 | None | any | New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath. |
-| `padding_mm` | 否 | 1500 | number |  |
-| `pixel_size` | 否 | 1600 | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
+| `mode` | 否 | `"3d"` | string |  |
+| `output_path` | 否 | `null` | any | New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath. |
+| `padding_mm` | 否 | `1500` | number |  |
+| `pixel_size` | 否 | `1600` | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

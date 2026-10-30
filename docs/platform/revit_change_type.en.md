@@ -12,16 +12,16 @@ description: "Change each element to one compatible type; family resolves duplic
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
 | `element_ids` | Yes | — | array |  |
-| `family` | No | None | any |  |
+| `family` | No | `null` | any |  |
 | `type_name` | Yes | — | string |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

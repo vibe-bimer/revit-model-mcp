@@ -12,21 +12,21 @@ description: "Colour elements in selected model views; reset restores overrides 
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `color` | No | #FF0000 | string |  |
-| `dry_run` | No | False | boolean |  |
+| `color` | No | `"#FF0000"` | string |  |
+| `dry_run` | No | `false` | boolean |  |
 | `element_ids` | Yes | — | array |  |
-| `fill` | No | True | boolean |  |
-| `halftone_others` | No | False | boolean |  |
-| `line_weight` | No | None | any |  |
-| `reset` | No | False | boolean |  |
-| `transparency` | No | 0 | integer |  |
-| `views` | No | active | any |  |
+| `fill` | No | `true` | boolean |  |
+| `halftone_others` | No | `false` | boolean |  |
+| `line_weight` | No | `null` | any |  |
+| `reset` | No | `false` | boolean |  |
+| `transparency` | No | `0` | integer |  |
+| `views` | No | `"active"` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

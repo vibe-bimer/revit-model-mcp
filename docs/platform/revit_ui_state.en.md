@@ -16,7 +16,7 @@ No additional business parameters; use the common parameters below.
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
 
 ## Behavior (registry text) {#behavior}
 

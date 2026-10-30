@@ -14,15 +14,15 @@ description: "Write a new local .xlsx issue register with element snapshots and 
 | --- | :--: | --- | --- | --- |
 | `issues` | Yes | — | array |  |
 | `output_path` | Yes | — | string | New .xlsx issue register path, resolved on the machine running this server; existing files are refused. |
-| `pixel_size` | No | 900 | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
+| `pixel_size` | No | `900` | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
 | `project` | Yes | — | object |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
 
 ## Behavior (registry text) {#behavior}
 

@@ -15,18 +15,18 @@ description: "把工作共享文档与中心文件同步；需要先取得确认
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
 | `comment` | 是 | — | string |  |
-| `compact` | 否 | False | boolean |  |
-| `confirm_token` | 否 | None | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
-| `relinquish` | 否 | all | any |  |
-| `save_local_after` | 否 | True | boolean |  |
-| `save_local_before` | 否 | True | boolean |  |
+| `compact` | 否 | `false` | boolean |  |
+| `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
+| `relinquish` | 否 | `"all"` | any |  |
+| `save_local_after` | 否 | `true` | boolean |  |
+| `save_local_before` | 否 | `true` | boolean |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
 | `document` | 是 | — | string | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

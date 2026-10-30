@@ -12,17 +12,17 @@ description: "Activate a non-template view. Zoom to fit, preserve zoom, or frame
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `activate_document` | No | False | boolean |  |
+| `activate_document` | No | `false` | boolean |  |
 | `view` | Yes | — | string |  |
-| `view_type` | No | None | any |  |
-| `zoom` | No | fit | any |  |
+| `view_type` | No | `null` | any |  |
+| `zoom` | No | `"fit"` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Target document title or path reference. |
-| `process_id` | No | None | any |  |
+| `document` | No | `null` | any | Target document title or path reference. |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

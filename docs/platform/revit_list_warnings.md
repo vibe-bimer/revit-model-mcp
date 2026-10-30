@@ -25,16 +25,16 @@ description: "按描述文本分组列出模型警告；指定文本并开启 `i
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `include_elements` | 否 | False | boolean | Include affected elements (ID, category, name) per group. Default false returns counts only. |
-| `warning_text` | 否 | None | any | Exact warning description from revit_list_warnings, case-insensitive; an unmatched text is an error. |
+| `include_elements` | 否 | `false` | boolean | Include affected elements (ID, category, name) per group. Default false returns counts only. |
+| `warning_text` | 否 | `null` | any | Exact warning description from revit_list_warnings, case-insensitive; an unmatched text is an error. |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
-| `timeout_seconds` | 否 | 120 | integer | 本次调用的等待上限（秒）。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
+| `timeout_seconds` | 否 | `120` | integer | 本次调用的等待上限（秒）。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

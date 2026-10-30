@@ -24,16 +24,16 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `relation` | Yes | — | string |  |
-| `source_id` | No | None | any | Revit ID of the source group (group-elements) or family instance (nested-family). |
-| `source_name` | No | None | any | Source name, case-insensitive: a level (level-rooms), area scheme (area-scheme-elements) or view template (view-template-dependents). |
+| `source_id` | No | `null` | any | Revit ID of the source group (group-elements) or family instance (nested-family). |
+| `source_name` | No | `null` | any | Source name, case-insensitive: a level (level-rooms), area scheme (area-scheme-elements) or view template (view-template-dependents). |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target document; needed when several Revit instances run. |
-| `process_id` | No | None | any | Revit process ID; takes precedence over document. |
-| `timeout_seconds` | No | 120 | integer | Seconds to wait for a result (default 120). |
+| `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
+| `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
+| `timeout_seconds` | No | `120` | integer | Seconds to wait for a result (default 120). |
 
 ## Behavior (registry text) {#behavior}
 

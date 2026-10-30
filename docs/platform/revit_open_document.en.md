@@ -12,17 +12,17 @@ description: "Open a local, UNC or RSN model. Central models open detached by de
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `activate` | No | False | boolean |  |
-| `audit` | No | False | boolean |  |
-| `mode` | No | detached | string |  |
+| `activate` | No | `false` | boolean |  |
+| `audit` | No | `false` | boolean |  |
+| `mode` | No | `"detached"` | string |  |
 | `path` | Yes | — | string |  |
-| `worksets` | No | all | any |  |
+| `worksets` | No | `"all"` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `process_id` | No | None | any |  |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

@@ -15,8 +15,8 @@ description: "沿穿过给定点的模型 X 或 Y 平行线镜像，`copy` 保�
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
 | `axis` | 是 | — | string |  |
-| `copy` | 否 | True | boolean |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `copy` | 否 | `true` | boolean |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
 | `point_mm` | 是 | — | array |  |
 
@@ -24,7 +24,7 @@ description: "沿穿过给定点的模型 X 或 Y 平行线镜像，`copy` 保�
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

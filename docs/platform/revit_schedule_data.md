@@ -14,16 +14,16 @@ description: "读取明细表显示的表头与单元格文本，支持分页。
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `max_rows` | 否 | 500 | integer |  |
-| `offset` | 否 | 0 | integer | 分页起始位置。 |
+| `max_rows` | 否 | `500` | integer |  |
+| `offset` | 否 | `0` | integer | 分页起始位置。 |
 | `schedule` | 是 | — | string | Exact schedule name or decimal Revit view ID. (Use the id when two schedules share a name.) |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

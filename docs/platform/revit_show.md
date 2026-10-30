@@ -21,13 +21,13 @@ description: "在 Revit 中显示构件并可同时选中，必要时打开标�
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
-| `select` | 否 | True | boolean |  |
+| `select` | 否 | `true` | boolean |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

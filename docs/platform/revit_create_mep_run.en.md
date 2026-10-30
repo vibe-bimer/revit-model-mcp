@@ -12,23 +12,23 @@ description: "Create connected duct, pipe, cable tray or conduit segments from m
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `connect_to` | No | None | any |  |
-| `diameter_mm` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `height_mm` | No | None | any |  |
+| `connect_to` | No | `null` | any |  |
+| `diameter_mm` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `height_mm` | No | `null` | any |  |
 | `kind` | Yes | — | string |  |
 | `level` | Yes | — | string |  |
-| `offset_mm` | No | None | any |  |
+| `offset_mm` | No | `null` | any |  |
 | `points_mm` | Yes | — | array |  |
-| `system_type` | No | None | any |  |
-| `type_name` | No | None | any |  |
-| `width_mm` | No | None | any |  |
+| `system_type` | No | `null` | any |  |
+| `type_name` | No | `null` | any |  |
+| `width_mm` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

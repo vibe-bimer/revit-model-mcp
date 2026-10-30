@@ -12,15 +12,15 @@ description: "Close a background document. Needs confirm_token from a first call
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `confirm_token` | No | None | any |  |
-| `save` | No | False | boolean |  |
+| `confirm_token` | No | `null` | any |  |
+| `save` | No | `false` | boolean |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `document` | Yes | — | string |  |
-| `process_id` | No | None | any |  |
+| `process_id` | No | `null` | any |  |
 
 ## Behavior (registry text) {#behavior}
 

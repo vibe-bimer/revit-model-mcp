@@ -18,7 +18,7 @@ description: "读取活动文档、打开的视图、当前选择集与打开的
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

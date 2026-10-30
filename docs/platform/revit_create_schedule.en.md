@@ -13,18 +13,18 @@ description: "Create a schedule for one category with the named fields in the gi
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `category` | Yes | — | string |  |
-| `dry_run` | No | False | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
 | `fields` | Yes | — | array |  |
-| `filters` | No | None | any |  |
-| `itemized` | No | True | boolean |  |
-| `name` | No | None | any |  |
-| `sort` | No | None | any |  |
+| `filters` | No | `null` | any |  |
+| `itemized` | No | `true` | boolean |  |
+| `name` | No | `null` | any |  |
+| `sort` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

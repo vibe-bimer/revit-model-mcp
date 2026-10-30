@@ -14,17 +14,17 @@ description: "打开本地、UNC 或 RSN 模型；中心模型默认以分离方
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `activate` | 否 | False | boolean |  |
-| `audit` | 否 | False | boolean |  |
-| `mode` | 否 | detached | string |  |
+| `activate` | 否 | `false` | boolean |  |
+| `audit` | 否 | `false` | boolean |  |
+| `mode` | 否 | `"detached"` | string |  |
 | `path` | 是 | — | string |  |
-| `worksets` | 否 | all | any |  |
+| `worksets` | 否 | `"all"` | any |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `process_id` | 否 | None | any | 目标 Revit 进程号。 |
+| `process_id` | 否 | `null` | any | 目标 Revit 进程号。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

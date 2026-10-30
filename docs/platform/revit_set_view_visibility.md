@@ -14,21 +14,21 @@ description: "在一个视图中更改类目、工作集与过滤器可见性；
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `category_classes` | 否 | None | any |  |
-| `dry_run` | 否 | False | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `filters` | 否 | None | any |  |
-| `hide_categories` | 否 | None | any |  |
-| `hide_categories_by_type` | 否 | None | any |  |
-| `show_categories` | 否 | None | any |  |
-| `template_mode` | 否 | None | any |  |
+| `category_classes` | 否 | `null` | any |  |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `filters` | 否 | `null` | any |  |
+| `hide_categories` | 否 | `null` | any |  |
+| `hide_categories_by_type` | 否 | `null` | any |  |
+| `show_categories` | 否 | `null` | any |  |
+| `template_mode` | 否 | `null` | any |  |
 | `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |
-| `worksets` | 否 | None | any |  |
+| `worksets` | 否 | `null` | any |  |
 
 ### 通用参数 {#common-parameters}
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
-| `document` | 否 | None | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
 
 ## 功能说明（注册表原文） {#behavior}
 

@@ -12,18 +12,18 @@ description: "Load optional families and place instances in one transaction and 
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `at_rooms` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `load` | No | None | any |  |
-| `placements` | No | None | any |  |
-| `stop_on_error` | No | True | boolean |  |
+| `at_rooms` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `load` | No | `null` | any |  |
+| `placements` | No | `null` | any |  |
+| `stop_on_error` | No | `true` | boolean |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | 600 | integer |  |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
+| `timeout_seconds` | No | `600` | integer |  |
 
 ## Behavior (registry text) {#behavior}
 

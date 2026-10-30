@@ -23,17 +23,17 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `dry_run` | No | False | boolean |  |
+| `dry_run` | No | `false` | boolean |  |
 | `element_id` | Yes | — | integer |  |
 | `parameter` | Yes | — | string |  |
-| `parameter_id` | No | None | any |  |
+| `parameter_id` | No | `null` | any |  |
 | `value` | Yes | — | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 

@@ -12,21 +12,21 @@ description: "Change category, workset and filter visibility in one view; dry_ru
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `category_classes` | No | None | any |  |
-| `dry_run` | No | False | boolean |  |
-| `filters` | No | None | any |  |
-| `hide_categories` | No | None | any |  |
-| `hide_categories_by_type` | No | None | any |  |
-| `show_categories` | No | None | any |  |
-| `template_mode` | No | None | any |  |
+| `category_classes` | No | `null` | any |  |
+| `dry_run` | No | `false` | boolean |  |
+| `filters` | No | `null` | any |  |
+| `hide_categories` | No | `null` | any |  |
+| `hide_categories_by_type` | No | `null` | any |  |
+| `show_categories` | No | `null` | any |  |
+| `template_mode` | No | `null` | any |  |
 | `view` | Yes | — | string |  |
-| `worksets` | No | None | any |  |
+| `worksets` | No | `null` | any |  |
 
 ### Common parameters {#common-parameters}
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
-| `document` | No | None | any | Title or file name substring of the target open document; needed when several are open. |
+| `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
 
 ## Behavior (registry text) {#behavior}
 
