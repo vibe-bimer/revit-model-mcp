@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import gzip
 import mimetypes
+import re
 import sys
 import threading
 from email.utils import formatdate, parsedate_to_datetime
@@ -41,16 +42,14 @@ COMPRESSIBLE = {
 }
 # Fonts and images are already compressed; running gzip over them costs CPU and saves nothing.
 MIN_GZIP_BYTES = 1024
-HASHED = ("main.", "palette.", "bundle.", "search.")
+# A run of eight or more hex digits in the filename stem is the build's content hash.
+FINGERPRINT = re.compile(r"[0-9a-f]{8,}")
 
 
 def cache_control(path: Path) -> str:
-    name = path.name
-    if path.suffix in (".css", ".js") and any(h in name for h in HASHED):
-        # The theme puts a content hash in the filename, so the bytes behind the URL never change.
+    if FINGERPRINT.search(path.stem):
+        # The filename embeds a content hash, so the bytes behind the URL never change.
         return "public, max-age=31536000, immutable"
-    if path.suffix in (".woff2", ".png", ".gif", ".jpg", ".jpeg", ".webp", ".ico"):
-        return "public, max-age=604800"
     # Everything else keeps its name across a rebuild, so it must be revalidated.
     return "no-cache"
 

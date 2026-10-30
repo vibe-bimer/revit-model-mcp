@@ -48,7 +48,11 @@ def build_site(root: Path) -> None:
         "body{color:#222}" * 40, encoding="utf-8"
     )
     (root / "assets" / "plain.css").write_text("body{margin:0}", encoding="utf-8")
+    (root / "assets" / "main.css").write_text("body{padding:0}", encoding="utf-8")
     (root / "assets" / "logo.png").write_bytes(b"\x89PNG\r\n\x1a\n" + b"0" * 64)
+    (root / "assets" / "photo.0123456789ab.png").write_bytes(
+        b"\x89PNG\r\n\x1a\n" + b"1" * 64
+    )
     (root / "sitemap.xml").write_text(SITEMAP_XML, encoding="utf-8")
     (root / "sitemap.xml.gz").write_bytes(gzip.compress(SITEMAP_XML.encode("utf-8")))
     (root / "404.html").write_text(
@@ -415,6 +419,34 @@ class SitemapTests(ServeSiteTestCase):
         self.assertTrue(headers["content-type"].startswith("application/xml"))
         self.assertNotIn("content-encoding", headers)
         self.assertEqual(body.decode("utf-8"), SITEMAP_XML)
+
+
+class CachePolicyTests(ServeSiteTestCase):
+    def test_content_hashed_assets_cache_immutably(self):
+        for target in (
+            "/assets/main.0123456789ab.css",
+            "/assets/photo.0123456789ab.png",
+        ):
+            with self.subTest(target=target):
+                status, headers, _ = self.request("GET", target)
+                self.assertEqual(status, 200)
+                self.assertEqual(
+                    headers["cache-control"], "public, max-age=31536000, immutable"
+                )
+
+    def test_unhashed_assets_revalidate(self):
+        for target in (
+            "/assets/plain.css",
+            "/assets/main.css",
+            "/assets/logo.png",
+            "/big.html",
+            "/sitemap.xml",
+            "/sitemap.xml.gz",
+        ):
+            with self.subTest(target=target):
+                status, headers, _ = self.request("GET", target)
+                self.assertEqual(status, 200)
+                self.assertEqual(headers["cache-control"], "no-cache")
 
 
 if __name__ == "__main__":
