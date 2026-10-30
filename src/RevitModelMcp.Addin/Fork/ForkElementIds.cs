@@ -256,7 +256,7 @@ internal static class ForkElementIds
 
         // The identifier column carries the number so the column sorts and filters as a number.
         return string.Equals(field, "id", StringComparison.OrdinalIgnoreCase) && value.Number is not null
-            ? XlsxCell.FromNumber(value.Number.Value)
+            ? ForkXlsxCell.FromNumber(value.Number.Value)
             : ForkXlsxCell.FromText(value.Text);
     }
 

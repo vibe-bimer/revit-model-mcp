@@ -61,4 +61,97 @@ public sealed class ForkInputTests
         await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
         await Assert.That(parsed.Error).IsEqualTo("move accepts no fork inputs.");
     }
+
+    [Test]
+    public async Task CreateLevel_CarriesItsElevationAndViewFlag()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-level","name":"L3","fork":{"elevationMm":"9000.5","createView":true}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Name).IsEqualTo("L3");
+        await Assert.That(parsed.Action!.Options.ElevationMm).IsEqualTo(9000.5);
+        await Assert.That(parsed.Action!.Options.CreateView).IsTrue();
+    }
+
+    [Test]
+    public async Task CreateFloor_CarriesItsLevelPointsAndType()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-floor","level":"L1","pointsMm":[[0,0],[4000,0],[4000,3000]],"fork":{"floorType":"Floor-Slab"}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Level).IsEqualTo("L1");
+        await Assert.That(parsed.Action!.PointsMm!.Count).IsEqualTo(3);
+        await Assert.That(parsed.Action!.Options.FloorType).IsEqualTo("Floor-Slab");
+    }
+
+    [Test]
+    public async Task SetPhase_CarriesBothPhasesAndKeepsAnEmptyName()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"set-phase","elementIds":[42],"fork":{"createdPhase":"","demolishedPhase":"Existing"}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Options.CreatedPhase).IsEqualTo(string.Empty);
+        await Assert.That(parsed.Action!.Options.DemolishedPhase).IsEqualTo("Existing");
+    }
+
+    [Test]
+    public async Task MergePhases_CarriesSourceAndTarget()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"merge-phases","fork":{"sourcePhase":"Phase 1","targetPhase":"Phase 2"}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Options.SourcePhase).IsEqualTo("Phase 1");
+        await Assert.That(parsed.Action!.Options.TargetPhase).IsEqualTo("Phase 2");
+    }
+
+    [Test]
+    public async Task ResetElementIds_TakesItsAddressesWithoutAForkBag()
+    {
+        var parsed = ControlJobParser.Parse("""{"command":"reset-element-ids","elementIds":[7,8]}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.ElementIds).IsEquivalentTo([7L, 8L]);
+    }
+
+    [Test]
+    public async Task ResetElementIds_RefusesAForkBag()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"reset-element-ids","elementIds":[7],"fork":{"seed":1}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(parsed.Error).IsEqualTo("reset-element-ids does not accept fork.seed.");
+    }
+
+    [Test]
+    public async Task RebuildModelIds_CarriesEveryRebuildOption()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"rebuild-model-ids","view":"3D","fork":{"destinationPath":"C:/out/model.rvt","overwrite":true,"removeTemplateLevels":false,"seed":7,"duplicateNames":"rename","copies":2}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.View).IsEqualTo("3D");
+        await Assert.That(parsed.Action!.Options.DestinationPath).IsEqualTo("C:/out/model.rvt");
+        await Assert.That(parsed.Action!.Options.Overwrite).IsTrue();
+        await Assert.That(parsed.Action!.Options.RemoveTemplateLevels).IsFalse();
+        await Assert.That(parsed.Action!.Options.Seed).IsEqualTo(7);
+        await Assert.That(parsed.Action!.Options.DuplicateNames).IsEqualTo("rename");
+        await Assert.That(parsed.Action!.Options.Copies).IsEqualTo(2);
+    }
+
+    [Test]
+    public async Task RebuildModelIds_RefusesAWholeNumberItCannotRead()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"rebuild-model-ids","fork":{"destinationPath":"C:/out/model.rvt","copies":"many"}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(parsed.Error).IsEqualTo("fork.copies must be a whole number.");
+    }
+
+    [Test]
+    public async Task ElementIdExport_ParsesAsARead()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"export-element-ids","fields":["category","id"],"saveTo":"C:/out/ids.xlsx"}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.ExportElementIds);
+        await Assert.That(parsed.Fields).IsEquivalentTo(["category", "id"]);
+        await Assert.That(parsed.SaveTo).IsEqualTo("C:/out/ids.xlsx");
+    }
 }
