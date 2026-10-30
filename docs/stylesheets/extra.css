@@ -620,9 +620,10 @@ body {
   text-transform: uppercase;
 }
 
-/* The heading anchor is a drafting tick, not a paragraph mark. */
+/* The heading anchor is a drafting tick, not a paragraph mark. It answers the text contrast
+   floor when a heading reveals it, so it reads as ink-3 rather than as a hairline rule. */
 [dir] .md-typeset .headerlink {
-  color: var(--rmc-rule-strong);
+  color: var(--rmc-ink-3);
   margin-left: 0.35rem;
   opacity: 0;
   transition: opacity 0.15s var(--rmc-ease), color 0.15s var(--rmc-ease);
