@@ -65,6 +65,7 @@ SCAN_SUFFIXES = (
     ".py",
 )
 PRUNED_DIRECTORIES = {
+    ".agent-teams",
     ".git",
     ".venv",
     "analysis",
@@ -76,6 +77,7 @@ PRUNED_DIRECTORIES = {
     "obj",
     "revit-corpus",
     "site",
+    "site-lan",
 }
 
 UPSTREAM_REPO_PATTERN = re.compile(re.escape(UPSTREAM_REPO))
