@@ -123,8 +123,15 @@ def parse_page_text(text: str) -> PageInfo:
 
 # The wrapper the generators put around wide tables, and the script's fallback for the rest.
 WRAPPER_CLASS = "rmc-tablewrap"
-# Pages the generators own: they can be told to wrap every wide table at the source.
-GENERATED_PREFIXES = ("features/", "platform/")
+# Pages the generators own and the repository file each one comes from. A generated page can wrap
+# every wide table at the source, and its edit link must point at the file that produces it.
+GENERATED_SOURCES = {
+    "index.html": "tools/site/landing.py",
+    "features/": "tools/site/generate_features.py",
+    "platform/": "tools/site/platform_catalog.py",
+}
+# The directory prefixes among the generated pages, derived so the two facts cannot drift apart.
+GENERATED_PREFIXES = tuple(path for path in GENERATED_SOURCES if path.endswith("/"))
 # A table this wide cannot fit a phone, so it has to sit in a wrapper that may scroll.
 WIDE_TABLE_COLUMNS = 5
 CJK_RANGE = ("\u4e00", "\u9fff")
@@ -376,12 +383,12 @@ def audit_site(
         if not description:
             errors.append(f"{relative}: missing meta description")
         else:
-            has_chinese = any("\u4e00" <= char <= "\u9fff" for char in description)
-            if english and has_chinese:
+            description_has_chinese = has_chinese(description)
+            if english and description_has_chinese:
                 errors.append(
                     f"{relative}: description is not English: {description[:40]!r}"
                 )
-            elif not english and not has_chinese:
+            elif not english and not description_has_chinese:
                 errors.append(
                     f"{relative}: description is not Chinese: {description[:40]!r}"
                 )
@@ -392,7 +399,7 @@ def audit_site(
             summary = " ".join(value.split())
             if not summary:
                 errors.append(f"{relative}: missing {label}")
-            elif english and any("\u4e00" <= char <= "\u9fff" for char in summary):
+            elif english and has_chinese(summary):
                 errors.append(f"{relative}: {label} is not English")
         parts = urlsplit(info.canonical)
         if not info.canonical or not parts.scheme or not parts.netloc:
@@ -429,15 +436,10 @@ def audit_site(
                     f"{relative}: wrong {lang} language-switch target {href!r}"
                 )
         href = info.edit_url
-        generated = {
-            "index.html": "tools/site/landing.py",
-            "features/": "tools/site/generate_features.py",
-            "platform/": "tools/site/platform_catalog.py",
-        }
         expected_edit = next(
             (
                 path
-                for prefix, path in generated.items()
+                for prefix, path in GENERATED_SOURCES.items()
                 if sibling == prefix
                 or (prefix.endswith("/") and sibling.startswith(prefix))
             ),
@@ -833,7 +835,6 @@ CONVENTIONAL_FILES = frozenset(
 CONVENTIONAL_NAMES = frozenset({"sitemap.xml", "sitemap.xml.gz"})
 CONVENTIONAL_PREFIXES = (
     "search/",
-    "assets/javascripts/lunr/",
     "assets/javascripts/workers/",
     "overrides/",
 )
@@ -842,6 +843,11 @@ CONVENTIONAL_SOURCES = {
     "assets/images/favicon.png": "Material's default icon, replaced by theme.favicon",
     "assets/logo.svg": "the mark README.md embeds",
     "assets/logo-white.svg": "declared as theme.logo in mkdocs.yml",
+    # The search worker importScripts these for the en/zh index, which no page links to directly.
+    # docs/hooks.py deletes every other lunr locale file, so anything else under lunr/ fails here.
+    "assets/javascripts/lunr/min/lunr.zh.min.js": "the search worker loads it for the Chinese index",
+    "assets/javascripts/lunr/min/lunr.multi.min.js": "the worker loads it for a two-language index",
+    "assets/javascripts/lunr/min/lunr.stemmer.support.min.js": "the worker loads shared stemmer support first",
 }
 REFERENCE_ATTRIBUTES = ("href", "src", "poster", "data")
 IMAGE_META = (

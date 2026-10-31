@@ -20,6 +20,13 @@ TOOL_PAGE = re.compile(
     r"(?P<directory>features|platform)/(?P<tool>revit_[a-z0-9_]+)/?$"
 )
 
+# The search plugin indexes the whole page body, and a few prose pages run to 10k characters. That
+# text is what a visitor downloads before the first keystroke, so each entry keeps only a prefix.
+# The limit is set just above the latest a tool parameter name can sit: every one of the 217
+# parameter names is fully visible within the first 943 characters of at least one entry, so a
+# parameter at the bottom of a long table still has an entry that indexes it.
+SEARCH_TEXT_LIMIT = 1000
+
 # Each entry maps the repository files that back a documentation page to its Chinese and English page, so a
 # link to any of those files resolves to the page the current language build actually has.
 SOURCES = [
@@ -465,17 +472,18 @@ def _catalog_surfaces() -> dict[str, dict]:
     """Map each catalog directory to the status fields a search result shows."""
     module = _catalog_module()
     release, integration = module.release(), module.integration()
+    # The release catalog sits on the default branch, which no result ever shows, so its branch is
+    # left out rather than repeated on every released entry. The integration branch names the
+    # catalog, so a branch entry keeps it.
     return {
         release.directory: {
             "catalog": "release",
             "status": release.status,
             "version": release.version,
-            "branch": release.branch,
         },
         integration.directory: {
             "catalog": "branch",
             "status": integration.status,
-            "version": "",
             "branch": integration.branch,
         },
     }
@@ -500,6 +508,9 @@ def search_record(location: str, surfaces: dict[str, dict] | None = None) -> dic
             break
     if found:
         record["tool"] = found.group("tool")
+    # An empty version says nothing a reader can use, so it is not stored.
+    if not record.get("version"):
+        record.pop("version", None)
     return record
 
 
@@ -511,11 +522,81 @@ def enrich_search_index(site: Path) -> int:
     data = json.loads(index.read_text(encoding="utf-8"))
     surfaces = _catalog_surfaces()
     for doc in data.get("docs") or []:
+        # Truncating the entry text is the one change that reaches every visitor: Material's worker
+        # fetches this whole file before the search box can answer a keystroke.
+        text = doc.get("text", "")
+        if len(text) > SEARCH_TEXT_LIMIT:
+            doc["text"] = text[:SEARCH_TEXT_LIMIT]
         doc.update(search_record(doc.get("location", ""), surfaces))
     index.write_text(
         json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
     )
     return len(data.get("docs") or [])
+
+
+def _index_languages(data: dict) -> list[str]:
+    """The languages the built index covers, read from its config or inferred from the entries."""
+    config = data.get("config") or {}
+    languages = [str(lang) for lang in (config.get("lang") or [])]
+    if languages:
+        return languages
+    seen: list[str] = []
+    for doc in data.get("docs") or []:
+        lang = "en" if doc.get("location", "").startswith("en/") else "zh"
+        if lang not in seen:
+            seen.append(lang)
+    return seen or ["zh"]
+
+
+def search_worker_assets(languages: list[str]) -> set[str]:
+    """The lunr files Material's search worker loads for an index in these languages.
+
+    The worker mirror is in the theme bundle: it loads a stemmer per non-English language, the
+    multi-language and shared stemmer support when it loads anything, and a segmenter only for
+    Japanese or Hindi/Thai. Every other file under ``assets/javascripts/lunr`` is a language the
+    site never builds, so the worker can never request it.
+    """
+    assets: set[str] = set()
+    pushed = False
+    for lang in languages:
+        if lang == "ja":
+            assets.add("tinyseg.js")
+            pushed = True
+        elif lang in ("hi", "th"):
+            assets.add("wordcut.js")
+            pushed = True
+        if lang != "en":
+            assets.add(f"min/lunr.{lang}.min.js")
+            pushed = True
+    if len(languages) > 1:
+        assets.add("min/lunr.multi.min.js")
+        pushed = True
+    if pushed:
+        assets.add("min/lunr.stemmer.support.min.js")
+    return assets
+
+
+def prune_search_assets(site: Path) -> int:
+    """Delete the lunr locale files the search worker cannot load for this build's languages."""
+    index = site / "search/search_index.json"
+    if not index.is_file():
+        return 0
+    root = site / "assets/javascripts/lunr"
+    if not root.is_dir():
+        return 0
+    keep = search_worker_assets(
+        _index_languages(json.loads(index.read_text(encoding="utf-8")))
+    )
+    removed = 0
+    for path in sorted(root.rglob("*.js")):
+        if path.relative_to(root).as_posix() not in keep:
+            path.unlink()
+            removed += 1
+    # Drop directories the pruned files leave empty, so the tree matches what it ships.
+    for directory in sorted((p for p in root.rglob("*") if p.is_dir()), reverse=True):
+        if not any(directory.iterdir()):
+            directory.rmdir()
+    return removed
 
 
 # The search plugin writes its index after the hooks' own post-build event, so the enrichment runs
@@ -534,6 +615,9 @@ def on_config(config):
 def on_shutdown() -> None:
     if SITE_DIR is not None:
         enrich_search_index(SITE_DIR)
+        # Each language pass copies the theme's lunr tree back into the site, so the pruning has to
+        # run once here, after the last pass, or an earlier pass would restore what a later one cut.
+        prune_search_assets(SITE_DIR)
 
 
 def on_post_build(config) -> None:
