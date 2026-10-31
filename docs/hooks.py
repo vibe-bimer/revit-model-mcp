@@ -534,6 +534,71 @@ def enrich_search_index(site: Path) -> int:
     return len(data.get("docs") or [])
 
 
+def _index_languages(data: dict) -> list[str]:
+    """The languages the built index covers, read from its config or inferred from the entries."""
+    config = data.get("config") or {}
+    languages = [str(lang) for lang in (config.get("lang") or [])]
+    if languages:
+        return languages
+    seen: list[str] = []
+    for doc in data.get("docs") or []:
+        lang = "en" if doc.get("location", "").startswith("en/") else "zh"
+        if lang not in seen:
+            seen.append(lang)
+    return seen or ["zh"]
+
+
+def search_worker_assets(languages: list[str]) -> set[str]:
+    """The lunr files Material's search worker loads for an index in these languages.
+
+    The worker mirror is in the theme bundle: it loads a stemmer per non-English language, the
+    multi-language and shared stemmer support when it loads anything, and a segmenter only for
+    Japanese or Hindi/Thai. Every other file under ``assets/javascripts/lunr`` is a language the
+    site never builds, so the worker can never request it.
+    """
+    assets: set[str] = set()
+    pushed = False
+    for lang in languages:
+        if lang == "ja":
+            assets.add("tinyseg.js")
+            pushed = True
+        elif lang in ("hi", "th"):
+            assets.add("wordcut.js")
+            pushed = True
+        if lang != "en":
+            assets.add(f"min/lunr.{lang}.min.js")
+            pushed = True
+    if len(languages) > 1:
+        assets.add("min/lunr.multi.min.js")
+        pushed = True
+    if pushed:
+        assets.add("min/lunr.stemmer.support.min.js")
+    return assets
+
+
+def prune_search_assets(site: Path) -> int:
+    """Delete the lunr locale files the search worker cannot load for this build's languages."""
+    index = site / "search/search_index.json"
+    if not index.is_file():
+        return 0
+    root = site / "assets/javascripts/lunr"
+    if not root.is_dir():
+        return 0
+    keep = search_worker_assets(
+        _index_languages(json.loads(index.read_text(encoding="utf-8")))
+    )
+    removed = 0
+    for path in sorted(root.rglob("*.js")):
+        if path.relative_to(root).as_posix() not in keep:
+            path.unlink()
+            removed += 1
+    # Drop directories the pruned files leave empty, so the tree matches what it ships.
+    for directory in sorted((p for p in root.rglob("*") if p.is_dir()), reverse=True):
+        if not any(directory.iterdir()):
+            directory.rmdir()
+    return removed
+
+
 # The search plugin writes its index after the hooks' own post-build event, so the enrichment runs
 # at shutdown instead: that is the only point where the index every language build writes exists.
 SITE_DIR: Path | None = None
@@ -550,6 +615,9 @@ def on_config(config):
 def on_shutdown() -> None:
     if SITE_DIR is not None:
         enrich_search_index(SITE_DIR)
+        # Each language pass copies the theme's lunr tree back into the site, so the pruning has to
+        # run once here, after the last pass, or an earlier pass would restore what a later one cut.
+        prune_search_assets(SITE_DIR)
 
 
 def on_post_build(config) -> None:

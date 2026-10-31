@@ -835,7 +835,6 @@ CONVENTIONAL_FILES = frozenset(
 CONVENTIONAL_NAMES = frozenset({"sitemap.xml", "sitemap.xml.gz"})
 CONVENTIONAL_PREFIXES = (
     "search/",
-    "assets/javascripts/lunr/",
     "assets/javascripts/workers/",
     "overrides/",
 )
@@ -844,6 +843,11 @@ CONVENTIONAL_SOURCES = {
     "assets/images/favicon.png": "Material's default icon, replaced by theme.favicon",
     "assets/logo.svg": "the mark README.md embeds",
     "assets/logo-white.svg": "declared as theme.logo in mkdocs.yml",
+    # The search worker importScripts these for the en/zh index, which no page links to directly.
+    # docs/hooks.py deletes every other lunr locale file, so anything else under lunr/ fails here.
+    "assets/javascripts/lunr/min/lunr.zh.min.js": "the search worker loads it for the Chinese index",
+    "assets/javascripts/lunr/min/lunr.multi.min.js": "the worker loads it for a two-language index",
+    "assets/javascripts/lunr/min/lunr.stemmer.support.min.js": "the worker loads shared stemmer support first",
 }
 REFERENCE_ATTRIBUTES = ("href", "src", "poster", "data")
 IMAGE_META = (
