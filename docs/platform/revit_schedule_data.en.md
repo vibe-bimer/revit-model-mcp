@@ -14,8 +14,8 @@ description: "Read displayed schedule header and body cell text, with paging. A 
 
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `max_rows` | No | `500` | integer |  |
-| `offset` | No | `0` | integer |  |
+| `max_rows` | No | `500` | integer | (not documented in the branch contract) |
+| `offset` | No | `0` | integer | (not documented in the branch contract) |
 | `schedule` | Yes | — | string | Exact schedule name or decimal Revit view ID. (Use the id when two schedules share a name.) |
 
 </div>

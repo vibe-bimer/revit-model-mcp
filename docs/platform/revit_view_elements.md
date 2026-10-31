@@ -29,7 +29,7 @@ description: "分页读取选定视图中的构件，含 ID、类目、族、类
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `categories` | 否 | `null` | any |  |
+| `categories` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `limit` | 否 | `100` | integer | 返回条数上限。 |
 | `offset` | 否 | `0` | integer | 分页起始位置。 |
 | `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |

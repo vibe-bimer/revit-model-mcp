@@ -12,19 +12,21 @@ description: "Colour elements in selected model views; reset restores overrides 
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `color` | No | `"#FF0000"` | string |  |
-| `dry_run` | No | `false` | boolean |  |
-| `element_ids` | Yes | — | array |  |
-| `fill` | No | `true` | boolean |  |
-| `halftone_others` | No | `false` | boolean |  |
-| `line_weight` | No | `null` | any |  |
-| `reset` | No | `false` | boolean |  |
-| `transparency` | No | `0` | integer |  |
-| `views` | No | `"active"` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `color` | No | `"#FF0000"` | string |
+| `dry_run` | No | `false` | boolean |
+| `element_ids` | Yes | — | array |
+| `fill` | No | `true` | boolean |
+| `halftone_others` | No | `false` | boolean |
+| `line_weight` | No | `null` | any |
+| `reset` | No | `false` | boolean |
+| `transparency` | No | `0` | integer |
+| `views` | No | `"active"` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

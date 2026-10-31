@@ -12,12 +12,14 @@ description: "Audit an open family or named project families without saving or l
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `detail` | No | `"summary"` | string |  |
-| `families` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `detail` | No | `"summary"` | string |
+| `families` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -27,7 +29,7 @@ description: "Audit an open family or named project families without saving or l
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target document; needed when several Revit instances run. |
 | `process_id` | No | `null` | any | Revit process ID; takes precedence over document. |
-| `timeout_seconds` | No | `600` | integer |  |
+| `timeout_seconds` | No | `600` | integer | (not documented in the branch contract) |
 
 </div>
 

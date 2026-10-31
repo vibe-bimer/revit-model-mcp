@@ -23,11 +23,11 @@ description: "在指定标高上创建直墙，XY 端点与高度用毫米；不
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `end_mm` | 是 | — | array |  |
-| `height_mm` | 否 | `3000` | number |  |
-| `level` | 是 | — | string |  |
-| `start_mm` | 是 | — | array |  |
-| `wall_type` | 是 | — | any |  |
+| `end_mm` | 是 | — | array | （集成分支契约未提供说明） |
+| `height_mm` | 否 | `3000` | number | （集成分支契约未提供说明） |
+| `level` | 是 | — | string | （集成分支契约未提供说明） |
+| `start_mm` | 是 | — | array | （集成分支契约未提供说明） |
+| `wall_type` | 是 | — | any | （集成分支契约未提供说明） |
 
 </div>
 

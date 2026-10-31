@@ -16,15 +16,15 @@ description: "在一个视图中更改类目、工作集与过滤器可见性；
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `category_classes` | 否 | `null` | any |  |
+| `category_classes` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `filters` | 否 | `null` | any |  |
-| `hide_categories` | 否 | `null` | any |  |
-| `hide_categories_by_type` | 否 | `null` | any |  |
-| `show_categories` | 否 | `null` | any |  |
-| `template_mode` | 否 | `null` | any |  |
+| `filters` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `hide_categories` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `hide_categories_by_type` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `show_categories` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `template_mode` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |
-| `worksets` | 否 | `null` | any |  |
+| `worksets` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

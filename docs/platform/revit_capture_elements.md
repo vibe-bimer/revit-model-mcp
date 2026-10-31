@@ -17,9 +17,9 @@ description: "渲染带高亮的 PNG，标记 1 到 500 个构件作为问题证
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
-| `mode` | 否 | `"3d"` | string |  |
+| `mode` | 否 | `"3d"` | string | （集成分支契约未提供说明） |
 | `output_path` | 否 | `null` | any | New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath. |
-| `padding_mm` | 否 | `1500` | number |  |
+| `padding_mm` | 否 | `1500` | number | （集成分支契约未提供说明） |
 | `pixel_size` | 否 | `1600` | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
 
 </div>

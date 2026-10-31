@@ -28,10 +28,10 @@ description: "写入一个实例或类型参数，可用参数 ID、共享参数
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `element_id` | 是 | — | integer |  |
-| `parameter` | 是 | — | string |  |
-| `parameter_id` | 否 | `null` | any |  |
-| `value` | 是 | — | any |  |
+| `element_id` | 是 | — | integer | （集成分支契约未提供说明） |
+| `parameter` | 是 | — | string | （集成分支契约未提供说明） |
+| `parameter_id` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `value` | 是 | — | any | （集成分支契约未提供说明） |
 
 </div>
 

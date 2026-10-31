@@ -12,25 +12,27 @@ description: "Align host grids and levels to a loaded link, with optional creati
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `create_missing` | No | `true` | boolean |  |
-| `create_plan_views` | No | `false` | boolean |  |
-| `dry_run` | No | `false` | boolean |  |
-| `grid_type` | No | `null` | any |  |
-| `include_pinned` | No | `false` | boolean |  |
-| `kinds` | No | `null` | any |  |
-| `level_offset_mm` | No | `0` | number |  |
-| `level_type` | No | `null` | any |  |
-| `link` | Yes | — | string |  |
-| `name_map` | No | `null` | any |  |
-| `plan_view_type` | No | `null` | any |  |
-| `prefix` | No | `""` | string |  |
-| `reuse_matching` | No | `true` | boolean |  |
-| `suffix` | No | `""` | string |  |
-| `tolerance_mm` | No | `0.5` | number |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `create_missing` | No | `true` | boolean |
+| `create_plan_views` | No | `false` | boolean |
+| `dry_run` | No | `false` | boolean |
+| `grid_type` | No | `null` | any |
+| `include_pinned` | No | `false` | boolean |
+| `kinds` | No | `null` | any |
+| `level_offset_mm` | No | `0` | number |
+| `level_type` | No | `null` | any |
+| `link` | Yes | — | string |
+| `name_map` | No | `null` | any |
+| `plan_view_type` | No | `null` | any |
+| `prefix` | No | `""` | string |
+| `reuse_matching` | No | `true` | boolean |
+| `suffix` | No | `""` | string |
+| `tolerance_mm` | No | `0.5` | number |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -39,7 +41,7 @@ description: "Align host grids and levels to a loaded link, with optional creati
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | `600` | integer |  |
+| `timeout_seconds` | No | `600` | integer | (not documented in the branch contract) |
 
 </div>
 

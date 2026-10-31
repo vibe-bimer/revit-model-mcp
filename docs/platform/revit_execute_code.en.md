@@ -12,14 +12,16 @@ description: "Compile and run C# against the live Revit API on the Revit thread.
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `code` | Yes | — | string |  |
-| `confirm_token` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `transaction` | No | `"auto"` | string |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `code` | Yes | — | string |
+| `confirm_token` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `transaction` | No | `"auto"` | string |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -28,7 +30,7 @@ description: "Compile and run C# against the live Revit API on the Revit thread.
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | `600` | integer |  |
+| `timeout_seconds` | No | `600` | integer | (not documented in the branch contract) |
 
 </div>
 

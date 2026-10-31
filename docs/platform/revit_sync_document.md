@@ -16,12 +16,12 @@ description: "把工作共享文档与中心文件同步；需要先取得确认
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `comment` | 是 | — | string |  |
-| `compact` | 否 | `false` | boolean |  |
+| `comment` | 是 | — | string | （集成分支契约未提供说明） |
+| `compact` | 否 | `false` | boolean | （集成分支契约未提供说明） |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
-| `relinquish` | 否 | `"all"` | any |  |
-| `save_local_after` | 否 | `true` | boolean |  |
-| `save_local_before` | 否 | `true` | boolean |  |
+| `relinquish` | 否 | `"all"` | any | （集成分支契约未提供说明） |
+| `save_local_after` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `save_local_before` | 否 | `true` | boolean | （集成分支契约未提供说明） |
 
 </div>
 

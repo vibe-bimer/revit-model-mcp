@@ -30,19 +30,19 @@ description: "设置一个视图的阴影、太阳位置、地平面、背景与
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `background` | 否 | `null` | any |  |
-| `background_colors` | 否 | `null` | any |  |
+| `background` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `background_colors` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `ground_plane` | 否 | `null` | any |  |
-| `ground_plane_level` | 否 | `null` | any |  |
-| `lighting_scheme` | 否 | `null` | any |  |
-| `shadow_intensity` | 否 | `null` | any |  |
-| `shadows` | 否 | `null` | any |  |
-| `sun_altitude_deg` | 否 | `null` | any |  |
-| `sun_azimuth_deg` | 否 | `null` | any |  |
-| `sun_date` | 否 | `null` | any |  |
-| `sun_time` | 否 | `null` | any |  |
-| `sunlight_intensity` | 否 | `null` | any |  |
+| `ground_plane` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `ground_plane_level` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `lighting_scheme` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `shadow_intensity` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `shadows` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `sun_altitude_deg` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `sun_azimuth_deg` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `sun_date` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `sun_time` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `sunlight_intensity` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |
 
 </div>

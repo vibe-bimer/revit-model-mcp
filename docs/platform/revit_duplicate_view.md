@@ -17,8 +17,8 @@ description: "复制视图，可选带详图复制或创建为从属视图。"
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `mode` | 否 | `"duplicate"` | string |  |
-| `name` | 否 | `null` | any |  |
+| `mode` | 否 | `"duplicate"` | string | （集成分支契约未提供说明） |
+| `name` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |
 
 </div>

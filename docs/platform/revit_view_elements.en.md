@@ -27,9 +27,9 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `categories` | No | `null` | any |  |
-| `limit` | No | `100` | integer |  |
-| `offset` | No | `0` | integer |  |
+| `categories` | No | `null` | any | (not documented in the branch contract) |
+| `limit` | No | `100` | integer | (not documented in the branch contract) |
+| `offset` | No | `0` | integer | (not documented in the branch contract) |
 | `view` | Yes | — | string | Exact non-template view name from revit_list_views, or a view ID as a decimal string. |
 
 </div>

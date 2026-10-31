@@ -16,10 +16,10 @@ description: "保存文档；需要先取得确认令牌，首次调用不改变
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `compact` | 否 | `false` | boolean |  |
+| `compact` | 否 | `false` | boolean | （集成分支契约未提供说明） |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
-| `overwrite` | 否 | `false` | boolean |  |
-| `save_as` | 否 | `null` | any |  |
+| `overwrite` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `save_as` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

@@ -26,34 +26,38 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `background` | No | `null` | any |  |
-| `background_colors` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `ground_plane` | No | `null` | any |  |
-| `ground_plane_level` | No | `null` | any |  |
-| `lighting_scheme` | No | `null` | any |  |
-| `shadow_intensity` | No | `null` | any |  |
-| `shadows` | No | `null` | any |  |
-| `sun_altitude_deg` | No | `null` | any |  |
-| `sun_azimuth_deg` | No | `null` | any |  |
-| `sun_date` | No | `null` | any |  |
-| `sun_time` | No | `null` | any |  |
-| `sunlight_intensity` | No | `null` | any |  |
-| `view` | Yes | — | string |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `background` | No | `null` | any |
+| `background_colors` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `ground_plane` | No | `null` | any |
+| `ground_plane_level` | No | `null` | any |
+| `lighting_scheme` | No | `null` | any |
+| `shadow_intensity` | No | `null` | any |
+| `shadows` | No | `null` | any |
+| `sun_altitude_deg` | No | `null` | any |
+| `sun_azimuth_deg` | No | `null` | any |
+| `sun_date` | No | `null` | any |
+| `sun_time` | No | `null` | any |
+| `sunlight_intensity` | No | `null` | any |
+| `view` | Yes | — | string |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `document` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `document` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ## Behavior (registry text) {#behavior}
 

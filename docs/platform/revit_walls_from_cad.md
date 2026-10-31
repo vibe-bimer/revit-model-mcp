@@ -16,17 +16,17 @@ description: "桥接洞口、配对平行 CAD 线并在一次撤销内连接基�
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `cad_id` | 是 | — | integer |  |
+| `cad_id` | 是 | — | integer | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `height_mm` | 否 | `3000` | number |  |
-| `join` | 否 | `true` | boolean |  |
-| `layers` | 是 | — | array |  |
-| `level` | 是 | — | string |  |
-| `max_gap_mm` | 否 | `3000` | number |  |
-| `max_thickness_mm` | 否 | `700` | number |  |
-| `min_length_mm` | 否 | `300` | number |  |
-| `min_thickness_mm` | 否 | `80` | number |  |
-| `wall_type` | 否 | `null` | any |  |
+| `height_mm` | 否 | `3000` | number | （集成分支契约未提供说明） |
+| `join` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `layers` | 是 | — | array | （集成分支契约未提供说明） |
+| `level` | 是 | — | string | （集成分支契约未提供说明） |
+| `max_gap_mm` | 否 | `3000` | number | （集成分支契约未提供说明） |
+| `max_thickness_mm` | 否 | `700` | number | （集成分支契约未提供说明） |
+| `min_length_mm` | 否 | `300` | number | （集成分支契约未提供说明） |
+| `min_thickness_mm` | 否 | `80` | number | （集成分支契约未提供说明） |
+| `wall_type` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

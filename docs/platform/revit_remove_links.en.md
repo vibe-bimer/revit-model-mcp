@@ -12,15 +12,17 @@ description: "Delete selected link types and their instances; dry_run previews. 
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `confirm_token` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `include_imported_cad` | No | `false` | boolean |  |
-| `kinds` | No | `null` | any |  |
-| `links` | Yes | — | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `confirm_token` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `include_imported_cad` | No | `false` | boolean |
+| `kinds` | No | `null` | any |
+| `links` | Yes | — | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

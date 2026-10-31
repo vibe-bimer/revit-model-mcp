@@ -18,16 +18,18 @@ The same-name tool has an identical contract to release 0.9.0.
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `dry_run` | No | `false` | boolean |  |
-| `end_mm` | Yes | — | array |  |
-| `height_mm` | No | `3000` | number |  |
-| `level` | Yes | — | string |  |
-| `start_mm` | Yes | — | array |  |
-| `wall_type` | Yes | — | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `dry_run` | No | `false` | boolean |
+| `end_mm` | Yes | — | array |
+| `height_mm` | No | `3000` | number |
+| `level` | Yes | — | string |
+| `start_mm` | Yes | — | array |
+| `wall_type` | Yes | — | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

@@ -16,10 +16,10 @@ description: "激活一个非样板视图，可缩放适配、保持当前缩放
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `activate_document` | 否 | `false` | boolean |  |
+| `activate_document` | 否 | `false` | boolean | （集成分支契约未提供说明） |
 | `view` | 是 | — | string | 视图的准确名称或十进制视图 ID。 |
-| `view_type` | 否 | `null` | any |  |
-| `zoom` | 否 | `"fit"` | any |  |
+| `view_type` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `zoom` | 否 | `"fit"` | any | （集成分支契约未提供说明） |
 
 </div>
 

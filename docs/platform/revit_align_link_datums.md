@@ -16,21 +16,21 @@ description: "把主体的轴网与标高对齐到已载入的链接，可选创
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `create_missing` | 否 | `true` | boolean |  |
-| `create_plan_views` | 否 | `false` | boolean |  |
+| `create_missing` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `create_plan_views` | 否 | `false` | boolean | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `grid_type` | 否 | `null` | any |  |
-| `include_pinned` | 否 | `false` | boolean |  |
-| `kinds` | 否 | `null` | any |  |
-| `level_offset_mm` | 否 | `0` | number |  |
-| `level_type` | 否 | `null` | any |  |
-| `link` | 是 | — | string |  |
-| `name_map` | 否 | `null` | any |  |
-| `plan_view_type` | 否 | `null` | any |  |
-| `prefix` | 否 | `""` | string |  |
-| `reuse_matching` | 否 | `true` | boolean |  |
-| `suffix` | 否 | `""` | string |  |
-| `tolerance_mm` | 否 | `0.5` | number |  |
+| `grid_type` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `include_pinned` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `kinds` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `level_offset_mm` | 否 | `0` | number | （集成分支契约未提供说明） |
+| `level_type` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `link` | 是 | — | string | （集成分支契约未提供说明） |
+| `name_map` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `plan_view_type` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `prefix` | 否 | `""` | string | （集成分支契约未提供说明） |
+| `reuse_matching` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `suffix` | 否 | `""` | string | （集成分支契约未提供说明） |
+| `tolerance_mm` | 否 | `0.5` | number | （集成分支契约未提供说明） |
 
 </div>
 

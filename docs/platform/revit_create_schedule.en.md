@@ -12,17 +12,19 @@ description: "Create a schedule for one category with the named fields in the gi
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `category` | Yes | — | string |  |
-| `dry_run` | No | `false` | boolean |  |
-| `fields` | Yes | — | array |  |
-| `filters` | No | `null` | any |  |
-| `itemized` | No | `true` | boolean |  |
-| `name` | No | `null` | any |  |
-| `sort` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `category` | Yes | — | string |
+| `dry_run` | No | `false` | boolean |
+| `fields` | Yes | — | array |
+| `filters` | No | `null` | any |
+| `itemized` | No | `true` | boolean |
+| `name` | No | `null` | any |
+| `sort` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

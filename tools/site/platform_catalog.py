@@ -458,6 +458,8 @@ LABELS = {
         "default": "默认值",
         "type": "类型",
         "meaning": "说明",
+        "meaning_missing": "（集成分支契约未提供说明）",
+        "meaning_missing_note": "集成分支契约未提供参数说明。",
         "no_specific": "此工具没有额外业务参数，使用下列通用参数即可。",
         "behavior": "功能说明（注册表原文）",
         "behavior_note": "以下保留工具在注册表中声明的英文原文，作为契约来源。",
@@ -531,6 +533,8 @@ LABELS = {
         "default": "Default",
         "type": "Type",
         "meaning": "Meaning",
+        "meaning_missing": "(not documented in the branch contract)",
+        "meaning_missing_note": "The branch contract ships no parameter descriptions.",
         "no_specific": "No additional business parameters; use the common parameters below.",
         "behavior": "Behavior (registry text)",
         "behavior_note": "The tool's own English declaration from the registry is preserved below as the contract of record.",
@@ -674,8 +678,31 @@ def default_cell(spec: dict) -> str:
     return f"`{json.dumps(spec['default'], ensure_ascii=False)}`"
 
 
-def parameter_rows(tool: dict, common: bool, lang: str) -> list[str]:
-    rows = []
+def parameter_meaning(name: str, spec: dict, lang: str) -> str:
+    """The Meaning cell of one parameter, or an empty string when nothing documents it.
+
+    The zh page adds hand-written meanings for parameters the branch contract itself never
+    describes; the en page ships only what the contract says, so there an undocumented
+    parameter has no text at all.
+    """
+    meaning = (
+        (PARAM_MEANINGS["zh"].get(name) if lang == "zh" else "")
+        or spec.get("description", "")
+        or ""
+    )
+    return " ".join(str(meaning).split())
+
+
+def _parameter_rows(tool: dict, common: bool, lang: str) -> tuple[list[str], bool]:
+    """Render the rows and report whether any of them carries a real Meaning text.
+
+    When at least one row has a meaning, undocumented rows render the meaning-missing
+    placeholder instead of an empty cell, so a reader can tell "the contract says
+    nothing" from a broken table. When no row has one, every row drops the cell so the
+    table matches its four-column heading.
+    """
+    labels = LABELS[lang]
+    cells = []
     for name, spec in tool["inputSchema"].get("properties", {}).items():
         if (name in COMMON_PARAMETERS) != common:
             continue
@@ -683,42 +710,74 @@ def parameter_rows(tool: dict, common: bool, lang: str) -> list[str]:
         if name not in tool["inputSchema"].get("required", []):
             required = "否" if lang == "zh" else "No"
         kind = spec.get("type") or ("any" if "anyOf" in spec else "")
-        meaning = (
-            (PARAM_MEANINGS["zh"].get(name) if lang == "zh" else "")
-            or spec.get("description", "")
-            or ""
+        cells.append(
+            (
+                name,
+                required,
+                default_cell(spec),
+                kind,
+                parameter_meaning(name, spec, lang),
+            )
         )
-        meaning = " ".join(str(meaning).split())
-        rows.append(
-            f"| `{name}` | {required} | {default_cell(spec)} | {kind} | {meaning} |"
-        )
-    return rows
+    any_meaning = any(meaning for _, _, _, _, meaning in cells)
+    if any_meaning:
+        rows = [
+            f"| `{name}` | {required} | {default} | {kind} | {meaning or labels['meaning_missing']} |"
+            for name, required, default, kind, meaning in cells
+        ]
+    else:
+        rows = [
+            f"| `{name}` | {required} | {default} | {kind} |"
+            for name, required, default, kind, _ in cells
+        ]
+    return rows, any_meaning
 
 
-def table_heading(lang: str) -> list[str]:
+def parameter_rows(tool: dict, common: bool, lang: str) -> list[str]:
+    """The rendered rows of one parameter table."""
+    return _parameter_rows(tool, common, lang)[0]
+
+
+def table_heading(lang: str, with_meaning: bool = True) -> list[str]:
+    """The header rows; without a Meaning column the table keeps four columns."""
     labels = LABELS[lang]
+    if with_meaning:
+        return [
+            (
+                f"| {labels['name']} {{scope=col}} | {labels['required']} {{scope=col}} | "
+                f"{labels['default']} {{scope=col}} | {labels['type']} {{scope=col}} | "
+                f"{labels['meaning']} {{scope=col}} |"
+            ),
+            "| --- | :--: | --- | --- | --- |",
+        ]
     return [
         (
             f"| {labels['name']} {{scope=col}} | {labels['required']} {{scope=col}} | "
-            f"{labels['default']} {{scope=col}} | {labels['type']} {{scope=col}} | "
-            f"{labels['meaning']} {{scope=col}} |"
+            f"{labels['default']} {{scope=col}} | {labels['type']} {{scope=col}} |"
         ),
-        "| --- | :--: | --- | --- | --- |",
+        "| --- | :--: | --- | --- |",
     ]
 
 
-def parameter_table(lang: str, rows: list[str]) -> list[str]:
-    """A parameter table inside the wrapper that may scroll sideways on a phone."""
+def parameter_table(lang: str, rows: list[str], has_meaning: bool) -> list[str]:
+    """A parameter table inside the wrapper that may scroll sideways on a phone.
+
+    When no row of this table has a Meaning text, the column would render as a column of
+    empty cells; it is dropped and one line under the table says why.
+    """
     if not rows:
         return [LABELS[lang]["no_specific"]]
-    return [
+    lines = [
         f'<div class="{WRAPPER_CLASS}" markdown="1">',
         "",
-        *table_heading(lang),
+        *table_heading(lang, with_meaning=has_meaning),
         *rows,
         "",
         "</div>",
     ]
+    if not has_meaning:
+        lines += ["", LABELS[lang]["meaning_missing_note"]]
+    return lines
 
 
 def _release_view(released: list[dict]) -> tuple[set[str], dict[str, dict]]:
@@ -789,12 +848,12 @@ def tool_page(tool: dict, released: list[dict], lang: str) -> str:
         out += [f"[{labels['twin_link']}](../features/{name}.md)", ""]
         out += _contract_diff_section(changes, lang)
     out += [f"## {labels['parameters']} {{#parameters}}", ""]
-    rows = parameter_rows(tool, False, lang)
-    out += parameter_table(lang, rows)
-    common = parameter_rows(tool, True, lang)
+    rows, has_meaning = _parameter_rows(tool, False, lang)
+    out += parameter_table(lang, rows, has_meaning)
+    common, common_has_meaning = _parameter_rows(tool, True, lang)
     if common:
         out += ["", f"### {labels['common']} {{#common-parameters}}", ""]
-        out += parameter_table(lang, common)
+        out += parameter_table(lang, common, common_has_meaning)
     out += ["", f"## {labels['behavior']} {{#behavior}}", ""]
     if lang == "zh":
         out += [labels["behavior_note"], ""]

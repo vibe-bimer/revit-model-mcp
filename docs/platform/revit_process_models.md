@@ -16,18 +16,18 @@ description: "在同一会话中逐个打开模型，执行步骤与 C# 代码�
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `code` | 否 | `null` | any |  |
+| `code` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `exports` | 否 | `null` | any |  |
-| `folder` | 否 | `null` | any |  |
-| `open` | 否 | `null` | any |  |
-| `paths` | 否 | `null` | any |  |
-| `pattern` | 否 | `"*.rvt"` | string |  |
-| `recursive` | 否 | `false` | boolean |  |
-| `save` | 否 | `null` | any |  |
-| `steps` | 否 | `null` | any |  |
-| `stop_on_error` | 否 | `false` | boolean |  |
+| `exports` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `folder` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `open` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `paths` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `pattern` | 否 | `"*.rvt"` | string | （集成分支契约未提供说明） |
+| `recursive` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `save` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `steps` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `stop_on_error` | 否 | `false` | boolean | （集成分支契约未提供说明） |
 
 </div>
 

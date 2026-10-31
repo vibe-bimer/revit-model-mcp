@@ -18,17 +18,19 @@ The same-name tool has an identical contract to release 0.9.0.
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `dry_run` | No | `false` | boolean |  |
-| `family` | Yes | — | string |  |
-| `level` | Yes | — | string |  |
-| `rotation_deg` | No | `0` | number |  |
-| `type_name` | Yes | — | any |  |
-| `x_mm` | Yes | — | number |  |
-| `y_mm` | Yes | — | number |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `dry_run` | No | `false` | boolean |
+| `family` | Yes | — | string |
+| `level` | Yes | — | string |
+| `rotation_deg` | No | `0` | number |
+| `type_name` | Yes | — | any |
+| `x_mm` | Yes | — | number |
+| `y_mm` | Yes | — | number |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

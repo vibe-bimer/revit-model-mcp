@@ -14,10 +14,10 @@ description: "Write a new local .xlsx issue register with element snapshots and 
 
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `issues` | Yes | — | array |  |
+| `issues` | Yes | — | array | (not documented in the branch contract) |
 | `output_path` | Yes | — | string | New .xlsx issue register path, resolved on the machine running this server; existing files are refused. |
 | `pixel_size` | No | `900` | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
-| `project` | Yes | — | object |  |
+| `project` | Yes | — | object | (not documented in the branch contract) |
 
 </div>
 

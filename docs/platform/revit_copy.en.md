@@ -12,16 +12,18 @@ description: "Create 1 to 100 successive copies at multiples of the model-axis o
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `count` | No | `1` | integer |  |
-| `dry_run` | No | `false` | boolean |  |
-| `dx_mm` | Yes | — | number |  |
-| `dy_mm` | Yes | — | number |  |
-| `dz_mm` | No | `0` | number |  |
-| `element_ids` | Yes | — | array |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `count` | No | `1` | integer |
+| `dry_run` | No | `false` | boolean |
+| `dx_mm` | Yes | — | number |
+| `dy_mm` | Yes | — | number |
+| `dz_mm` | No | `0` | number |
+| `element_ids` | Yes | — | array |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

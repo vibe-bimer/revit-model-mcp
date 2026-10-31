@@ -17,7 +17,7 @@ description: "在一次撤销内执行最多 50 个动作，首个失败时整�
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `steps` | 是 | — | array |  |
+| `steps` | 是 | — | array | （集成分支契约未提供说明） |
 
 </div>
 

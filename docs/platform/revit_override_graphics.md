@@ -16,15 +16,15 @@ description: "在选定模型视图中给构件上色；`reset` 恢复本 Revit 
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `color` | 否 | `"#FF0000"` | string |  |
+| `color` | 否 | `"#FF0000"` | string | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
-| `fill` | 否 | `true` | boolean |  |
-| `halftone_others` | 否 | `false` | boolean |  |
-| `line_weight` | 否 | `null` | any |  |
-| `reset` | 否 | `false` | boolean |  |
-| `transparency` | 否 | `0` | integer |  |
-| `views` | 否 | `"active"` | any |  |
+| `fill` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `halftone_others` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `line_weight` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `reset` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `transparency` | 否 | `0` | integer | （集成分支契约未提供说明） |
+| `views` | 否 | `"active"` | any | （集成分支契约未提供说明） |
 
 </div>
 

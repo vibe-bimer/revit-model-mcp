@@ -30,16 +30,16 @@ description: "按一到两个字段汇总符合条件的构件，可选求和与
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `area_scheme` | 否 | `null` | any | Exact area-scheme name, case-insensitive. |
-| `categories` | 否 | `null` | any |  |
-| `family` | 否 | `null` | any |  |
+| `categories` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `family` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `group_by` | 是 | — | array | One or two distinct fields (e.g. category, family, type, level) or exact localized parameter names. |
-| `level` | 否 | `null` | any |  |
+| `level` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `parameter_filters` | 否 | `null` | any | AND-combined filters: parameter (exact localized name), operator (equals, contains, greater, less, empty, not-empty, exists) and value. Numbers use mm, m2, m3 or display units. |
-| `phase` | 否 | `null` | any |  |
+| `phase` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `sum_field` | 否 | `null` | any | Numeric field or parameter name to sum and average per group; lengths in mm, areas m2, volumes m3. |
 | `type_name` | 否 | `null` | any | Exact type name, case-insensitive. |
 | `view` | 否 | `null` | any | 视图的准确名称或十进制视图 ID。 |
-| `workset` | 否 | `null` | any |  |
+| `workset` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

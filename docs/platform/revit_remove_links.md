@@ -18,9 +18,9 @@ description: "删除选定的链接类型及其全部实例；`dry_run` 只预�
 | --- | :--: | --- | --- | --- |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `include_imported_cad` | 否 | `false` | boolean |  |
-| `kinds` | 否 | `null` | any |  |
-| `links` | 是 | — | any |  |
+| `include_imported_cad` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `kinds` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `links` | 是 | — | any | （集成分支契约未提供说明） |
 
 </div>
 

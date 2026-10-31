@@ -23,9 +23,9 @@ description: "按 `dx_mm`、`dy_mm`、`dz_mm` 沿模型轴移动构件；`dry_ru
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `dx_mm` | 是 | — | number |  |
-| `dy_mm` | 是 | — | number |  |
-| `dz_mm` | 否 | `0` | number |  |
+| `dx_mm` | 是 | — | number | （集成分支契约未提供说明） |
+| `dy_mm` | 是 | — | number | （集成分支契约未提供说明） |
+| `dz_mm` | 否 | `0` | number | （集成分支契约未提供说明） |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
 
 </div>

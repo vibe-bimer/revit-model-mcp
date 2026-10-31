@@ -14,15 +14,17 @@ description: "在 Revit 工作站上用样板创建项目或族文件。"
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `activate` | 否 | `true` | boolean |  |
-| `kind` | 否 | `"project"` | string |  |
-| `name` | 否 | `null` | any |  |
-| `save_as` | 否 | `null` | any |  |
-| `template` | 否 | `null` | any |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `activate` | 否 | `true` | boolean |
+| `kind` | 否 | `"project"` | string |
+| `name` | 否 | `null` | any |
+| `save_as` | 否 | `null` | any |
+| `template` | 否 | `null` | any |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ### 通用参数 {#common-parameters}
 

@@ -17,7 +17,7 @@ description: "关闭后台文档；需要先调用一次取得确认令牌，首
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
-| `save` | 否 | `false` | boolean |  |
+| `save` | 否 | `false` | boolean | （集成分支契约未提供说明） |
 
 </div>
 

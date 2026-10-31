@@ -28,16 +28,16 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `area_scheme` | No | `null` | any | Exact area-scheme name, case-insensitive. |
-| `categories` | No | `null` | any |  |
-| `family` | No | `null` | any |  |
+| `categories` | No | `null` | any | (not documented in the branch contract) |
+| `family` | No | `null` | any | (not documented in the branch contract) |
 | `group_by` | Yes | — | array | One or two distinct fields (e.g. category, family, type, level) or exact localized parameter names. |
-| `level` | No | `null` | any |  |
+| `level` | No | `null` | any | (not documented in the branch contract) |
 | `parameter_filters` | No | `null` | any | AND-combined filters: parameter (exact localized name), operator (equals, contains, greater, less, empty, not-empty, exists) and value. Numbers use mm, m2, m3 or display units. |
-| `phase` | No | `null` | any |  |
+| `phase` | No | `null` | any | (not documented in the branch contract) |
 | `sum_field` | No | `null` | any | Numeric field or parameter name to sum and average per group; lengths in mm, areas m2, volumes m3. |
 | `type_name` | No | `null` | any | Exact type name, case-insensitive. |
 | `view` | No | `null` | any | Exact non-template view name; limits the search to that view. |
-| `workset` | No | `null` | any |  |
+| `workset` | No | `null` | any | (not documented in the branch contract) |
 
 </div>
 

@@ -17,9 +17,9 @@ description: "用第一个已载入的标题栏或指定标题栏创建图纸。
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `name` | 是 | — | string |  |
-| `number` | 是 | — | string |  |
-| `title_block` | 否 | `null` | any |  |
+| `name` | 是 | — | string | （集成分支契约未提供说明） |
+| `number` | 是 | — | string | （集成分支契约未提供说明） |
+| `title_block` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

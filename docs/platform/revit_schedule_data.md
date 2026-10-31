@@ -16,7 +16,7 @@ description: "读取明细表显示的表头与单元格文本，支持分页。
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `max_rows` | 否 | `500` | integer |  |
+| `max_rows` | 否 | `500` | integer | （集成分支契约未提供说明） |
 | `offset` | 否 | `0` | integer | 分页起始位置。 |
 | `schedule` | 是 | — | string | Exact schedule name or decimal Revit view ID. (Use the id when two schedules share a name.) |
 

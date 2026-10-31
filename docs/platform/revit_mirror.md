@@ -16,11 +16,11 @@ description: "沿穿过给定点的模型 X 或 Y 平行线镜像，`copy` 保�
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `axis` | 是 | — | string |  |
-| `copy` | 否 | `true` | boolean |  |
+| `axis` | 是 | — | string | （集成分支契约未提供说明） |
+| `copy` | 否 | `true` | boolean | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
-| `point_mm` | 是 | — | array |  |
+| `point_mm` | 是 | — | array | （集成分支契约未提供说明） |
 
 </div>
 

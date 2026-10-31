@@ -17,8 +17,8 @@ description: "把视图与明细表放到图纸上，坐标用图纸毫米。"
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `sheet` | 是 | — | string |  |
-| `views` | 是 | — | array |  |
+| `sheet` | 是 | — | string | （集成分支契约未提供说明） |
+| `views` | 是 | — | array | （集成分支契约未提供说明） |
 
 </div>
 

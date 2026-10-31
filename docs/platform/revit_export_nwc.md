@@ -17,26 +17,26 @@ description: "在 Revit 工作站导出 Navisworks NWC，需要安装导出器�
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
-| `convert_element_properties` | 否 | `null` | any |  |
-| `convert_lights` | 否 | `null` | any |  |
-| `convert_linked_cad_formats` | 否 | `null` | any |  |
-| `coordinates` | 否 | `null` | any |  |
-| `divide_file_into_levels` | 否 | `null` | any |  |
+| `convert_element_properties` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `convert_lights` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `convert_linked_cad_formats` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `coordinates` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `divide_file_into_levels` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 否 | `null` | any | 要处理的构件 Revit ID 列表。 |
-| `export_element_ids` | 否 | `null` | any |  |
-| `export_links` | 否 | `null` | any |  |
-| `export_parts` | 否 | `null` | any |  |
-| `export_room_as_attribute` | 否 | `null` | any |  |
-| `export_room_geometry` | 否 | `null` | any |  |
-| `export_urls` | 否 | `null` | any |  |
-| `faceting_factor` | 否 | `null` | any |  |
-| `find_missing_materials` | 否 | `null` | any |  |
-| `overwrite` | 否 | `false` | boolean |  |
-| `parameters` | 否 | `null` | any |  |
-| `path` | 是 | — | string |  |
-| `scope` | 否 | `null` | any |  |
-| `settings_xml` | 否 | `null` | any |  |
+| `export_element_ids` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `export_links` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `export_parts` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `export_room_as_attribute` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `export_room_geometry` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `export_urls` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `faceting_factor` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `find_missing_materials` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `overwrite` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `parameters` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `path` | 是 | — | string | （集成分支契约未提供说明） |
+| `scope` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `settings_xml` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `view` | 否 | `null` | any | 视图的准确名称或十进制视图 ID。 |
 
 </div>

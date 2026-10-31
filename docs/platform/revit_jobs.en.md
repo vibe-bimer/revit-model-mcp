@@ -14,7 +14,7 @@ description: "List recent jobs, or wait up to wait_seconds (0 to 50, default 40)
 
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `job_id` | No | `null` | any |  |
+| `job_id` | No | `null` | any | (not documented in the branch contract) |
 | `wait_seconds` | No | `40` | integer | Seconds to wait, 0 through 50. |
 
 </div>

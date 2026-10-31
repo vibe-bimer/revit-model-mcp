@@ -28,12 +28,12 @@ description: "按参数与类目统计已填、空值与缺失数量，并给出
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `categories` | 是 | — | array | Category names (1 to 20) from the categories catalog; matches any listed category. |
-| `include_types` | 否 | `true` | boolean |  |
-| `level` | 否 | `null` | any |  |
+| `include_types` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `level` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `parameters` | 是 | — | array | Exact localized parameter names (1 to 30); names that do not match count as missing. |
 | `sample_limit` | 否 | `20` | integer | Maximum sampled element IDs per empty and missing list, 1 to 100 (default 20); counts always cover all elements. |
 | `view` | 否 | `null` | any | 视图的准确名称或十进制视图 ID。 |
-| `workset` | 否 | `null` | any |  |
+| `workset` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

@@ -14,10 +14,10 @@ description: "Render a highlighted PNG that marks 1 to 500 elements, for issue e
 
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `element_ids` | Yes | — | array |  |
-| `mode` | No | `"3d"` | string |  |
+| `element_ids` | Yes | — | array | (not documented in the branch contract) |
+| `mode` | No | `"3d"` | string | (not documented in the branch contract) |
 | `output_path` | No | `null` | any | New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath. |
-| `padding_mm` | No | `1500` | number |  |
+| `padding_mm` | No | `1500` | number | (not documented in the branch contract) |
 | `pixel_size` | No | `1600` | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
 
 </div>

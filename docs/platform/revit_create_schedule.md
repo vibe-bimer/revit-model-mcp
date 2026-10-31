@@ -16,13 +16,13 @@ description: "按给定字段顺序为一个类目创建明细表，字段用 Re
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `category` | 是 | — | string |  |
+| `category` | 是 | — | string | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `fields` | 是 | — | array |  |
-| `filters` | 否 | `null` | any |  |
-| `itemized` | 否 | `true` | boolean |  |
-| `name` | 否 | `null` | any |  |
-| `sort` | 否 | `null` | any |  |
+| `fields` | 是 | — | array | （集成分支契约未提供说明） |
+| `filters` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `itemized` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `name` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `sort` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

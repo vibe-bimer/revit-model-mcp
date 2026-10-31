@@ -25,7 +25,7 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `relation` | Yes | — | string |  |
+| `relation` | Yes | — | string | (not documented in the branch contract) |
 | `source_id` | No | `null` | any | Revit ID of the source group (group-elements) or family instance (nested-family). |
 | `source_name` | No | `null` | any | Source name, case-insensitive: a level (level-rooms), area scheme (area-scheme-elements) or view template (view-template-dependents). |
 

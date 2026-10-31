@@ -16,17 +16,17 @@ description: "按模型毫米坐标点创建相连的风管、水管、桥架或
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `connect_to` | 否 | `null` | any |  |
-| `diameter_mm` | 否 | `null` | any |  |
+| `connect_to` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `diameter_mm` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `height_mm` | 否 | `null` | any |  |
-| `kind` | 是 | — | string |  |
-| `level` | 是 | — | string |  |
-| `offset_mm` | 否 | `null` | any |  |
-| `points_mm` | 是 | — | array |  |
-| `system_type` | 否 | `null` | any |  |
-| `type_name` | 否 | `null` | any |  |
-| `width_mm` | 否 | `null` | any |  |
+| `height_mm` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `kind` | 是 | — | string | （集成分支契约未提供说明） |
+| `level` | 是 | — | string | （集成分支契约未提供说明） |
+| `offset_mm` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `points_mm` | 是 | — | array | （集成分支契约未提供说明） |
+| `system_type` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `type_name` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `width_mm` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

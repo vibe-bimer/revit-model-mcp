@@ -12,14 +12,16 @@ description: "Duplicate a view, optionally with detailing or as a dependent view
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `dry_run` | No | `false` | boolean |  |
-| `mode` | No | `"duplicate"` | string |  |
-| `name` | No | `null` | any |  |
-| `view` | Yes | — | string |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `dry_run` | No | `false` | boolean |
+| `mode` | No | `"duplicate"` | string |
+| `name` | No | `null` | any |
+| `view` | Yes | — | string |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
