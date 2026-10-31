@@ -1,7 +1,6 @@
 using System.IO;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
-using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Control;
 using RevitModelMcp.Core.Models;
 
@@ -9,7 +8,7 @@ namespace RevitModelMcp.Capture;
 
 internal static class ModelHealthReader
 {
-    public static ModelHealthData Read(Document document, ControlJobContract job)
+    public static ModelHealthData Read(Document document, ControlJobContract job, bool observeFileSize = true)
     {
         var result = new ModelHealthData
         {
@@ -19,8 +18,9 @@ internal static class ModelHealthReader
             IsWorkshared = document.IsWorkshared
         };
         if (string.IsNullOrEmpty(result.FileName)) result.FileName = document.Title;
-        result.FileSizeBytes = Try<long?>(result, "fileSizeBytes", () =>
-            string.IsNullOrEmpty(document.PathName) ? null : new FileInfo(document.PathName).Length);
+        if (observeFileSize)
+            result.FileSizeBytes = Try<long?>("fileSizeBytes", () =>
+                string.IsNullOrEmpty(document.PathName) ? null : new FileInfo(document.PathName).Length);
         foreach (var metric in new Dictionary<string, Func<string>>
         {
             ["name"] = () => document.ProjectInformation.Name,
@@ -30,13 +30,29 @@ internal static class ModelHealthReader
             ["buildingName"] = () => document.ProjectInformation.BuildingName,
             ["status"] = () => document.ProjectInformation.Status,
             ["author"] = () => document.ProjectInformation.Author
-        }) result.ProjectInfo[metric.Key] = Try(result, "projectInfo." + metric.Key, metric.Value);
+        }) result.ProjectInfo[metric.Key] = Try("projectInfo." + metric.Key, metric.Value);
 
+        result.Counts = ReadCounts(document);
+        result.TopWarnings = Try("topWarnings", () => ModelWarningReader.Read(document, null, false)
+            .Groups.Take(10).Select(group => new HealthWarning { Text = group.Text, Count = group.Count }).ToList())!;
+        foreach (var unit in new Dictionary<string, ForgeTypeId>
+        {
+            ["length"] = SpecTypeId.Length,
+            ["area"] = SpecTypeId.Area,
+            ["volume"] = SpecTypeId.Volume
+        }) result.Units[unit.Key] = Try("units." + unit.Key,
+            () => document.GetUnits().GetFormatOptions(unit.Value).GetUnitTypeId().TypeId);
+        return result;
+    }
+
+    public static Dictionary<string, int?> ReadCounts(Document document, IReadOnlyCollection<string>? requested = null)
+    {
+        var warnings = new Lazy<IList<FailureMessage>>(document.GetWarnings);
         var metrics = new Dictionary<string, Func<int>>
         {
             ["elements"] = () => Count(document, collector => collector.WhereElementIsNotElementType()),
-            ["warnings"] = () => document.GetWarnings().Count,
-            ["warningGroups"] = () => document.GetWarnings().Select(warning => warning.GetDescriptionText()).Distinct().Count(),
+            ["warnings"] = () => warnings.Value.Count,
+            ["warningGroups"] = () => warnings.Value.Select(warning => warning.GetDescriptionText()).Distinct().Count(),
             ["levels"] = () => CountClass<Level>(document),
             ["grids"] = () => CountClass<Grid>(document),
             ["views"] = () => CountClass<View>(document),
@@ -62,25 +78,19 @@ internal static class ModelHealthReader
             ["cadImports"] = () => Imports(document).Count(instance => !instance.IsLinked),
             ["images"] = () => CountClass<ImageInstance>(document)
         };
+        var counts = new Dictionary<string, int?>();
         foreach (var metric in metrics)
-            result.Counts[metric.Key] = Try<int?>(result, "counts." + metric.Key, () => metric.Value());
-        result.TopWarnings = Try(result, "topWarnings", () => ModelWarningReader.Read(document, null, false)
-            .Groups.Take(10).Select(group => new HealthWarning { Text = group.Text, Count = group.Count }).ToList())!;
-        foreach (var unit in new Dictionary<string, Func<string>>
-        {
-            ["length"] = () => RevitUnits.LengthUnitId(document),
-            ["area"] = () => RevitUnits.AreaUnitId(document),
-            ["volume"] = () => RevitUnits.VolumeUnitId(document)
-        }) result.Units[unit.Key] = Try(result, "units." + unit.Key, unit.Value);
-        return result;
+            if (requested is null || requested.Contains(metric.Key))
+                counts[metric.Key] = Try<int?>("counts." + metric.Key, () => metric.Value());
+        return counts;
     }
 
-    private static T? Try<T>(ModelHealthData result, string metric, Func<T> read)
+    private static T? Try<T>(string metric, Func<T> read)
     {
         try { return read(); }
         catch (Exception exception)
         {
-            result.Skipped.Add(new SkippedMetric { Metric = metric, Error = exception.Message });
+            PluginLog.Skipped($"model health {metric}", exception);
             return default;
         }
     }

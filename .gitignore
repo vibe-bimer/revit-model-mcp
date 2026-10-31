@@ -29,6 +29,7 @@ htmlcov/
 *.egg-info/
 dist/
 uv.lock
+!server/uv.lock
 
 # Local data
 .env
@@ -39,18 +40,24 @@ uv.lock
 *.log
 docs/screenshots/raw/
 
-# Local Revit API documentation corpus (machine-specific, ~255 MB)
-revit-corpus/
-
-# Agent teams working state
-.agent-teams/
-
 # Documentation build output (tools/site is tracked source).
 /site/
-/site-lan/
 /site.new/
 /site.prev/
 /.site-build.lock
 
 # MCP bundle output
 *.mcpb
+
+# Editor and local tool state
+.vscode/*
+/work/
+.idea/
+.claude/
+.codex/
+.omp/
+.playwright-mcp/
+.mcp.json
+CLAUDE.local.md
+*.local.json
+*.local.md

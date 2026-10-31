@@ -1,97 +1,121 @@
-<a id="architecture"></a>
+# Architecture
 
-# 架构
+## Components
 
-<a id="components"></a>
-
-## 组件
-
-[Python 服务器](../server/revit_model_mcp/server.py)注册读取工具和可选的动作工具，然后构造任务。
-[RevitReadChannel](../server/revit_model_mcp/revit_channel.py)使用 asyncio 锁将调用串行化。
-[HTTP 主机](../server/revit_model_mcp/http_host.py)提交任务，并按 ID 轮询结果。
-[PowerShell 主机](../server/revit_model_mcp/ssh_host.py)在本地或通过 SSH 发布任务并读取响应。
-[插件应用](../src/RevitModelMcp.Addin/Application.cs)创建 Revit ExternalEvent 和心跳。
-Core 项目包含解析器、数据契约和序列化器，不引用 Revit API。
+The [Python server](../server/revit_model_mcp/server.py) registers read tools and optional action tools, then constructs jobs.
+[RevitChannel](../server/revit_model_mcp/revit_channel.py) serializes calls with an asyncio lock.
+The [pipe host](../server/revit_model_mcp/pipe_host.py) serves `REVIT_MCP_HOST=local`: it reads heartbeats, talks pipe/1 to the selected add-in and falls back to the file channel.
+The [HTTP host](../server/revit_model_mcp/http_host.py) submits jobs and polls results by ID.
+The [PowerShell host](../server/revit_model_mcp/ssh_host.py) publishes jobs and reads responses locally or through SSH.
+The [add-in application](../src/RevitModelMcp.Addin/Application.cs) creates the Revit ExternalEvent, the [pipe listener](../src/RevitModelMcp.Addin/Control/PipeChannel.cs) and the heartbeat.
+The core project contains parsers, data contracts, serializers and the [pipe/1 codec](../src/RevitModelMcp.Core/Control/PipeProtocol.cs) without Revit API references.
 
 ```mermaid
 flowchart LR
-    Client[MCP 客户端] <-->|stdio| Server[Python 服务器]
-    Server <-->|本地 PowerShell 或 SSH| Files[Windows 文件通道]
-    Files --> Watcher[FileSystemWatcher 与定时器]
-    Watcher --> Event[ExternalEvent]
-    Server <-->|HTTP + Bearer 令牌| HTTP[HttpListener]
-    HTTP --> Event
-    Event --> Handler[读取与动作处理器]
+    Client[MCP client] <-->|stdio, optionally through SSH| Server[Python server]
+    Server <-->|named pipe pipe/1| Pipe[PipeChannel]
+    Server <-->|local PowerShell or SSH| Files[Windows file channel]
+    Files --> Watcher[FileSystemWatcher and timer]
+    Server <-->|HTTP + bearer token| HTTP[HttpListener]
+    Pipe --> Scheduler[JobScheduler]
+    Watcher --> Scheduler
+    HTTP --> Scheduler
+    Scheduler --> Event[ExternalEvent]
+    Event --> Handler[Read and action handlers]
     Handler --> Files
+    Handler --> Pipe
     Handler --> HTTP
 ```
 
-<a id="file-request-lifecycle"></a>
+## Pipe request lifecycle
 
-## 文件请求生命周期
+1. The server reads fresh heartbeats in ROOT and selects one target with the same rules as the file channel.
+2. If the heartbeat lists `pipe/1`, it opens `\\.\pipe\RevitModelMcp.<pid>` and sends `hello`; the reply must match the heartbeat `pid` and `instanceId`.
+3. The server sends `submit` with the job; the add-in queues it in the shared scheduler and requests an ExternalEvent.
+4. The add-in pushes state changes and one final message with the command response. Pipe threads never call the Revit API.
+5. On disconnect the add-in cancels that connection's queued jobs; a running job finishes, and a reconnected client can ask for its `status`.
 
-1. 服务器检查是否有 Revit 进程，并记录该命令已有的响应。
-2. 将 JSON 写入唯一的 `mcp_<uuid>.tmp` 文件，再将其移动为 `trigger.txt`。
-3. 文件监视器请求触发 ExternalEvent。每 10 秒运行的定时器提供兜底检查。
-4. Revit 在 API 上下文中执行处理器。通道匹配 `targetDocument` 并认领触发文件。
-5. 读取器生成响应。分页会话会继续请求 ExternalEvent 回调，直到完成。
-6. 服务器检测 `response_<timestamp>_<command>_<correlationId>.json`，匹配请求 ID 并校验响应。
-7. 主机移除响应文件和临时文件。视图导出还会复制并移除远程 PNG。
+## File request lifecycle
 
-任务包含 `command` 和各命令特有的字段。
-成功响应包含 `command`、`success` 和 `data`。
-响应还携带计时信息和响应实例元数据。
-参见[响应契约](../src/RevitModelMcp.Core/Models/ReadCommandModels.cs)。
-文件协议的任务与响应均携带请求关联标识符 `correlationId`。
-HTTP 分配 `jobId`，并通过 `/jobs/{id}` 轮询；已完成结果在十分钟后过期。
-asyncio 锁只会串行化同一个服务器进程内的调用。
-每个通道目录只运行一个服务器进程，可以避免多个响应消费者竞争。
+1. Under its existing job lock, the server discovers processes and heartbeats in ROOT and selects one target.
+2. It pins the PID, `startedUtc` identity and `ROOT\instances\<pid>` directory, then confirms the v2 channel with a bounded correlated ping.
+3. It verifies the selected process and identity again, writes a unique `mcp_<uuid>.tmp` and atomically moves it to `job_<jobId>.json` in that directory.
+4. The instance's watcher requests an ExternalEvent; a 10-second timer provides a fallback check.
+5. The watcher moves the job into a thread-safe scheduler and removes its file. Revit checks the PID and active document in its API context; actions resolve the addressed open document.
+6. Readers atomically write correlated responses in the same directory. Paged sessions request further ExternalEvent callbacks until complete.
+7. The server polls that fixed directory and validates response correlation and PID. It copies exported PNGs and cleans only the current job's files there.
 
-<a id="revit-context-and-model-access"></a>
+Jobs contain a `command` and command-specific fields.
+Successful responses contain `command`, `success` and `data`.
+Responses also carry timing, responder and client metadata, `jobId` and `queuedMs`.
+See the [response contracts](../src/RevitModelMcp.Core/Models/ReadCommandModels.cs).
+The server gives each job a fresh `correlationId`; v2 responses must echo it.
+Late responses from other jobs are ignored.
+The server assigns a `jobId` and a process-wide `clientId`; `clientName` comes from MCP initialize. HTTP polls `/jobs/{id}`. Completed read results expire after ten minutes and action results after 24 hours; see [result retention](transport.md#result-retention).
+The asyncio lock serializes calls within one server process only.
+Clients targeting different PIDs use separate directories.
+Clients targeting the same PID have separate FIFO queues. The scheduler rotates between clients and executes one job or read-session slice per ExternalEvent.
 
-## Revit 上下文与模型访问
+## Revit context and model access
 
-文件监视器和定时器回调通过 ExternalEvent 请求执行工作。
-事件处理器在 Revit API 上下文中调用 [ControlChannel.Tick](../src/RevitModelMcp.Addin/Control/ControlChannel.cs)。
-默认 MCP 工具查询模型和导出图像，不修改模型构件。
-显式启用的动作同时要求服务器注册开关和工作站门禁。
-事务、警告处理和对话框抑制见[动作行为](../README.md#actions-opt-in)。
-图像导出使用 `Document.ExportImage`，并指定要导出的视图集合。
-它不会改变活动视图。
-通道还接受未作为 MCP 工具暴露的旧版快照和视图转储任务。
-旧版视图转储会话可以打开和关闭 UI 视图。
-文件输出、日志和可选的窗口激活都是可观察到的副作用。
+File watcher and timer callbacks request work through ExternalEvent.
+The event handler calls [ControlChannel.Tick](../src/RevitModelMcp.Addin/Control/ControlChannel.cs) in the Revit API context.
+The default MCP tools query the model and export images without editing model elements.
+Actions are refused by default: the installer writes the machine policy `ReadOnly=1`.
+The server setting and workstation file can independently refuse them too, and no lower layer can turn policy read-only off.
+See [action behavior](actions.md) for transactions, warning resolution and dialog suppression.
+Image export uses `Document.ExportImage` with a selected view set.
+It does not change the active view.
+File output, logs and optional window activation are observable side effects.
 
-<a id="instances-and-heartbeat"></a>
+## Instances and heartbeat
 
-## 实例与心跳
+Each Revit instance writes `ROOT\instance_<processId>.json` every five seconds.
+The heartbeat preserves process ID, Revit version, active document title, path and `updatedUtc`.
+It also reports `fileChannelVersion=2`, a `startedUtc` identity fixed at startup, and nullable `httpPort` populated only after a successful listener bind.
+Discovery version 3 adds a per-process `instanceId`, `pipeName`, `protocols` and every open non-linked document.
+The first heartbeat is written after the pipe listens, so `pipe/1` is never advertised for a pipe that is not accepting clients.
+The add-in caches document information from Revit events before the timer writes it.
+Heartbeat replacement uses a temporary file and `File.Replace` or `File.Move`.
+File discovery reads only ROOT and combines fresh heartbeat data with every running Revit process.
+Missing, malformed or expired heartbeats leave the process visible with `pluginResponding=false` and empty document fields.
+For v2, a fresh heartbeat is a pre-check; `pluginResponding=true` requires a bounded ping confirming correlation, responder PID and unchanged startup identity.
+Busy or timed-out handshakes never remove a process from discovery.
 
-每个 Revit 实例每五秒写入一次 `instance_<processId>.json`。
-心跳包含进程 ID、Revit 版本、活动文档标题、路径和 UTC 时间戳。
-插件先通过 Revit 事件缓存文档信息，再由定时器写入心跳。
-心跳替换使用临时文件和 `File.Replace` 或 `File.Move`。
-服务器忽略格式错误的心跳文件，以及超过 60 秒的记录。
-存在有效心跳时，它返回这些实例。
-只有没有有效心跳时，才回退到进程 ID 列表；此时 `pluginResponding=false`，文档字段为空。
+Each instance watches `job_*.json` in its own `ROOT\instances\<pid>` directory.
+Responses, atomic temporary files and PNGs share that per-PID directory.
+Cleanup never targets another instance's directory, and later discovery cannot redirect an outstanding job.
 
-`document` 映射为任务中的 `targetDocument`。
-匹配器检查活动文档标题，以及从路径中提取的文件名。
-匹配不区分大小写，允许使用子串。
-使用具有区分度的标题或文件名，避免匹配歧义。
-未指定目标时，任何匹配的 Revit 实例都可以认领触发文件。
+`document` maps to `targetDocument` in a job.
+Directed reads match active document titles or file names case-insensitively and require exactly one matching instance before publication.
+Actions and undirected reads require exactly one running instance, including processes without confirmed channels in that count.
+The PID guard remains in the add-in.
+After claiming a directed read, the add-in rejects an active document that no longer matches; the correlated error consumes the job file.
+Actions retain their existing open-document resolution.
 
-<a id="failure-behavior"></a>
+Update the server and the add-in together: the server accepts an add-in of the same major version and `fileChannelVersion=2` only, and refuses a heartbeat without that field before publication.
+There is no legacy ROOT channel.
+HTTP remains one configured endpoint with PID and startup identity checked through `/health`; no port scanning occurs.
+See [transport compatibility](transport.md#file-protocol-compatibility).
 
-## 失败行为
+## Failure behavior
 
-已存在触发文件时，会产生忙碌错误。
-任务拾取超时后，待处理的触发文件仍留在原处。
-调用方收到该超时后，任务仍可能执行。
-响应超时表示任务已被拾取，但在响应等待时间内未找到新的响应。
-网络轮询会重试瞬时 SSH 故障和命令超时故障。
-读取命令失败会转换为 MCP 工具错误。
-执行器返回的动作失败会保留其响应对象，包括 `error` 和可用的动作元数据。
-读取和动作的传输失败都会转换为 MCP 工具错误。
-模型数据和插件错误消息保留其原始语言。
+A seventeenth queued job from one client returns `queue_full` with `retryAfterMs`.
+A pickup timeout leaves the pending job file in place.
+The job can execute after the caller receives that timeout.
+A response timeout means pickup occurred but no new response was found within the response budget.
+Network polling retries transient SSH and command timeout failures.
+Read-command failures become MCP tool errors.
+Action failures returned by the executor preserve their response object, including `error` and available action metadata.
+Transport failures become MCP tool errors for both reads and actions.
+Model data and add-in error messages retain their source language.
 
-字段名和目录见[数据格式](feed-format.md)，协议限制见[已知缺口](roadmap.md#known-gaps)。
+See the [feed format](feed-format.md) for field names and directories and [known gaps](roadmap.md#known-gaps) for protocol limitations.
+
+## Batch supervisor
+
+The [batch supervisor](../src/RevitModelMcp.BatchSupervisor/BatchSupervisor.cs) is a separate net48 process with a Core reference and no Revit API reference.
+It owns only workers it launched, records phase progress atomically in `run.json`, and resumes unfinished models after restart.
+The add-in exposes a small launch, pre-pass, open, snapshot, and close command set.
+The worker sends `batch-snapshot` through the existing v2 file channel.
+See [batch collection](batch.md) for routing and failure behavior.

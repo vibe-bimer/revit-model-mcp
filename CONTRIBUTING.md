@@ -1,11 +1,40 @@
 # Contributing
 
-Bug reports and feature requests use the [issue forms](https://github.com/vibe-bimer/revit-model-mcp/issues/new/choose).
+Bug reports and feature requests use the [issue forms](https://github.com/sharafutdinovdi/revit-model-mcp/issues/new/choose).
 Bug reports include the Revit year, add-in version, installation method, transport, reproduction steps and sanitized logs.
 For visible failures, attach a screenshot of the dialog or ribbon in the form's screenshot field.
-Usage and installation questions belong in [Discussions](https://github.com/vibe-bimer/revit-model-mcp/discussions).
+Usage and installation questions belong in [Discussions](https://github.com/sharafutdinovdi/revit-model-mcp/discussions).
 
 Contributors follow the [code of conduct](https://github.com/sharafutdinovdi/.github/blob/main/CODE_OF_CONDUCT.md).
+
+## Start in 10 minutes
+
+Pick a [good first issue](https://github.com/sharafutdinovdi/revit-model-mcp/issues?q=is%3Aopen+label%3A%22good+first+issue%22), comment that you are taking it, and open a PR from a fork as described below.
+Issues labeled `help wanted` are open to anyone; larger ones are tracked as `epic` with child issues.
+
+### Contributing without Revit
+
+You do not need Revit or Windows for the Python server, the Core library, tests and documentation:
+
+```sh
+cd server && uv run --with pytest pytest -q
+dotnet test --project tests/RevitModelMcp.Core.Tests/RevitModelMcp.Core.Tests.csproj
+uv tool install pre-commit && pre-commit install
+pre-commit run --all-files
+```
+
+The first command runs the Python server tests, which use mocked transports and a fake HTTP server.
+The second runs the Core C# tests on Windows, macOS or Linux with the SDK from `global.json`.
+The `dotnet-format` hook prints a notice and exits successfully on macOS and Linux.
+Windows PR checks verify C# formatting and build the add-in for every Revit year.
+Only changes under `src/RevitModelMcp.Addin` need Windows to build locally.
+
+### Labels and milestones
+
+- Type: `bug`, `enhancement`, `docs`, `tests`, `server` and similar labels group the work and the release notes.
+- Priority: `P0` crash, data safety or wrong result; `P1` real bug on a common path; `P2` edge case or robustness; `P3` polish or rare case.
+- `needs-design` means the approach must be agreed in the issue before code.
+- Milestones follow the weekly release: a milestone named by date, for example `2026-10-12`, holds what ships that Monday, and `Backlog` holds unscheduled work.
 
 ## Pull requests
 
@@ -28,7 +57,7 @@ Owner review applies to the paths in [CODEOWNERS](.github/CODEOWNERS):
 - Add-in and Core source under `src/`, except project dependency manifests.
 - Python runtime code under `server/revit_model_mcp/`.
 - Installer code under `build/install/` and the root installation script.
-- Release, release-please, WinGet and Dependabot auto-merge workflows.
+- Release, release-please and Dependabot auto-merge workflows.
 - CODEOWNERS, the security policy and the license.
 
 Docs, tests, other CI workflows and dependency manifests without an owner can merge after required checks pass.
@@ -36,9 +65,10 @@ Dependabot patch and minor updates enable squash auto-merge; required checks and
 Major updates receive a `needs-review` label and wait for a maintainer.
 NuGet manifests under `build/install/` and publishing workflow updates still require owner review.
 All merges use squash with the PR title and body, and history remains linear.
+
 ## Automated checks
 
-CI builds the Revit 2020, 2022, 2026 and 2027 add-ins, runs Core and Python tests, builds and smoke-tests both MSI scopes, and validates the Python package.
+CI builds the Revit 2022, 2026 and 2027 add-ins, runs Core and Python tests, builds and smoke-tests both MSI scopes, and validates the Python package.
 PR checks validate the Conventional Commit title, all workflow files with `actionlint`, C# formatting from `.editorconfig`, and Python lint and formatting with Ruff.
 CodeQL analyzes C# and Python on PRs, pushes to `main` and a weekly schedule.
 Successful PR checks publish one updated comment with add-in artifact links and the Revit years built.
@@ -51,7 +81,8 @@ Path labels are applied automatically; `enhancement`, `bug`, `docs` and `depende
 
 ## Local checks
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/), Python 3.11+, the .NET SDK selected by `global.json`, and actionlint 1.7.12 on PATH.
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), Python 3.11+, and the .NET SDK selected by `global.json`.
+The actionlint hook installs version 1.7.12 in an isolated Go environment; Go must be available for the initial setup.
 Run from the repository root:
 
 ```sh
@@ -60,17 +91,35 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-The hooks apply Ruff 0.16.7 fixes and formatting, verify C# formatting, lint workflows, and check file endings, whitespace, YAML and JSON.
+The hooks apply Ruff 0.16.10 fixes and formatting, verify C# formatting, lint workflows, and check file endings, whitespace, YAML and JSON.
 The C# hook sets `Configuration=Debug.R26` and `DeployAddin=false` and runs once when C# files change.
-Full solution formatting requires Windows; macOS and Linux contributors can run `SKIP=dotnet-format pre-commit run --all-files` and use the Windows PR check for C# formatting.
+Full solution formatting requires Windows.
+On macOS and Linux, the hook prints a notice and exits successfully; Windows PR CI verifies C# formatting.
 Review hook edits and stage them before committing again.
+
+### Fork layer checks
+
+The fork's code is a bounded layer on upstream (`adr/0001`, `adr/0008`), and three scripts keep the bound honest.
+Run them from the repository root:
+
+```sh
+uv run python build/check_fork_budget.py
+uv run python tools/check_fork_identity.py
+uv run python build/upstream_report.py
+```
+
+The first fails when the dispatch hooks change by more than `build/fork.json` allows, or when a changed file is
+neither fork code, a hook, nor a read listed with its reason. The second fails when upstream's install identity,
+package name or security contact reappears on a surface this fork ships. The third prints which upstream commits the base
+contains and which it does not, so the read in `adr/0001`'s rhythm is a command rather than a memory. All three read the
+base commit from `build/fork.json`, which is the one place it is written down.
 
 ## Build and test
 
 Run from a fresh clone's repository root on Windows with the .NET SDK selected by `global.json`:
 
 ```powershell
-foreach ($year in '20', '22', '23', '24', '25', '26', '27') {
+foreach ($year in '22', '23', '24', '25', '26', '27') {
     dotnet build src/RevitModelMcp.Addin -c "Release.R$year" -p:DeployAddin=false
     if ($LASTEXITCODE -ne 0) { throw "R$year build failed" }
 }
@@ -83,7 +132,7 @@ dotnet format RevitModelMcp.sln --verify-no-changes --verbosity minimal
 `DeployAddin=false` prevents deployment to the local Revit installation.
 Core tests need no running Revit instance.
 The test runner is Microsoft.Testing.Platform; use `--project` as shown.
-The seven release builds cover `Release.R20` and `Release.R22` through `Release.R27`: Revit 2020 and 2022–2027, not Revit 2021.
+Release builds cover `Release.R22` through `Release.R27`.
 Run `dotnet format RevitModelMcp.sln` with the same environment variables to apply formatting.
 
 Run Python tests and package builds on Windows, macOS or Linux with Python 3.11+ and uv:
@@ -91,8 +140,8 @@ Run Python tests and package builds on Windows, macOS or Linux with Python 3.11+
 ```sh
 cd server
 uv run --with pytest pytest -q
-uvx ruff==0.16.7 check .
-uvx ruff==0.16.7 format --check .
+uvx ruff==0.16.10 check .
+uvx ruff==0.16.10 format --check .
 uv build
 uvx twine check dist/*
 ```
@@ -100,7 +149,7 @@ uvx twine check dist/*
 Transport tests use mocked operations and a local fake HTTP server.
 They do not require a Windows workstation.
 Keep credentials and model files out of commits and use sanitized fixtures.
-Run `uvx ruff==0.16.7 check --fix .` and `uvx ruff==0.16.7 format .` to apply Python lint fixes and formatting.
+Run `uvx ruff==0.16.10 check --fix .` and `uvx ruff==0.16.10 format .` to apply Python lint fixes and formatting.
 Run `actionlint` 1.7.12 from the repository root after changing a workflow.
 
 ## Documentation site
@@ -118,29 +167,15 @@ On Windows, use `.venv\Scripts\python.exe` and `.venv\Scripts\mkdocs.exe`.
 Open `http://127.0.0.1:8000/revit-model-mcp/`.
 Run `mkdocs build --strict` in the activated environment before submitting a PR.
 
-Maintain the Chinese and English documentation together. Tool pages and navigation are generated from the current MCP registry snapshot in [`tools.json`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/tools.json), reviewed bilingual titles, summaries, prompts and parameter meanings in [`capabilities.yaml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/capabilities.yaml), and complete Chinese tool descriptions in [`contracts.yaml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/contracts.yaml). After tool descriptions, signatures, schemas or registration change, activate the documentation environment and make the server importable with `python -m pip install -e server`, then refresh the snapshot:
-
-```sh
-python tools/site/generate_features.py --dump
-```
-
-Review and update both languages in the capability entries, including every affected parameter meaning. Translate each complete changed description in the contract entry and update its `source` to the exact SHA-256 of the current UTF-8 tool description; do not merely refresh the hash without reviewing the translation. Do not hand-edit generated pages or claim live validation from registry dumps. Then regenerate and run these checks from the repository root:
-
-```sh
-python tools/site/generate_features.py --write
-python tools/site/generate_features.py --verify-registry --check
-python -m unittest discover -s tools/site -p 'test_*.py'
-mkdocs build --strict
-python tools/site/check_site.py --site-dir site
-```
-
-The integration branch has its own catalog under [`docs/platform/`](https://github.com/vibe-bimer/revit-model-mcp/tree/main/docs/platform), generated by [`platform_catalog.py`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/platform_catalog.py) from the snapshot in [`platform-tools.json`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/platform-tools.json). Refresh that snapshot from a checkout of the branch with `python tools/site/generate_features.py --dump-platform /path/to/branch/worktree`; the command joins the branch's `docs/tool-manifest.json` for the toolset and access flags and refuses a snapshot whose names disagree with the registry. Do not hand-edit `docs/platform/`; the same `--check` run covers it.
-
-These checks cover registry freshness, reviewed translation completeness, generated-page drift, bilingual navigation, internal links and anchors. Source changes block site publication until the translations are refreshed, generated pages are updated and every check passes.
-
 ## Test coverage
 
 The Python tests cover job construction, transport failures, downloads, action validation and MCP stdio registration with both flag states.
+They also check that the bundle manifest lists every registered tool in order with its current description.
+After changing tools, run `cd server && uv run python ../build/bundle_manifest.py` to regenerate the manifest.
+The same tests compare `docs/tool-manifest.json` with the registry and check the policy tables behind it.
+After changing tools, also run `cd server && uv run python ../build/tool_manifest.py`; see [Tool manifest](docs/tool-manifest.md).
+A committed snapshot of every tool input schema (`server/tests/golden/tools.schema.json`: names, parameters, types, defaults and required) fails the Python tests when a schema changes.
+For a deliberate change, run `cd server && UPDATE_TOOL_SCHEMAS=1 uv run --with pytest pytest tests/test_tool_schemas.py` and commit the snapshot diff, so reviewers see the change.
 A threaded fake HTTP server covers health, authentication, busy responses, job polling and PNG download.
 Core tests cover parsing, serialization, formatting, units and query processing.
 These tests do not require a live Revit model.
@@ -151,12 +186,18 @@ Automated tests do not validate live Revit behavior; see [validation evidence](d
 
 1. Merge PRs with Conventional Commit titles.
 2. release-please maintains a `chore(main): release X.Y.Z` PR with generated changelog entries and version updates.
-3. The maintainer checks the release PR and merges it after required checks pass.
-4. Check the Release please workflow, both MSI assets, seven per-year ZIPs, wheel, source distribution and `SHA256SUMS.txt`.
-5. Check PyPI, MCP Registry and WinGet job results for stable releases; download the manifests if WinGet submission is not configured.
+3. Releases ship on Monday (Europe/Moscow). The maintainer merges the release PR on Monday after required checks pass.
+4. Check the Release please workflow, both MSI assets, six ZIPs, wheel, source distribution and `SHA256SUMS.txt`. If a job fails with `The job was not acquired by Runner`, that is a GitHub infrastructure failure: rerun it with `gh run rerun <run id> --failed`.
+5. Check the release assets and `SHA256SUMS.txt`. This fork publishes nothing to PyPI, the MCP Registry, Smithery or WinGet: upstream owns those names, and both projects share version numbers, so a release from here that claimed one of them would install upstream's code while appearing to work.
 
-release-please owns [CHANGELOG.md](CHANGELOG.md), the version in `server/pyproject.toml` and both versions in `server/server.json`.
-The manifest starts at `0.3.0`; `server/pyproject.toml` remains the package version checked by the build.
+When the `SIGNPATH_API_TOKEN` secret and the `SIGNPATH_ORGANIZATION_ID` variable are set, the release job submits the MSIs and ZIPs to SignPath and waits up to 90 minutes for the approval of the signing request. Without them the job skips signing and publishes unsigned assets. Optional variables `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_SIGNING_POLICY_SLUG` and `SIGNPATH_ARTIFACT_CONFIGURATION_SLUG` override the defaults `revit-model-mcp`, `release-signing` and `release`. The artifact configuration lives in `.signpath/artifact-configuration.xml`; keep the copy in SignPath identical.
+
+The required `release-window` check keeps the release PR red outside Monday in Europe/Moscow time and passes at once for every other PR.
+A scheduled run refreshes it when Monday starts and when it ends.
+For an urgent fix, the maintainer adds the `hotfix-release` label to the release PR, which turns the check green and allows a release on another day.
+The size of the change, not the calendar, decides the version bump: `feat` bumps the minor version and `fix` the patch version, as described below.
+
+release-please owns [CHANGELOG.md](CHANGELOG.md) and the version in `server/pyproject.toml`, which the build checks.
 The simple strategy skips its absent default `version.txt`; no separate version file is maintained.
 Before 1.0, `feat` and breaking changes bump the minor version, while `fix` bumps the patch version.
 Visible documentation and dependency changes can also produce a patch release.
@@ -175,16 +216,18 @@ Repository Actions settings must allow GitHub Actions to create pull requests.
 
 ## Release assets
 
-CI uploads installable R20, R22, R26 and R27 folder layouts and an `installers` artifact.
+CI builds all six add-in years, uploads installable R22, R26 and R27 folder layouts, and an `installers` artifact with both MSIs covering every year.
 It extracts both MSIs, rejects Revit API assemblies, and checks installation and removal for each built year.
-The release-please workflow or a manually pushed `v<version>` tag triggers all seven add-in builds and Core/server tests.
+CI also checks that each MSI refuses to install while the other scope is installed.
+The release-please workflow or a manually pushed `v<version>` tag triggers all six add-in builds and Core/server tests.
 The tag version must match `server/pyproject.toml`.
-The GitHub Release contains seven per-year ZIPs, single-user and multi-user MSIs, the Python wheel and source distribution, and `SHA256SUMS.txt` covering every asset.
+The GitHub Release contains six per-year ZIPs, single-user and multi-user MSIs, the Python wheel and source distribution, and `SHA256SUMS.txt` covering every asset.
 Extract each year's ZIP into `%APPDATA%\Autodesk\Revit\Addins\20<yy>` while that Revit instance is closed.
 The archive root contains `RevitModelMcp.addin` and the `RevitModelMcp` assembly directory.
 
 The release workflow invokes the WixSharp pipeline with `Build__Version` set to the tag version.
-CI uses `0.0.0-ci`.
+CI reads the repository version from `server/pyproject.toml` and builds with `<version>-dev`, for example `0.9.1-dev`, so the add-in reports `0.9.1-dev+<commit>` and passes the server's same-major check.
+A local `dotnet build` without `-p:Version` takes the plain version from `server/pyproject.toml`, so the add-in passes the same-major check against the server in the same checkout.
 After building the required years on Windows, the same packaging command is available locally:
 
 ```powershell
@@ -198,21 +241,14 @@ The module installs WiX 7, accepts its EULA, installs the matching UI extension,
 Single-user installation uses `%APPDATA%\Autodesk\Revit\Addins\<year>`.
 Multi-user installation uses `%ProgramData%\Autodesk\Revit\Addins\<year>` through 2026 and `%ProgramFiles%\Autodesk\Revit\Addins\2027` for 2027.
 
-Stable releases publish the wheel and source distribution to PyPI through GitHub OIDC in the `pypi` environment.
-The pending publisher configuration is listed above the `pypi` job in `.github/workflows/release.yml`.
-PyPI failure does not block the GitHub Release.
-After PyPI succeeds, the workflow updates both versions in `server/server.json` and publishes to the official MCP Registry through GitHub OIDC.
-Registry publishing is best-effort and its response appears in the job log.
-Prerelease tags containing `-` skip PyPI, MCP Registry and WinGet publishing.
+`dotnet run --project build -- bundle` builds the Revit `.bundle` zip from the same `Release.R*/publish` output, and `python build/validate_bundle.py output/RevitModelMcp.bundle.zip --years 2022-2027` checks its `PackageContents.xml` and file layout on any platform.
+CI runs both after the six Revit builds and uploads the zip as the `revit-model-mcp-bundle` artifact.
+CI and the release workflow also rebuild the six years with `-p:ManagedInstall=true`, run the bundle step with `Bundle__Managed=true` and validate `revit-model-mcp-<version>-managed.bundle.zip` with `--managed-version`. The release attaches that zip.
 
-The release workflow calls `.github/workflows/winget.yml` after publishing the GitHub Release.
-`release-please.yml` dispatches `release.yml` for the new tag (a top-level run, which PyPI trusted publishing requires); `release.yml` then calls `winget.yml`. The same pipeline can be started by hand from the Actions tab with an existing tag to republish assets.
-The calling job grants `id-token: write`; the PyPI job retains the `pypi` environment and both publishers retain OIDC permissions.
-WinGet also supports manually published releases and `workflow_dispatch` with a stable release tag.
-It generates and validates manifests for `Sharafutdinov.RevitModelMcp` and uploads a `winget-manifests` artifact.
-Submission requires the optional `WINGET_TOKEN` repository secret, a classic PAT with `public_repo` scope.
-Without the token, generation and artifact upload still run.
-On Windows, `build/winget/New-WingetManifests.ps1 -Version 0.2.0 -ReleaseTag v0.2.0 -OutputDir artifacts/winget` downloads the MSIs and reads their hashes and product codes.
-`-SkipDownload` uses matching MSIs already in `output/`.
+The release attaches the wheel and the source distribution to the GitHub Release and publishes nothing else; `uvx --from <wheel> revit-model-mcp` installs that wheel, while a bare `uvx` of that name resolves upstream's PyPI project instead.
+
+`release-please.yml` dispatches `release.yml` for the new tag. To start the same pipeline by hand from the Actions tab, select the existing tag under "Use workflow from" and enter that same tag as the input.
+This fork does not submit to WinGet, and it ships no manifest generator: `Sharafutdinov.RevitModelMcp` is upstream's package, so a submission from here would overwrite upstream's listing with this fork's installer.
+A fork-owned package identifier is a separate decision; until then, install from the MSI on the GitHub Release.
 
 Contributions are licensed under the [MIT license](LICENSE).

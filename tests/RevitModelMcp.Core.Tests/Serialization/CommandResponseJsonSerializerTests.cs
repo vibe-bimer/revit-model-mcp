@@ -1,6 +1,7 @@
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.Json;
+using RevitModelMcp.Core.Batch;
 using RevitModelMcp.Core.Control;
 using RevitModelMcp.Core.Models;
 using RevitModelMcp.Core.Serialization;
@@ -9,6 +10,235 @@ namespace RevitModelMcp.Core.Tests.Serialization;
 
 public sealed class CommandResponseJsonSerializerTests
 {
+    [Test]
+    [Arguments("https://host/a/b", "https://host/a/b")]
+    [Arguments("file:///a/b.rvt", "file:///a/b.rvt")]
+    [Arguments(@"C:\a\b.rvt", "b.rvt")]
+    [Arguments(@"\\srv\share\x.rvt", "x.rvt")]
+    public async Task RedactPaths_PreservesUrlsAndRedactsWindowsPaths(string value, string expected)
+    {
+        var response = CommandResponse<string>.Ok("test", value, 1);
+        var redacted = CommandResponseJsonSerializer.RedactPaths(CommandResponseJsonSerializer.Serialize(response));
+        using var json = JsonDocument.Parse(redacted);
+        await Assert.That(json.RootElement.GetProperty("data").GetString()).IsEqualTo(expected);
+    }
+
+    [Test]
+    public async Task FamilyAudit_SerializesAllSkippedFamilies()
+    {
+        var data = new FamilyAuditData
+        {
+            Mode = "project",
+            SkippedCount = 150,
+            Skipped = Enumerable.Range(201, 150).Select(index => new SkippedRead
+            {
+                What = $"Family {index}",
+                Reason = "The audit is limited to the first 200 editable families."
+            }).ToList()
+        };
+        using var json = Parse(CommandResponse<FamilyAuditData>.Ok("family-audit", data, 1));
+        var result = json.RootElement.GetProperty("data");
+        await Assert.That(result.GetProperty("skippedCount").GetInt32()).IsEqualTo(150);
+        await Assert.That(result.GetProperty("skipped").GetArrayLength()).IsEqualTo(150);
+        await Assert.That(result.GetProperty("skipped")[0].GetProperty("what").GetString()).IsEqualTo("Family 201");
+        await Assert.That(result.GetProperty("skipped")[149].GetProperty("reason").GetString()).Contains("200");
+    }
+
+    [Test]
+    public async Task ProcessModels_SerializesProgressAndCancelledResult()
+    {
+        var data = new ActionResultData
+        {
+            CurrentIndex = 2,
+            Total = 4,
+            CurrentPath = @"C:\Private\Second.rvt",
+            Models = [new ProcessModelResult { Path = @"C:\Private\First.rvt", Status = "done" }],
+            Cancelled = true
+        };
+        var response = CommandResponse<ActionResultData>.PartialResult("process-models", data,
+            "Cancelled before the next model; completed changes remain committed.", 5);
+        var stored = CommandResponseJsonSerializer.RedactPaths(CommandResponseJsonSerializer.Serialize(response));
+        using var json = JsonDocument.Parse(stored);
+        var progress = json.RootElement.GetProperty("data");
+        await Assert.That(progress.GetProperty("currentIndex").GetInt32()).IsEqualTo(2);
+        await Assert.That(progress.GetProperty("total").GetInt32()).IsEqualTo(4);
+        await Assert.That(progress.GetProperty("currentPath").GetString()).IsEqualTo("Second.rvt");
+        await Assert.That(progress.GetProperty("models")[0].GetProperty("path").GetString()).IsEqualTo("First.rvt");
+        await Assert.That(progress.GetProperty("cancelled").GetBoolean()).IsTrue();
+        await Assert.That(stored).DoesNotContain("Private");
+    }
+
+    [Test]
+    public async Task ProcessModels_SerializesDoneFailedAndSkippedModels()
+    {
+        var data = new ActionResultData
+        {
+            Total = 3,
+            Done = 1,
+            Failed = 1,
+            SkippedCount = 1,
+            Summary = "Processed 1 of 3 models; 1 failed, 1 skipped.",
+            Models =
+            [
+                new ProcessModelResult
+                {
+                    Path = @"C:\Models\Done.rvt", Status = "done",
+                    Opened = new ProcessModelOpenedResult { Mode = "detached" },
+                    Code = new ProcessModelCodeResult { ReturnValue = 42, ReturnValueMarker = "return-marker", Log = ["ran"] },
+                    Exports = [new ActionResultData { Folder = @"C:\Out\Done", Files = [new ExportedFile { Name = "Done.ifc", SizeBytes = 10 }] }],
+                    Saved = @"C:\Out\Done.rvt",
+                    DialogsDismissed = ProcessDialogSummary.FromMessages(["Space warning", "Space warning", "Other warning"])
+                },
+                new ProcessModelResult { Path = @"C:\Models\Missing.rvt", Status = "failed", Error = "File not found." },
+                new ProcessModelResult { Path = @"C:\Models\Open.rvt", Status = "skipped", Error = "Already open." }
+            ]
+        };
+
+        using var json = Parse(CommandResponse<ActionResultData>.PartialResult("process-models", data, data.Summary!, 5));
+        var models = json.RootElement.GetProperty("data").GetProperty("models");
+        await Assert.That(models.GetArrayLength()).IsEqualTo(3);
+        await Assert.That(models[0].GetProperty("code").GetProperty("returnValue").GetInt32()).IsEqualTo(42);
+        await Assert.That(models[0].GetProperty("exports")[0].GetProperty("files")[0].GetProperty("name").GetString()).IsEqualTo("Done.ifc");
+        await Assert.That(models[0].GetProperty("saved").GetString()).IsEqualTo(@"C:\Out\Done.rvt");
+        var dismissed = models[0].GetProperty("dialogsDismissed");
+        await Assert.That(dismissed.GetProperty("messages")[0].GetProperty("count").GetInt32()).IsEqualTo(2);
+        await Assert.That(dismissed.GetProperty("truncated").GetBoolean()).IsFalse();
+        await Assert.That(models[1].GetProperty("error").GetString()).IsEqualTo("File not found.");
+        await Assert.That(models[1].GetProperty("dialogsDismissed").GetProperty("messages").GetArrayLength()).IsEqualTo(0);
+        await Assert.That(models[2].GetProperty("status").GetString()).IsEqualTo("skipped");
+    }
+
+    [Test]
+    public async Task ProcessModels_DismissedMessagesLimitDistinctEntries()
+    {
+        var summary = ProcessDialogSummary.FromMessages(
+            Enumerable.Range(0, 51).Select(index => $"Warning {index}").Concat(["Warning 0"]));
+
+        await Assert.That(summary.Messages.Count).IsEqualTo(50);
+        await Assert.That(summary.Messages[0].Count).IsEqualTo(2);
+        await Assert.That(summary.Truncated).IsTrue();
+    }
+
+    [Test]
+    public async Task ExecuteCode_SerializesLimitedJsonValuesAndDiagnostics()
+    {
+        var response = CommandResponse<ActionResultData>.Ok("execute-code", new ActionResultData
+        {
+            ReturnValue = CodeResultLimiter.Limit(new Dictionary<string, object?>
+            {
+                ["count"] = 3,
+                ["items"] = new[] { "a", "b" }
+            }, value => value),
+            Log = ["ready"],
+            Diagnostics = [new CodeDiagnostic { Line = 2, Column = 4, Id = "CS1002", Message = "; expected" }],
+            Summary = "Executed code in Model.rvt."
+        }, 5);
+        var json = CommandResponseJsonSerializer.Serialize(response);
+        await Assert.That(json.Contains("\"returnValue\"")).IsTrue();
+        await Assert.That(json.Contains("\"count\":3")).IsTrue();
+        await Assert.That(json.Contains("\"line\":2")).IsTrue();
+    }
+
+    [Test]
+    public async Task Serialize_CreatedViewsSheetsAndPlacements_ExposeTopLevelIds()
+    {
+        var view = new ActionResultData
+        {
+            ViewId = 42,
+            ViewName = "Night section",
+            Id = 42,
+            Verification = new ActionVerification { After = new ActionFacts { Id = 42 } }
+        };
+        using var viewJson = Parse(CommandResponse<ActionResultData>.Ok("create-view", view, 1));
+        var viewData = viewJson.RootElement.GetProperty("data");
+        await Assert.That(viewData.GetProperty("viewId").GetInt64()).IsEqualTo(42);
+        await Assert.That(viewData.GetProperty("viewName").GetString()).IsEqualTo("Night section");
+        await Assert.That(viewData.TryGetProperty("view", out _)).IsFalse();
+        await Assert.That(viewData.GetProperty("verification").GetProperty("after").GetProperty("id").GetInt64()).IsEqualTo(42);
+
+        var sheet = new ActionResultData { SheetId = 51, SheetNumber = "NX-101", SheetName = "Night sheet" };
+        using var sheetJson = Parse(CommandResponse<ActionResultData>.Ok("create-sheet", sheet, 1));
+        var sheetData = sheetJson.RootElement.GetProperty("data");
+        await Assert.That(sheetData.GetProperty("sheetId").GetInt64()).IsEqualTo(51);
+        await Assert.That(sheetData.GetProperty("sheetNumber").GetString()).IsEqualTo("NX-101");
+        await Assert.That(sheetData.GetProperty("sheetName").GetString()).IsEqualTo("Night sheet");
+
+        var placements = new ActionResultData { ViewportIds = [61, 62], ScheduleInstanceIds = [63] };
+        using var placementJson = Parse(CommandResponse<ActionResultData>.Ok("place-views-on-sheet", placements, 1));
+        var placementData = placementJson.RootElement.GetProperty("data");
+        await Assert.That(placementData.GetProperty("viewportIds").EnumerateArray().Select(id => id.GetInt64())).IsEquivalentTo(new long[] { 61, 62 });
+        await Assert.That(placementData.GetProperty("scheduleInstanceIds")[0].GetInt64()).IsEqualTo(63);
+    }
+
+    [Test]
+    public async Task Serialize_ModelSnapshot_UsesExactSchemaNamesAndNulls()
+    {
+        var snapshot = new ModelSnapshotData
+        {
+            CollectedAtUtc = "2026-09-30T12:00:00Z",
+            Source = new ModelSnapshotSource { Path = @"C:\Models\Model.rvt", RuntimeYear = 2026 },
+            Passport = new ModelSnapshotPassport
+            {
+                Title = "Model",
+                RevitServer = null,
+                Counts = new()
+                {
+                    ["elements"] = 0,
+                    ["views"] = 0,
+                    ["sheets"] = 0,
+                    ["families"] = 0,
+                    ["familyTypes"] = 0,
+                    ["links"] = 0
+                }
+            },
+            Warnings = new ModelSnapshotWarnings
+            {
+                Total = 201,
+                Groups =
+                [ModelSnapshotWarningGroup.Create("Warning", 201, Enumerable.Range(1, 201).Select(id => (long)id))]
+            },
+            Skipped = [new SkippedRead { What = "source file", Reason = "Unavailable" }],
+            SkippedCount = 1
+        };
+        using var json = JsonDocument.Parse(CommandResponseJsonSerializer.Serialize(
+            CommandResponse<ModelSnapshotData>.Ok("model-snapshot", snapshot, 1)));
+        var data = json.RootElement.GetProperty("data");
+        await Assert.That(data.EnumerateObject().Select(property => property.Name).Order().ToArray())
+            .IsEquivalentTo(new[] { "schemaVersion", "collectedAtUtc", "source", "passport", "warnings",
+                "families", "parameterFill", "skipped", "skippedCount" });
+        await Assert.That(data.GetProperty("schemaVersion").GetInt32()).IsEqualTo(1);
+        await Assert.That(data.GetProperty("source").EnumerateObject().Select(property => property.Name).Order().ToArray())
+            .IsEquivalentTo(new[] { "path", "kind", "runtimeYear", "savedInYear", "upgradedInMemory" });
+        await Assert.That(data.GetProperty("passport").EnumerateObject().Select(property => property.Name).Order().ToArray())
+            .IsEquivalentTo(new[] { "title", "isWorkshared", "centralPath", "numberOfSaves", "versionGuid",
+                "basicFileInfoUsername", "fileLastWriteUtc", "fileSizeBytes", "revitServer", "counts", "worksets" });
+        await Assert.That(data.GetProperty("warnings").EnumerateObject().Select(property => property.Name).Order().ToArray())
+            .IsEquivalentTo(new[] { "total", "groups" });
+        await Assert.That(data.GetProperty("families").EnumerateObject().Select(property => property.Name).Order().ToArray())
+            .IsEquivalentTo(new[] { "total", "inPlace", "nonEditable", "items", "signals" });
+        await Assert.That(data.GetProperty("passport").GetProperty("revitServer").ValueKind).IsEqualTo(JsonValueKind.Null);
+        await Assert.That(data.GetProperty("warnings").GetProperty("groups")[0].GetProperty("elementIds").GetArrayLength()).IsEqualTo(200);
+        await Assert.That(data.GetProperty("warnings").GetProperty("groups")[0].GetProperty("elementIdsTruncated").GetBoolean()).IsTrue();
+        await Assert.That(data.GetProperty("parameterFill").GetProperty("rows").GetArrayLength()).IsEqualTo(0);
+        await Assert.That(data.GetProperty("skipped")[0].GetProperty("what").GetString()).IsEqualTo("source file");
+        await Assert.That(data.GetProperty("skippedCount").GetInt32()).IsEqualTo(1);
+        await Assert.That(RoundTripCoordinator("model-snapshot", snapshot).Passport.RevitServer).IsNull();
+    }
+
+    [Test]
+    public async Task ModelSnapshotWarningGroup_CapsDistinctElementIdsAt201stId()
+    {
+        var firstTwoHundred = Enumerable.Range(1, 200).Reverse().Select(id => (long)id).ToArray();
+        var atLimit = ModelSnapshotWarningGroup.Create("Warning", 1, firstTwoHundred.Append(1).Append(200));
+        var overLimit = ModelSnapshotWarningGroup.Create("Warning", 1,
+            new long[] { 200, 200 }.Concat(firstTwoHundred).Append(1).Append(201).Append(202));
+
+        await Assert.That(atLimit.ElementIds.SequenceEqual(firstTwoHundred)).IsTrue();
+        await Assert.That(atLimit.ElementIdsTruncated).IsFalse();
+        await Assert.That(overLimit.ElementIds.SequenceEqual(firstTwoHundred)).IsTrue();
+        await Assert.That(overLimit.ElementIdsTruncated).IsTrue();
+    }
+
     private static T RoundTripCoordinator<T>(string command, T data)
     {
         var json = CommandResponseJsonSerializer.Serialize(CommandResponse<T>.Ok(command, data, 1));
@@ -17,6 +247,109 @@ public sealed class CommandResponseJsonSerializerTests
             typeof(CommandResponse<T>), new System.Runtime.Serialization.Json.DataContractJsonSerializerSettings
             { UseSimpleDictionaryFormat = true });
         return ((CommandResponse<T>)serializer.ReadObject(stream)!).Data!;
+    }
+
+    [Test]
+    public async Task Serialize_BatchSupervisorStart_RoundTripsRunId()
+    {
+        var result = RoundTripCoordinator("batch-supervisor-start", new BatchStartResult
+        {
+            RunId = "b6834588269d44b6985a6721f333573d"
+        });
+
+        await Assert.That(result.RunId).IsEqualTo("b6834588269d44b6985a6721f333573d");
+    }
+
+    [Test]
+    public async Task Serialize_BatchRun_RoundTripsStatusCancelAndFetchState()
+    {
+        var dialog = new BatchDialogRecord
+        {
+            DialogId = "missing-link",
+            Type = "TaskDialogShowingEventArgs",
+            Message = "Link unavailable",
+            Decision = "unknown",
+            ModelPath = @"C:\Models\A.rvt",
+            Phase = "snapshot",
+            TimeUtc = "2026-09-30T12:00:00Z"
+        };
+        var run = new BatchRun
+        {
+            RunId = "run-1",
+            Status = BatchRunStatus.Running,
+            Years = [2026],
+            Models = [new BatchModel
+            {
+                Path = @"C:\Models\A.rvt", Status = BatchModelStatus.Running,
+                Phase = BatchPhase.Snapshot, SavedYear = 2025,
+                PhaseTimingsMs = new() { ["open"] = 42 }, Dialogs = [dialog],
+                SnapshotFile = "snapshot.json"
+            }]
+        };
+
+        var status = RoundTripCoordinator("batch-status", run);
+        await Assert.That(status.Status).IsEqualTo(BatchRunStatus.Running);
+        await Assert.That(status.Models[0].PhaseTimingsMs["open"]).IsEqualTo(42);
+        await Assert.That(status.Models[0].Dialogs[0].Message).IsEqualTo("Link unavailable");
+
+        var cancelled = RoundTripCoordinator("batch-cancel", run with
+        {
+            Status = BatchRunStatus.Cancelled,
+            CancelRequested = true
+        });
+        await Assert.That(cancelled.CancelRequested).IsTrue();
+        await Assert.That(cancelled.Status).IsEqualTo(BatchRunStatus.Cancelled);
+
+        var fetched = RoundTripCoordinator("batch-fetch", run with { Status = BatchRunStatus.Completed });
+        await Assert.That(fetched.Models[0].SnapshotFile).IsEqualTo("snapshot.json");
+        await Assert.That(fetched.Models[0].Dialogs[0].DialogId).IsEqualTo("missing-link");
+    }
+
+    [Test]
+    public async Task Serialize_BatchPhases_RoundTripConcreteResultsAndDialogs()
+    {
+        var open = RoundTripCoordinator("batch-open", new BatchPhaseResult<ActionResultData>
+        {
+            Result = new ActionResultData { Title = "Model A", OpenedAs = "detached" }
+        });
+        await Assert.That(open.Result!.Title).IsEqualTo("Model A");
+
+        var close = RoundTripCoordinator("batch-close", new BatchPhaseResult<ActionResultData>
+        {
+            Result = new ActionResultData { Saved = false, Path = @"C:\Models\A.rvt" }
+        });
+        await Assert.That(close.Result!.Saved).IsFalse();
+
+        var snapshot = RoundTripCoordinator("batch-snapshot", new BatchPhaseResult<ModelSnapshotData>
+        {
+            Result = new ModelSnapshotData
+            {
+                CollectedAtUtc = "2026-09-30T12:00:00Z",
+                Source = new ModelSnapshotSource { RuntimeYear = 2026 },
+                Passport = new ModelSnapshotPassport { Title = "Model A" }
+            },
+            Dialogs = [new BatchDialogRecord
+            {
+                DialogId = "warning", Type = "TaskDialogShowingEventArgs", Decision = "allowed",
+                ModelPath = @"C:\Models\A.rvt", Phase = "snapshot", TimeUtc = "2026-09-30T12:00:00Z",
+                Result = 1001
+            }]
+        });
+        await Assert.That(snapshot.Result!.Source.RuntimeYear).IsEqualTo(2026);
+        await Assert.That(snapshot.Result.Passport.Title).IsEqualTo("Model A");
+        await Assert.That(snapshot.Dialogs[0].Result).IsEqualTo(1001);
+        await Assert.That(snapshot.Dialogs[0].Phase).IsEqualTo("snapshot");
+    }
+
+    [Test]
+    public async Task Serialize_DocumentChangedError_PreservesCorrelationAndResponder()
+    {
+        var response = CommandResponse<object>.Fail("document-info", "The active document no longer matches the target document.", 0, "read-50");
+        response.Responder = new ResponderInfo { ProcessId = 42, DocumentName = "Architectural" };
+        using var json = JsonDocument.Parse(CommandResponseJsonSerializer.Serialize(response));
+        await Assert.That(json.RootElement.GetProperty("success").GetBoolean()).IsFalse();
+        await Assert.That(json.RootElement.GetProperty("correlationId").GetString()).IsEqualTo("read-50");
+        await Assert.That(json.RootElement.GetProperty("responder").GetProperty("processId").GetInt32()).IsEqualTo(42);
     }
 
     [Test]
@@ -129,14 +462,26 @@ public sealed class CommandResponseJsonSerializerTests
         var data = RoundTripCoordinator("model-health", new ModelHealthData
         {
             Counts = { ["elements"] = 12, ["rooms"] = null },
-            TopWarnings = [new HealthWarning { Text = "Warning", Count = 2 }],
-            Skipped = [new SkippedMetric { Metric = "counts.rooms", Error = "Unavailable" }]
+            TopWarnings = [new HealthWarning { Text = "Warning", Count = 2 }]
         });
         await Assert.That(data.Counts["elements"]).IsEqualTo(12);
         await Assert.That(data.Counts["rooms"]).IsNull();
         await Assert.That(data.FileSizeBytes).IsNull();
         await Assert.That(data.TopWarnings[0].Count).IsEqualTo(2);
-        await Assert.That(data.Skipped[0].Metric).IsEqualTo("counts.rooms");
+        var diagnostics = new SkippedReadDiagnostics();
+        diagnostics.Add("model health counts.rooms", new InvalidOperationException("Unavailable"));
+        SkippedReadDiagnostics.Current = diagnostics;
+        try
+        {
+            using var json = JsonDocument.Parse(CommandResponseJsonSerializer.Serialize(
+                CommandResponse<ModelHealthData>.Ok("model-health", data, 1)));
+            await Assert.That(json.RootElement.GetProperty("skipped")[0].GetProperty("what").GetString())
+                .IsEqualTo("model health counts.rooms");
+        }
+        finally
+        {
+            SkippedReadDiagnostics.Current = null;
+        }
     }
 
     [Test]
@@ -218,8 +563,8 @@ public sealed class CommandResponseJsonSerializerTests
     {
         var verification = new ActionVerification
         {
-            Before = new ActionFacts { Id = 1, Parameter = "Comments", Value = "", StorageType = "String", Owner = "instance" },
-            After = new ActionFacts { Id = 1, Parameter = "Comments", Value = "Reviewed", StorageType = "String", Owner = "instance" },
+            Before = new ActionFacts { Id = 1, Parameter = "Comments", ParameterId = "ALL_MODEL_INSTANCE_COMMENTS", Value = "", StorageType = "String", Owner = "instance" },
+            After = new ActionFacts { Id = 1, Parameter = "Comments", ParameterId = "ALL_MODEL_INSTANCE_COMMENTS", Value = "Reviewed", StorageType = "String", Owner = "instance" },
             Changed = [1]
         };
         var data = new ActionResultData
@@ -227,7 +572,7 @@ public sealed class CommandResponseJsonSerializerTests
             DryRun = false,
             Committed = false,
             FailedStep = 1,
-            UndoName = "revit_batch",
+            UndoName = "MCP (client): Ran a batch of 2 steps in A",
             RolledBack = true,
             Steps = [
                 new BatchStepResult { Index = 0, Command = "set-parameter", Success = true, RolledBack = true,
@@ -242,6 +587,8 @@ public sealed class CommandResponseJsonSerializerTests
         await Assert.That(payload.GetProperty("dryRun").GetBoolean()).IsFalse();
         await Assert.That(payload.GetProperty("committed").GetBoolean()).IsFalse();
         await Assert.That(payload.GetProperty("steps")[0].GetProperty("index").GetInt32()).IsEqualTo(0);
+        await Assert.That(payload.GetProperty("steps")[0].GetProperty("data").GetProperty("verification").GetProperty("before").GetProperty("parameterId").GetString()).IsEqualTo("ALL_MODEL_INSTANCE_COMMENTS");
+        await Assert.That(payload.GetProperty("steps")[0].GetProperty("data").GetProperty("verification").GetProperty("after").GetProperty("parameterId").GetString()).IsEqualTo("ALL_MODEL_INSTANCE_COMMENTS");
         await Assert.That(payload.GetProperty("steps")[1].GetProperty("success").GetBoolean()).IsFalse();
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(serialized));
         var serializer = new DataContractJsonSerializer(typeof(CommandResponse<ActionResultData>));
@@ -340,13 +687,23 @@ public sealed class CommandResponseJsonSerializerTests
     }
 
     [Test]
+    public async Task Ping_ReportsEffectivePolicyOnlyWhenPresent()
+    {
+        using var withPolicy = Parse(ReadCommandResponseFactory.Ping(1, new Dictionary<string, string> { ["readOnly"] = "true" }));
+        using var withoutPolicy = Parse(ReadCommandResponseFactory.Ping(1, new Dictionary<string, string>()));
+
+        await Assert.That(withPolicy.RootElement.GetProperty("policy").GetProperty("readOnly").GetString()).IsEqualTo("true");
+        await Assert.That(withoutPolicy.RootElement.TryGetProperty("policy", out _)).IsFalse();
+    }
+
+    [Test]
     public async Task Serialize_ViewSummary_PreservesCategoriesWithoutElements()
     {
         var response = CommandResponse<ViewSummaryData>.Ok(
             "view-summary",
             new ViewSummaryData
             {
-                Header = new ViewDumpHeader { Name = "Level 1 Plan", Type = "FloorPlan", Scale = 100, ElementCount = 21 },
+                Header = new ViewHeader { Name = "Level 1 Plan", Type = "FloorPlan", Scale = 100, ElementCount = 21 },
                 Categories = { new ViewCategorySummary { Category = "Walls", Count = 12, DifferentTypes = 3 } }
             },
             120);
@@ -558,6 +915,40 @@ public sealed class CommandResponseJsonSerializerTests
     }
 
     [Test]
+    [Arguments("3d")]
+    [Arguments("plan")]
+    public async Task Serialize_CaptureElements_PreservesFileMissingIdsAndMode(string mode)
+    {
+        var response = CommandResponse<ElementCaptureData>.Ok(
+            "capture-elements",
+            new ElementCaptureData
+            {
+                FileName = "capture_20261004_120000_000.png",
+                Width = 1600,
+                Height = 900,
+                SizeBytes = 123456,
+                ElementCount = 2,
+                MissingIds = new List<long> { 17, 4294967296 },
+                Mode = mode
+            },
+            812);
+
+        using var json = Parse(response);
+        var data = json.RootElement.GetProperty("data");
+
+        await AssertSuccess(json.RootElement, "capture-elements");
+        await Assert.That(data.GetProperty("fileName").GetString()).IsEqualTo("capture_20261004_120000_000.png");
+        await Assert.That(data.GetProperty("width").GetInt32()).IsEqualTo(1600);
+        await Assert.That(data.GetProperty("height").GetInt32()).IsEqualTo(900);
+        await Assert.That(data.GetProperty("sizeBytes").GetInt64()).IsEqualTo(123456);
+        await Assert.That(data.GetProperty("elementCount").GetInt32()).IsEqualTo(2);
+        await Assert.That(data.GetProperty("missingIds").GetArrayLength()).IsEqualTo(2);
+        await Assert.That(data.GetProperty("missingIds")[0].GetInt64()).IsEqualTo(17);
+        await Assert.That(data.GetProperty("missingIds")[1].GetInt64()).IsEqualTo(4294967296);
+        await Assert.That(data.GetProperty("mode").GetString()).IsEqualTo(mode);
+    }
+
+    [Test]
     public async Task Serialize_MissingView_ReturnsReadableFailureWithoutData()
     {
         var response = CommandResponse<ViewSummaryData>.ViewNotFound("view-summary", "Missing View", 2);
@@ -716,6 +1107,40 @@ public sealed class CommandResponseJsonSerializerTests
         await Assert.That(missing.RootElement.GetProperty("data").TryGetProperty("location", out _)).IsFalse();
         await Assert.That(missing.RootElement.GetProperty("data").TryGetProperty("boundingBox", out _)).IsFalse();
         await Assert.That(missing.RootElement.TryGetProperty("viewOpened", out _)).IsFalse();
+    }
+
+    [Test]
+    public async Task Serialize_Jobs_PreservesListWithoutCancellation()
+    {
+        var response = CommandResponse<JobListData>.Ok("jobs", new JobListData
+        {
+            Jobs =
+            [
+                new JobSummary
+                {
+                    JobId = "read-job",
+                    ClientName = "reader",
+                    Command = "view-elements",
+                    State = "running",
+                    Position = 0,
+                    AgeMs = 250
+                }
+            ]
+        }, 0);
+
+        using var json = Parse(response);
+        await AssertSuccess(json.RootElement, "jobs");
+        var data = json.RootElement.GetProperty("data");
+        await Assert.That(data.TryGetProperty("cancellation", out _)).IsFalse();
+        var jobs = data.GetProperty("jobs");
+        await Assert.That(jobs.GetArrayLength()).IsEqualTo(1);
+        var job = jobs[0];
+        await Assert.That(job.GetProperty("jobId").GetString()).IsEqualTo("read-job");
+        await Assert.That(job.GetProperty("clientName").GetString()).IsEqualTo("reader");
+        await Assert.That(job.GetProperty("command").GetString()).IsEqualTo("view-elements");
+        await Assert.That(job.GetProperty("state").GetString()).IsEqualTo("running");
+        await Assert.That(job.GetProperty("position").GetInt32()).IsEqualTo(0);
+        await Assert.That(job.GetProperty("ageMs").GetInt64()).IsEqualTo(250);
     }
 
     private static JsonDocument Parse<T>(CommandResponse<T> response)

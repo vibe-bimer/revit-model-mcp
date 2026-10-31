@@ -1,7 +1,6 @@
 using Autodesk.Revit.DB;
 using Nice3point.Revit.Extensions;
 using RevitModelMcp.Capture;
-using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Control;
 
 namespace RevitModelMcp.Control;
@@ -12,14 +11,9 @@ internal static class ActionVerifier
         ActionJobContract action, List<ElementId> ids) => command switch
         {
             "move" => new ActionFacts { Elements = ids.Select(id => Bounds(RequiredElement(targetDocument, RevitValueReader.GetId(id)))).ToList() },
-            "set-phase" => new ActionFacts { Elements = ids.Select(id => PhaseFacts(targetDocument, RevitValueReader.GetId(id))).ToList() },
             "set-parameter" => ParameterFacts(targetDocument, action),
-            "set-view-lighting" => new ActionFacts
-            {
-                Lighting = ViewLighting.Read(targetDocument, ViewLighting.Resolve(targetDocument, action.View))
-            },
             "delete" => new ActionFacts { Requested = ids.Select(RevitValueReader.GetId).ToList() },
-            _ => null
+            _ => Fork.ForkActions.CaptureBefore(targetDocument, command, action, ids)
         };
 
     internal static void CaptureAfter(Document targetDocument, string command, ActionJobContract action, ActionResultData result)
@@ -30,44 +24,17 @@ internal static class ActionVerifier
             case "move":
                 var after = action.ElementIds.Select(id => Bounds(RequiredElement(targetDocument, id))).ToList();
                 verification.After = new ActionFacts { Elements = after };
-                verification.Changed = verification.Before!.Elements!.Zip(after, (before, current) =>
+                verification.Changed ??= verification.Before!.Elements!.Zip(after, (before, current) =>
                     SameBounds(before.BoundingBoxMinMm, current.BoundingBoxMinMm) &&
                     SameBounds(before.BoundingBoxMaxMm, current.BoundingBoxMaxMm) ? (long?)null : current.Id)
-                    .Where(id => id.HasValue).Select(id => id!.Value).ToList();
-                break;
-            case "set-phase":
-                var afterPhases = action.ElementIds.Select(id => PhaseFacts(targetDocument, id)).ToList();
-                verification.After = new ActionFacts { Elements = afterPhases };
-                verification.Changed = verification.Before!.Elements!.Zip(afterPhases,
-                    (before, current) => before.CreatedPhase == current.CreatedPhase
-                                         && before.DemolishedPhase == current.DemolishedPhase ? (long?)null : current.Id)
                     .Where(id => id.HasValue).Select(id => id!.Value).ToList();
                 break;
             case "set-parameter":
                 verification.After = ParameterFacts(targetDocument, action);
                 verification.Changed = verification.Before!.Value == verification.After.Value ? [] : [action.ElementId];
                 break;
-            case "set-view-lighting":
-                var lighting = ViewLighting.Read(targetDocument, ViewLighting.Resolve(targetDocument, action.View));
-                verification.After = new ActionFacts { Lighting = lighting };
-                // A view change has no element id to report, so the settings that moved are the changed set.
-                result.ChangedSettings = ViewLightingComparison.Differences(verification.Before?.Lighting, lighting);
-                break;
-            case "create-level":
-                var level = RequiredElement(targetDocument, result.Id!.Value) as Level
-                            ?? throw new InvalidOperationException("The created element is not a level.");
-                verification.After = new ActionFacts
-                {
-                    Id = RevitValueReader.GetId(level.Id),
-                    Category = level.Category?.Name ?? string.Empty,
-                    Name = level.Name,
-                    ElevationMm = Math.Round(RevitUnits.InternalUnitsToMillimeters(level.Elevation), 1)
-                };
-                verification.WouldCreate = action.DryRun ? true : null;
-                break;
             case "place-family":
             case "create-wall":
-            case "create-floor":
                 var element = RequiredElement(targetDocument, result.Id!.Value);
                 var facts = Bounds(element);
                 var type = element.GetTypeId().ToElement<ElementType>(targetDocument);
@@ -83,37 +50,59 @@ internal static class ActionVerifier
                 verification.After = new ActionFacts { StillPresent = stillPresent };
                 if (stillPresent.Count > 0) throw new InvalidOperationException("Deletion verification found surviving elements.");
                 break;
+            default:
+                Fork.ForkActions.CaptureAfter(targetDocument, command, action, result);
+                break;
         }
     }
+
+    /// <summary>Captures what a move, rotate or mirror can change: bounds, location and facing/hand orientation.</summary>
+    internal static List<double> Pose(Element element)
+    {
+        var pose = new List<double>();
+        using var bounds = element.get_BoundingBox(null);
+        if (bounds is not null)
+        {
+            pose.AddRange(Millimeters(bounds.Min));
+            pose.AddRange(Millimeters(bounds.Max));
+        }
+        switch (element.Location)
+        {
+            case LocationPoint point:
+                pose.AddRange(Millimeters(point.Point));
+                pose.Add(Math.Round(point.Rotation, 4));
+                break;
+            case LocationCurve { Curve: { IsBound: true } curve }:
+                pose.AddRange(Millimeters(curve.GetEndPoint(0)));
+                pose.AddRange(Millimeters(curve.GetEndPoint(1)));
+                break;
+        }
+        if (element is FamilyInstance instance)
+        {
+            foreach (var direction in new[] { instance.FacingOrientation, instance.HandOrientation })
+                pose.AddRange(new[] { direction.X, direction.Y, direction.Z }.Select(value => Math.Round(value, 4)));
+        }
+        return pose;
+    }
+
+    internal static bool IsHosted(Element element) => element is FamilyInstance { Host: not null };
 
     private static Element RequiredElement(Document targetDocument, long id) =>
         ActionCommandExecutor.CreateId(id).ToElement(targetDocument)
         ?? throw new InvalidOperationException($"Verification could not find element {id}.");
 
-    private static ActionFacts PhaseFacts(Document targetDocument, long id)
-    {
-        var element = RequiredElement(targetDocument, id);
-        return new ActionFacts
-        {
-            Id = RevitValueReader.GetId(element.Id),
-            Category = element.Category?.Name ?? string.Empty,
-            CreatedPhase = ActionMutations.PhaseName(targetDocument, element.CreatedPhaseId),
-            DemolishedPhase = ActionMutations.PhaseName(targetDocument, element.DemolishedPhaseId),
-        };
-    }
-
     private static ActionFacts ParameterFacts(Document targetDocument, ActionJobContract action)
     {
         var element = RequiredElement(targetDocument, action.ElementId);
-        var parameter = element.FindParameter(action.Parameter!)
-                        ?? throw new ArgumentException($"Parameter '{action.Parameter}' was not found on the instance or type.");
+        var (parameter, candidate) = ActionMutations.ResolveParameter(element, action.Parameter!, action.ParameterId);
         return new ActionFacts
         {
             Id = RevitValueReader.GetId(element.Id),
             Parameter = parameter.Definition.Name,
+            ParameterId = candidate.Id,
             Value = ActionMutations.ParameterValue(parameter),
             StorageType = parameter.StorageType.ToString(),
-            Owner = parameter.Element.Id == element.Id ? "instance" : "type"
+            Owner = candidate.Owner
         };
     }
 
@@ -131,7 +120,7 @@ internal static class ActionVerifier
 
     private static List<double> Millimeters(XYZ point) =>
         new[] { point.X, point.Y, point.Z }
-            .Select(value => Math.Round(RevitUnits.InternalUnitsToMillimeters(value), 1)).ToList();
+            .Select(value => Math.Round(UnitUtils.ConvertFromInternalUnits(value, UnitTypeId.Millimeters), 1)).ToList();
 
     private static bool SameBounds(List<double>? before, List<double>? after) =>
         before is null ? after is null : after is not null && before.SequenceEqual(after);

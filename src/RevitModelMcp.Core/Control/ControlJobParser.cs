@@ -1,34 +1,49 @@
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Text.RegularExpressions;
+using RevitModelMcp.Core.Export;
 using RevitModelMcp.Core.Models;
 
 namespace RevitModelMcp.Core.Control;
 
 public enum ControlJobKind
 {
-    LegacySnapshot,
-    ViewsDump,
     Ping,
     DocumentInfo,
+    Documents,
+    UiState,
     ModelHealth,
+    ModelSnapshot,
     LinksStatus,
     SharedCoordinates,
     ParameterFillCheck,
     ListViews,
     ViewSummary,
+    ViewInfo,
     ViewElements,
     ElementDetails,
     ViewWarnings,
+    ScheduleData,
     ExportView,
     ExportElementIds,
+    CaptureElements,
     QueryElements,
     AggregateElements,
     ListCatalog,
     ListWarnings,
     ListRelations,
+    FamilyAudit,
     Action,
-    Invalid
+    NwcSettingsCheck,
+    Invalid,
+    CompareLinkDatums,
+    Jobs,
+    BatchSupervisorStart,
+    BatchPrePass,
+    BatchOpen,
+    BatchSnapshot,
+    BatchClose
 }
 
 public sealed class ControlJobParseResult
@@ -44,7 +59,9 @@ public sealed class ControlJobParseResult
     public ControlJobKind Kind { get; }
     public string Command { get; }
     public string? CorrelationId { get; internal set; }
-    public IReadOnlyList<string> Views { get; internal set; } = Array.Empty<string>();
+    public string? JobId { get; internal set; }
+    public string ClientId { get; internal set; } = "unknown";
+    public string ClientName { get; internal set; } = "unknown";
     public string? View { get; internal set; }
     public string? ViewType { get; internal set; }
     public string? NameContains { get; internal set; }
@@ -66,16 +83,17 @@ public sealed class ControlJobParseResult
     public long? SourceId { get; internal set; }
     public string? SourceName { get; internal set; }
     public int PixelSize { get; internal set; } = 1600;
+    public IReadOnlyList<long> ElementIds { get; internal set; } = [];
+    public double PaddingMm { get; internal set; } = 1500;
+    public string Mode { get; internal set; } = "3d";
     public bool ZoomToFit { get; internal set; } = true;
     public string? TargetDocument { get; internal set; }
+    public IReadOnlyList<ModelSnapshotParameterRule> ParameterRules { get; internal set; } = [];
     public int? TargetProcessId { get; internal set; }
+    public bool IncludeLinked { get; internal set; }
     public ActionJobContract? Action { get; internal set; }
     public string? Error { get; }
     public Exception? Cause { get; }
-    public static ControlJobParseResult LegacySnapshot()
-    {
-        return new ControlJobParseResult(ControlJobKind.LegacySnapshot, "legacy-snapshot", null);
-    }
     public static ControlJobParseResult Invalid(string command, string error, Exception? cause = null)
     {
         return new ControlJobParseResult(ControlJobKind.Invalid, command, error, cause);
@@ -86,13 +104,6 @@ public sealed class ControlJobParseResult
         return new ControlJobParseResult(kind, command, null);
     }
 
-    private static ControlJobParseResult ViewsDump(IReadOnlyList<string> views)
-    {
-        var result = Create(ControlJobKind.ViewsDump, "views-dump");
-        result.Views = views;
-        return result;
-    }
-
     private static ControlJobParseResult ViewCommand(ControlJobKind kind, string command, string view)
     {
         var result = Create(kind, command);
@@ -100,17 +111,10 @@ public sealed class ControlJobParseResult
         return result;
     }
 
-    private static ControlJobParseResult ExportElementIds(
-        string command,
-        string? saveTo,
-        IReadOnlyList<string>? fields)
+    private static ControlJobParseResult Documents(bool includeLinked)
     {
-        var result = Create(ControlJobKind.ExportElementIds, command);
-        result.SaveTo = Normalize(saveTo);
-        // An empty list keeps the reader's default columns.
-        result.Fields = fields is null
-            ? Array.Empty<string>()
-            : fields.Where(field => !string.IsNullOrWhiteSpace(field)).Select(field => field.Trim()).ToList();
+        var result = Create(ControlJobKind.Documents, "documents");
+        result.IncludeLinked = includeLinked;
         return result;
     }
 
@@ -150,54 +154,122 @@ public sealed class ControlJobParseResult
         return result;
     }
 
+    private static ControlJobParseResult ExportElementIds(ControlJobContract job)
+    {
+        var result = Create(ControlJobKind.ExportElementIds, "export-element-ids");
+        result.Fields = job.Fields ?? [];
+        result.SaveTo = Normalize(job.SaveTo);
+        return result;
+    }
+
     private static string? Normalize(string? value)
     {
         return string.IsNullOrWhiteSpace(value) ? null : value!.Trim();
     }
-    public static ControlJobParseResult FromContract(ControlJobContract job)
+    public static ControlJobParseResult FromContract(ControlJobContract job, IReadOnlyCollection<string>? trustedNetworkRoots = null)
     {
         var command = Normalize(job.Command);
         if (command is null)
         {
             return new ControlJobParseResult(ControlJobKind.Invalid, "invalid", "The command field is required.")
             {
-                CorrelationId = job.CorrelationId
+                CorrelationId = job.CorrelationId,
+                ClientId = string.IsNullOrWhiteSpace(job.ClientId) ? "unknown" : job.ClientId!,
+                ClientName = string.IsNullOrWhiteSpace(job.ClientName) ? "unknown" : job.ClientName!
             };
         }
 
-        var views = NormalizeMany(job.Views);
         var view = Normalize(job.View);
         var categories = NormalizeMany(job.Categories);
         var result = command switch
         {
-            "views-dump" when views.Count == 0 => Invalid(command, "The views-dump command requires a non-empty views list."),
-            "views-dump" => ViewsDump(views),
             "ping" => Create(ControlJobKind.Ping, command),
+            "batch-supervisor-start" => Create(ControlJobKind.BatchSupervisorStart, command),
+            "batch-prepass" => Create(ControlJobKind.BatchPrePass, command),
+            "batch-open" => Create(ControlJobKind.BatchOpen, command),
+            "batch-snapshot" => ParseModelSnapshot(job, ControlJobKind.BatchSnapshot, command),
+            "batch-close" => Create(ControlJobKind.BatchClose, command),
+            "jobs" => Create(ControlJobKind.Jobs, command),
             "model-health" => Create(ControlJobKind.ModelHealth, command),
+            "model-snapshot" => ParseModelSnapshot(job),
             "links-status" => Create(ControlJobKind.LinksStatus, command),
             "shared-coordinates" => Create(ControlJobKind.SharedCoordinates, command),
             "parameter-fill-check" => ParseParameterFill(job),
             "document-info" => Create(ControlJobKind.DocumentInfo, command),
+            "documents" => Documents(job.IncludeLinked ?? false),
+            "ui-state" => Create(ControlJobKind.UiState, command),
             "list-views" => ListViews(job.ViewType, job.NameContains),
             "view-summary" => RequireView(ControlJobKind.ViewSummary, command, view),
+            "view-info" => RequireView(ControlJobKind.ViewInfo, command, view),
             "view-elements" => ParseViewElements(command, view, categories, job.Offset, job.Limit),
             "element-details" => ParseElementDetails(command, job.Id),
             "view-warnings" => RequireView(ControlJobKind.ViewWarnings, command, view),
+            "capture-elements" => ParseCaptureElements(job),
             "export-view" => ParseExportView(command, view, job.PixelSize, job.ZoomToFit),
-            "export-element-ids" => ExportElementIds(command, job.SaveTo, job.Fields),
+            "export-element-ids" => ExportElementIds(job),
+            "schedule-data" => view is null ? Invalid(command, "schedule is required.") : ParseScheduleData(job, view),
             "query-elements" => UniversalJobParser.ParseQuery(job),
             "aggregate-elements" => UniversalJobParser.ParseAggregate(job),
             "list-catalog" => UniversalJobParser.ParseCatalog(job),
             "list-warnings" => UniversalJobParser.ParseWarnings(job),
             "list-relations" => UniversalJobParser.ParseRelations(job),
-            _ when ActionJobParser.IsAction(command) => ActionJobParser.Parse(command, job),
+            "family-audit" => ParseFamilyAudit(job),
+            "nwc-settings-check" => ParseNwcSettingsCheck(job.SettingsXml, trustedNetworkRoots),
+            "compare-link-datums" => ParseCompareLinkDatums(job),
+            _ when ActionJobParser.IsAction(command) => ActionJobParser.Parse(command, job, trustedNetworkRoots),
             _ => Invalid(command, $"Unknown command: {command}.")
         };
         result.CorrelationId = job.CorrelationId;
+        result.JobId = job.JobId;
+        result.ClientId = string.IsNullOrWhiteSpace(job.ClientId) ? "unknown" : job.ClientId!;
+        result.ClientName = string.IsNullOrWhiteSpace(job.ClientName) ? "unknown" : job.ClientName!;
         result.CoordinatorJob.CorrelationId = job.CorrelationId;
-        result.TargetDocument = Normalize(job.TargetDocument);
+        if (command is "family-audit" or "nwc-settings-check" or "batch-supervisor-start" or "batch-prepass" or "batch-open" or "batch-snapshot" or "batch-close" or "model-snapshot") result.CoordinatorJob = job;
+        result.TargetDocument = command == "family-audit" ? null : Normalize(job.TargetDocument);
         result.TargetProcessId = job.TargetProcessId;
+        if (job.TargetProcessId is <= 0)
+            return Invalid(command, "targetProcessId must be a strict positive integer.");
         return result;
+    }
+
+    private static ControlJobParseResult ParseFamilyAudit(ControlJobContract job)
+    {
+        var parsed = ActionJobParser.Parse("family-audit", job);
+        if (parsed.Error is not null) return parsed;
+        var result = ControlJobParseResult.Create(ControlJobKind.FamilyAudit, "family-audit");
+        result.Action = parsed.Action;
+        return result;
+    }
+
+    private static ControlJobParseResult ParseNwcSettingsCheck(string? path, IReadOnlyCollection<string>? trustedNetworkRoots)
+    {
+        const string command = "nwc-settings-check";
+        try
+        {
+            NwcPathValidator.EnsureAbsoluteNoTraversal(path!, "settings_xml", trustedNetworkRoots);
+            if (!path!.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("settings_xml must have the .xml extension.");
+            return Create(ControlJobKind.NwcSettingsCheck, command);
+        }
+        catch (ArgumentException exception)
+        {
+            return Invalid(command, exception.Message);
+        }
+    }
+
+    private static ControlJobParseResult ParseCompareLinkDatums(ControlJobContract job)
+    {
+        const string command = "compare-link-datums";
+        try
+        {
+            var result = Create(ControlJobKind.CompareLinkDatums, command);
+            result.Action = new ActionJobContract { DatumOptions = ActionJobParser.ParseDatumOptions(job) };
+            return result;
+        }
+        catch (ArgumentException exception)
+        {
+            return Invalid(command, exception.Message);
+        }
     }
 
     private static ControlJobParseResult ParseParameterFill(ControlJobContract job)
@@ -225,6 +297,21 @@ public sealed class ControlJobParseResult
             SampleLimit = job.SampleLimit ?? 20,
             IncludeTypes = job.IncludeTypes ?? true
         };
+        return result;
+    }
+
+    private static ControlJobParseResult ParseModelSnapshot(ControlJobContract job,
+        ControlJobKind kind = ControlJobKind.ModelSnapshot, string command = "model-snapshot")
+    {
+        var rules = new List<ModelSnapshotParameterRule>();
+        foreach (var rule in job.ParameterRules ?? [])
+        {
+            if (rule is null || string.IsNullOrWhiteSpace(rule.Category) || string.IsNullOrWhiteSpace(rule.Parameter))
+                return Invalid(command, "Each parameterRules entry requires a non-blank category and parameter.");
+            rules.Add(new ModelSnapshotParameterRule { Category = rule.Category.Trim(), Parameter = rule.Parameter.Trim() });
+        }
+        var result = Create(kind, command);
+        result.ParameterRules = rules;
         return result;
     }
 
@@ -256,7 +343,7 @@ public sealed class ControlJobParseResult
 
         return resolvedLimit <= 0
             ? Invalid(command, "The limit must be greater than zero.")
-            : ViewElements(view, categories, resolvedOffset, resolvedLimit);
+            : ViewElements(view, categories, resolvedOffset, Math.Min(resolvedLimit, ControlJobParser.MaximumQueryLimit));
     }
 
     private static ControlJobParseResult ParseElementDetails(string command, long? id)
@@ -278,9 +365,40 @@ public sealed class ControlJobParseResult
         }
 
         var resolvedPixelSize = pixelSize ?? 1600;
-        return resolvedPixelSize is < 1 or > 4000
-            ? Invalid(command, "The pixelSize must be between 1 and 4000 pixels.")
+        return resolvedPixelSize is < ControlJobParser.MinPixelSize or > 4000
+            ? Invalid(command, "The pixelSize must be between 32 and 4000 pixels; Revit rejects smaller images.")
             : ExportView(view, resolvedPixelSize, zoomToFit ?? true);
+    }
+
+    private static ControlJobParseResult ParseCaptureElements(ControlJobContract job)
+    {
+        const string command = "capture-elements";
+        if (job.ElementIds is null || job.ElementIds.Count is < 1 or > 500 || job.ElementIds.Any(id => id <= 0))
+            return Invalid(command, "elementIds requires 1 to 500 positive integer IDs.");
+        if (job.PixelSize is < ControlJobParser.MinPixelSize or > 4000)
+            return Invalid(command, "pixelSize must be between 32 and 4000 pixels; Revit rejects smaller images.");
+        var padding = job.PaddingMm ?? 1500;
+        if (double.IsNaN(padding) || double.IsInfinity(padding) || padding is < 0 or > 20000)
+            return Invalid(command, "paddingMm must be between 0 and 20000.");
+        var mode = job.Mode ?? "3d";
+        if (mode is not ("3d" or "plan"))
+            return Invalid(command, "mode must be 3d or plan.");
+        var result = Create(ControlJobKind.CaptureElements, command);
+        result.ElementIds = job.ElementIds.Distinct().ToList();
+        result.PixelSize = job.PixelSize ?? 1600;
+        result.PaddingMm = padding;
+        result.Mode = mode;
+        return result;
+    }
+
+    private static ControlJobParseResult ParseScheduleData(ControlJobContract job, string schedule)
+    {
+        if (job.Offset is < 0 || job.Limit is < 1 or > 5000)
+            return Invalid("schedule-data", "offset must be non-negative and max_rows must be 1 to 5000.");
+        var result = ViewCommand(ControlJobKind.ScheduleData, "schedule-data", schedule);
+        result.Offset = job.Offset ?? 0;
+        result.Limit = job.Limit ?? 500;
+        return result;
     }
 
     private static IReadOnlyList<string> NormalizeMany(IEnumerable<string>? values)
@@ -296,35 +414,46 @@ public sealed class ControlJobParseResult
 
 public static class ControlJobParser
 {
-    public static ControlJobParseResult Parse(string? content)
+    private static readonly DataContractJsonSerializer JobSerializer = new(typeof(ControlJobContract),
+        new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true });
+    private static readonly DataContractJsonSerializer EnvelopeSerializer = new(typeof(JobEnvelope));
+    private static readonly Regex WorksetsProperty = new("\"worksets\"(?=\\s*:)", RegexOptions.Compiled);
+
+    internal const int MaximumQueryLimit = 5000;
+    internal const int MinPixelSize = 32;
+    public static ControlJobParseResult Parse(string? content, IReadOnlyCollection<string>? trustedNetworkRoots = null)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
-            return ControlJobParseResult.LegacySnapshot();
+            return ControlJobParseResult.Invalid("invalid", "The job JSON is empty.");
         }
 
+        var isNwcExport = Regex.IsMatch(content, "\"command\"\\s*:\\s*\"export-nwc\"");
         try
         {
-            var serializer = new DataContractJsonSerializer(typeof(ControlJobContract));
+            if (isNwcExport)
+                content = Regex.Replace(content, "\"parameters\"(?=\\s*:)", "\"nwcParameters\"");
+            if (Regex.IsMatch(content, "\"command\"\\s*:\\s*\"set-view-visibility\""))
+                content = WorksetsProperty.Replace(content, "\"visibilityWorksets\"");
             using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
-            var job = serializer.ReadObject(stream) as ControlJobContract;
+            var job = JobSerializer.ReadObject(stream) as ControlJobContract;
             return job is null
                 ? ControlJobParseResult.Invalid("invalid", "The job JSON is empty.")
-                : ControlJobParseResult.FromContract(job);
+                : ControlJobParseResult.FromContract(job, trustedNetworkRoots);
         }
         catch (Exception exception)
         {
             var result = ControlJobParseResult.Invalid(
                 "invalid",
-                $"Failed to parse the job JSON: {exception.Message}",
-                exception);
+                isNwcExport ? "Failed to parse the export-nwc job JSON." : $"Failed to parse the job JSON: {exception.Message}",
+                isNwcExport ? null : exception);
             try
             {
                 using var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
-                var envelope = new DataContractJsonSerializer(typeof(JobEnvelope)).ReadObject(stream) as JobEnvelope;
+                var envelope = EnvelopeSerializer.ReadObject(stream) as JobEnvelope;
                 if (envelope is not null)
                 {
-                    result = ControlJobParseResult.Invalid(envelope.Command ?? "invalid", result.Error!, exception);
+                    result = ControlJobParseResult.Invalid(envelope.Command ?? "invalid", result.Error!, isNwcExport ? null : exception);
                     result.CorrelationId = envelope.CorrelationId;
                 }
             }
@@ -350,10 +479,24 @@ public static class ControlJobParser
 [DataContract]
 public sealed partial class ControlJobContract
 {
+    [DataMember(Name = "runId", EmitDefaultValue = false)]
+    public string? RunId { get; set; }
+    [DataMember(Name = "jobId", EmitDefaultValue = false)]
+    public string? JobId { get; set; }
+    [DataMember(Name = "clientId", EmitDefaultValue = false)]
+    public string? ClientId { get; set; }
+    [DataMember(Name = "clientName", EmitDefaultValue = false)]
+    public string? ClientName { get; set; }
     [DataMember(Name = "correlationId", EmitDefaultValue = false)]
     public string? CorrelationId { get; set; }
     [DataMember(Name = "parameters", EmitDefaultValue = false)]
     public List<string>? Parameters { get; set; }
+    [DataMember(Name = "parameterRules", EmitDefaultValue = false)]
+    public List<ModelSnapshotParameterRule?>? ParameterRules { get; set; }
+    [DataMember(Name = "savedInYear", EmitDefaultValue = false)]
+    public int? SavedInYear { get; set; }
+    [DataMember(Name = "upgradedInMemory", EmitDefaultValue = false)]
+    public bool? UpgradedInMemory { get; set; }
     [DataMember(Name = "sampleLimit", EmitDefaultValue = false)]
     public int? SampleLimit { get; set; }
     [DataMember(Name = "includeTypes", EmitDefaultValue = false)]
@@ -364,6 +507,12 @@ public sealed partial class ControlJobContract
     public List<string>? Views { get; set; }
     [DataMember(Name = "view")]
     public string? View { get; set; }
+    [DataMember(Name = "format")] public string? Format { get; set; }
+    [DataMember(Name = "sheets")] public List<string>? Sheets { get; set; }
+    [DataMember(Name = "sheetSet")] public string? SheetSet { get; set; }
+    [DataMember(Name = "allSheets")] public bool? AllSheets { get; set; }
+    [DataMember(Name = "folder")] public string? Folder { get; set; }
+    [DataMember(Name = "options")] public FileExportOptions? ExportOptions { get; set; }
     [DataMember(Name = "viewType")]
     public string? ViewType { get; set; }
     [DataMember(Name = "nameContains")]
@@ -372,6 +521,8 @@ public sealed partial class ControlJobContract
     public List<string>? Categories { get; set; }
     [DataMember(Name = "offset")]
     public int? Offset { get; set; }
+    [DataMember(Name = "saveTo")] public string? SaveTo { get; set; }
+
     [DataMember(Name = "limit")]
     public int? Limit { get; set; }
     [DataMember(Name = "id")]
@@ -412,16 +563,22 @@ public sealed partial class ControlJobContract
     public long? SourceId { get; set; }
     [DataMember(Name = "sourceName")]
     public string? SourceName { get; set; }
+    [DataMember(Name = "paddingMm")]
+    public double? PaddingMm { get; set; }
+
     [DataMember(Name = "pixelSize")]
     public int? PixelSize { get; set; }
     [DataMember(Name = "zoomToFit")]
     public bool? ZoomToFit { get; set; }
-    [DataMember(Name = "saveTo")]
-    public string? SaveTo { get; set; }
     [DataMember(Name = "targetDocument")]
     public string? TargetDocument { get; set; }
     [DataMember(Name = "targetProcessId")]
     public int? TargetProcessId { get; set; }
+    [DataMember(Name = "includeLinked")]
+    public bool? IncludeLinked { get; set; }
+    // The fork's own action inputs travel in one bag, so a fork action adds inputs without an upstream field (adr/0005).
+    [DataMember(Name = "fork")]
+    public Dictionary<string, object>? Fork { get; set; }
 }
 
 [DataContract]

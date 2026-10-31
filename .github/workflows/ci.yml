@@ -9,13 +9,27 @@ permissions:
   contents: read
 
 jobs:
+  # Branch protection requires CI / test.
+  test:
+    needs: [bundle, python, core-tests, addin-build, installer]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require all CI jobs to pass
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")'
+
   bundle:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22'
       - name: Install MCPB CLI
@@ -33,74 +47,212 @@ jobs:
 
           const { getMcpConfigForManifest } = await import(pathToFileURL(`${process.env.RUNNER_TEMP}/mcpb/node_modules/@anthropic-ai/mcpb/dist/shared/config.js`));
           const manifest = JSON.parse(readFileSync('bundle/manifest.json', 'utf8'));
-          // The bundle ships every tool the server exposes. The site documents the read tools in
-          // docs/tools.md and the action tools in docs/actions.md, so both pages count.
-          const documentedTools = ['docs/tools.md', 'docs/actions.md']
-            .flatMap(file => [...readFileSync(file, 'utf8').matchAll(/^\| `(revit_\w+)`/gm)].map(match => match[1]))
-            .sort();
+          const documentedTools = [...new Set(['docs/tools.md', 'docs/actions.md'].flatMap(path =>
+            [...readFileSync(path, 'utf8').matchAll(/^\| `(revit_\w+)`/gm)].map(match => match[1])
+          ))].sort();
           assert.deepEqual(manifest.tools.map(tool => tool.name).sort(), documentedTools);
           assert.equal(manifest.version, '0.0.0');
           assert.equal(manifest.user_config.REVIT_MCP_REDACT_PATHS.default, true);
-          assert.equal(manifest.user_config.REVIT_MCP_ALLOW_WRITE.default, false);
+          assert.equal(manifest.user_config.REVIT_MCP_READ_ONLY.default, true);
           assert.equal(manifest.user_config.REVIT_MCP_TOKEN.sensitive, true);
-          for (const userConfig of [{}, ...[true, false].flatMap(redact => [true, false].map(write => ({
-            REVIT_MCP_REDACT_PATHS: redact, REVIT_MCP_ALLOW_WRITE: write,
+          const wheel = `https://github.com/vibe-bimer/revit-model-mcp/releases/download/v${manifest.version}/revit_model_mcp-${manifest.version}-py3-none-any.whl`;
+          // Both projects publish the same version numbers, so any PyPI spec here would install
+          // upstream's server. The launcher must name this fork's own release wheel.
+          assert.ok(!/revit-model-mcp\s*(?:[=<>^~!]=?|[<>])/.test(JSON.stringify(manifest.server)), 'bundle launcher must not resolve a PyPI spec');
+          assert.equal(manifest.server.mcp_config.command, 'uvx');
+          assert.deepEqual(manifest.server.mcp_config.args, ['--from', wheel, 'revit-model-mcp']);
+          assert.equal(manifest.server.mcp_config.platform_overrides, undefined);
+          for (const userConfig of [{}, ...[true, false].flatMap(redact => [true, false].map(readOnly => ({
+            REVIT_MCP_REDACT_PATHS: redact, REVIT_MCP_READ_ONLY: readOnly,
             REVIT_MCP_HOST: 'ssh:test-workstation', REVIT_MCP_TOKEN: 'test-token',
           })))]) {
             const config = await getMcpConfigForManifest({manifest, userConfig, extensionPath: '/tmp/bundle', systemDirs: {}, pathSeparator: '/'});
             assert.equal(config.command, 'uvx');
-            assert.deepEqual(config.args, [
-              '--from',
-              'https://github.com/vibe-bimer/revit-model-mcp/releases/download/v0.0.0/revit_model_mcp-0.0.0-py3-none-any.whl',
-              'revit-model-mcp',
-            ]);
+            assert.deepEqual(config.args, ['--from', wheel, 'revit-model-mcp']);
             const expected = {
               REVIT_MCP_REDACT_PATHS: String(userConfig.REVIT_MCP_REDACT_PATHS ?? true),
-              REVIT_MCP_ALLOW_WRITE: String(userConfig.REVIT_MCP_ALLOW_WRITE ?? false),
+              REVIT_MCP_READ_ONLY: String(userConfig.REVIT_MCP_READ_ONLY ?? true),
               REVIT_MCP_HOST: userConfig.REVIT_MCP_HOST ?? 'local',
               REVIT_MCP_TOKEN: userConfig.REVIT_MCP_TOKEN ?? '',
             };
             assert.deepEqual(config.env, expected);
           }
-          console.log('PASS: 19 documented tools, default settings, all boolean combinations and host/token forwarding');
+          console.log(`PASS: ${documentedTools.length} documented tools, default settings, all boolean combinations and host/token forwarding`);
           JAVASCRIPT
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: bundle
           path: ${{ runner.temp }}/revit-model-mcp.mcpb
           if-no-files-found: error
 
-  test:
-    runs-on: windows-latest
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: server
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The fork budget test diffs the pinned base against HEAD, so the
+          # whole history has to be present; the default depth of 1 hides it.
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          version: '0.12.22'
+          enable-cache: true
+          cache-dependency-glob: server/uv.lock
+      - name: Check the fork identity
+        working-directory: .
+        run: uv run python tools/check_fork_identity.py
+      - name: Test server
+        run: uv run --frozen --with pytest==9.1.1 pytest -q
+      - name: Check Python
+        run: uvx ruff==0.16.10 check .
+      - name: Verify Python formatting
+        run: uvx ruff==0.16.10 format --check .
+      - name: Check Docker requirements match the lock file
+        working-directory: server
+        shell: bash
+        run: |
+          uv export --frozen --no-dev --no-emit-project --no-header --quiet -o "$RUNNER_TEMP/requirements.docker.txt"
+          diff -u --strip-trailing-cr requirements.docker.txt "$RUNNER_TEMP/requirements.docker.txt"
+      - name: Build Python package
+        run: |
+          uv build
+          uvx twine==7.0.0 check dist/*
+
+  core-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
-      - name: Build Revit 2026
-        run: dotnet build src/RevitModelMcp.Addin -c Release.R26 -p:DeployAddin=false
-      - name: Build Revit 2020
-        run: dotnet build src/RevitModelMcp.Addin -c Release.R20 -p:DeployAddin=false
-      - name: Build Revit 2022
-        run: dotnet build src/RevitModelMcp.Addin -c Release.R22 -p:DeployAddin=false
-      - name: Build Revit 2027
-        run: dotnet build src/RevitModelMcp.Addin -c Release.R27 -p:DeployAddin=false
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/packages*.lock.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - name: Restore tests with lock
+        run: dotnet restore tests/RevitModelMcp.Core.Tests/RevitModelMcp.Core.Tests.csproj --locked-mode
       - name: Test core
-        run: dotnet test --project tests/RevitModelMcp.Core.Tests/RevitModelMcp.Core.Tests.csproj
-      - uses: actions/setup-python@v7
+        run: dotnet test --project tests/RevitModelMcp.Core.Tests/RevitModelMcp.Core.Tests.csproj --no-restore
+
+  addin-build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        year: ['22', '23', '24', '25', '26', '27']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/packages*.lock.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - name: Restore Revit API reference pin helper with lock
+        run: dotnet restore build/RevitApiReferencePin/RevitApiReferencePin.csproj --locked-mode -p:Configuration=Release
+      - name: Restore batch supervisor with lock
+        run: dotnet restore src/RevitModelMcp.BatchSupervisor/RevitModelMcp.BatchSupervisor.csproj --locked-mode -p:Configuration=Release.R26
+      - name: Resolve development version
+        shell: pwsh
+        run: |
+          $match = Select-String -Path server/pyproject.toml -Pattern '^version = "(\d+\.\d+\.\d+)"' | Select-Object -First 1
+          if (!$match) { throw 'server/pyproject.toml has no plain MAJOR.MINOR.PATCH version' }
+          "CI_VERSION=$($match.Matches[0].Groups[1].Value)-dev" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Build add-in and verify metadata
+        shell: pwsh
+        run: |
+          $year = '${{ matrix.year }}'
+          dotnet restore src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj --locked-mode "-p:Configuration=Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION"
+          if ($LASTEXITCODE -ne 0) { throw "R$year locked restore failed" }
+          dotnet build src/RevitModelMcp.Addin -c "Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION" -p:IsRepackable=true --no-restore
+          if ($LASTEXITCODE -ne 0) { throw "R$year build or AssemblyRef verification failed" }
+          $assemblyVersion = [System.Reflection.AssemblyName]::GetAssemblyName("src/RevitModelMcp.Addin/bin/Release.R$year/RevitModelMcp.dll").Version.ToString(3)
+          $expectedVersion = $env:CI_VERSION.Split('-')[0]
+          if ($assemblyVersion -ne $expectedVersion) { throw "R$year assembly version $assemblyVersion differs from $expectedVersion" }
+          $product = (Get-Item "src/RevitModelMcp.Addin/bin/Release.R$year/RevitModelMcp.dll").VersionInfo.ProductVersion
+          if (!$product.StartsWith("$env:CI_VERSION+")) { throw "R$year product version $product does not start with $env:CI_VERSION+" }
+          foreach ($name in 'RevitModelMcp.dll', 'RevitModelMcp.Updater.exe', 'RevitModelMcp.BatchSupervisor.exe', 'RevitModelMcp.Core.dll') {
+            $productName = (Get-Item "src/RevitModelMcp.Addin/bin/Release.R$year/$name").VersionInfo.ProductName
+            if ($productName -ne 'Model MCP') { throw "R$year $name has product name '$productName', expected 'Model MCP'" }
+          }
+
+  installer:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/packages*.lock.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
-      - name: Install uv
-        run: pip install uv
-      - name: Test server
-        working-directory: server
-        run: uv run --with pytest pytest -q
+          cache: pip
+          cache-dependency-path: |
+            build/server-exe/requirements-build.txt
+            server/requirements.docker.txt
+      - name: Restore Revit API reference pin helper with lock
+        run: dotnet restore build/RevitApiReferencePin/RevitApiReferencePin.csproj --locked-mode -p:Configuration=Release
+      - name: Restore batch supervisor with lock
+        run: dotnet restore src/RevitModelMcp.BatchSupervisor/RevitModelMcp.BatchSupervisor.csproj --locked-mode -p:Configuration=Release.R26
+      - name: Resolve development version
+        shell: pwsh
+        run: |
+          $match = Select-String -Path server/pyproject.toml -Pattern '^version = "(\d+\.\d+\.\d+)"' | Select-Object -First 1
+          if (!$match) { throw 'server/pyproject.toml has no plain MAJOR.MINOR.PATCH version' }
+          "CI_VERSION=$($match.Matches[0].Groups[1].Value)-dev" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Build installer Revit versions
+        shell: pwsh
+        run: |
+          foreach ($year in '22', '23', '24', '25', '26', '27') {
+            dotnet restore src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj --locked-mode "-p:Configuration=Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION"
+            if ($LASTEXITCODE -ne 0) { throw "R$year locked restore failed" }
+            dotnet build src/RevitModelMcp.Addin -c "Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION" -p:IsRepackable=true --no-restore
+            if ($LASTEXITCODE -ne 0) { throw "R$year build or AssemblyRef verification failed" }
+            $assemblyVersion = [System.Reflection.AssemblyName]::GetAssemblyName("src/RevitModelMcp.Addin/bin/Release.R$year/RevitModelMcp.dll").Version.ToString(3)
+            $expectedVersion = $env:CI_VERSION.Split('-')[0]
+            if ($assemblyVersion -ne $expectedVersion) { throw "R$year assembly version $assemblyVersion differs from $expectedVersion" }
+            $product = (Get-Item "src/RevitModelMcp.Addin/bin/Release.R$year/RevitModelMcp.dll").VersionInfo.ProductVersion
+            if (!$product.StartsWith("$env:CI_VERSION+")) { throw "R$year product version $product does not start with $env:CI_VERSION+" }
+            foreach ($name in 'RevitModelMcp.dll', 'RevitModelMcp.Updater.exe', 'RevitModelMcp.BatchSupervisor.exe', 'RevitModelMcp.Core.dll') {
+              $productName = (Get-Item "src/RevitModelMcp.Addin/bin/Release.R$year/$name").VersionInfo.ProductName
+              if ($productName -ne 'Model MCP') { throw "R$year $name has product name '$productName', expected 'Model MCP'" }
+            }
+          }
+      - name: Restore installer projects with locks
+        shell: pwsh
+        run: |
+          dotnet restore build/Build.csproj --locked-mode
+          if ($LASTEXITCODE -ne 0) { throw 'Build project locked restore failed' }
+          dotnet restore build/install/Installer.csproj --locked-mode -p:Configuration=Release
+          if ($LASTEXITCODE -ne 0) { throw 'Installer locked restore failed' }
+      - name: Build bundled server executable
+        run: python build/server-exe/build.py
+      - name: Smoke-test bundled server executable
+        run: python build/server-exe/smoke.py
       - name: Build installers
         shell: pwsh
         env:
-          Build__Version: 0.0.0-ci
+          Build__Version: ${{ env.CI_VERSION }}
         run: |
-          dotnet run --project build -- pack --no-build
+          dotnet run --no-restore --project build -- pack --no-build
           if ($LASTEXITCODE -ne 0) { throw 'Installer build failed' }
           $installers = @(Get-ChildItem output/*.msi)
           if ($installers.Count -ne 2) { throw "Expected two MSIs, found $($installers.Count)" }
@@ -114,29 +266,43 @@ jobs:
             $process = Start-Process msiexec.exe -ArgumentList "/a `"$($msi.FullName)`" /qn /norestart TARGETDIR=`"$target`" /l*v `"$log`"" -Wait -PassThru
             if ($process.ExitCode -ne 0) { throw "MSI extraction failed: $($process.ExitCode)" }
             $files = @(Get-ChildItem $target -Recurse -File)
-            if ($files | Where-Object Name -Like 'RevitAPI*.dll') { throw 'Revit API binaries must not be distributed' }
+            $blocked = @($files | Where-Object {
+              $_.Name -match '^(AdWindows|UIFramework|RevitAPI|RevitNET).*\.dll$' -or
+              ($_.Extension -eq '.dll' -and $_.VersionInfo.CompanyName -match 'Autodesk')
+            })
+            if ($blocked.Count) { throw "Autodesk binaries must not be distributed: $($blocked.Name -join ', ')" }
+            $servers = @($files | Where-Object Name -EQ 'revit-model-mcp.exe')
+            if ($servers.Count -ne 1) { throw "Expected one bundled server executable in $($msi.Name), found $($servers.Count)" }
+            if (!(Test-Path (Join-Path $servers[0].DirectoryName 'licenses/PYTHON-LICENSE.txt'))) { throw "Missing Python license in $($msi.Name)" }
             $manifests = @($files | Where-Object Name -EQ 'RevitModelMcp.addin')
-            if ($manifests.Count -ne 4) { throw 'Unexpected Revit year count in MSI' }
-            foreach ($year in '20', '22', '26', '27') {
+            if ($manifests.Count -ne 6) { throw 'Unexpected Revit year count in MSI' }
+            foreach ($year in '22', '23', '24', '25', '26', '27') {
               $manifest = @($manifests | Where-Object { $_.Directory.Name -eq "20$year" })
               if ($manifest.Count -ne 1) { throw "Missing or duplicate R$year manifest in MSI" }
+              [xml]$manifestXml = Get-Content -LiteralPath $manifest[0].FullName
+              if (($year -in '26', '27') -ne ($null -ne $manifestXml.SelectSingleNode('/RevitAddIns/ManifestSettings'))) {
+                throw "Wrong ManifestSettings in R$year MSI manifest"
+              }
               if (!(Test-Path "$($manifest[0].DirectoryName)/RevitModelMcp/RevitModelMcp.dll")) { throw "Missing R$year assembly in MSI" }
+              if (!(Test-Path "$($manifest[0].DirectoryName)/RevitModelMcp/RevitModelMcp.Updater.exe")) { throw "Missing R$year updater in MSI" }
+              if (!(Test-Path "$($manifest[0].DirectoryName)/RevitModelMcp/RevitModelMcp.BatchSupervisor.exe")) { throw "Missing R$year batch supervisor in MSI" }
+              if (!(Test-Path "$($manifest[0].DirectoryName)/RevitModelMcp/RevitModelMcp.Core.dll")) { throw "Missing R$year supervisor Core dependency in MSI" }
               Write-Host "ASSERT: $($msi.Name) contains R$year manifest and assembly"
             }
-            Write-Host "ASSERT: $($msi.Name) contains no RevitAPI DLLs"
+            Write-Host "ASSERT: $($msi.Name) contains no Autodesk DLLs"
           }
       - name: Smoke test single-user MSI
         shell: pwsh
         run: |
           $msi = (Get-ChildItem output/*-SingleUser.msi).FullName
-          $roots = @("$env:APPDATA/Autodesk/Revit/Addins/2020", "$env:APPDATA/Autodesk/Revit/Addins/2022", "$env:APPDATA/Autodesk/Revit/Addins/2026", "$env:APPDATA/Autodesk/Revit/Addins/2027")
+          $roots = @("$env:APPDATA/Autodesk/Revit/Addins/2022", "$env:APPDATA/Autodesk/Revit/Addins/2026", "$env:APPDATA/Autodesk/Revit/Addins/2027")
           $log = "$env:RUNNER_TEMP/mcp-single-install.log"
           try {
             $process = Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart /l*v `"$log`"" -Wait -PassThru
             if ($process.ExitCode -ne 0) { throw "SingleUser install failed: $($process.ExitCode)" }
             Write-Host 'ASSERT: SingleUser install exit code 0'
             foreach ($root in $roots) {
-              foreach ($relative in 'RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll') {
+              foreach ($relative in 'RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll', 'RevitModelMcp/RevitModelMcp.Updater.exe', 'RevitModelMcp/RevitModelMcp.BatchSupervisor.exe', 'RevitModelMcp/RevitModelMcp.Core.dll') {
                 if (!(Test-Path "$root/$relative")) { throw "Missing installed file: $root/$relative" }
                 Write-Host "ASSERT: installed $root/$relative"
               }
@@ -147,23 +313,60 @@ jobs:
             Write-Host 'ASSERT: SingleUser uninstall exit code 0'
           }
           foreach ($root in $roots) {
-            foreach ($relative in 'RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll') {
+            foreach ($relative in 'RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll', 'RevitModelMcp/RevitModelMcp.Updater.exe', 'RevitModelMcp/RevitModelMcp.BatchSupervisor.exe', 'RevitModelMcp/RevitModelMcp.Core.dll') {
               if (Test-Path "$root/$relative") { throw "File remains after uninstall: $root/$relative" }
               Write-Host "ASSERT: removed $root/$relative"
             }
+          }
+      - name: Smoke test MSI over developer build
+        shell: pwsh
+        run: |
+          $msi = (Get-ChildItem output/*-SingleUser.msi).FullName
+          $root = "$env:APPDATA/Autodesk/Revit/Addins/2026"
+          $folder = Join-Path $root 'RevitModelMcp'
+          $source = Join-Path $env:RUNNER_TEMP 'DevBuild.cs'
+          Set-Content -LiteralPath $source -Value '[assembly: System.Reflection.AssemblyVersion("9.0.0.0")] [assembly: System.Reflection.AssemblyFileVersion("9.0.0.0")] public class DevBuild { }'
+          $devDll = Join-Path $env:RUNNER_TEMP 'DevBuild.dll'
+          # Windows PowerShell can compile to a file; PowerShell 7 cannot.
+          powershell.exe -NoProfile -Command "Add-Type -Path '$source' -OutputAssembly '$devDll'"
+          if ($LASTEXITCODE -ne 0 -or !(Test-Path $devDll)) { throw 'Could not compile the fake developer assembly' }
+          New-Item -ItemType Directory -Force $folder | Out-Null
+          $dlls = 'RevitModelMcp.dll', 'RevitModelMcp.Core.dll'
+          foreach ($name in $dlls) { Copy-Item $devDll (Join-Path $folder $name) }
+          $stale = '<?xml version="1.0" encoding="utf-8"?><RevitAddIns><AddIn Type="Application"><Name>Stale</Name><Assembly>C:\old\dev\RevitModelMcp.dll</Assembly></AddIn></RevitAddIns>'
+          Set-Content -LiteralPath (Join-Path $root 'RevitModelMcp.addin') -Value $stale
+          try {
+            $log = "$env:RUNNER_TEMP/mcp-dev-over-install.log"
+            $process = Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart /l*v `"$log`"" -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "Install over developer build failed: $($process.ExitCode)" }
+            foreach ($name in $dlls) {
+              $installed = Join-Path $folder $name
+              $version = (Get-Item $installed).VersionInfo.FileVersion
+              if ($version -eq '9.0.0.0') { throw "$name was kept at developer version $version" }
+              $built = (Get-FileHash "src/RevitModelMcp.Addin/bin/Release.R26/$name" -Algorithm SHA256).Hash
+              if ($built -ne (Get-FileHash $installed -Algorithm SHA256).Hash) { throw "Installed $name does not match the release build" }
+              Write-Host "ASSERT: $name replaced by the release build (was 9.0.0.0, now $version)"
+            }
+            $manifestText = Get-Content -Raw (Join-Path $root 'RevitModelMcp.addin')
+            if ($manifestText -match 'C:\\old\\dev' -or $manifestText -match 'Stale') { throw 'Stale manifest was kept' }
+            Write-Host 'ASSERT: stale manifest replaced'
+          } finally {
+            $process = Start-Process msiexec.exe -ArgumentList "/x `"$msi`" /qn /norestart /l*v `"$env:RUNNER_TEMP/mcp-dev-over-uninstall.log`"" -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "Uninstall after developer build test failed: $($process.ExitCode)" }
+            Write-Host 'ASSERT: uninstall after developer build test exit code 0'
           }
       - name: Smoke test multi-user MSI
         shell: pwsh
         run: |
           $msi = (Get-ChildItem output/*-MultiUser.msi).FullName
-          $roots = @("$env:ProgramData/Autodesk/Revit/Addins/2020", "$env:ProgramData/Autodesk/Revit/Addins/2022", "$env:ProgramData/Autodesk/Revit/Addins/2026", "$env:ProgramFiles/Autodesk/Revit/Addins/2027")
+          $roots = @("$env:ProgramData/Autodesk/Revit/Addins/2022", "$env:ProgramData/Autodesk/Revit/Addins/2026", "$env:ProgramFiles/Autodesk/Revit/Addins/2027")
           $log = "$env:RUNNER_TEMP/mcp-multi-install.log"
           try {
             $process = Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart /l*v `"$log`"" -Wait -PassThru
             if ($process.ExitCode -ne 0) { throw "MultiUser install failed: $($process.ExitCode)" }
             Write-Host 'ASSERT: MultiUser install exit code 0'
             foreach ($root in $roots) {
-              foreach ($relative in 'RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll') {
+              foreach ($relative in 'RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll', 'RevitModelMcp/RevitModelMcp.Updater.exe', 'RevitModelMcp/RevitModelMcp.BatchSupervisor.exe', 'RevitModelMcp/RevitModelMcp.Core.dll') {
                 if (!(Test-Path "$root/$relative")) { throw "Missing installed file: $root/$relative" }
                 Write-Host "ASSERT: installed $root/$relative"
               }
@@ -174,73 +377,248 @@ jobs:
             Write-Host 'ASSERT: MultiUser uninstall exit code 0'
           }
           foreach ($root in $roots) {
-            foreach ($relative in 'RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll') {
+            foreach ($relative in 'RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll', 'RevitModelMcp/RevitModelMcp.Updater.exe', 'RevitModelMcp/RevitModelMcp.BatchSupervisor.exe', 'RevitModelMcp/RevitModelMcp.Core.dll') {
               if (Test-Path "$root/$relative") { throw "File remains after uninstall: $root/$relative" }
               Write-Host "ASSERT: removed $root/$relative"
             }
           }
+      - name: Smoke test scope conflict
+        shell: pwsh
+        run: |
+          $single = (Get-ChildItem output/*-SingleUser.msi).FullName
+          $multi = (Get-ChildItem output/*-MultiUser.msi).FullName
+          $machineAddin = "$env:ProgramData/Autodesk/Revit/Addins/2022/RevitModelMcp.addin"
+          $userAddin = "$env:APPDATA/Autodesk/Revit/Addins/2022/RevitModelMcp.addin"
+          $installed = $false
+          try {
+            $process = Start-Process msiexec.exe -ArgumentList "/i `"$single`" /qn /norestart /l*v `"$env:RUNNER_TEMP/mcp-conflict-single-install.log`"" -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "SingleUser install failed: $($process.ExitCode)" }
+            $installed = $true
+            Write-Host 'ASSERT: SingleUser install exit code 0'
+            $process = Start-Process msiexec.exe -ArgumentList "/i `"$multi`" /qn /norestart /l*v `"$env:RUNNER_TEMP/mcp-conflict-multi-refused.log`"" -Wait -PassThru
+            if ($process.ExitCode -ne 1603) { throw "MultiUser install next to SingleUser returned $($process.ExitCode), expected 1603" }
+            Write-Host 'ASSERT: MultiUser install refused with exit code 1603'
+            if (!(Select-String -Path "$env:RUNNER_TEMP/mcp-conflict-multi-refused.log" -SimpleMatch 'already installed for this user' -Quiet)) { throw 'MultiUser refusal text missing from log' }
+            Write-Host 'ASSERT: MultiUser refusal text logged'
+            if (Test-Path $machineAddin) { throw "Refused MultiUser install created $machineAddin" }
+            Write-Host "ASSERT: no $machineAddin"
+          } finally {
+            if ($installed) {
+              $process = Start-Process msiexec.exe -ArgumentList "/x `"$single`" /qn /norestart /l*v `"$env:RUNNER_TEMP/mcp-conflict-single-uninstall.log`"" -Wait -PassThru
+              if ($process.ExitCode -ne 0) { throw "SingleUser uninstall failed: $($process.ExitCode)" }
+              Write-Host 'ASSERT: SingleUser uninstall exit code 0'
+            }
+          }
+          $installed = $false
+          try {
+            $process = Start-Process msiexec.exe -ArgumentList "/i `"$multi`" /qn /norestart /l*v `"$env:RUNNER_TEMP/mcp-conflict-multi-install.log`"" -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "MultiUser install failed: $($process.ExitCode)" }
+            $installed = $true
+            Write-Host 'ASSERT: MultiUser install exit code 0'
+            $process = Start-Process msiexec.exe -ArgumentList "/i `"$single`" /qn /norestart /l*v `"$env:RUNNER_TEMP/mcp-conflict-single-refused.log`"" -Wait -PassThru
+            if ($process.ExitCode -ne 1603) { throw "SingleUser install next to MultiUser returned $($process.ExitCode), expected 1603" }
+            Write-Host 'ASSERT: SingleUser install refused with exit code 1603'
+            if (!(Select-String -Path "$env:RUNNER_TEMP/mcp-conflict-single-refused.log" -SimpleMatch 'already installed on this computer' -Quiet)) { throw 'SingleUser refusal text missing from log' }
+            Write-Host 'ASSERT: SingleUser refusal text logged'
+            if (Test-Path $userAddin) { throw "Refused SingleUser install created $userAddin" }
+            Write-Host "ASSERT: no $userAddin"
+          } finally {
+            if ($installed) {
+              $process = Start-Process msiexec.exe -ArgumentList "/x `"$multi`" /qn /norestart /l*v `"$env:RUNNER_TEMP/mcp-conflict-multi-uninstall.log`"" -Wait -PassThru
+              if ($process.ExitCode -ne 0) { throw "MultiUser uninstall failed: $($process.ExitCode)" }
+              Write-Host 'ASSERT: MultiUser uninstall exit code 0'
+            }
+          }
+      - name: Smoke test same-version MSI upgrade
+        shell: pwsh
+        env:
+          Build__Version: ${{ env.CI_VERSION }}
+        run: |
+          $buildA = Join-Path $env:RUNNER_TEMP 'msi-a'
+          $buildB = Join-Path $env:RUNNER_TEMP 'msi-b'
+          New-Item -ItemType Directory -Force $buildA, $buildB | Out-Null
+          Copy-Item output/*.msi $buildA
+          $marker = [guid]::NewGuid().ToString()
+          foreach ($dir in Get-ChildItem src/RevitModelMcp.Addin/bin -Directory -Filter 'Release.R*') {
+            Set-Content -LiteralPath (Join-Path $dir.FullName 'upgrade-marker.txt') -Value $marker -NoNewline
+          }
+          dotnet run --no-restore --project build -- pack --no-build
+          if ($LASTEXITCODE -ne 0) { throw 'Second installer build failed' }
+          Copy-Item output/*.msi $buildB
+          Copy-Item "$buildB/*.msi" output -Force
+          if (@(Get-ChildItem output/*.msi).Count -ne 2) { throw 'Expected two MSIs in output after rebuild' }
+
+          $installer = New-Object -ComObject WindowsInstaller.Installer
+          function Get-MsiProperty($path, $name) {
+            $database = $installer.OpenDatabase($path, 0)
+            $view = $database.OpenView("SELECT ``Value`` FROM ``Property`` WHERE ``Property`` = '$name'")
+            [void]$view.Execute()
+            $record = $view.Fetch()
+            if ($null -eq $record) { throw "Missing MSI property: $name in $path" }
+            $value = $record.StringData(1)
+            [void]$view.Close()
+            return $value
+          }
+
+          $relativeFiles = @('RevitModelMcp.addin', 'RevitModelMcp/RevitModelMcp.dll', 'RevitModelMcp/RevitModelMcp.Updater.exe', 'RevitModelMcp/RevitModelMcp.BatchSupervisor.exe', 'RevitModelMcp/RevitModelMcp.Core.dll')
+          foreach ($scope in 'SingleUser', 'MultiUser') {
+            $msiA = (Get-ChildItem "$buildA/*-$scope.msi").FullName
+            $msiB = (Get-ChildItem "$buildB/*-$scope.msi").FullName
+            $productA = Get-MsiProperty $msiA 'ProductCode'
+            $productB = Get-MsiProperty $msiB 'ProductCode'
+            $upgradeA = Get-MsiProperty $msiA 'UpgradeCode'
+            $upgradeB = Get-MsiProperty $msiB 'UpgradeCode'
+            $versionA = Get-MsiProperty $msiA 'ProductVersion'
+            $versionB = Get-MsiProperty $msiB 'ProductVersion'
+            if ($versionA -ne $versionB) { throw "$scope MSI versions differ: [$versionA] [$versionB]" }
+            if ($upgradeA -ne $upgradeB) { throw "$scope MSI UpgradeCodes differ" }
+            if ($productA -eq $productB) { throw "$scope MSI ProductCodes are equal" }
+            Write-Host "ASSERT: $scope MSI version and UpgradeCode match, ProductCodes differ"
+
+            if ($scope -eq 'SingleUser') {
+              $roots = @("$env:APPDATA/Autodesk/Revit/Addins/2022", "$env:APPDATA/Autodesk/Revit/Addins/2026", "$env:APPDATA/Autodesk/Revit/Addins/2027")
+            } else {
+              $roots = @("$env:ProgramData/Autodesk/Revit/Addins/2022", "$env:ProgramData/Autodesk/Revit/Addins/2026", "$env:ProgramFiles/Autodesk/Revit/Addins/2027")
+            }
+            $extract = Join-Path $env:RUNNER_TEMP "mcp-upgrade-$scope-extract"
+            $log = Join-Path $env:RUNNER_TEMP "mcp-upgrade-$scope-extract.log"
+            $process = Start-Process msiexec.exe -ArgumentList "/a `"$msiB`" /qn /norestart TARGETDIR=`"$extract`" /l*v `"$log`"" -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "$scope MSI B extraction failed: $($process.ExitCode)" }
+            $installedProductCode = $null
+            try {
+              $log = Join-Path $env:RUNNER_TEMP "mcp-upgrade-$scope-a-install.log"
+              $process = Start-Process msiexec.exe -ArgumentList "/i `"$msiA`" /qn /norestart /l*v `"$log`"" -Wait -PassThru
+              if ($process.ExitCode -ne 0) { throw "$scope MSI A install failed: $($process.ExitCode)" }
+              $installedProductCode = $productA
+              Write-Host "ASSERT: $scope MSI A install exit code 0"
+              $log = Join-Path $env:RUNNER_TEMP "mcp-upgrade-$scope-b-install.log"
+              $process = Start-Process msiexec.exe -ArgumentList "/i `"$msiB`" /qn /norestart /l*v `"$log`"" -Wait -PassThru
+              if ($process.ExitCode -ne 0) { throw "$scope MSI B upgrade failed: $($process.ExitCode)" }
+              $installedProductCode = $productB
+              Write-Host "ASSERT: $scope MSI B upgrade exit code 0"
+              $related = $installer.RelatedProducts($upgradeB)
+              if ($related.Count -ne 1 -or $related.Item(0) -ne $productB) { throw "$scope upgrade did not leave exactly MSI B registered" }
+              Write-Host "ASSERT: $scope exactly MSI B is registered for the UpgradeCode"
+              $years = @('2022', '2026', '2027')
+              for ($index = 0; $index -lt $years.Count; $index++) {
+                $year = $years[$index]
+                $root = $roots[$index]
+                foreach ($relative in $relativeFiles) {
+                  if (!(Test-Path "$root/$relative")) { throw "Missing installed file: $root/$relative" }
+                  Write-Host "ASSERT: installed $root/$relative"
+                }
+                $manifest = @(Get-ChildItem $extract -Recurse -File -Filter RevitModelMcp.addin | Where-Object { $_.Directory.Name -eq $year })
+                if ($manifest.Count -ne 1) { throw "Missing or duplicate $scope R$year manifest in MSI B" }
+                $expectedDll = "$($manifest[0].DirectoryName)/RevitModelMcp/RevitModelMcp.dll"
+                if ((Get-FileHash "$root/RevitModelMcp/RevitModelMcp.dll" -Algorithm SHA256).Hash -ne (Get-FileHash $expectedDll -Algorithm SHA256).Hash) {
+                  throw "$scope R$year installed assembly differs from MSI B"
+                }
+                Write-Host "ASSERT: $scope R$year installed assembly matches MSI B"
+                if ((Get-Content -LiteralPath "$root/RevitModelMcp/upgrade-marker.txt" -Raw) -ne $marker) { throw "$scope R$year installed files are not from MSI B" }
+                Write-Host "ASSERT: $scope R$year installed marker file is from MSI B"
+              }
+            } finally {
+              if ($null -ne $installedProductCode) {
+                $log = Join-Path $env:RUNNER_TEMP "mcp-upgrade-$scope-uninstall.log"
+                $process = Start-Process msiexec.exe -ArgumentList "/x $installedProductCode /qn /norestart /l*v `"$log`"" -Wait -PassThru
+                if ($process.ExitCode -ne 0) { throw "$scope uninstall failed: $($process.ExitCode)" }
+                Write-Host "ASSERT: $scope uninstall exit code 0"
+                foreach ($root in $roots) {
+                  foreach ($relative in $relativeFiles) {
+                    if (Test-Path "$root/$relative") { throw "File remains after uninstall: $root/$relative" }
+                    Write-Host "ASSERT: removed $root/$relative"
+                  }
+                }
+              }
+            }
+          }
       - name: Upload MSI logs on failure
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: installer-logs
           path: |
             ${{ runner.temp }}/mcp-*.log
             ${{ runner.temp }}/*-extract.log
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: installers
           path: output/*.msi
           if-no-files-found: error
-      - name: Verify WinGet manifest generation
-        shell: pwsh
-        run: |
-          ./build/winget/New-WingetManifests.ps1 -Version 0.0.0-ci -ReleaseTag v0.0.0-ci -OutputDir artifacts/winget -SkipDownload
-          winget --version
-          $output = winget validate --manifest artifacts/winget --disable-interactivity 2>&1 | Out-String
-          Write-Host $output
-          # winget exits non-zero for "succeeded with warnings"; only a hard failure must fail the job.
-          if ($output -notmatch 'Manifest validation succeeded') { throw 'WinGet validation failed' }
-          # The pwsh shell wrapper exits with the last native exit code; reset it after the check above.
-          $global:LASTEXITCODE = 0
       - name: Stage add-in artifacts
         shell: pwsh
         run: |
-          foreach ($year in '20', '22', '26', '27') {
+          foreach ($year in '22', '26', '27') {
             $stage = "artifacts/addin-R$year"
             New-Item -ItemType Directory -Force "$stage/RevitModelMcp" | Out-Null
-            Copy-Item "src/RevitModelMcp.Addin/bin/Release.R$year/*" "$stage/RevitModelMcp" -Recurse
-            Copy-Item src/RevitModelMcp.Addin/RevitModelMcp.addin, LICENSE, THIRD-PARTY-NOTICES.md $stage
+            Get-ChildItem "src/RevitModelMcp.Addin/bin/Release.R$year" |
+              Where-Object Name -ne 'publish' | Copy-Item -Destination "$stage/RevitModelMcp" -Recurse
+            Copy-Item "src/RevitModelMcp.Addin/bin/Release.R$year/publish/RevitModelMcp.addin", LICENSE, THIRD-PARTY-NOTICES.md $stage
             if (!(Test-Path "$stage/RevitModelMcp/RevitModelMcp.dll")) { throw "Missing R$year add-in" }
-            if (Get-ChildItem $stage -Recurse -Filter 'RevitAPI*.dll') { throw 'Revit API binaries must not be distributed' }
+            if (!(Test-Path "$stage/RevitModelMcp/RevitModelMcp.Updater.exe")) { throw "Missing R$year updater" }
+            if (!(Test-Path "$stage/RevitModelMcp/RevitModelMcp.BatchSupervisor.exe")) { throw "Missing R$year batch supervisor" }
+            if (!(Test-Path "$stage/RevitModelMcp/RevitModelMcp.Core.dll")) { throw "Missing R$year supervisor Core dependency" }
+            $blocked = @(Get-ChildItem $stage -Recurse -Filter '*.dll' -File | Where-Object {
+              $_.Name -match '^(AdWindows|UIFramework|RevitAPI|RevitNET).*\.dll$' -or
+              $_.VersionInfo.CompanyName -match 'Autodesk'
+            })
+            if ($blocked.Count) { throw "Autodesk binaries must not be distributed: $($blocked.Name -join ', ')" }
           }
-      - uses: actions/upload-artifact@v7
-        with:
-          name: revit-model-mcp-addin-R20
-          retention-days: 90
-          path: artifacts/addin-R20/
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: revit-model-mcp-addin-R22
           retention-days: 90
           path: artifacts/addin-R22/
           if-no-files-found: error
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: revit-model-mcp-addin-R26
           retention-days: 90
           path: artifacts/addin-R26/
           if-no-files-found: error
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: revit-model-mcp-addin-R27
           retention-days: 90
           path: artifacts/addin-R27/
           if-no-files-found: error
-      - name: Build Python package
-        working-directory: server
+      - name: Build and validate the Revit bundle
+        shell: pwsh
+        env:
+          Build__Version: ${{ env.CI_VERSION }}
         run: |
-          uv build
-          if ($LASTEXITCODE -ne 0) { throw 'Python build failed' }
-          uvx twine check dist/*
+          dotnet run --no-restore --project build -- bundle
+          if ($LASTEXITCODE -ne 0) { throw 'Bundle build failed' }
+          python build/validate_bundle.py output/RevitModelMcp.bundle.zip --years 2022-2027
+          if ($LASTEXITCODE -ne 0) { throw 'Bundle validation failed' }
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: revit-model-mcp-bundle
+          retention-days: 90
+          path: output/RevitModelMcp.bundle.zip
+          if-no-files-found: error
+      - name: Build and validate the managed Revit bundle
+        shell: pwsh
+        env:
+          Build__Version: ${{ env.CI_VERSION }}
+          Bundle__Managed: 'true'
+        run: |
+          foreach ($year in '22', '23', '24', '25', '26', '27') {
+            dotnet restore src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj --locked-mode "-p:Configuration=Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION"
+            if ($LASTEXITCODE -ne 0) { throw "R$year locked restore failed" }
+            dotnet build src/RevitModelMcp.Addin -c "Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION" -p:IsRepackable=true -p:ManagedInstall=true --no-restore
+            if ($LASTEXITCODE -ne 0) { throw "R$year managed build failed" }
+            $bytes = [IO.File]::ReadAllBytes("src/RevitModelMcp.Addin/bin/Release.R$year/RevitModelMcp.dll")
+            $text = [Text.Encoding]::Latin1.GetString($bytes)
+            if ($text -notmatch 'ManagedInstall.true') { throw "R$year managed build does not carry ManagedInstall=true" }
+          }
+          dotnet run --no-restore --project build -- bundle
+          if ($LASTEXITCODE -ne 0) { throw 'Managed bundle build failed' }
+          python build/validate_bundle.py "output/revit-model-mcp-$env:CI_VERSION-managed.bundle.zip" --years 2022-2027 --managed-version $env:CI_VERSION
+          if ($LASTEXITCODE -ne 0) { throw 'Managed bundle validation failed' }
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: revit-model-mcp-bundle-managed
+          retention-days: 90
+          path: output/revit-model-mcp-${{ env.CI_VERSION }}-managed.bundle.zip
+          if-no-files-found: error

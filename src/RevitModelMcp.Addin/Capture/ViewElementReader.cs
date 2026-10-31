@@ -2,7 +2,6 @@ using System.Globalization;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Architecture;
 using Nice3point.Revit.Extensions;
-using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Models;
 using RevitModelMcp.Core.Units;
 
@@ -30,18 +29,18 @@ internal sealed class ViewElementReader
         var result = new ViewElementDump
         {
             Id = RevitValueReader.GetId(element.Id),
-            Category = TryRead(() => element.Category?.Name),
-            Family = TryRead(() => RevitValueReader.GetFamilyName(element)),
-            Type = TryRead(() => RevitValueReader.GetTypeName(_document, element)),
-            Name = TryRead(() => element.Name),
-            Level = TryRead(() => GetLevelName(element)),
-            Workset = TryRead(() => GetWorksetName(element)),
-            Phase = TryRead(() => GetPhaseName(element)),
+            Category = TryRead(RevitValueReader.GetId(element.Id), "category", () => element.Category?.Name),
+            Family = TryRead(RevitValueReader.GetId(element.Id), "family", () => RevitValueReader.GetFamilyName(element)),
+            Type = TryRead(RevitValueReader.GetId(element.Id), "type", () => RevitValueReader.GetTypeName(_document, element)),
+            Name = TryRead(RevitValueReader.GetId(element.Id), "name", () => element.Name),
+            Level = TryRead(RevitValueReader.GetId(element.Id), "level", () => GetLevelName(element)),
+            Workset = TryRead(RevitValueReader.GetId(element.Id), "workset", () => GetWorksetName(element)),
+            Phase = TryRead(RevitValueReader.GetId(element.Id), "phase", () => GetPhaseName(element)),
             HasWarnings = _warningElementIds.Contains(RevitValueReader.GetId(element.Id))
         };
 
         ReadParameters(element, result, true);
-        var type = TryRead(() => _document.GetElement(element.GetTypeId()));
+        var type = TryRead(RevitValueReader.GetId(element.Id), "type", () => _document.GetElement(element.GetTypeId()));
         if (type is not null)
         {
             ReadParameters(type, result, false);
@@ -66,7 +65,7 @@ internal sealed class ViewElementReader
             result.Room = ReadRoom(room);
         }
 
-        var type = TryRead(() => _document.GetElement(element.GetTypeId()));
+        var type = TryRead(RevitValueReader.GetId(element.Id), "type", () => _document.GetElement(element.GetTypeId()));
         if (type is null)
         {
             return result;
@@ -75,14 +74,26 @@ internal sealed class ViewElementReader
         result.TypeElement = new ElementTypeDetails
         {
             Id = RevitValueReader.GetId(type.Id),
-            Family = TryRead(() => RevitValueReader.GetFamilyName(type)),
-            Name = TryRead(() => type.Name),
+            Family = TryRead(RevitValueReader.GetId(type.Id), "family", () => RevitValueReader.GetFamilyName(type), "type"),
+            Name = TryRead(RevitValueReader.GetId(type.Id), "name", () => type.Name, "type"),
             Parameters = ReadAllParameters(type)
         };
         return result;
     }
 
     public static void ReadGeometry(Element element, ElementGeometryData result)
+    {
+        try
+        {
+            ReadGeometryCore(element, result);
+        }
+        catch (Exception exception)
+        {
+            PluginLog.Skipped($"element {RevitValueReader.GetId(element.Id)} geometry", exception);
+        }
+    }
+
+    private static void ReadGeometryCore(Element element, ElementGeometryData result)
     {
         var location = element.Location;
         if (location is LocationPoint point)
@@ -159,7 +170,7 @@ internal sealed class ViewElementReader
 
     public string? GetTypeIdentity(Element element, ViewElementDump dump)
     {
-        var typeId = TryRead(() => element.GetTypeId());
+        var typeId = TryRead(RevitValueReader.GetId(element.Id), "type ID", () => element.GetTypeId());
         if (RevitValueReader.IsValidId(typeId))
         {
             return RevitValueReader.GetId(typeId!).ToString(CultureInfo.InvariantCulture);
@@ -195,9 +206,9 @@ internal sealed class ViewElementReader
 
                 ReadMeasurement(parameter, parameterName, target, overwriteMeasurements);
             }
-            catch
+            catch (Exception exception)
             {
-                // One damaged parameter must not hide the remaining element data.
+                PluginLog.Skipped($"element {RevitValueReader.GetId(source.Id)} parameter {RevitValueReader.GetId(parameter.Id)}", exception);
             }
         }
     }
@@ -272,18 +283,18 @@ internal sealed class ViewElementReader
         if (parameter.StorageType == StorageType.Double)
         {
             var value = parameter.AsDouble();
-            var dataType = ParameterDataType.From(parameter.Definition);
-            if (dataType.IsLength)
+            var dataType = parameter.Definition.GetDataType();
+            if (dataType == SpecTypeId.Length)
             {
                 return $"{UnitConverter.FeetToMillimeters(value).ToString("0.###", CultureInfo.InvariantCulture)} mm";
             }
 
-            if (dataType.IsArea)
+            if (dataType == SpecTypeId.Area)
             {
                 return $"{UnitConverter.SquareFeetToSquareMeters(value).ToString("0.######", CultureInfo.InvariantCulture)} m²";
             }
 
-            if (dataType.IsVolume)
+            if (dataType == SpecTypeId.Volume)
             {
                 return $"{UnitConverter.CubicFeetToCubicMeters(value).ToString("0.######", CultureInfo.InvariantCulture)} m³";
             }
@@ -309,9 +320,9 @@ internal sealed class ViewElementReader
             {
                 parameters.Add(ReadParameterDetail(parameter));
             }
-            catch
+            catch (Exception exception)
             {
-                // A damaged parameter must not interrupt reading an individual element.
+                PluginLog.Skipped($"element {RevitValueReader.GetId(element.Id)} parameter {RevitValueReader.GetId(parameter.Id)}", exception);
             }
         }
 
@@ -350,18 +361,18 @@ internal sealed class ViewElementReader
         }
 
         var value = parameter.AsDouble();
-        var dataType = ParameterDataType.From(parameter.Definition);
-        if (dataType.IsLength)
+        var dataType = parameter.Definition?.GetDataType();
+        if (dataType == SpecTypeId.Length)
         {
             detail.MetricValue = UnitConverter.FeetToMillimeters(value);
             detail.MetricUnit = "mm";
         }
-        else if (dataType.IsArea)
+        else if (dataType == SpecTypeId.Area)
         {
             detail.MetricValue = UnitConverter.SquareFeetToSquareMeters(value);
             detail.MetricUnit = "m2";
         }
-        else if (dataType.IsVolume)
+        else if (dataType == SpecTypeId.Volume)
         {
             detail.MetricValue = UnitConverter.CubicFeetToCubicMeters(value);
             detail.MetricUnit = "m3";
@@ -375,14 +386,15 @@ internal sealed class ViewElementReader
         return candidates.Any(candidate => string.Equals(name, candidate, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static T? TryRead<T>(Func<T?> read)
+    private static T? TryRead<T>(long id, string what, Func<T?> read, string kind = "element")
     {
         try
         {
             return read();
         }
-        catch
+        catch (Exception exception)
         {
+            PluginLog.Skipped($"{kind} {id} {what}", exception);
             return default;
         }
     }

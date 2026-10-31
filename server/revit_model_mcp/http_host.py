@@ -1,26 +1,58 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+import copy
+import hashlib
+import hmac
+import http.client
 import json
 import os
 import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
+from revit_model_mcp.policy import POLICY_REFUSAL_PREFIX
 from revit_model_mcp.revit_channel import (
+    Job,
     JobPickupStatus,
+    PolicyRefusedError,
+    ReadOnlyRefusedError,
     ResponseParseError,
     ResponseTimeoutError,
+    ResultExpiredError,
     RevitChannelError,
+    TransportUnavailableError,
+    matches_document,
+    select_instance,
 )
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
+
+
+class HttpUnavailableError(TransportUnavailableError):
+    transport = "HTTP"
+
+
+def _policy_refusal_text(error: urllib.error.HTTPError) -> str | None:
+    """Return the organization policy refusal text from a 403 body, if the add-in sent one."""
+    try:
+        text = json.loads(error.read(65536)).get("error")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return text if isinstance(text, str) and text.startswith(POLICY_REFUSAL_PREFIX) else None
+
+
+def _is_job_submission_path(path: str) -> bool:
+    route = path.split("?")[0]
+    return route == "/jobs" or (route.startswith("/jobs/") and route.endswith("/cancel"))
 
 
 class HttpHost:
@@ -43,18 +75,49 @@ class HttpHost:
         self._job_id: str | None = None
         self._response: str | None = None
         self._payload: dict[str, Any] = {}
+        self._identity: dict[str, Any] | None = None
+        self._verified_token: str | None = None
 
     async def health(self) -> dict[str, Any]:
-        _, body, _ = await self._request("GET", "/health", authenticated=False)
+        self._verified_token = None
+        token = self.token
+        nonce = os.urandom(32) if token else None
+        headers = (
+            {"X-RevitMcp-Nonce": base64.urlsafe_b64encode(nonce).rstrip(b"=").decode("ascii")}
+            if nonce is not None
+            else None
+        )
+        _, body, response_headers = await self._request(
+            "GET", "/health", authenticated=False, extra_headers=headers
+        )
+        if nonce is not None:
+            expected = base64.urlsafe_b64encode(
+                hmac.new(
+                    token.encode("utf-8"), b"revit-model-mcp/health/v1\n" + nonce, hashlib.sha256
+                ).digest()
+            ).rstrip(b"=")
+            actual = response_headers.get("X-RevitMcp-Proof", "").encode("utf-8")
+            if not hmac.compare_digest(actual, expected):
+                raise RevitChannelError(
+                    "The HTTP endpoint did not prove the add-in token. "
+                    "Update the add-in, or another process may be using the port. "
+                    "Check that REVIT_MCP_TOKEN or --token matches the workstation settings.json."
+                )
         result = self._json(body)
         if result.get("ok") is not True or not isinstance(result.get("processId"), int):
             raise ResponseParseError("Invalid Revit health response.")
+        if nonce is not None:
+            self._verified_token = token
         return result
+
+    @property
+    def instance_info(self) -> dict[str, Any]:
+        return self._identity or {}
 
     async def list_revit_instances(self, document: str | None = None) -> list[dict[str, object]]:
         status = await self.health()
         name = status.get("documentName", "")
-        if document and document.casefold() not in str(name).casefold():
+        if document and not matches_document(status, document):
             return []
         return [
             {
@@ -66,7 +129,49 @@ class HttpHost:
             }
         ]
 
+    async def select_job(self, job: Job) -> tuple[HttpHost, Job]:
+        instance = select_instance(await self.list_revit_instances(), job)
+        selected = copy.copy(self)
+        selected._verified_token = None
+        selected._identity = instance
+        return selected, replace(
+            job, payload={**job.payload, "targetProcessId": instance["processId"]}
+        )
+
+    async def fetch_job(self, job_id: str) -> dict[str, Any]:
+        _, body, _ = await self._request("GET", "/jobs/" + urllib.parse.quote(job_id, safe=""))
+        envelope = self._json(body)
+        result = envelope.get("result")
+        if isinstance(result, str):
+            result = json.loads(result)
+        if isinstance(result, dict):
+            return result
+        return {
+            "command": "jobs",
+            "success": True,
+            "partial": True,
+            "message": "Command accepted and running.",
+            "data": {"state": envelope.get("state")},
+        }
+
+    async def cancel_job(self, job_id: str) -> dict[str, Any]:
+        _, body, _ = await self._request(
+            "POST",
+            "/jobs/" + urllib.parse.quote(job_id, safe="") + "/cancel",
+            json.dumps({"command": "jobs"}).encode("utf-8"),
+        )
+        return self._json(body)
+
     async def prepare_job(self, name: str, content: str, command: str) -> set[str]:
+        self._verified_token = None
+        if self._identity is not None:
+            status = await self.health()
+            if any(
+                status.get(key) != self._identity.get(key) for key in ("processId", "startedUtc")
+            ):
+                raise RevitChannelError(
+                    "The configured HTTP endpoint identity changed before submission. Retry discovery."
+                )
         self._job_id = None
         self._response = None
         self._payload = json.loads(content)
@@ -77,7 +182,7 @@ class HttpHost:
         if status == 202:
             self._job_id = self._pending_id(body)
         elif status == 200:
-            self._response = body.decode("utf-8-sig")
+            self._response = self._completed_result(body)
         else:
             raise ResponseParseError(f"Unexpected job submission status: {status}.")
         return set()
@@ -112,7 +217,7 @@ class HttpHost:
                 timeout=min(10, remaining),
             )
             if status == 200:
-                self._response = body.decode("utf-8-sig")
+                self._response = self._completed_result(body)
                 break
             if status != 202:
                 raise ResponseParseError(f"Unexpected job result status: {status}.")
@@ -124,7 +229,7 @@ class HttpHost:
         response_name: str,
         cleanup_names: list[str],
         download_artifact: bool,
-        save_to: str | None,
+        output_path: str | None,
     ) -> tuple[str, str | None]:
         if self._response is None:
             raise ResponseParseError("The HTTP job has no completed response.")
@@ -150,8 +255,8 @@ class HttpHost:
             if not isinstance(name, str) or not name or Path(name).name != name or "\\" in name:
                 raise ResponseParseError("The image response contains an unsafe file name.")
             target = (
-                Path(save_to).expanduser().resolve()
-                if save_to
+                Path(output_path).expanduser().resolve()
+                if output_path
                 else Path(tempfile.mkdtemp(prefix="revit-view-")) / name
             )
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -164,7 +269,7 @@ class HttpHost:
         return self._response, local_path
 
     async def delete_files(self, names: list[str]) -> None:
-        # Server results remain available for ten minutes, including after client timeouts.
+        # Server results remain available for 24 hours, including after client timeouts.
         return
 
     @staticmethod
@@ -184,6 +289,16 @@ class HttpHost:
             raise ResponseParseError("The pending HTTP response did not contain a job id.")
         return job_id
 
+    @classmethod
+    def _completed_result(cls, body: bytes) -> str:
+        envelope = cls._json(body)
+        result = envelope.get("result")
+        if isinstance(result, dict):
+            return json.dumps(result, ensure_ascii=False)
+        if not isinstance(result, str):
+            raise ResponseParseError("The completed HTTP job has no JSON result.")
+        return result
+
     async def _request(
         self,
         method: str,
@@ -191,8 +306,11 @@ class HttpHost:
         body: bytes | None = None,
         timeout: float = 10,
         authenticated: bool = True,
+        extra_headers: dict[str, str] | None = None,
     ):
         headers = {"Accept": "application/json, image/png"}
+        if extra_headers is not None:
+            headers.update(extra_headers)
         if body is not None:
             headers["Content-Type"] = "application/json"
         if authenticated:
@@ -202,6 +320,10 @@ class HttpHost:
                 raise RevitChannelError(
                     "Set REVIT_MCP_TOKEN or --token to the token in the workstation settings.json."
                 )
+            if self._verified_token != self.token:
+                await self.health()
+            if self._verified_token != self.token:
+                raise RevitChannelError("The HTTP endpoint token proof is no longer current.")
             headers["Authorization"] = "Bearer " + self.token
         request = urllib.request.Request(
             self.host + path, data=body, headers=headers, method=method
@@ -212,27 +334,56 @@ class HttpHost:
                 with self._opener.open(request, timeout=timeout) as response:
                     return response.status, response.read(), response.headers
             except urllib.error.HTTPError as error:
+                policy_text = _policy_refusal_text(error) if error.code == 403 else None
                 error.close()
+                if policy_text is not None:
+                    raise PolicyRefusedError(policy_text) from None
+                if error.code == 401:
+                    self._verified_token = None
+                if error.code == 410:
+                    raise ResultExpiredError(
+                        "The Revit result expired or was evicted and is no longer available. "
+                        "Do not retry polling this job. If it was an action, inspect the model before resubmitting."
+                    ) from None
                 messages = {
+                    408: "Revit timed out waiting for the request body; retry the request.",
+                    413: "The job is larger than the 1 MiB limit.",
+                    503: "Revit endpoint returned HTTP 503: HTTP.sys has no working listener for this URL. On the Revit machine run revit_ping over the local transport (it shows httpListener), and check netsh http show urlacl and netsh http show servicestate; see docs/transport.md.",
                     401: "Revit rejected the bearer token. Check REVIT_MCP_TOKEN or --token against the workstation settings.json.",
-                    403: "Revit denied this request. Actions require the workstation allow-write gate and REVIT_MCP_ALLOW_WRITE=1 in the MCP server.",
-                    409: "Revit is busy with another job. Wait for it to finish before retrying.",
-                    404: "Revit job or endpoint not found; completed results expire after ten minutes.",
+                    403: "Revit denied this request. Actions are refused while the workstation is in read-only mode.",
+                    429: "Revit job queue is full for this client; retry after a short wait.",
+                    404: "Revit job or endpoint not found; check the job ID.",
                 }
-                raise RevitChannelError(
+                error_type = (
+                    ReadOnlyRefusedError
+                    if error.code == 403 and method == "POST" and _is_job_submission_path(path)
+                    else HttpUnavailableError
+                    if error.code == 503
+                    else RevitChannelError
+                )
+                raise error_type(
                     messages.get(error.code, f"Revit endpoint returned HTTP {error.code}.")
                 ) from None
-            except (TimeoutError, urllib.error.URLError, OSError) as error:
+            except (
+                TimeoutError,
+                urllib.error.URLError,
+                OSError,
+                http.client.HTTPException,
+            ) as error:
+                self._verified_token = None
                 if isinstance(error, TimeoutError) or isinstance(
                     getattr(error, "reason", None), TimeoutError
                 ):
                     raise RevitChannelError(
-                        f"Revit HTTP request timed out at {self.host}. A submitted job may still execute; "
+                        f"Revit HTTP request timed out at {self.host}; "
+                        f"jobId={self._job_id or self._payload.get('jobId', 'unknown')}. "
+                        "A submitted job may still execute; "
                         "inspect the model before retrying an action."
                     ) from None
-                raise RevitChannelError(
+                raise HttpUnavailableError(
                     f"Revit endpoint not reachable at {self.host}: is Revit running with the add-in, "
                     "and is the port reachable from this machine?"
+                    " If the add-in log says HTTP is disabled or failed, revit_ping over the local transport shows the reason in httpListener."
                 ) from None
 
         return await asyncio.to_thread(send)

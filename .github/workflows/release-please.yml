@@ -9,13 +9,15 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
-  actions: write
+  contents: read
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
@@ -29,7 +31,7 @@ jobs:
         env:
           HAS_PAT: ${{ secrets.RELEASE_PLEASE_TOKEN != '' }}
         run: echo "has_pat=$HAS_PAT" >> "$GITHUB_OUTPUT"
-      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4
+      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
@@ -40,6 +42,10 @@ jobs:
     needs: release
     if: needs.release.outputs.release_created == 'true' && needs.release.outputs.has_pat != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+      contents: read
     steps:
       - name: Run the release pipeline for the new tag
         env:

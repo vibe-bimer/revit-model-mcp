@@ -1,13 +1,26 @@
 from __future__ import annotations
 
 import asyncio
+import contextvars
+import functools
+import inspect
 import json
 import logging
 import os
+import re
 import uuid
 from dataclasses import dataclass, replace
-from typing import Any, Protocol
+from typing import Any, Protocol, get_type_hints
 
+from mcp.server.mcpserver import Context
+
+from revit_model_mcp.errors import (
+    POLICY_BLOCKED,
+    READ_ONLY,
+    READ_ONLY_MESSAGE,
+    refusal,
+    with_error_code,
+)
 from revit_model_mcp.universal_jobs import aggregate_payload, query_payload
 
 LOGGER = logging.getLogger(__name__)
@@ -16,35 +29,181 @@ DEFAULT_TIMEOUT_SECONDS = 120
 DEFAULT_PICKUP_TIMEOUT_SECONDS = 300
 ACTIVATION_TASK = os.environ.get("REVIT_MCP_ACTIVATE_TASK", "")
 CHANNEL_DIRECTORY = "RevitModelMcp"
-TRIGGER_FILE = "trigger.txt"
+CLIENT_ID = uuid.uuid4().hex
+_client_name: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "revit_client_name", default="unknown"
+)
+
+
+def with_client_identity(function):
+    signature = inspect.signature(function)
+    hints = get_type_hints(function, include_extras=True)
+
+    @functools.wraps(function)
+    async def wrapped(*args, ctx: Context | None = None, **kwargs):
+        try:
+            params = ctx.session.client_params if ctx is not None else None
+        except ValueError:
+            params = None
+        name = getattr(getattr(params, "client_info", None), "name", None)
+        token = _client_name.set(name or "unknown")
+        try:
+            return await function(*args, **kwargs)
+        finally:
+            _client_name.reset(token)
+
+    wrapped.__signature__ = signature.replace(
+        parameters=[
+            *(
+                parameter.replace(annotation=hints.get(parameter.name, parameter.annotation))
+                for parameter in signature.parameters.values()
+            ),
+            inspect.Parameter(
+                "ctx", inspect.Parameter.KEYWORD_ONLY, default=None, annotation=Context
+            ),
+        ],
+        return_annotation=hints.get("return", signature.return_annotation),
+    )
+    wrapped.__annotations__ = {**hints, "ctx": Context}
+    return wrapped
+
+
 ACTION_COMMANDS = frozenset(
     {
+        "undo-last",
+        "batch-supervisor-start",
         "select",
         "show",
         "isolate",
+        "override-graphics",
         "move",
+        "rotate",
+        "copy",
+        "mirror",
+        "change-type",
+        "update-parameters",
         "place-family",
+        "load-family",
+        "place-families",
         "create-wall",
-        "create-floor",
-        "create-level",
-        "set-phase",
-        "merge-phases",
+        "create-mep-run",
+        "link-cad",
+        "walls-from-cad",
+        "create-view",
+        "duplicate-view",
+        "apply-view-template",
+        "create-sheet",
+        "place-views-on-sheet",
+        "tag-elements",
+        "create-schedule",
         "set-parameter",
-        "set-view-lighting",
         "delete",
-        "reset-element-ids",
-        "rebuild-model-ids",
         "batch",
+        "process-models",
+        "export-nwc",
+        "export",
+        "edit-families",
+        "align-link-datums",
+        "open-document",
+        "activate-document",
+        "activate-view",
+        "close-views",
+        "new-document",
+        "close-document",
+        "save-document",
+        "sync-document",
+        "set-view-visibility",
+        "remove-links",
+        "execute-code",
     }
 )
+
+
+LONG_ACTION_COMMANDS = frozenset({"process-models", "export", "export-nwc", "edit-families"})
+
+
+def configured_pickup_timeout_seconds() -> int:
+    try:
+        value = int(
+            os.environ.get("REVIT_MCP_PICKUP_TIMEOUT_SECONDS", str(DEFAULT_PICKUP_TIMEOUT_SECONDS))
+        )
+    except ValueError as error:
+        raise RevitChannelError(
+            "REVIT_MCP_PICKUP_TIMEOUT_SECONDS must be a positive integer."
+        ) from error
+    if value <= 0:
+        raise RevitChannelError("REVIT_MCP_PICKUP_TIMEOUT_SECONDS must be a positive integer.")
+    return value
+
+
+def tool_budget_seconds() -> float:
+    try:
+        value = float(os.environ.get("REVIT_MCP_TOOL_BUDGET_S", "40"))
+    except ValueError as error:
+        raise RevitChannelError("REVIT_MCP_TOOL_BUDGET_S must be between 10 and 200.") from error
+    if not 10 <= value <= 200:
+        raise RevitChannelError("REVIT_MCP_TOOL_BUDGET_S must be between 10 and 200.")
+    return value
+
+
+def running_job(job_id: str, response: dict[str, Any] | None = None) -> dict[str, Any]:
+    data = (response or {}).get("data")
+    progress = (
+        {key: data[key] for key in ("currentIndex", "total", "currentPath") if key in data}
+        if isinstance(data, dict)
+        else None
+    )
+    models = (
+        [{"status": model["status"]} for model in data.get("models", []) if "status" in model]
+        if isinstance(data, dict)
+        else []
+    )
+    if progress is not None and models:
+        progress["models"] = models
+    return {
+        "status": "running",
+        "jobId": job_id,
+        "progress": progress,
+        "partial": models,
+        "message": "The action may already have changed the model. Poll revit_jobs with this jobId until it finishes; inspect the final result before retrying.",
+    }
 
 
 class RevitChannelError(RuntimeError):
     """User-facing Revit read channel error."""
 
 
-class SshUnavailableError(RevitChannelError):
+class ReadOnlyRefusedError(RevitChannelError):
+    """The transport refused a request because the workstation is read-only."""
+
+
+class PolicyRefusedError(ReadOnlyRefusedError):
+    """The add-in refused a request because of the machine policy; the text is the add-in's own."""
+
+
+def refused_response(command: str, error: ReadOnlyRefusedError) -> dict[str, Any]:
+    """The refusal for a transport refusal: organization policy text, else the user read-only gate."""
+    if isinstance(error, PolicyRefusedError):
+        return refusal(command, POLICY_BLOCKED, str(error))
+    return refusal(command, READ_ONLY, READ_ONLY_MESSAGE)
+
+
+class ResultExpiredError(RevitChannelError):
     pass
+
+
+class TransportUnavailableError(RevitChannelError):
+    transport = "transport"
+
+    def __str__(self) -> str:
+        return (
+            f"Revit is not reachable over {self.transport}: {super().__str__().rstrip('.')}. "
+            "The call did not run. Retry when the workstation or tunnel is back."
+        )
+
+
+class SshUnavailableError(TransportUnavailableError):
+    transport = "SSH"
 
 
 class RevitNotRunningError(RevitChannelError):
@@ -72,21 +231,25 @@ class ResponseParseError(RevitChannelError):
 
 
 @dataclass(frozen=True)
-class ReadJob:
+class Job:
     command: str
     payload: dict[str, Any]
-    save_to: str | None = None
+    output_path: str | None = None
 
     @classmethod
-    def ping(cls) -> ReadJob:
+    def ping(cls) -> Job:
         return cls("ping", {"command": "ping"})
 
     @classmethod
-    def document_info(cls) -> ReadJob:
+    def jobs(cls) -> Job:
+        return cls("jobs", {"command": "jobs"})
+
+    @classmethod
+    def document_info(cls) -> Job:
         return cls("document-info", {"command": "document-info"})
 
     @classmethod
-    def list_views(cls, view_type: str | None = None, name_contains: str | None = None) -> ReadJob:
+    def list_views(cls, view_type: str | None = None, name_contains: str | None = None) -> Job:
         payload: dict[str, Any] = {"command": "list-views"}
         if normalized := _optional_text(view_type):
             payload["viewType"] = normalized
@@ -95,36 +258,43 @@ class ReadJob:
         return cls("list-views", payload)
 
     @classmethod
-    def view_summary(cls, view: str) -> ReadJob:
+    def view_summary(cls, view: str) -> Job:
         return cls(
             "view-summary",
             {"command": "view-summary", "view": _required_text(view, "view")},
         )
 
     @classmethod
-    def export_view(cls, view: str, pixel_size: int = 1600, save_to: str | None = None) -> ReadJob:
-        if pixel_size < 1 or pixel_size > 4000:
-            raise RevitChannelError("pixel_size must be between 1 and 4000.")
+    def view_info(cls, view: str) -> Job:
+        return cls("view-info", {"command": "view-info", "view": _required_text(view, "view")})
+
+    @classmethod
+    def schedule_data(cls, schedule: str, max_rows: int = 500, offset: int = 0) -> Job:
+        if max_rows < 1 or max_rows > 5000 or offset < 0:
+            raise RevitChannelError("max_rows must be 1 to 5000 and offset must be non-negative.")
+        return cls(
+            "schedule-data",
+            {
+                "command": "schedule-data",
+                "view": _required_text(schedule, "schedule"),
+                "limit": max_rows,
+                "offset": offset,
+            },
+        )
+
+    @classmethod
+    def export_view(cls, view: str, pixel_size: int = 1600, output_path: str | None = None) -> Job:
+        if pixel_size < 32 or pixel_size > 4000:
+            raise RevitChannelError(
+                "pixel_size must be between 32 and 4000 (Revit rejects smaller images)."
+            )
         payload = {
             "command": "export-view",
             "view": _required_text(view, "view"),
             "pixelSize": pixel_size,
             "zoomToFit": True,
         }
-        return cls("export-view", payload, save_to)
-
-    @classmethod
-    def export_element_ids(
-        cls, fields: list[str] | None = None, save_to: str | None = None
-    ) -> ReadJob:
-        payload: dict[str, Any] = {"command": "export-element-ids"}
-        requested = [field for field in (_optional_text(field) for field in fields or []) if field]
-        if requested:
-            payload["fields"] = requested
-        if normalized := _optional_text(save_to):
-            # The workbook is written on the Revit workstation, so this path travels in the job.
-            payload["saveTo"] = normalized
-        return cls("export-element-ids", payload)
+        return cls("export-view", payload, output_path)
 
     @classmethod
     def view_elements(
@@ -133,7 +303,7 @@ class ReadJob:
         categories: list[str] | None = None,
         offset: int = 0,
         limit: int = 100,
-    ) -> ReadJob:
+    ) -> Job:
         if offset < 0:
             raise RevitChannelError("offset must not be negative.")
         if limit <= 0:
@@ -150,13 +320,13 @@ class ReadJob:
         return cls("view-elements", payload)
 
     @classmethod
-    def element_details(cls, element_id: int) -> ReadJob:
+    def element_details(cls, element_id: int) -> Job:
         if element_id <= 0:
             raise RevitChannelError("element-details requires a positive element id.")
         return cls("element-details", {"command": "element-details", "id": element_id})
 
     @classmethod
-    def view_warnings(cls, view: str) -> ReadJob:
+    def view_warnings(cls, view: str) -> Job:
         return cls(
             "view-warnings",
             {"command": "view-warnings", "view": _required_text(view, "view")},
@@ -180,7 +350,7 @@ class ReadJob:
         sort_field: str = "id",
         sort_direction: str = "asc",
         include_geometry: bool = False,
-    ) -> ReadJob:
+    ) -> Job:
         try:
             payload = query_payload(
                 categories,
@@ -220,7 +390,7 @@ class ReadJob:
         phase: str | None = None,
         area_scheme: str | None = None,
         parameter_filters: list[dict[str, Any]] | None = None,
-    ) -> ReadJob:
+    ) -> Job:
         try:
             payload = aggregate_payload(
                 categories,
@@ -242,16 +412,19 @@ class ReadJob:
         return cls("aggregate-elements", payload)
 
     @classmethod
-    def list_catalog(cls, section: str) -> ReadJob:
+    def list_catalog(cls, section: str, name_contains: str | None = None, limit: int = 200) -> Job:
         return cls(
             "list-catalog",
-            {"command": "list-catalog", "section": _required_text(section, "section")},
+            {
+                "command": "list-catalog",
+                "section": _required_text(section, "section"),
+                "nameContains": _optional_text(name_contains),
+                "limit": limit,
+            },
         )
 
     @classmethod
-    def list_warnings(
-        cls, warning_text: str | None = None, include_elements: bool = False
-    ) -> ReadJob:
+    def list_warnings(cls, warning_text: str | None = None, include_elements: bool = False) -> Job:
         payload: dict[str, Any] = {"command": "list-warnings", "includeElements": include_elements}
         if normalized := _optional_text(warning_text):
             payload["warningText"] = normalized
@@ -260,7 +433,7 @@ class ReadJob:
     @classmethod
     def list_relations(
         cls, relation: str, source_id: int | None = None, source_name: str | None = None
-    ) -> ReadJob:
+    ) -> Job:
         payload: dict[str, Any] = {
             "command": "list-relations",
             "relation": _required_text(relation, "relation"),
@@ -276,13 +449,20 @@ class ReadJob:
     def to_json(self) -> str:
         return json.dumps(self.payload, ensure_ascii=False, separators=(",", ":"))
 
-    def for_document(self, document: str | None) -> ReadJob:
+    def for_document(self, document: str | None) -> Job:
         normalized = _optional_text(document)
         if normalized is None:
             return self
         payload = dict(self.payload)
         payload["targetDocument"] = normalized
         return replace(self, payload=payload)
+
+    def for_process(self, process_id: int | None) -> Job:
+        if process_id is None:
+            return self
+        if type(process_id) is not int or process_id <= 0:
+            raise RevitChannelError("process_id must be a strict positive integer.")
+        return replace(self, payload={**self.payload, "targetProcessId": process_id})
 
 
 @dataclass(frozen=True)
@@ -317,7 +497,80 @@ def _unique_texts(values: list[str]) -> list[str]:
     return result
 
 
+def matches_document(instance: dict[str, Any], document: str) -> bool:
+    needle = document.strip().casefold()
+    filename = str(instance.get("documentPath", "")).replace("\\", "/").rsplit("/", 1)[-1]
+    candidates = [instance.get("documentTitle", instance.get("documentName", "")), filename]
+    documents = instance.get("documents")
+    if isinstance(documents, list):
+        for entry in documents:
+            if not isinstance(entry, dict):
+                continue
+            entry_path = str(entry.get("path", "")).replace("\\", "/").rsplit("/", 1)[-1]
+            candidates.extend([entry.get("title", ""), entry_path])
+    return any(needle in str(value).casefold() for value in candidates)
+
+
+def _describe_instance(instance: dict[str, Any]) -> str:
+    documents = instance.get("documents")
+    if isinstance(documents, list) and documents:
+        names = ", ".join(
+            str(doc.get("title") or doc.get("path") or "?")
+            for doc in documents
+            if isinstance(doc, dict)
+        )
+    else:
+        names = str(instance.get("documentTitle") or instance.get("documentName") or "no document")
+    return f"pid {instance.get('processId')} ({names or 'no document'})"
+
+
+def resolve_instance(instances: list[dict[str, Any]], document: str | None) -> dict[str, Any]:
+    """Pick one running instance: unambiguous with a single instance regardless of document text;
+    otherwise match by document, or fall back to requiring exactly one instance."""
+    if len(instances) == 1:
+        return instances[0]
+    if not document:
+        details = "; ".join(_describe_instance(item) for item in instances) or "none running"
+        raise RevitChannelError(
+            "Actions and undirected reads require exactly one running Revit instance. "
+            f"Use revit_list_instances and a unique document for directed reads. Running instances: {details}."
+        )
+    matches = [item for item in instances if matches_document(item, document)]
+    if not matches:
+        raise RevitChannelError(
+            "No running Revit instance has a matching active document. Use revit_list_instances."
+        )
+    if len(matches) != 1:
+        raise RevitChannelError(
+            "The document reference is ambiguous across Revit instances. Use a unique title or file name."
+        )
+    return matches[0]
+
+
+def select_instance(instances: list[dict[str, Any]], job: Job) -> dict[str, Any]:
+    document = job.payload.get("targetDocument")
+    process_id = job.payload.get("targetProcessId")
+    if process_id is not None:
+        if type(process_id) is not int or process_id <= 0:
+            raise RevitChannelError("process_id must be a strict positive integer.")
+        matches = [item for item in instances if item.get("processId") == process_id]
+        if len(matches) != 1:
+            raise RevitChannelError("The explicitly selected Revit process is absent or ambiguous.")
+        selected = matches[0]
+        if document and not matches_document(selected, document):
+            raise RevitChannelError("The explicit process and document contradict each other.")
+    else:
+        selected = resolve_instance(instances, document)
+    return selected
+
+
 class RemoteHost(Protocol):
+    async def fetch_job(self, job_id: str) -> dict[str, Any]: ...
+
+    async def cancel_job(self, job_id: str) -> dict[str, Any]: ...
+
+    async def select_job(self, job: Job) -> tuple[RemoteHost, Job]: ...
+
     async def prepare_job(self, name: str, content: str, command: str) -> set[str]: ...
 
     async def wait_until_trigger_is_gone(self, timeout_seconds: float) -> JobPickupStatus: ...
@@ -335,36 +588,163 @@ class RemoteHost(Protocol):
         response_name: str,
         cleanup_names: list[str],
         download_artifact: bool,
-        save_to: str | None,
+        output_path: str | None,
     ) -> tuple[str, str | None]: ...
 
     async def delete_files(self, names: list[str]) -> None: ...
 
 
-class RevitReadChannel:
+RELEASES_URL = "https://github.com/vibe-bimer/revit-model-mcp/releases/latest"
+ADDIN_VERSION = re.compile(
+    r"(\d+(?:\.\d+)+)(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?"
+    r"(?:\+[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?"
+)
+
+
+def check_addin_compatibility(command: str, instance: dict[str, Any]) -> None:
+    from revit_model_mcp import package_version
+
+    server_major = int(package_version().split(".")[0])
+    reported = instance.get("addinVersion")
+    version = reported if isinstance(reported, str) and reported else None
+    parsed = ADDIN_VERSION.fullmatch(version) if version is not None else None
+    if parsed is None or int(parsed.group(1).split(".")[0]) != server_major:
+        installed = version or "no add-in version"
+        raise RevitChannelError(
+            f"This server needs a Model MCP add-in of major version {server_major}; "
+            f"the Revit workstation has {installed}. "
+            f"Install the matching add-in from the releases page: {RELEASES_URL}."
+        )
+    commands = instance.get("commands")
+    if not isinstance(commands, list) or command not in commands:
+        raise RevitChannelError(
+            f"The Model MCP add-in {version} does not support {command}. "
+            f"Install the matching add-in from the releases page: {RELEASES_URL}."
+        )
+
+
+class RevitChannel:
     def __init__(self, remote: RemoteHost) -> None:
         self.remote = remote
         self._lock = asyncio.Lock()
 
     async def execute(
         self,
-        job: ReadJob,
+        job: Job,
         timeout_seconds: int = DEFAULT_TIMEOUT_SECONDS,
-        pickup_timeout_seconds: int = DEFAULT_PICKUP_TIMEOUT_SECONDS,
+        pickup_timeout_seconds: int | None = None,
     ) -> dict[str, Any]:
+        try:
+            return await self._execute(
+                job,
+                timeout_seconds,
+                pickup_timeout_seconds
+                if pickup_timeout_seconds is not None
+                else configured_pickup_timeout_seconds(),
+            )
+        except ReadOnlyRefusedError as error:
+            if job.command in ACTION_COMMANDS or (
+                job.command == "jobs" and job.payload.get("requestCancellation")
+            ):
+                return refused_response(job.command, error)
+            raise
+
+    async def _execute(
+        self, job: Job, timeout_seconds: int, pickup_timeout_seconds: int
+    ) -> dict[str, Any]:
+        if job.command == "capture-elements":
+            from revit_model_mcp.http_host import HttpHost
+
+            if isinstance(self.remote, HttpHost):
+                raise RevitChannelError("element snapshots need the local or SSH transport")
         if timeout_seconds <= 0:
             raise RevitChannelError("timeout_seconds must be greater than zero.")
         if pickup_timeout_seconds <= 0:
             raise RevitChannelError("pickup_timeout_seconds must be greater than zero.")
 
+        if job.command == "jobs" and job.payload.get("fetchJobId"):
+            job_id = job.payload["fetchJobId"]
+            if not isinstance(job_id, str) or not re.fullmatch(r"[0-9a-fA-F]{32}", job_id):
+                raise RevitChannelError("job_id must be a job id returned by an action.")
+            wait_seconds = job.payload.get("waitSeconds", 40)
+            if not isinstance(wait_seconds, (int, float)) or not 0 <= wait_seconds <= 50:
+                raise RevitChannelError("wait_seconds must be between 0 and 50.")
+            remote, job = await self.remote.select_job(job)
+            if job.payload.get("requestCancellation"):
+                from revit_model_mcp.ssh_host import RemoteCommandError
+
+                try:
+                    return await remote.cancel_job(job_id)
+                except RemoteCommandError as error:
+                    # File-channel cancellation reports the gate through PowerShell stderr.
+                    if READ_ONLY_MESSAGE in str(error):
+                        raise ReadOnlyRefusedError(str(error)) from error
+                    raise
+            deadline = asyncio.get_running_loop().time() + wait_seconds
+            while True:
+                response = await remote.fetch_job(job_id)
+                if not _is_intermediate_response(response):
+                    return parse_response(json.dumps(response), response.get("command", ""))
+                remaining = deadline - asyncio.get_running_loop().time()
+                if remaining <= 0:
+                    return running_job(job_id, response)
+                await asyncio.sleep(min(0.25, remaining))
+
         async with self._lock:
-            return await self._execute_serial(job, timeout_seconds, pickup_timeout_seconds)
+            remote, job = await self.remote.select_job(job)
+            instance = getattr(remote, "instance_info", {})
+            if not isinstance(instance, dict):
+                instance = {}
+            check_addin_compatibility(job.command, instance)
+            result = await RevitChannel(remote)._execute_serial(
+                job, timeout_seconds, pickup_timeout_seconds
+            )
+            if job.command == "ping":
+                result["addinVersion"] = instance["addinVersion"]
+                if isinstance(state := instance.get("httpState"), str):
+                    result["httpListener"] = {"state": state}
+                    if "httpReason" in instance:
+                        result["httpListener"]["reason"] = instance["httpReason"]
+            return result
 
     async def _execute_serial(
-        self, job: ReadJob, timeout_seconds: int, pickup_timeout_seconds: int
+        self, job: Job, timeout_seconds: int, pickup_timeout_seconds: int
     ) -> dict[str, Any]:
+        if job.command in ("export-view", "capture-elements"):
+            from revit_model_mcp.artifact_download import preflight_artifact_target
+
+            try:
+                preflight_artifact_target(job.output_path)
+            except ValueError as error:
+                raise RevitChannelError(str(error)) from error
+        candidate = (
+            job.command in LONG_ACTION_COMMANDS
+            or (job.command == "open-document" and job.payload.get("audit") is True)
+            or job.command == "execute-code"
+        )
+        budget = tool_budget_seconds() if candidate else 40
+        instance = getattr(self.remote, "instance_info", {})
+        if not isinstance(instance, dict):
+            instance = {}
+        background = "jobs/persisted" in instance.get("commands", []) and (
+            job.command in LONG_ACTION_COMMANDS
+            or (job.command == "open-document" and job.payload.get("audit") is True)
+            or job.command == "execute-code"
+        )
+        loop = asyncio.get_running_loop()
+        tool_deadline = loop.time() + budget if background else None
         correlation_id = uuid.uuid4().hex
-        job = replace(job, payload={**job.payload, "correlationId": correlation_id})
+        job_id = uuid.uuid4().hex
+        job = replace(
+            job,
+            payload={
+                **job.payload,
+                "correlationId": correlation_id,
+                "jobId": job_id,
+                "clientId": CLIENT_ID,
+                "clientName": _client_name.get(),
+            },
+        )
         temporary_name = f"mcp_{correlation_id}.tmp"
         response_name: str | None = None
         job_prepared = False
@@ -379,29 +759,63 @@ class RevitReadChannel:
             )
             job_prepared = True
 
-            pickup = await self.remote.wait_until_trigger_is_gone(pickup_timeout_seconds)
+            try:
+                pickup = await asyncio.wait_for(
+                    self.remote.wait_until_trigger_is_gone(pickup_timeout_seconds),
+                    min(budget, max(0, tool_deadline - loop.time())) if background else None,
+                )
+            except TimeoutError:
+                return running_job(job_id)
+
             trigger_taken = pickup.taken
             if not trigger_taken:
                 trigger_state = "is still present" if pickup.trigger_present else "is absent"
                 raise JobPickupTimeoutError(
                     f"Job was not picked up within {pickup.elapsed_seconds:.1f} s; "
                     f"Revit activation attempts: {pickup.activation_attempts}; "
-                    f"{TRIGGER_FILE} {trigger_state}. The job was not deleted and may still execute later."
+                    f"jobId={job_id}; job file {trigger_state}. The job was not deleted and may still execute later."
                 )
 
             loop = asyncio.get_running_loop()
-            deadline = loop.time() + timeout_seconds
-            response_name = await self.remote.wait_for_new_response(
-                job.command, known_responses, timeout_seconds, correlation_id
+            deadline = (
+                min(loop.time() + timeout_seconds, tool_deadline)
+                if background
+                else loop.time() + timeout_seconds
             )
+
+            def remaining() -> float:
+                # A frozen clock can round the difference above the budget.
+                left = max(0, deadline - loop.time())
+                return min(budget, timeout_seconds, left) if background else left
+
+            try:
+                response_name = await asyncio.wait_for(
+                    self.remote.wait_for_new_response(
+                        job.command,
+                        known_responses,
+                        remaining() if background else timeout_seconds,
+                        correlation_id,
+                    ),
+                    remaining() if background else None,
+                )
+            except (ResultExpiredError, ReadOnlyRefusedError):
+                raise
+            except (RevitChannelError, TimeoutError):
+                if not background:
+                    raise
+                response_name = None
             while response_name is not None:
                 # Progress writes reuse this file; cleanup must wait for a real result.
                 try:
                     content, _ = await asyncio.wait_for(
                         self.remote.finish_job(response_name, [], False, None),
-                        timeout=max(0, deadline - loop.time()),
+                        timeout=remaining(),
                     )
-                except TimeoutError:
+                except (ResultExpiredError, ReadOnlyRefusedError):
+                    raise
+                except (RevitChannelError, TimeoutError):
+                    if not background:
+                        raise
                     break
                 try:
                     envelope = json.loads(content)
@@ -415,60 +829,101 @@ class RevitReadChannel:
                     known_responses.add(response_name)
                     response_name = None
                 elif envelope is not None:
-                    result = parse_response(content, job.command)
+                    result = _complete_image_result(
+                        parse_response(content, job.command), job.command
+                    )
+                    responder = result.get("responder")
+                    if getattr(self.remote, "requires_identity", False) and (
+                        result.get("correlationId") != correlation_id
+                        or not isinstance(responder, dict)
+                        or responder.get("processId") != job.payload.get("targetProcessId")
+                    ):
+                        raise RevitChannelError(
+                            "The selected channel returned an unconfirmed response identity or correlation."
+                        )
                     if not _is_intermediate_response(result):
                         break
                     result = None
-                remaining = deadline - loop.time()
-                if remaining <= 0:
+                left = remaining()
+                if left <= 0:
                     break
-                await asyncio.sleep(min(1, remaining))
+                await asyncio.sleep(min(1, left))
                 if loop.time() >= deadline:
                     break
-                response_name = await self.remote.wait_for_new_response(
-                    job.command, known_responses, deadline - loop.time(), correlation_id
-                )
+                try:
+                    response_name = await self.remote.wait_for_new_response(
+                        job.command, known_responses, remaining(), correlation_id
+                    )
+                except (ResultExpiredError, ReadOnlyRefusedError):
+                    raise
+                except (RevitChannelError, TimeoutError):
+                    if not background:
+                        raise
+                    response_name = None
+
+            if result is None and background:
+                # Recheck at the boundary: a completed result wins over the budget.
+                try:
+                    response = await asyncio.wait_for(self.remote.fetch_job(job_id), 1)
+                except (ResultExpiredError, ReadOnlyRefusedError):
+                    raise
+                except (RevitChannelError, TimeoutError):
+                    return running_job(job_id)
+                if _is_intermediate_response(response):
+                    return running_job(job_id, response)
+                return parse_response(json.dumps(response), job.command)
 
             if result is None:
                 raise ResponseTimeoutError(
-                    f"The add-in picked up the job, but no result for {job.command} appeared within {timeout_seconds} s. "
+                    f"The add-in picked up jobId={job_id}, but no result for {job.command} appeared within {timeout_seconds} s. "
                     + (
                         "The action may have executed. Inspect the model before retrying."
                         if job.command in ACTION_COMMANDS
-                        else "The command may need more time; increase timeout_seconds and retry."
+                        else "The job may still execute; find it with revit_jobs and increase timeout_seconds before retrying."
                     )
                 )
 
-            if job.command == "export-view" and result.get("success") is True:
-                finish_attempted = True
+            if job.command in ("export-view", "capture-elements") and result.get("success") is True:
                 content, local_path = await self.remote.finish_job(
                     response_name,
                     [temporary_name, response_name],
                     True,
-                    job.save_to,
+                    job.output_path,
                 )
-                result = parse_response(content, job.command)
+                finish_attempted = True
+                result = _complete_image_result(parse_response(content, job.command), job.command)
                 if local_path is not None:
                     result["data"]["localPath"] = local_path
         except (Exception, asyncio.CancelledError) as error:
             # Preserve the original failure until temporary-file cleanup finishes.
             failure = error
 
+        if background and isinstance(failure, asyncio.CancelledError):
+            raise failure
+
         cleanup_names = [temporary_name] if job_prepared and not finish_attempted else []
         if response_name and not finish_attempted:
             cleanup_names.append(response_name)
         try:
-            await self.remote.delete_files(cleanup_names)
+            if job.command == "capture-elements":
+                await asyncio.wait_for(self.remote.delete_files(cleanup_names), 10)
+            else:
+                await self.remote.delete_files(cleanup_names)
         except (Exception, asyncio.CancelledError) as cleanup_error:
             # Cleanup failure must not replace the original command failure.
-            if failure is None:
-                failure = RevitChannelError(
-                    f"Could not clean up channel temporary files: {cleanup_error}"
-                )
-            else:
+            if failure is not None:
                 LOGGER.warning(
                     "Could not clean up temporary files after an error: %s",
                     cleanup_error,
+                )
+            elif result is not None and isinstance(cleanup_error, Exception):
+                LOGGER.warning(
+                    "Could not clean up temporary files after receiving a result: %s",
+                    cleanup_error,
+                )
+            else:
+                failure = RevitChannelError(
+                    f"Could not clean up channel temporary files: {cleanup_error}"
                 )
 
         if failure is not None:
@@ -478,10 +933,33 @@ class RevitReadChannel:
         return result
 
 
+def _complete_image_result(result: dict[str, Any], command: str) -> dict[str, Any]:
+    data = result.get("data")
+    elapsed_ms = result.get("elapsedMs")
+    if (
+        command in ("export-view", "capture-elements")
+        and result.get("partial") is True
+        and result.get("success") is False
+        and isinstance(data, dict)
+        and isinstance(data.get("fileName"), str)
+        and data["fileName"]
+        and isinstance(elapsed_ms, (int, float))
+        and elapsed_ms > 0
+    ):
+        result = result.copy()
+        result["success"] = True
+        result.pop("partial")
+    return result
+
+
 def _is_intermediate_response(response: dict[str, Any]) -> bool:
     if response.get("partial") is not True:
         return False
+    if response.get("command") == "process-models":
+        return response.get("message") == "Command accepted and running."
     message = response.get("message")
+    if isinstance(message, str) and message.startswith("Processed "):
+        return True
     if response.get("correlationId"):
         terminal_partial = isinstance(message, str) and (
             "The 60-second limit was reached" in message
@@ -494,18 +972,13 @@ def _is_intermediate_response(response: dict[str, Any]) -> bool:
             )
         )
         return not terminal_partial
-    return (
-        message
-        in (
-            "Command accepted and running.",
-            "Command accepted; preparing the view element list.",
-            "The element list is ready; reading data in batches.",
-            "Processing is waiting for the next ExternalEvent call.",
-            "New job rejected: RevitModelMcp is busy reading elements.",
-        )
-        or (isinstance(message, str) and message.startswith("Processed "))
-        or (response.get("data") == "accepted" and response.get("elapsedMs") == 0)
-    )
+    return message in (
+        "Command accepted and running.",
+        "Command accepted; preparing the view element list.",
+        "The element list is ready; reading data in batches.",
+        "Processing is waiting for the next ExternalEvent call.",
+        "New job rejected: RevitModelMcp is busy reading elements.",
+    ) or (response.get("data") == "accepted" and response.get("elapsedMs") == 0)
 
 
 def parse_response(content: str, expected_command: str) -> dict[str, Any]:
@@ -526,7 +999,7 @@ def parse_response(content: str, expected_command: str) -> dict[str, Any]:
         )
     if response["success"] is False:
         if expected_command in ACTION_COMMANDS:
-            return response
+            return with_error_code(response)
         if _is_intermediate_response(response) or (
             response.get("partial") is True
             and isinstance(response.get("data"), (dict, list))

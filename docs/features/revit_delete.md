@@ -1,74 +1,35 @@
----
-description: "删除构件及其依赖"
----
+# Delete Elements
 
-# 删除构件
+Delete elements and their Revit dependencies; the count includes dependents.
 
-`revit_delete`
+**Group:** Model actions · **Kind:** Action (opt-in)
 
-<p class="facts"><span><b>分组</b> 编辑</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.1.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 模型构件 / 参数</span></p>
+## Parameters
 
-删除构件及其依赖
+| Name | Required | Default | Type | Meaning |
+| --- | --- | --- | --- | --- |
+| `element_ids` | Yes | — | `array of integer` | element ids (unitless Revit ids) |
+| `confirm_token` | No | null | `string / null` | — |
+| `dry_run` | No | false | `boolean` | rehearse: execute, return the same verification block, then roll back |
 
-!!! warning "动作工具需要双门禁"
-    客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
+### Common parameters
 
-!!! note "使用提示"
-    支持 dry_run
-
-[同名集成分支页面](../platform/revit_delete.md)
-
-## 与集成分支的契约差异 {#contract-diff}
-
-下表由注册表 inputSchema 自动比较得出，不是手写清单。
-
-- 仅集成分支有参数 confirm_token
-
-本页是发布版 0.9.0 的契约；集成分支上的同名工具参数不同，请勿混用。
-
-## 可复制提示词 {#prompts}
-
-```text
-删掉这两个构件，先彩排
-```
-
-## 参数 {#parameters}
-
-<div class="rmc-tablewrap" markdown="1">
-
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `element_ids` | 是 | — | `array<integer>` | 构件 ID 列表（无单位的 Revit ID） |
-| `dry_run` | 否 | `false` | `boolean` | 彩排：执行后回滚，返回同样的校验块，不写模型 |
-
-</div>
-
-### 通用参数 {#common-parameters}
-
-<div class="rmc-tablewrap" markdown="1">
-
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
-
-</div>
-
-## 功能说明与返回结果 {#contract}
-
-需要移除时，删除构件及其 Revit 依赖对象；ID 没有单位，返回的删除数量包含依赖对象。
-`dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
-同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
-
-## Revit 年份支持 {#year-support}
-
-| Revit 年份 | 验证状态 |
+| Name | Meaning |
 | --- | --- |
-| 2020 | <span class="state ok">已实测</span> |
-| 2026 | <span class="state ok">已实测</span> |
-| 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
+| `document` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected. |
 
-已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
+## Behavior and returned data
 
----
+Delete elements and their Revit dependencies; the count includes dependents. dry_run returns the count. Above 500 elements including dependents a confirm_token from a first call is needed; revit_run_actions refuses such deletions.
 
-[全部功能](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)
+## Revit year support
+
+| Revit year | State |
+| --- | --- |
+| 2020 | Not supported yet |
+| 2022–2025, 2027 | Built |
+| 2026 | Built |
+
+**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
+
+[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)

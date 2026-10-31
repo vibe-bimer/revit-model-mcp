@@ -6,6 +6,27 @@ namespace RevitModelMcp.Core.Tests.Control;
 public sealed class UniversalJobParserTests
 {
     [Test]
+    public async Task Parse_Catalog_ReadsFilterAndLimit()
+    {
+        var result = ControlJobParser.Parse("""{"command":"list-catalog","section":"family-types","nameContains":" Door ","limit":2000}""");
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.ListCatalog);
+        await Assert.That(result.NameContains).IsEqualTo("Door");
+        await Assert.That(result.Limit).IsEqualTo(2000);
+        var defaults = ControlJobParser.Parse("""{"command":"list-catalog","section":"levels"}""");
+        await Assert.That(defaults.Limit).IsEqualTo(200);
+    }
+
+    [Test]
+    [Arguments(0)]
+    [Arguments(-1)]
+    [Arguments(2001)]
+    public async Task Parse_Catalog_RejectsInvalidLimit(int limit)
+    {
+        var result = ControlJobParser.Parse($$"""{"command":"list-catalog","section":"levels","limit":{{limit}}}""");
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+    }
+
+    [Test]
     [Arguments("{}", false)]
     [Arguments("{\"includeGeometry\":false}", false)]
     [Arguments("{\"includeGeometry\":true}", true)]
@@ -16,6 +37,18 @@ public sealed class UniversalJobParserTests
         var result = ControlJobParser.Parse(json);
         await Assert.That(result.Kind).IsEqualTo(ControlJobKind.QueryElements);
         await Assert.That(result.IncludeGeometry).IsEqualTo(expected);
+    }
+
+    [Test]
+    public async Task Parse_QueryElements_ClampsLimitAboveMaximum()
+    {
+        var maximum = ControlJobParser.Parse("""{"command":"query-elements","limit":5000}""");
+        var excessive = ControlJobParser.Parse("""{"command":"query-elements","limit":5001}""");
+
+        await Assert.That(maximum.Kind).IsEqualTo(ControlJobKind.QueryElements);
+        await Assert.That(maximum.Limit).IsEqualTo(5000);
+        await Assert.That(excessive.Kind).IsEqualTo(ControlJobKind.QueryElements);
+        await Assert.That(excessive.Limit).IsEqualTo(5000);
     }
 
     [Test]

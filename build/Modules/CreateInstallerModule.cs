@@ -35,7 +35,8 @@ public sealed class CreateInstallerModule(IOptions<BuildOptions> buildOptions) :
         await context.DotNet().Build(new DotNetBuildOptions
         {
             ProjectSolution = wixInstaller.Path,
-            Configuration = "Release"
+            Configuration = "Release",
+            NoRestore = true
         }, cancellationToken: cancellationToken);
 
         var builderFile = wixInstaller.Folder!
@@ -68,7 +69,8 @@ public sealed class CreateInstallerModule(IOptions<BuildOptions> buildOptions) :
             }
 
             assemblyFolder.GetFile("RevitModelMcp.dll").Exists.ShouldBeTrue($"Missing add-in: {buildDirectory.Path}");
-            wixTarget.Folder.GetFile("RevitModelMcp.addin").CopyTo(yearFolder.GetFile("RevitModelMcp.addin").Path);
+            buildDirectory.GetFolder("publish").GetFile("RevitModelMcp.addin")
+                .CopyTo(yearFolder.GetFile("RevitModelMcp.addin").Path);
             foreach (var name in new[] { "LICENSE", "THIRD-PARTY-NOTICES.md" })
             {
                 SolutionRoot.Directory.GetFile(name).CopyTo(yearFolder.GetFile(name).Path);
@@ -93,8 +95,13 @@ public sealed class CreateInstallerModule(IOptions<BuildOptions> buildOptions) :
                 }
             }, cancellationToken: cancellationToken);
 
-        var outputFiles = outputFolder.GetFiles(file => file.Extension == ".msi").ToArray();
-        outputFiles.Length.ShouldBe(2, "Exactly two installers must be produced");
+        var store = string.Equals(Environment.GetEnvironmentVariable("INSTALLER_VARIANT"), "store", StringComparison.OrdinalIgnoreCase);
+        var outputFiles = outputFolder
+            .GetFiles(file => file.Extension == ".msi" && file.NameWithoutExtension.EndsWith("-store", StringComparison.Ordinal) == store)
+            .ToArray();
+        outputFiles.Length.ShouldBe(store ? 1 : 2, store
+            ? "Exactly one store installer must be produced"
+            : "Exactly two installers must be produced");
 
         foreach (var outputFile in outputFiles)
         {
@@ -110,7 +117,7 @@ public sealed class CreateInstallerModule(IOptions<BuildOptions> buildOptions) :
         var wixToolFolder = Folder.CreateTemporaryFolder();
         await context.DotNet().Tool.Execute(new DotNetToolOptions
         {
-            Arguments = ["install", "wix", "--version", "7.*", "--tool-path", wixToolFolder.Path]
+            Arguments = ["install", "wix", "--version", "7.0.0", "--tool-path", wixToolFolder.Path]
         }, cancellationToken: cancellationToken);
 
         var wixExe = wixToolFolder.GetFile("wix.exe");
@@ -126,6 +133,12 @@ public sealed class CreateInstallerModule(IOptions<BuildOptions> buildOptions) :
             new GenericCommandLineToolOptions(wixExe.Path)
             {
                 Arguments = ["extension", "add", "-g", $"WixToolset.UI.wixext/{wixVersion}"]
+            }, cancellationToken: cancellationToken);
+
+        await context.Shell.Command.ExecuteCommandLineTool(
+            new GenericCommandLineToolOptions(wixExe.Path)
+            {
+                Arguments = ["extension", "add", "-g", $"WixToolset.Util.wixext/{wixVersion}"]
             }, cancellationToken: cancellationToken);
 
         return wixToolFolder;

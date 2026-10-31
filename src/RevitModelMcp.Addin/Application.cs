@@ -1,81 +1,207 @@
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Events;
 using JetBrains.Annotations;
+using Nice3point.Revit.Extensions;
 using Nice3point.Revit.Toolkit;
 using Nice3point.Revit.Toolkit.External;
+using RevitModelMcp.Activity;
+using RevitModelMcp.Connect;
 using RevitModelMcp.Control;
 using RevitModelMcp.Core.Control;
+using RevitModelMcp.Core.Export;
+using RevitModelMcp.Core.Help;
 using RevitModelMcp.Core.Models;
 using RevitModelMcp.Core.Serialization;
+using RevitModelMcp.Updates;
 
 namespace RevitModelMcp;
 
 [UsedImplicitly]
 public sealed class Application : ExternalApplication
 {
-    private static readonly string TriggerFilePath = Path.Combine(
-        Output.SnapshotFileWriter.OutputDirectory,
-        "trigger.txt");
+    internal static string AddinVersion => typeof(Application).Assembly
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.0";
 
-    private readonly ControlChannel _controlChannel = new(TriggerFilePath);
+    internal const int ProtocolVersion = 1;
+
+    internal static readonly string[] SupportedCommands =
+    [
+        "ping", "jobs", "jobs/persisted", "model-health", "links-status", "shared-coordinates",
+        "parameter-fill-check", "document-info", "documents", "ui-state", "list-views", "view-summary",
+        "view-info", "view-elements", "element-details", "view-warnings", "export-view", "capture-elements", "schedule-data",
+        "query-elements", "aggregate-elements", "list-catalog", "list-warnings",
+        "list-relations", "family-audit", "nwc-settings-check", "compare-link-datums",
+        "select", "show", "isolate", "override-graphics", "move", "rotate", "copy", "mirror", "change-type", "update-parameters", "place-family", "load-family", "place-families", "create-wall", "link-cad", "walls-from-cad", "create-mep-run", "create-view", "duplicate-view", "apply-view-template", "create-sheet", "place-views-on-sheet", "tag-elements", "create-schedule",
+        "set-parameter", "delete", "batch", "process-models", "export-nwc", "export", "edit-families",
+        "align-link-datums", "open-document", "close-document", "save-document",
+        "sync-document", "activate-document", "activate-view", "close-views", "new-document",
+        "set-view-visibility", "remove-links", "execute-code", "undo-last",
+        "batch-supervisor-start", "batch-prepass", "batch-open", "batch-close", "model-snapshot",
+        ..Core.Fork.ForkRegistry.Commands,
+        ..Core.Fork.ForkReads.Commands
+    ];
+    private ControlChannel _controlChannel = null!;
     private ControlExternalEventHandler? _eventHandler;
     private Autodesk.Revit.UI.ExternalEvent? _externalEvent;
     private ExternalEventRequestQueue? _requestQueue;
-    private TriggerFileWatcher? _triggerWatcher;
+    private JobFileWatcher? _jobWatcher;
     private InstanceHeartbeat? _instanceHeartbeat;
     private Document? _activeDocument;
     private HttpChannel? _httpChannel;
+    private PipeChannel? _pipeChannel;
+    private volatile IReadOnlyList<InstanceDocument> _documents = Array.Empty<InstanceDocument>();
+    private readonly string _instanceId = Guid.NewGuid().ToString("N");
+    private static Application? _instance;
 
     public override void OnStartup()
     {
+#if NETFRAMEWORK
+        AppDomain.CurrentDomain.AssemblyResolve += ResolveCodeDependency;
+#endif
+        Policy.PolicyProvider.ApplyProcessEnvironment();
         PluginLog.Start();
+        _instance = this;
         PluginLog.Info($"RevitModelMcp started. LogPath='{PluginLog.FilePath}'.");
+        var (fileChannelEnabled, fileChannelWarning) = Output.ChannelDirectory.InitializeChannel();
+        if (fileChannelWarning is not null)
+            PluginLog.Warn(fileChannelWarning);
+        _controlChannel = new ControlChannel(Output.ChannelDirectory.OutputDirectory)
+        {
+            FileChannelEnabled = fileChannelEnabled
+        };
         _eventHandler = new ControlExternalEventHandler(_controlChannel);
         _externalEvent = Autodesk.Revit.UI.ExternalEvent.Create(_eventHandler);
-        _requestQueue = new ExternalEventRequestQueue(() => _externalEvent.Raise());
+        _requestQueue = new ExternalEventRequestQueue(() =>
+        {
+            var result = _externalEvent.Raise();
+            if (result is ExternalEventRequest.Denied or ExternalEventRequest.TimedOut)
+                _controlChannel.Scheduler.MarkWaiting();
+            return result is ExternalEventRequest.Accepted or ExternalEventRequest.Pending;
+        }, _controlChannel.Scheduler.MarkWaiting);
         _eventHandler.Attach(_requestQueue);
-        _triggerWatcher = new TriggerFileWatcher(
-            TriggerFilePath,
-            RequestExecution,
-            exception => PluginLog.Error("Trigger watcher failed.", exception),
-            TimeSpan.FromSeconds(10));
-        _triggerWatcher.Start();
-        _instanceHeartbeat = new InstanceHeartbeat(
-            Path.GetDirectoryName(TriggerFilePath)!,
-            Process.GetCurrentProcess().Id,
-            Application.ControlledApplication.VersionNumber);
-        Application.ViewActivated += OnViewActivated;
-        Application.ControlledApplication.DocumentClosing += OnDocumentClosing;
-        DialogOverride.Attach(Application);
-        _activeDocument = RevitContext.UiApplication?.ActiveUIDocument?.Document;
-        _instanceHeartbeat.Start(_activeDocument);
+        NwcPathValidator.ConfigureTrustedNetworkRoots([]);
+        HttpSettings? httpSettings = null;
+        string? httpSettingsError = null;
+        var showActivityPaneOnAction = true;
         try
         {
-            _httpChannel = new HttpChannel(_controlChannel, RequestExecution,
-                Application.ControlledApplication.VersionNumber, HttpSettings.Load());
-            _httpChannel.UpdateDocument(_activeDocument?.Title);
-            _httpChannel.Start();
+            httpSettings = HttpSettings.Load();
+            if (Policy.PolicyProvider.Current.HttpEnabled is { } policyHttp) httpSettings.HttpEnabled = policyHttp;
+            showActivityPaneOnAction = httpSettings.ShowActivityPaneOnAction;
+            try
+            {
+                NwcPathValidator.ConfigureTrustedNetworkRoots(Policy.PolicyProvider.Current.TrustedNetworkRoots ?? httpSettings.TrustedNetworkRoots);
+            }
+            catch (ArgumentException)
+            {
+                PluginLog.Warn("Invalid trustedNetworkRoots in settings.json. Network shares remain unavailable.");
+            }
         }
         catch (Exception exception)
         {
-            PluginLog.Warn($"HTTP configuration failed. Check settings.json and its permissions. Type='{exception.GetType().Name}'.");
+            httpSettingsError = exception.GetType().Name;
+            PluginLog.Warn($"Settings could not be loaded. Check settings.json and its permissions. Type='{exception.GetType().Name}'.");
         }
+        if (_controlChannel.FileChannelEnabled)
+        {
+            _jobWatcher = new JobFileWatcher(
+                Output.ChannelDirectory.OutputDirectory,
+                RequestExecution,
+                exception => PluginLog.Error("Job file watcher failed.", exception),
+                TimeSpan.FromSeconds(10));
+            _jobWatcher.Start();
+        }
+        Application.ViewActivated += OnViewActivated;
+        Application.ControlledApplication.DocumentClosing += OnDocumentClosing;
+        Application.ControlledApplication.DocumentClosed += OnDocumentListChanged;
+        Application.ControlledApplication.DocumentOpened += OnDocumentListChanged;
+        Application.ControlledApplication.DocumentCreated += OnDocumentListChanged;
+        Application.ControlledApplication.DocumentSavedAs += OnDocumentListChanged;
+        _activeDocument = RevitContext.UiApplication?.ActiveUIDocument?.Document;
+        _documents = ReadDocuments(null);
+        try
+        {
+            _pipeChannel = new PipeChannel(_controlChannel, RequestExecution,
+                Application.ControlledApplication.VersionNumber, _instanceId, () => _documents);
+            _pipeChannel.Start();
+        }
+        catch (Exception exception)
+        {
+            _pipeChannel = null;
+            PluginLog.Error("Pipe listener failed.", exception);
+        }
+        if (_controlChannel.FileChannelEnabled)
+        {
+            // The first heartbeat is written after the pipe listens, so discovery never advertises a dead pipe.
+            _instanceHeartbeat = new InstanceHeartbeat(
+                Output.ChannelDirectory.RootDirectory,
+                Process.GetCurrentProcess().Id,
+                Application.ControlledApplication.VersionNumber,
+                _instanceId,
+                _pipeChannel?.PipeName);
+        }
+        Application.ControlledApplication.DocumentChanged += OnDocumentChanged;
+        ActivityHost.Scheduler = _controlChannel.Scheduler;
+        ActivityHost.CancelJob = _controlChannel.CancelJob;
+        RegisterActivityPane();
+        _instanceHeartbeat?.Start(_activeDocument, _documents);
+        var httpStatus = httpSettings is null
+            ? HttpListenerStatus.ConfigError(httpSettingsError!)
+            : HttpListenerStatus.ForDisabled(Policy.PolicyProvider.Current.HttpEnabled);
+        var channelOwnsStatus = false;
+        if (httpSettings is not null)
+        {
+            try
+            {
+                httpSettings.ApplyHttpOverrides(Policy.PolicyProvider.Current.HttpEnabled);
+                _httpChannel = new HttpChannel(_controlChannel, RequestExecution,
+                    Application.ControlledApplication.VersionNumber, httpSettings);
+                _httpChannel.UpdateDocument(_activeDocument?.Title);
+                _httpChannel.StatusChanged += status => _instanceHeartbeat?.UpdateHttpStatus(status);
+                _httpChannel.Start();
+                _instanceHeartbeat?.UpdateHttpPort(_httpChannel.BoundPort);
+                // The channel pushes its own later status changes, including the self-probe result.
+                channelOwnsStatus = httpSettings.HttpEnabled;
+            }
+            catch (Exception exception)
+            {
+                httpStatus = HttpListenerStatus.ConfigError(exception.GetType().Name);
+                PluginLog.Warn($"HTTP configuration failed. Check settings.json and its permissions. Type='{exception.GetType().Name}'.");
+            }
+        }
+        if (!channelOwnsStatus) _instanceHeartbeat?.UpdateHttpStatus(httpStatus);
+        ActivityPaneAutoShow.Configure(showActivityPaneOnAction);
+        UpdateService.Start();
     }
 
     public override void OnShutdown()
     {
+        _instance = null;
+#if NETFRAMEWORK
+        AppDomain.CurrentDomain.AssemblyResolve -= ResolveCodeDependency;
+#endif
         Application.ViewActivated -= OnViewActivated;
         Application.ControlledApplication.DocumentClosing -= OnDocumentClosing;
+        Application.ControlledApplication.DocumentClosed -= OnDocumentListChanged;
+        Application.ControlledApplication.DocumentOpened -= OnDocumentListChanged;
+        Application.ControlledApplication.DocumentCreated -= OnDocumentListChanged;
+        Application.ControlledApplication.DocumentSavedAs -= OnDocumentListChanged;
+        Application.ControlledApplication.DocumentChanged -= OnDocumentChanged;
+        ActivityHost.Reset();
+        ActivityPaneAutoShow.Reset();
         _activeDocument = null;
         _instanceHeartbeat?.Dispose();
         _instanceHeartbeat = null;
-        _triggerWatcher?.Dispose();
-        _triggerWatcher = null;
+        _jobWatcher?.Dispose();
+        _jobWatcher = null;
+        _pipeChannel?.Dispose();
+        _pipeChannel = null;
         _httpChannel?.Dispose();
         _httpChannel = null;
         _controlChannel.Shutdown();
@@ -86,28 +212,111 @@ public sealed class Application : ExternalApplication
         PluginLog.Shutdown();
     }
 
+#if NETFRAMEWORK
+    private static Assembly? ResolveCodeDependency(object? sender, ResolveEventArgs args)
+    {
+        var name = new AssemblyName(args.Name).Name;
+        if (name is not ("Microsoft.CodeAnalysis" or "Microsoft.CodeAnalysis.CSharp" or
+            "System.Buffers" or "System.Collections.Immutable" or "System.Memory" or
+            "System.Numerics.Vectors" or "System.Reflection.Metadata" or
+            "System.Runtime.CompilerServices.Unsafe" or "System.Text.Encoding.CodePages" or
+            "System.Threading.Tasks.Extensions")) return null;
+        var folder = Path.GetDirectoryName(typeof(Application).Assembly.Location)!;
+        var path = Path.Combine(folder, name + ".dll");
+        return File.Exists(path) ? Assembly.LoadFrom(path) : null;
+    }
+#endif
+
+    private void RegisterActivityPane()
+    {
+        ActivityPaneProvider.Register(Application);
+        var panel = Application.CreatePanel("MCP");
+        var button = panel.AddPushButton<ShowActivityPaneCommand>(PaneText.RibbonButton)
+            .SetImage("/RevitModelMcp;component/Resources/Icons/Activity16.png")
+            .SetLargeImage("/RevitModelMcp;component/Resources/Icons/Activity32.png")
+            .SetToolTip(PaneText.RibbonToolTip);
+        button.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, HelpLinks.AddinHelpUrl));
+        var connect = panel.AddPushButton<ConnectAiCommand>(ConnectText.RibbonButton)
+            .SetImage("/RevitModelMcp;component/Resources/Icons/Connect16.png")
+            .SetLargeImage("/RevitModelMcp;component/Resources/Icons/Connect32.png")
+            .SetToolTip(ConnectText.RibbonToolTip);
+        connect.SetContextualHelp(new ContextualHelp(ContextualHelpType.Url, HelpLinks.AddinHelpUrl));
+    }
+
+    /// <summary>Re-reads document titles, for example after a detached open appended "_detached" with no later event.</summary>
+    internal static void RefreshDocumentList()
+    {
+        var instance = _instance;
+        if (instance is null) return;
+        instance.RefreshDocuments(null);
+        instance._httpChannel?.UpdateDocument(instance._activeDocument?.Title);
+    }
+
     private void OnViewActivated(object? sender, ViewActivatedEventArgs args)
     {
         _activeDocument = args.CurrentActiveView?.Document;
-        _instanceHeartbeat?.UpdateDocument(_activeDocument);
+        RefreshDocuments(null);
         _httpChannel?.UpdateDocument(_activeDocument?.Title);
     }
 
     private void OnDocumentClosing(object? sender, DocumentClosingEventArgs args)
     {
+        ConfirmationStore.DocumentClosing(args.Document);
         if (ReferenceEquals(args.Document, _activeDocument))
         {
             // The heartbeat must clear a closed active document without waiting for a view switch.
             _activeDocument = null;
-            _instanceHeartbeat?.UpdateDocument(null);
             _httpChannel?.UpdateDocument(null);
         }
+        RefreshDocuments(args.Document);
+    }
+
+    private void OnDocumentListChanged(object? sender, EventArgs args) => RefreshDocuments(null);
+
+    private void RefreshDocuments(Document? closing)
+    {
+        try
+        {
+            _documents = ReadDocuments(closing);
+        }
+        catch (Exception exception)
+        {
+            // Discovery data must never break a Revit event.
+            PluginLog.Error("Open document list could not be read.", exception);
+        }
+        _instanceHeartbeat?.UpdateDocument(_activeDocument, _documents);
+    }
+
+    private IReadOnlyList<InstanceDocument> ReadDocuments(Document? closing)
+    {
+        var documents = new List<InstanceDocument>();
+        var application = RevitContext.UiApplication?.Application;
+        if (application is null) return documents;
+        foreach (Document document in application.Documents)
+        {
+            if (document.IsLinked || (closing is not null && document.Equals(closing))) continue;
+            documents.Add(new InstanceDocument
+            {
+                Title = document.Title,
+                Path = document.PathName ?? string.Empty,
+                IsActive = _activeDocument is not null && document.Equals(_activeDocument),
+                IsFamilyDocument = document.IsFamilyDocument
+            });
+        }
+        return documents;
+    }
+
+    private void OnDocumentChanged(object? sender, DocumentChangedEventArgs args)
+    {
+        ConfirmationStore.DocumentChanged(args.GetDocument());
+        UndoTracker.OnDocumentChanged(args);
     }
 
     private void RequestExecution()
     {
         try
         {
+            _controlChannel.ScanPendingFiles();
             // Raise is allowed on the watcher thread; Revit API calls run only inside Execute.
             _requestQueue?.Request();
         }
@@ -122,8 +331,6 @@ internal sealed class InstanceHeartbeat : IDisposable
 {
     private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan StaleAge = TimeSpan.FromMinutes(1);
-    private const int PublishAttempts = 5;
-    private const int PublishRetryDelayMilliseconds = 120;
     private static readonly UTF8Encoding Utf8WithoutBom = new(false);
     private readonly object _sync = new();
     private readonly string _directory;
@@ -131,26 +338,33 @@ internal sealed class InstanceHeartbeat : IDisposable
     private readonly string _temporaryPath;
     private readonly int _processId;
     private readonly string _revitVersion;
+    private readonly string _instanceId;
+    private readonly string? _pipeName;
+    private IReadOnlyList<InstanceDocument> _documents = Array.Empty<InstanceDocument>();
     private System.Threading.Timer? _timer;
     private string _documentTitle = string.Empty;
     private string _documentPath = string.Empty;
     private bool _disposed;
+    private int? _httpPort;
+    private HttpListenerStatus? _httpStatus;
 
-    public InstanceHeartbeat(string directory, int processId, string revitVersion)
+    public InstanceHeartbeat(string directory, int processId, string revitVersion, string instanceId, string? pipeName)
     {
         _directory = directory;
         _processId = processId;
         _revitVersion = revitVersion;
+        _instanceId = instanceId;
+        _pipeName = pipeName;
         _path = Path.Combine(directory, $"instance_{processId}.json");
         _temporaryPath = Path.Combine(directory, $"instance_{processId}.tmp");
     }
 
-    public void Start(Document? document)
+    public void Start(Document? document, IReadOnlyList<InstanceDocument> documents)
     {
-        UpdateDocument(document);
+        UpdateDocument(document, documents);
     }
 
-    public void UpdateDocument(Document? document)
+    public void UpdateDocument(Document? document, IReadOnlyList<InstanceDocument> documents)
     {
         lock (_sync)
         {
@@ -161,9 +375,28 @@ internal sealed class InstanceHeartbeat : IDisposable
 
             _documentTitle = document?.Title ?? string.Empty;
             _documentPath = document?.PathName ?? string.Empty;
+            _documents = documents;
             WriteStatus();
             _timer ??= new System.Threading.Timer(_ => Tick(), null, HeartbeatInterval, HeartbeatInterval);
             _timer.Change(HeartbeatInterval, HeartbeatInterval);
+        }
+    }
+
+    public void UpdateHttpPort(int? port)
+    {
+        lock (_sync)
+        {
+            _httpPort = port;
+            if (!_disposed) WriteStatus();
+        }
+    }
+
+    public void UpdateHttpStatus(HttpListenerStatus status)
+    {
+        lock (_sync)
+        {
+            _httpStatus = status;
+            if (!_disposed) WriteStatus();
         }
     }
 
@@ -189,12 +422,31 @@ internal sealed class InstanceHeartbeat : IDisposable
             {
                 ProcessId = _processId,
                 RevitVersion = _revitVersion,
-                PluginVersion = RevitModelMcp.PluginVersion.Value,
                 DocumentTitle = _documentTitle,
                 DocumentPath = _documentPath,
-                UpdatedUtc = DateTime.UtcNow.ToString("O")
+                UpdatedUtc = DateTime.UtcNow.ToString("O"),
+                StartedUtc = Output.ChannelDirectory.StartedUtc,
+                HttpPort = _httpPort,
+                HttpState = _httpStatus?.State,
+                HttpReason = _httpStatus?.Reason,
+                InstanceId = _instanceId,
+                PipeName = _pipeName,
+                Protocols = Protocols(),
+                Documents = _documents.ToList(),
+                AddinVersion = Application.AddinVersion,
+                ProtocolVersion = Application.ProtocolVersion,
+                Commands = Application.SupportedCommands.ToList()
             };
-            Publish(InstanceStatusJsonSerializer.Serialize(status));
+            File.WriteAllText(_temporaryPath, InstanceStatusJsonSerializer.Serialize(status), Utf8WithoutBom);
+            if (File.Exists(_path))
+            {
+                File.Replace(_temporaryPath, _path, null);
+            }
+            else
+            {
+                File.Move(_temporaryPath, _path);
+            }
+
             DeleteStaleFiles();
         }
         catch (Exception exception)
@@ -204,56 +456,13 @@ internal sealed class InstanceHeartbeat : IDisposable
         }
     }
 
-    /// <summary>
-    /// Publishes a heartbeat payload. Readers such as the MCP server, an indexer or a backup agent
-    /// can hold the status file open, and <see cref="File.Replace"/> then fails because it has to
-    /// delete the target. Retry, then write in place: a heartbeat that keeps moving matters more
-    /// than an atomic swap, because a stalled file makes the server see a dead instance.
-    /// </summary>
-    private void Publish(string json)
+    private List<string> Protocols()
     {
-        for (var attempt = 1; ; attempt++)
-        {
-            try
-            {
-                File.WriteAllText(_temporaryPath, json, Utf8WithoutBom);
-                if (File.Exists(_path))
-                {
-                    File.Replace(_temporaryPath, _path, null);
-                }
-                else
-                {
-                    File.Move(_temporaryPath, _path);
-                }
-
-                return;
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-            {
-                if (attempt >= PublishAttempts)
-                {
-                    File.WriteAllText(_path, json, Utf8WithoutBom);
-                    TryDeleteTemporaryFile();
-                    PluginLog.Warn(
-                        $"Instance heartbeat for '{_path}' fell back to an in-place write after {attempt} attempts. Last error: {exception.Message}");
-                    return;
-                }
-
-                System.Threading.Thread.Sleep(PublishRetryDelayMilliseconds);
-            }
-        }
-    }
-
-    private void TryDeleteTemporaryFile()
-    {
-        try
-        {
-            File.Delete(_temporaryPath);
-        }
-        catch (Exception)
-        {
-            // The temporary file is reused on the next write, so a failed delete is harmless.
-        }
+        var protocols = new List<string>();
+        if (_pipeName is not null) protocols.Add(PipeProtocol.Version);
+        protocols.Add("file/2");
+        if (_httpPort is not null && _httpStatus?.IsFailed != true) protocols.Add("http/1");
+        return protocols;
     }
 
     private void DeleteStaleFiles()
@@ -321,7 +530,7 @@ internal sealed class ControlExternalEventHandler : IExternalEventHandler
             () =>
             {
                 _controlChannel.Tick(application);
-                if (_controlChannel.HasActiveSession)
+                if (_controlChannel.HasPendingWork)
                 {
                     // The batch session requests the next Execute independently of Idling.
                     requestQueue.Request();

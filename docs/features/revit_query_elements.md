@@ -1,96 +1,49 @@
----
-description: "按类别/族/类型/标高/视图/工作集/参数过滤，分页读取构件明细"
----
+# Query Elements
 
-# 构件查询
+Read a page of matching element rows.
 
-`revit_query_elements`
+**Group:** Model queries · **Kind:** Read (read-only)
 
-<p class="facts"><span><b>分组</b> 查询与统计</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.1.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span></p>
+## Parameters
 
-按类别/族/类型/标高/视图/工作集/参数过滤，分页读取构件明细
+| Name | Required | Default | Type | Meaning |
+| --- | --- | --- | --- | --- |
+| `area_scheme` | No | null | `string / null` | Exact area-scheme name, case-insensitive. |
+| `categories` | No | null | `array of string / null` | — |
+| `family` | No | null | `string / null` | — |
+| `fields` | No | null | `array of string / null` | fields to return or write; the tool picks its usual ones by default |
+| `include_geometry` | No | false | `boolean` | Include location, boundingBox and roomCenterMm in model mm. Default false; true enlarges the response. |
+| `level` | No | null | `string / null` | level name, as revit_list_catalog reports it |
+| `limit` | No | 100 | `integer` | — |
+| `offset` | No | 0 | `integer` | — |
+| `parameter_filters` | No | null | `array of object / null` | AND-combined filters: parameter (exact localized name), operator (equals, contains, greater, less, empty, not-empty, exists) and value. Numbers use mm, m2, m3 or display units. |
+| `phase` | No | null | `string / null` | — |
+| `process_id` | No | null | `integer / null` | Revit process ID; takes precedence over document. |
+| `sort_direction` | No | "asc" | `string` | asc (default) or desc, case-insensitive. |
+| `sort_field` | No | "id" | `string` | System field (e.g. id, category, level) or exact localized parameter name to sort by; default id. |
+| `type_name` | No | null | `string / null` | Exact type name, case-insensitive. |
+| `view` | No | null | `string / null` | view name (or its Revit id) |
+| `workset` | No | null | `string / null` | — |
 
-[同名集成分支页面](../platform/revit_query_elements.md)
+### Common parameters
 
-## 与集成分支的契约差异 {#contract-diff}
-
-下表由注册表 inputSchema 自动比较得出，不是手写清单。
-
-- 参数 limit 约束 minimum：发布版 — / 集成分支 1
-- 参数 offset 约束 minimum：发布版 — / 集成分支 0
-- 仅发布版有参数 pickup_timeout_seconds
-- 仅集成分支有参数 process_id
-
-本页是发布版 0.9.0 的契约；集成分支上的同名工具参数不同，请勿混用。
-
-## 可复制提示词 {#prompts}
-
-```text
-列出 2F 上所有没填防火等级的门，给出 ID
-```
-
-## 参数 {#parameters}
-
-<div class="rmc-tablewrap" markdown="1">
-
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `area_scheme` | 否 | `null` | `string / null` | 面积方案的精确本地化名称（由 area-schemes 目录获取）；选择后仅查询该方案的面积构件，并与其它过滤条件共同生效 |
-| `categories` | 否 | `null` | `array<string> / null` | 类别过滤（可多个，取并集） |
-| `family` | 否 | `null` | `string / null` | 族名过滤 |
-| `fields` | 否 | `null` | `array<string> / null` | 要返回的字段；缺省返回常用字段 |
-| `include_geometry` | 否 | `false` | `boolean` | 是否返回位置、包围盒与所在房间中心（模型 mm） |
-| `level` | 否 | `null` | `string / null` | 标高过滤 |
-| `limit` | 否 | `100` | `integer` | 每页条数（配合 offset 分页） |
-| `offset` | 否 | `0` | `integer` | 从第几条开始（配合 limit 分页） |
-| `parameter_filters` | 否 | `null` | `array<object> / null` | 参数过滤条件（equals / contains / greater / less / empty / not-empty / exists） |
-| `phase` | 否 | `null` | `string / null` | 阶段过滤 |
-| `sort_direction` | 否 | `"asc"` | `string` | 排序方向：asc / desc |
-| `sort_field` | 否 | `"id"` | `string` | 排序字段（默认按构件 ID） |
-| `type_name` | 否 | `null` | `string / null` | 类型名称（与族一起定位） |
-| `view` | 否 | `null` | `string / null` | 视图名称（或视图 ID） |
-| `workset` | 否 | `null` | `string / null` | 工作集过滤 |
-
-</div>
-
-### 通用参数 {#common-parameters}
-
-<div class="rmc-tablewrap" markdown="1">
-
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
-| `pickup_timeout_seconds` | 否 | `300` | `integer` | local / SSH 等待插件拾取任务的预算（正整数秒，默认 300）；HTTP 忽略。拾取超时后待处理任务仍可能执行 |
-| `timeout_seconds` | 否 | `120` | `integer` | 拾取任务后的结果等待预算（正整数秒，默认 120）；HTTP 使用它作为响应预算，不能覆盖插件内部执行上限。超时不代表待处理动作已取消 |
-
-</div>
-
-## 功能说明与返回结果 {#contract}
-
-!!! note "使用提示"
-    以下保留当前工具声明的完整译文。文件通道实现仍有例外：它可能返回 `success:false`、`partial:true` 的终态部分数据，而不抛出声明中的错误。完整结果必须满足 `success:true` 且 `partial:false`（或没有该字段）；等待超时不取消任务。详见[读取响应契约](../tools.md)。
-
-在调用 `revit_list_catalog` 后，读取一页匹配构件的数据行。
-
-返回的数据包含 `elements`（`id` 和 `values`）、`fields`、`total`、`offset`、`limit` 和 `hasMore`；值会包含可用性、来源，以及可获取时的单位。
-长度使用 mm，面积使用 m2，体积使用 m3；可选的几何数据使用模型坐标系中的 mm，四舍五入到小数点后 1 位；无法获取的几何数据会省略。
-在房间内放置对象时使用 `roomCenterMm`；包围盒中心可能位于房间外。
-没有匹配项，或偏移量超出结果范围时，返回 `elements=[]`；当 `hasMore=true` 时，增加 `offset` 继续读取。
-先调用 `revit_list_catalog`；计数和分类汇总优先使用 `revit_aggregate_elements`。
-字段或筛选条件无效、文档不存在、读取失败或超时都会报错；不返回部分数据。
-
-如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
-
-## Revit 年份支持 {#year-support}
-
-| Revit 年份 | 验证状态 |
+| Name | Meaning |
 | --- | --- |
-| 2020 | <span class="state ok">已实测</span> |
-| 2026 | <span class="state ok">已实测</span> |
-| 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
+| `document` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected. |
+| `timeout_seconds` | Positive result-wait budget in seconds after pickup (default 120); HTTP uses it as the response budget. Does not override add-in execution limits; a timeout does not cancel a pending job. |
 
-已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
+## Behavior and returned data
 
----
+Read a page of matching element rows. Lengths use mm, areas m2, volumes m3; optional geometry is in model mm. roomCenterMm is a point inside the room, a bounding-box centre can lie outside it. hasMore=true means further pages exist. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.
 
-[全部功能](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)
+## Revit year support
+
+| Revit year | State |
+| --- | --- |
+| 2020 | Not supported yet |
+| 2022–2025, 2027 | Built |
+| 2026 | Built |
+
+**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
+
+[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)

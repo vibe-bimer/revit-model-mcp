@@ -21,7 +21,8 @@ internal static class QueryFilterBuilder
         Func<FilteredElementCollector> structuralCollector = () => Apply(
             viewId is null ? new FilteredElementCollector(document) : new FilteredElementCollector(document, viewId),
             structuralFilters);
-        var parameterNames = filters.Parameters.Select(filter => filter.Parameter).Concat(requestedFields);
+        var parameterNames = filters.Parameters.Select(filter => filter.Parameter)
+            .Concat(requestedFields.Where(field => !ElementFieldReader.IsBuiltInField(field)));
         var parameters = QueryParameterResolver.Resolve(document, parameterNames, structuralCollector);
         var parameterFilters = filters.Parameters.Select(filter => BuildParameterFilter(document, filter, parameters[filter.Parameter]));
         var allFilters = structuralFilters.Concat(parameterFilters).ToList();
@@ -29,7 +30,7 @@ internal static class QueryFilterBuilder
         {
             ResolvedFields = requestedFields
                 .Where(ElementFieldReader.IsBuiltInField)
-                .Concat(parameters.Keys)
+                .Concat(parameters.Keys.Where(key => !ElementFieldReader.IsBuiltInField(key)))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList(),
             CreateCollector = () => Apply(
@@ -129,7 +130,18 @@ internal static class QueryFilterBuilder
         ParameterFilterSpec filter)
     {
         var displayValue = ParseDouble(filter.Value!, descriptor.Name);
-        var internalValue = descriptor.DataType.ToInternalUnits(document, displayValue);
+        var internalValue = displayValue;
+        if (descriptor.DataType is not null && UnitUtils.IsMeasurableSpec(descriptor.DataType))
+        {
+            var unit = descriptor.DataType == SpecTypeId.Length
+                ? UnitTypeId.Millimeters
+                : descriptor.DataType == SpecTypeId.Area
+                    ? UnitTypeId.SquareMeters
+                    : descriptor.DataType == SpecTypeId.Volume
+                        ? UnitTypeId.CubicMeters
+                        : document.GetUnits().GetFormatOptions(descriptor.DataType).GetUnitTypeId();
+            internalValue = UnitUtils.ConvertToInternalUnits(displayValue, unit);
+        }
 
         const double epsilon = 1e-9;
         return filter.Operator switch
@@ -198,13 +210,13 @@ internal static class QueryFilterBuilder
         return result;
     }
 
-    private static string? GetBuiltInCategoryName(Category category)
+    internal static string? GetBuiltInCategoryName(Category category)
     {
         var builtInCategory = GetBuiltInCategory(category);
         return builtInCategory?.ToString();
     }
 
-    private static IEnumerable<string> GetRevitCategoryNames(Category category)
+    internal static IEnumerable<string> GetRevitCategoryNames(Category category)
     {
         yield return category.Name;
         var builtInCategory = GetBuiltInCategory(category);
@@ -218,9 +230,9 @@ internal static class QueryFilterBuilder
         {
             localizedName = LabelUtils.GetLabelFor(builtInCategory.Value);
         }
-        catch
+        catch (Exception exception)
         {
-            // Some internal categories have no display label.
+            PluginLog.Skipped($"category {builtInCategory.Value} display label", exception);
         }
 
         if (!string.IsNullOrWhiteSpace(localizedName))
@@ -231,14 +243,7 @@ internal static class QueryFilterBuilder
 
     private static BuiltInCategory? GetBuiltInCategory(Category category)
     {
-        var value = RevitValueReader.GetId(category.Id);
-        if (value is < int.MinValue or > int.MaxValue)
-        {
-            return null;
-        }
-
-        var builtInCategory = (BuiltInCategory)(int)value;
-        return Enum.IsDefined(typeof(BuiltInCategory), builtInCategory) ? builtInCategory : null;
+        return RevitValueReader.ToBuiltInCategory(RevitValueReader.GetId(category.Id));
     }
 
     private static View ResolveView(Document document, string name) =>

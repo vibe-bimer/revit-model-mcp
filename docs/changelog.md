@@ -1,1 +1,1 @@
---8<-- "CHANGELOG.zh.md"
+--8<-- "CHANGELOG.md"

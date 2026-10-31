@@ -1,1 +1,1 @@
---8<-- "CONTRIBUTING.zh.md"
+--8<-- "CONTRIBUTING.md"
