@@ -294,7 +294,13 @@ def prepare_server_environment(
     project = source / "server" / "pyproject.toml"
     venv = source / "server" / ".venv"
     reason = None
-    if uv and project.is_file():
+    # The export's own shape decides the reason first, so the record says the same thing on a
+    # machine with uv and on one without it.
+    if not project.is_file():
+        reason = "the export carries no server project"
+    elif uv is None:
+        reason = "uv is not installed"
+    else:
         command = [uv, "sync"]
         result = run(command, cwd=source / "server", env=env)
         if result.returncode != 0:
@@ -308,10 +314,6 @@ def prepare_server_environment(
         # inside the throwaway export, so removing it is safe.
         if venv.exists() and not venv.is_symlink():
             shutil.rmtree(venv, ignore_errors=True)
-    elif uv is None:
-        reason = "uv is not installed"
-    elif not project.is_file():
-        reason = "the export carries no server project"
     if link_build_environment(source, repo, ("server/.venv",)):
         log(f"== {reason}; falling back to the checkout's server virtualenv")
         return {"mode": "linked", "command": None, "fallback": reason}

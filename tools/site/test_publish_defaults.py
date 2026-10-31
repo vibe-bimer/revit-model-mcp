@@ -394,6 +394,22 @@ class FlowEnvironmentTests(PublishHarness):
             "the export carries no server project",
         )
 
+    def test_the_missing_project_reason_does_not_depend_on_uv(self):
+        """The record must read the same on a machine with uv and on one without it."""
+        self.commit("v1")
+
+        with_uv = self.publish()
+        without_uv = self.publish(PATH=self.path_without_uv())
+
+        for result in (with_uv, without_uv):
+            self.assertEqual(result.returncode, 0, result.stderr)
+            manifest = self.status()["current_manifest"]
+            self.assertEqual(manifest["server_environment"]["mode"], "absent")
+            self.assertEqual(
+                manifest["server_environment"]["fallback"],
+                "the export carries no server project",
+            )
+
 
 class KeepReleasesTests(PublishHarness):
     def test_site_keep_releases_controls_retention(self):
