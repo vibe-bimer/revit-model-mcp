@@ -2,6 +2,7 @@ using Autodesk.Revit.DB;
 using Nice3point.Revit.Extensions;
 using RevitModelMcp.Capture;
 using RevitModelMcp.Core.Control;
+using RevitModelMcp.Core.Fork;
 
 namespace RevitModelMcp.Control.Fork;
 
@@ -17,7 +18,8 @@ internal static class ForkLevels
     {
         ForkLookup.Require(!string.IsNullOrWhiteSpace(action.Name), "name is required.");
         ForkLookup.Require(action.Options.ElevationMm.HasValue, "elevationMm is required.");
-        ForkLookup.Require(double.IsFinite(action.Options.ElevationMm!.Value), "elevationMm must be a finite number.");
+        var elevationMm = action.Options.ElevationMm!.Value;
+        ForkLookup.Require(!double.IsNaN(elevationMm) && !double.IsInfinity(elevationMm), "elevationMm must be a finite number.");
     }
 
     /// <summary>Creates the level and reports its id, category and the readings of the new level.</summary>

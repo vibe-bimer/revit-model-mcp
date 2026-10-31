@@ -103,7 +103,8 @@
     "tools/check_fork_identity.py": "the identity check",
     "build/tool_manifest.py": "the network table names this fork's release feed",
     "server/revit_model_mcp/updates.py": "the update check reads this fork's release tag",
-    "server/tests/test_updates.py": "asserts the update check never resolves the package name"
+    "server/tests/test_updates.py": "asserts the update check never resolves the package name",
+    "src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj": "the net48 System.IO.Compression reference the fork xlsx writer needs"
   },
   "removed": {
     ".github/workflows/winget.yml": "removed: it published to upstream's WinGet package",
