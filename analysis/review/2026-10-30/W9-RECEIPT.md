@@ -210,6 +210,7 @@ $ actionlint        # v1.7.12，与 CI 同版本
 ## 6. 上线冒烟 runbook（**由 Lead 执行，W9 未执行**）
 
 前提：隔离环境验收已通过（本回执 §2、§4、§5）。执行前确认没有其他发布在跑。
+（2026-10-31 更新：#38 补记三个运行默认项的决定与验证，见 §6.4；§6.1、§6.3 的演练记录项同步补充。）
 
 ### 6.1 步骤
 
@@ -227,7 +228,9 @@ curl -sI http://192.168.100.120:8099/ | head -3    # 切换前线上仍可用
 STATE_TMP=$(mktemp -d); ROOT_TMP=$(mktemp -d)
 SITE_STATE_DIR=$STATE_TMP SITE_PUBLISH_ROOT=$ROOT_TMP/site \
   SITE_COMMIT=$(git rev-parse HEAD) scripts/update-site.sh ; echo "exit=$?"
-#    期望 exit=0，$STATE_TMP/manifest.json 里 last_attempt.outcome=success
+#    期望 exit=0，$STATE_TMP/manifest.json 里 last_attempt.outcome=success，
+#    current_manifest.source_resolution=pin，
+#    current_manifest.server_environment.mode 为 uv-sync 或 linked（§6.4）
 
 # 3. 正常发布（第一次需要接管线上普通目录，只做一次）
 SITE_PUBLISH_ROOT=/home/roky/revit-mcp/site scripts/update-site.sh --adopt
@@ -268,11 +271,23 @@ SITE_COMMIT=<known-good-sha> scripts/update-site.sh
 | 发布 release id | `<utcstamp>-<shortsha>` |
 | 前一版 release id | `<utcstamp>-<shortsha>` |
 | 源码 commit（`source_commit`） | `<sha>` |
+| 解析方式（`source_resolution`） | `<pin / head / upstream>` |
+| 服务器环境（`server_environment.mode`） | `<uv-sync / linked / absent>`；`linked` 时附 `fallback` 原因 |
 | 切换时间（UTC） | `<YYYY-MM-DDTHH:MM:SSZ>` |
 | 发布退出码 / 结论 | `<0 success / 4 rollback / 1 构建失败 / 2 同步失败>` |
 | 冒烟结果（逐项） | `<标题/200/404/robots/gzip/浏览器 7 页>` |
 | 是否回退 | `<否 / 是，原因>` |
 | 状态文件快照 | `$STATE/manifest.json` 的 `current_release`、`last_attempt`、`last_success` |
+
+### 6.4 三个运行默认项的决定（#38，2026-10-31 补记）
+
+| 默认项 | 决定 | 实现与验证 |
+| --- | --- | --- |
+| `SITE_COMMIT` | **端到端支持固定 commit**。接受仓库内 `git rev-parse` 能解析的任意 revision（完整 sha、短 sha、tag、分支名，须已存在于本地仓库）；设置时不执行 fetch，导出、门禁、构建与清单全部使用该 commit，清单记 `source_resolution: "pin"`；未设置时发布分支远端顶端，无远端则发布本地 `HEAD`。 | 新增 `tools/site/test_publish_defaults.py` 3 个黑盒测试（HEAD 更新后仍发布 pin 内容、短 sha 解析、重复固定发布为 no-op）；演练（§8 命令）发布 pin 的旧 commit 并核对页面与清单。 |
+| 导出树服务器环境 | **能自建就自建**：`PATH` 上有 uv 且导出树带 `server/pyproject.toml` 时，在导出树内跑 `uv sync`，从导出源码安装本包；否则回退为符号链接开发目录的 `server/.venv`，并在发布日志写明回退原因。所选路径记入清单 `server_environment`（`mode: uv-sync / linked / absent`，`fallback` 记原因）。`.venv-docs` 仍照旧从开发目录链接。 | 6 个单元测试（自建、sync 失败回退、半成品清理、无 uv 回退、皆无记 absent、无服务器工程）+ 3 个流程测试（清单字段与日志行）；主机实跑演练确认 `uv-sync` 路径。 |
+| `SITE_KEEP_RELEASES` | **默认保持 3**。实测一个版本约 36 MB（35,548,718 字节），默认稳态约 110 MB；需增减用该环境变量，最小值 2（当前版与上一版必须保留），非整数或低于 2 在构建开始前以退出码 1、阶段 `config` 失败。 | 3 个测试（`SITE_KEEP_RELEASES=2` 保留数、`banana` 与 `1` 的响亮失败）；保留数由既有发布测试回归覆盖。 |
+
+依据与细节见 `scripts/README.md` 的「Export server environment」一节与变量表；实现见 `scripts/publish_site.py`（`prepare_server_environment`、`keep_releases`）。
 
 ---
 
@@ -299,6 +314,7 @@ python3 tools/site/generate_features.py --verify-registry --check   # 生成物�
 python3 tools/site/verify_dual_build.py                             # 双配置门禁（真构建）
 python3 tools/site/verify_dual_build.py --skip-build                # 只比对已有产物
 python3 -m unittest tools.site.test_publish_site -v                 # 发布演练
+python3 -m unittest tools.site.test_publish_defaults -v             # 三个默认项行为测试（#38）
 python3 -m unittest tools.site.test_verify_dual_build -v            # 归一化/比对单测
 actionlint                                                          # 工作流静态检查
 
