@@ -12,7 +12,18 @@ ROOT="${SITE_REPO:-$(cd "$HERE/.." && pwd)}"
 PORT="${SITE_PORT:-8099}"
 LOG_DIR="${SITE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/revit-model-mcp}"
 LOG="$LOG_DIR/site-update.log"
+PYTHON="${PYTHON:-python3}"
+# The run is recorded in the state root, so a dead timer and a failed publish
+# are two different things to see in the deployment's own status page.
+STARTED="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 mkdir -p "$LOG_DIR"
+
+record_run() {
+  "$PYTHON" "$HERE/site_status.py" --record-timer \
+    --state "$LOG_DIR" --started "$STARTED" \
+    --exit-code "$1" --publish-exit "${2:-}" --verification "${3:-}" \
+    >>"$LOG" 2>&1 || true
+}
 
 {
   echo "=== $(date -Is) update on port $PORT"
@@ -30,6 +41,7 @@ mkdir -p "$LOG_DIR"
     3)
       # Another publish is already running and holds the lock; this round is a skip, not a failure.
       echo "publish skipped: another publish is in progress; the published site is unchanged"
+      record_run 0 3 "skipped"
       exit 0
       ;;
     2)
@@ -64,7 +76,9 @@ mkdir -p "$LOG_DIR"
 
   if [ "$publish_rc" -ne 0 ] || [ "$verify_failed" -ne 0 ]; then
     echo "run failed: publish exit $publish_rc, verification exit $verify_failed"
+    record_run 1 "$publish_rc" "failed"
     exit 1
   fi
+  record_run 0 "$publish_rc" "ok"
   exit 0
 } >>"$LOG" 2>&1

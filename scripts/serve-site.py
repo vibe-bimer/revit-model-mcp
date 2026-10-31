@@ -13,7 +13,9 @@ removes about 80%. This server keeps the same "static files from a directory" co
   * the site's own 404.html for a missing page, and a few dozen bytes of text for a missing
     asset: a browser asking for a stale image does not need a whole page, and the server never
     consults robots.txt, which is an indexing hint rather than access control;
-  * no directory listings.
+  * no directory listings;
+  * a live publish status at /status.json and /status.html, so a dead publisher or a dead timer
+    is visible at the deployment itself instead of only in a local log.
 
 Usage: serve-site.py [port] [directory]
 """
@@ -21,6 +23,7 @@ Usage: serve-site.py [port] [directory]
 from __future__ import annotations
 
 import gzip
+import json
 import mimetypes
 import re
 import sys
@@ -31,6 +34,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from typing import ClassVar
 from urllib.parse import unquote, urlsplit
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import site_status
 
 COMPRESSIBLE = {
     ".css",
@@ -184,6 +190,15 @@ class DocsHandler(BaseHTTPRequestHandler):
     root: ClassVar[Path]
     _cache: ClassVar[dict[tuple[str, int, int], bytes]] = {}
     _lock: ClassVar[threading.Lock] = threading.Lock()
+    # The live publish status. The publisher and the timer write it into the
+    # state root; the server renders it on request, so a dead publisher shows
+    # up at the deployment itself.
+    STATUS_TARGETS: ClassVar[dict[str, str]] = {
+        "/status": "html",
+        "/status/": "html",
+        "/status.html": "html",
+        "/status.json": "json",
+    }
 
     def log_message(self, fmt, *args):
         # Name and signature are fixed by BaseHTTPRequestHandler.
@@ -272,6 +287,10 @@ class DocsHandler(BaseHTTPRequestHandler):
         return data
 
     def _respond(self, body: bool) -> None:
+        status_kind = self.STATUS_TARGETS.get(urlsplit(self.path).path)
+        if status_kind is not None:
+            self._status(status_kind, body)
+            return
         try:
             path, redirect = self._resolve()
         except _BadRequest:
@@ -317,6 +336,25 @@ class DocsHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Encoding", "gzip")
         if path.suffix in COMPRESSIBLE:
             self.send_header("Vary", "Accept-Encoding")
+        self.end_headers()
+        if body:
+            self.wfile.write(payload)
+
+    def _status(self, kind: str, body: bool) -> None:
+        """Answer the live publish status; the state root is read per request."""
+        summary = site_status.summarize()
+        if kind == "json":
+            payload = (json.dumps(summary, indent=2, sort_keys=True) + "\n").encode()
+            content_type = "application/json; charset=utf-8"
+        else:
+            payload = site_status.render_html(summary).encode("utf-8")
+            content_type = "text/html; charset=utf-8"
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(len(payload)))
+        # The status changes with every publish, so it is never cached.
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         if body:
             self.wfile.write(payload)

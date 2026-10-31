@@ -35,6 +35,9 @@ REQUIRED_FILES: tuple[tuple[str, str], ...] = (
     ("scripts/serve-site.py", "the local server"),
     ("scripts/publish_site.py", "the release publisher"),
     ("scripts/site-cron.sh", "the scheduled publisher"),
+    ("scripts/site_status.py", "the publish status summary"),
+    ("scripts/check-site-status.py", "the publish watchdog"),
+    ("docs/ci-gates.md", "the gate documentation"),
 )
 
 # Each section lists one page per documented tool. The floor is the number of

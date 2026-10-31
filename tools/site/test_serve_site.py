@@ -8,9 +8,12 @@ are always compared under identical request headers, per the site review spec.
 import gzip
 import http.client
 import importlib.util
+import json
+import os
 import tempfile
 import threading
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -631,6 +634,81 @@ class RobotsHintTests(ServeSiteTestCase):
         status, headers, _ = self.request("GET", "/missing/")
         self.assertEqual(status, 404)
         self.assertTrue(headers["content-type"].startswith("text/html"))
+
+
+class StatusEndpointTests(ServeSiteTestCase):
+    """The deployment publishes its own publish health at /status."""
+
+    @classmethod
+    def prepare(cls, root: Path) -> None:
+        build_site(root)
+        cls.state = root / "state"
+        cls.state.mkdir()
+        # A fresh success: the summary must be able to tell healthy from stale.
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        (cls.state / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "schema": "revit-model-mcp.site-status/v1",
+                    "current_release": "20260101T000000Z-abc1234",
+                    "current_manifest": {
+                        "release_id": "20260101T000000Z-abc1234",
+                        "verification": {"build": "pass", "check_site": "pass"},
+                    },
+                    "last_attempt": {
+                        "outcome": "noop",
+                        "utc": now,
+                        "stage": "noop",
+                    },
+                    "last_success": {
+                        "utc": now,
+                        "noop": True,
+                        "release_id": "20260101T000000Z-abc1234",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        cls.previous = os.environ.get("SITE_STATE_DIR")
+        os.environ["SITE_STATE_DIR"] = str(cls.state)
+
+    @classmethod
+    def tearDownClass(cls):
+        if cls.previous is None:
+            os.environ.pop("SITE_STATE_DIR", None)
+        else:
+            os.environ["SITE_STATE_DIR"] = cls.previous
+        super().tearDownClass()
+
+    def test_status_json_describes_the_deployment(self):
+        status, headers, body = self.request("GET", "/status.json")
+        self.assertEqual(status, 200)
+        self.assertTrue(headers["content-type"].startswith("application/json"))
+        self.assertEqual(headers["cache-control"], "no-store")
+        summary = json.loads(body.decode("utf-8"))
+        self.assertEqual(summary["schema"], "revit-model-mcp.site-status/v1")
+        self.assertEqual(summary["outcome"], "noop")
+        self.assertEqual(summary["current_release"], "20260101T000000Z-abc1234")
+        self.assertFalse(summary["stale"])
+
+    def test_status_page_is_html_in_both_spellings(self):
+        for target in ("/status", "/status/", "/status.html"):
+            with self.subTest(target=target):
+                status, headers, body = self.request("GET", target)
+                self.assertEqual(status, 200)
+                self.assertTrue(headers["content-type"].startswith("text/html"))
+                self.assertEqual(headers["cache-control"], "no-store")
+                text = body.decode("utf-8")
+                self.assertIn("20260101T000000Z-abc1234", text)
+                self.assertIn("/status.json", text)
+
+    def test_status_head_matches_its_identity_get(self):
+        _, get_headers, body = self.request("GET", "/status.json")
+        status, head_headers, head_body = self.request("HEAD", "/status.json")
+        self.assertEqual(status, 200)
+        self.assertEqual(head_body, b"")
+        self.assertEqual(int(head_headers["content-length"]), len(body))
+        self.assertEqual(head_headers["content-type"], get_headers["content-type"])
 
 
 if __name__ == "__main__":

@@ -125,6 +125,8 @@ Windows 上使用 `.venv\Scripts\python.exe` 和 `.venv\Scripts\mkdocs.exe`。
 提交 PR 前，在已激活环境中运行 `mkdocs build --strict`。
 CI 还会运行 `python tools/site/check_docs_line.py`：站点配置、生成器、审计脚本、本地服务器、发布器或工具页面章节
 从检出中缺失时即失败，文档线被删掉不会再无声地进入 `main`。
+每道门禁证明什么、不能证明什么，以及线上站点的发布健康在哪里查看，见
+[CI 门禁与盲区](https://github.com/vibe-bimer/revit-model-mcp/blob/main/docs/ci-gates.md)。
 
 中英文文档必须同步维护。工具页面和导航根据当前 MCP 注册表快照 [`tools.json`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/tools.json)、[`capabilities.yaml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/capabilities.yaml) 中经审核的双语标题、摘要、提示词和参数含义，以及 [`contracts.yaml`](https://github.com/vibe-bimer/revit-model-mcp/blob/main/tools/site/content/contracts.yaml) 中完整的中文工具描述生成。工具描述、签名、schema 或注册发生变化后，激活文档环境，并用 `python -m pip install -e server` 使服务器可导入，然后更新快照：
 

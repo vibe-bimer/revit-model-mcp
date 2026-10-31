@@ -169,6 +169,8 @@ Run `mkdocs build --strict` in the activated environment before submitting a PR.
 CI also runs `python tools/site/check_docs_line.py`, which fails when the site configuration, the generator, the
 auditor, the server, the publisher or the tool sections are missing from the checkout, so a dropped documentation
 line cannot reach `main` unnoticed.
+[CI gates and their blind spots](https://github.com/vibe-bimer/revit-model-mcp/blob/main/docs/ci-gates.en.md) lists what each gate proves, what it cannot prove, and where the
+publish health of the deployed site is reported.
 
 ## Test coverage
 

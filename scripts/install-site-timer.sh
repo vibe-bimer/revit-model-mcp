@@ -6,21 +6,29 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PORT="${SITE_PORT:-8099}"
 INTERVAL_SECONDS="${SITE_INTERVAL:-900}"
 CRON_SCHEDULE="${1:-*/15 * * * *}"
-STATE="${XDG_STATE_HOME:-$HOME/.local/state}/revit-model-mcp"
+STATE="${SITE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/revit-model-mcp}"
 mkdir -p "$STATE"
 
 if command -v crontab >/dev/null 2>&1; then
   entry="$CRON_SCHEDULE SITE_PORT=$PORT $ROOT/scripts/site-cron.sh"
+  # The watchdog checks the deployment's own status and exits non-zero when the
+  # publish channel is broken, so a dead timer is noticed without reading logs.
+  watch="17 * * * * SITE_STATE_DIR=$STATE $ROOT/scripts/check-site-status.py >>$STATE/site-update.log 2>&1"
   current="$(crontab -l 2>/dev/null || true)"
-  { printf '%s\n' "$current" | grep -vF "site-cron.sh" || true; printf '%s\n' "$entry"; } | sed '/^$/d' | crontab -
+  { printf '%s\n' "$current" | grep -vF "site-cron.sh" || true
+    printf '%s\n' "$current" | grep -vF "check-site-status.py" || true
+    printf '%s\n' "$entry"
+    printf '%s\n' "$watch"
+  } | sed '/^$/d' | crontab -
   echo "scheduled with cron: $entry"
+  echo "scheduled with cron: $watch"
 elif command -v systemctl >/dev/null 2>&1 && systemctl --user show-environment >/dev/null 2>&1; then
   unit_dir="${XDG_CONFIG_HOME:-$HOME/.config}/systemd/user"
   mkdir -p "$unit_dir"
-  sed "s|@ROOT@|$ROOT|g; s|@PORT@|$PORT|g" "$ROOT/scripts/systemd/revit-model-mcp-site.service" > "$unit_dir/revit-model-mcp-site.service"
+  sed "s|@ROOT@|$ROOT|g; s|@PORT@|$PORT|g; s|@STATE@|$STATE|g" "$ROOT/scripts/systemd/revit-model-mcp-site.service" > "$unit_dir/revit-model-mcp-site.service"
   sed "s|@INTERVAL@|$INTERVAL_SECONDS|g" "$ROOT/scripts/systemd/revit-model-mcp-site.timer" > "$unit_dir/revit-model-mcp-site.timer"
   # The server runs as its own unit: a process started from the oneshot refresh unit dies with its cgroup.
-  sed "s|@ROOT@|$ROOT|g; s|@PORT@|$PORT|g" "$ROOT/scripts/systemd/revit-model-mcp-serve.service" > "$unit_dir/revit-model-mcp-serve.service"
+  sed "s|@ROOT@|$ROOT|g; s|@PORT@|$PORT|g; s|@STATE@|$STATE|g" "$ROOT/scripts/systemd/revit-model-mcp-serve.service" > "$unit_dir/revit-model-mcp-serve.service"
   systemctl --user daemon-reload
   systemctl --user enable --now revit-model-mcp-site.timer
   systemctl --user enable --now revit-model-mcp-serve.service

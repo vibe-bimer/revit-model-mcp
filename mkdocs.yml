@@ -179,6 +179,7 @@ plugins:
             Issue 管理: Issue management
             分诊标签: Triage labels
             验证资料: Validation records
+            CI 门禁与盲区: CI gates and blind spots
             实测证据: Validation evidence
             手工测试计划: Manual test plan
             ID 重建性能记录: ID rebuild performance record
@@ -442,6 +443,7 @@ nav:
           - Issue 管理: agents/issue-tracker.md
           - 分诊标签: agents/triage-labels.md
       - 验证资料:
+          - CI 门禁与盲区: ci-gates.md
           - 实测证据: validation.md
           - 手工测试计划: manual-test-plan.md
           - ID 重建性能记录: rebuild-performance.md

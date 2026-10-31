@@ -16,6 +16,8 @@ ${SITE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/revit-model-mcp}/
   releases/<utcstamp>-adopted/      a legacy directory taken over by --adopt
   current -> releases/<id>          atomic pointer, flipped with rename
   manifest.json                     latest status: attempt, success, failure
+  cron-status.json                  last timer run: exit code, verification
+  watchdog-status.json              last health check and its verdict
   publish.lock                      flock held for the whole publish
   site-update.log                   timer log
 <repo>/site -> state/current        served root (SITE_PUBLISH_ROOT)
@@ -34,6 +36,8 @@ ${SITE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/revit-model-mcp}/
 | `serve-site.sh <port>` | Start a LAN server on a free port and verify its content. / 仅在空闲端口启动局域网服务，并核实页面内容。 |
 | `site-cron.sh` | Timer entry: publish, then verify something answers on the port; restarts the serve unit only when nothing does, and never kills another port owner. / 定时入口：发布后核实端口有响应，仅在无人响应时重启 serve 单元，绝不终止占用端口的其他服务。 |
 | `install-site-timer.sh [schedule]` | Prefer cron, then a systemd user timer, then a supervised loop; installs the refresh timer and the serve unit. / 优先 cron，其次 systemd 用户定时器，最后托管循环；同时安装刷新定时器与服务单元。 |
+| `site_status.py` | Summarize the publish state into JSON or the bilingual status page; records one timer run with `--record-timer`. / 把发布状态汇总成 JSON 或双语状态页；`--record-timer` 记录一次定时器运行。 |
+| `check-site-status.py` | Watchdog: exit `0` healthy, `1` last publish failed, `2` stale; records its verdict and optionally posts to `SITE_ALERT_WEBHOOK`. / 巡检：`0` 健康、`1` 上次发布失败、`2` 已过期；记录结论，可按 `SITE_ALERT_WEBHOOK` 外发告警。 |
 
 The documentation server runs as `revit-model-mcp-serve.service`, never as a child of the refresh job: a process started from the oneshot refresh unit is killed with its cgroup when that unit exits.
 
@@ -86,6 +90,9 @@ Each release carries its own `manifest.json` (`revit-model-mcp.site-manifest/v1`
 | `MKDOCS` | auto-discovered | Builder command; a command line is split, not evaluated. / 构建命令，按词拆分，不做 eval。 |
 | `MKDOCS_CONFIG` | `<export>/mkdocs-lan.yml` | Config file, relative to the exported tree. / 配置文件。 |
 | `PYTHON` | `python3` | Interpreter for the publisher and the gates. / 解释器。 |
+| `SITE_STATUS_STALE_HOURS` | `26` | Age after which a deployment with no successful publish is stale. / 无成功发布超过该小时数即视为过期。 |
+| `SITE_STATUS_TIMER_SILENT_HOURS` | `2` | Silence after which the timer is considered dead. / 定时器静默超过该小时数即视为停摆。 |
+| `SITE_ALERT_WEBHOOK` | unset | URL that receives an unhealthy verdict as JSON. / 接收非健康结论的 webhook 地址。 |
 | `SITE_PUBLISH_RUNNING` | unset | Set for the nested test gate so the publisher's own tests skip themselves. / 发布器在导出树内跑测试时设置，避免递归。 |
 
 A dirty development tree is not a reason to skip: the export comes from `git archive`, so uncommitted edits neither block publishing nor leak into the release.
@@ -97,6 +104,31 @@ A dirty development tree is not a reason to skip: the export comes from `git arc
 The exported tree is a clean snapshot, so its `server/.venv` is built there when possible: with uv on `PATH`, the publisher runs `uv sync` inside the export's `server/`, installing the package from the exported source, and the registry gate then runs the code being published. When uv is missing, the sync fails, or the export carries no server project, the publisher falls back to symlinking the checkout's `server/.venv` and says so in the log (`falling back to the checkout's server virtualenv`). The chosen path is recorded in the release manifest as `server_environment`: `mode` is `uv-sync` when the export built its own environment, `linked` when the fallback symlink was used (with the reason in `fallback`), and `absent` when neither was possible — the gates then use their module-form fallback and fail loudly if the server is needed. The documentation venv (`.venv-docs`) is always symlinked from the checkout as before.
 
 导出树是干净快照，因此其 `server/.venv` 尽量在导出树内现建：`PATH` 上有 uv 时，发布器在导出树的 `server/` 里跑 `uv sync`，从导出源码安装本包，注册表门禁跑的就是被发布的代码；uv 缺失、sync 失败或导出树没有服务器工程时，回退为把开发目录的 `server/.venv` 符号链接进来，并在日志里写明（`falling back to the checkout's server virtualenv`）。所选路径记录在发布清单的 `server_environment` 字段：`mode` 为 `uv-sync` 表示导出树自建环境，`linked` 表示用了回退链接（原因写在 `fallback`），`absent` 表示两者皆不可得——此时门禁退回模块形式，需要服务器时会响亮失败。文档构建环境 `.venv-docs` 仍照旧从开发目录符号链接。
+
+## Publish health / 发布健康
+
+The deployment reports its own health, so a dead publish channel is visible without reading logs on the host.
+
+部署会自报健康状况，因此发布通道失效时无需登录主机翻日志也能发现。
+
+| Endpoint / 端点 | Answer / 返回 |
+| --- | --- |
+| `/status.json` | The summary as JSON, `no-store`. / 摘要的 JSON 版本，`no-store`。 |
+| `/status.html`, `/status`, `/status/` | The same summary as a bilingual page with a banner; `noindex`. / 同一份摘要的双语页面，带结论横幅，`noindex`。 |
+
+The summary carries `outcome` (last attempt), `current_release`, `last_attempt`, `last_success`, `last_failure`, `last_timer_run`, `last_watchdog_run`, `stale` and `stale_reasons`. A deployment is **stale** when the last successful publish is older than `SITE_STATUS_STALE_HOURS` (default 26) or the timer has been silent longer than `SITE_STATUS_TIMER_SILENT_HOURS` (default 2) — a publisher that died leaves a successful release that ages.
+
+摘要包含最后一次尝试的结论、当前发布、最近成功与失败、定时器与巡检的最后一次运行、以及是否 stale 与原因。**stale** 的判据是最近一次成功发布超过 `SITE_STATUS_STALE_HOURS`（默认 26 小时），或定时器静默超过 `SITE_STATUS_TIMER_SILENT_HOURS`（默认 2 小时）——发布器死掉时，成功版本会一直留着并变旧。
+
+```bash
+python3 scripts/check-site-status.py          # exit 0 healthy, 1 failed, 2 stale / 退出码
+python3 scripts/check-site-status.py --json   # the summary plus the verdict / 摘要加结论
+curl -s http://<host>:8099/status.json | jq .stale
+```
+
+`install-site-timer.sh` adds an hourly watchdog entry (`17 * * * *`) whose output appends to `site-update.log`; a non-zero exit is what cron mails and what any external monitor can watch. Set `SITE_ALERT_WEBHOOK` to a URL and an unhealthy verdict is POSTed there as `{"source", "verdict", "exit_code", "summary"}`; delivery failures are reported but never change the exit code.
+
+`install-site-timer.sh` 会安装每小时一次的巡检（`17 * * * *`），输出追加到 `site-update.log`；非零退出码就是 cron 发信、外部监控可盯的信号。把 `SITE_ALERT_WEBHOOK` 设为某个 URL，非健康结论会以 `{"source", "verdict", "exit_code", "summary"}` POST 过去；投递失败会报告，但不改变退出码。
 
 ## Migration / 迁移
 

@@ -10,6 +10,13 @@ base (absolute URLs, root-relative prefixes, robots policy and volatile
 manifest fields) the two trees must match file for file. The comparison never
 asserts a fixed page, asset or tool count.
 
+What this gate cannot prove: it only fails while a configuration still points
+at a file that exists. A commit that deletes something the build never reads —
+``scripts/serve-site.py``, ``scripts/publish_site.py``, the timer scripts, or
+this gate's own siblings — builds clean here and leaves CI green. The
+existence assertion in ``check_docs_line.py`` covers that blind spot; keep the
+two gates together. See ``docs/ci-gates.md``.
+
 Usage::
 
     python tools/site/verify_dual_build.py [--work-root DIR] [--skip-build]

@@ -6,4 +6,8 @@ After=network-online.target
 Type=oneshot
 WorkingDirectory=@ROOT@
 Environment=SITE_PORT=@PORT@
+Environment=SITE_STATE_DIR=@STATE@
 ExecStart=@ROOT@/scripts/site-cron.sh
+# The watchdog reads the state the publish just wrote; a non-zero exit marks this
+# unit failed, so a dead publish channel shows up in `systemctl --user --failed`.
+ExecStartPost=/usr/bin/python3 @ROOT@/scripts/check-site-status.py
