@@ -1,38 +1,207 @@
 {#-
-  404 page.
+  404 page, standalone.
 
   The site is built once but the page answers for every locale and every depth, so the copy is
   bilingual and every link is absolute against `config.site_url` rather than relative: a relative
   `features/` would resolve against whatever missing path the visitor asked for.
 
+  The page extends nothing and loads nothing: no theme stylesheet, no bundle, no webfont. A
+  visitor who hit a dead link gets the copy and the exits, not the whole shell. All styles are
+  inline, and the two palettes below are the site tokens from docs/stylesheets/extra.css, so the
+  page follows the system colour scheme at the same AA contrast as the site.
+
   The two entry groups are marked with `<!--rmc:404:zh-->` and `<!--rmc:404:en-->` comments. The
   static tree cannot pick a language per request, so `docs/hooks.py` writes a second copy under
   `en/404.html` with the English group first, and `scripts/serve-site.py` serves that copy for a
-  miss under `/en/`. Do not rename the markers without updating both.
+  miss under `/en/`. Do not rename the markers without updating both. Each build pass renders
+  this template with its own `theme.language`, so `<html lang>`, the skip link and the page order
+  follow the pass; `docs/hooks.py` keeps the passes apart.
 -#}
-{% extends "main.html" %}
-
-{% block extrahead %}
+<!DOCTYPE html>
+<html lang="{{ config.theme.language }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   {#- An error page is not content: keep it out of the index and give it no canonical URL. -#}
   <meta name="robots" content="noindex">
-{% endblock %}
-
-{% block content %}
-  {#- The skip link in the layout targets this root: the page has no table of contents, so the
-      theme's own skip link never renders here. -#}
-  <div class="rmc-404" id="rmc-main" tabindex="-1">
+  <title>404 · {{ config.site_name }}</title>
+  <style>
+    /* Site tokens (docs/stylesheets/extra.css), inlined: this page loads no stylesheet. */
+    :root {
+      color-scheme: light;
+      --paper: #ffffff;
+      --ink: #0b1524;
+      --ink-2: #44536b;
+      --ink-3: #627084;
+      --rule: #dde4ee;
+      --rule-strong: #c4d0e0;
+      --brand: #005fb8;
+      --brand-ink: #00478c;
+      --radius: 0.35rem;
+      --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        color-scheme: dark;
+        --paper: #070d18;
+        --ink: #e9eff8;
+        --ink-2: #a8b6cb;
+        --ink-3: #7f8fa6;
+        --rule: #1d2a40;
+        --rule-strong: #2d3f5c;
+        --brand: #4da3ff;
+        --brand-ink: #85c2ff;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0 1.25rem;
+    }
+    /* The layout in main.html hides its skip link until focus; same pattern here. */
+    .md-skip {
+      clip-path: inset(50%);
+      height: 1px;
+      overflow: hidden;
+      position: absolute;
+      white-space: nowrap;
+      width: 1px;
+    }
+    .md-skip:focus {
+      clip-path: none;
+      height: auto;
+      overflow: visible;
+      width: auto;
+      background: var(--paper);
+      border: 1px solid var(--rule-strong);
+      border-radius: var(--radius);
+      color: var(--ink);
+      display: inline-block;
+      left: 1rem;
+      padding: 0.4rem 0.8rem;
+      position: fixed;
+      text-decoration: none;
+      top: 1rem;
+      z-index: 10;
+    }
+    .rmc-404 {
+      margin: 0 auto;
+      max-width: 44rem;
+      padding: 3.2rem 0 4rem;
+    }
+    .rmc-404__code {
+      color: var(--ink-3);
+      font-family: var(--mono);
+      font-size: clamp(3.4rem, 11vw, 6.5rem);
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      line-height: 0.9;
+      margin: 0 0 0.5rem;
+    }
+    .rmc-404__title {
+      font-size: 1.35rem;
+      line-height: 1.3;
+      margin: 0 0 0.7rem;
+    }
+    .rmc-404__lede {
+      color: var(--ink-2);
+      font-size: 0.8rem;
+      line-height: 1.7;
+      margin: 0 0 1.3rem;
+      max-width: 40rem;
+    }
+    /* The English sentence rides along under the Chinese one, as on the site pages. */
+    .rmc-404__lede span[lang="en"] {
+      color: var(--ink-3);
+      display: block;
+      font-size: 0.72rem;
+      margin-top: 0.45rem;
+    }
+    .rmc-404__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.6rem;
+    }
+    .rmc-btn {
+      align-items: center;
+      background: var(--paper);
+      border: 1px solid var(--rule-strong);
+      border-radius: var(--radius);
+      color: var(--ink);
+      display: inline-flex;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.5rem 0.9rem;
+      text-decoration: none;
+    }
+    .rmc-btn:hover {
+      border-color: var(--ink-3);
+    }
+    .rmc-btn:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+    .rmc-btn--primary {
+      background: var(--brand);
+      border-color: var(--brand);
+      color: #ffffff;
+    }
+    /* The dark palette turns the brand into a light blue, and white on it measures 2.6:1. Dark
+       ink on the same fill measures 7.5:1, so the label flips with the scheme instead. */
+    @media (prefers-color-scheme: dark) {
+      .rmc-btn--primary { color: var(--paper); }
+    }
+    .rmc-btn--primary:hover {
+      background: var(--brand-ink);
+      border-color: var(--brand-ink);
+    }
+    .rmc-404__links {
+      border-top: 1px solid var(--rule);
+      display: grid;
+      gap: 0.1rem 1.4rem;
+      grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+      padding-top: 0.9rem;
+    }
+    .rmc-404__links a {
+      border-bottom: 1px solid var(--rule);
+      color: var(--ink-2);
+      font-size: 0.68rem;
+      padding: 0.4rem 0;
+      text-decoration: none;
+    }
+    .rmc-404__links a:hover {
+      color: var(--brand);
+    }
+    .rmc-404__links a:focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  {#- The layout in main.html ships the skip link; a standalone page needs its own, and the
+      site gate reads it as the first link on the page. -#}
+  <a class="md-skip" href="#rmc-main">{% if config.theme.language == "en" %}Skip to content{% else %}跳转至内容{% endif %}</a>
+  <main class="rmc-404" id="rmc-main" tabindex="-1">
     <p class="rmc-404__code" aria-hidden="true">404</p>
     <h1 class="rmc-404__title">页面不存在 · Page not found</h1>
     <p class="rmc-404__lede">
-      链接可能已经变更，或者页面已经移动。用右上角的搜索直接查工具名、参数名或错误信息。
-      <span lang="en">The link may have changed, or the page may have moved. Use the search in the
-      header to look up a tool, a parameter or an error message.</span>
+      链接可能已经变更，或者页面已经移动。回到首页，或从功能总览重新找到要找的工具、参数或说明。
+      <span lang="en">The link may have changed, or the page may have moved. Head back to the
+      home page, or find the tool, parameter or note again from the feature catalog.</span>
     </p>
     <!--rmc:404:zh-->
     <div class="rmc-404__actions" lang="zh-CN">
       <a class="rmc-btn rmc-btn--primary" href="{{ config.site_url }}">返回首页</a>
       <a class="rmc-btn" href="{{ config.site_url }}features/">功能总览</a>
-      <a class="rmc-btn" href="{{ config.site_url }}en/" lang="en">English</a>
+      <a class="rmc-btn md-select__link" href="{{ config.site_url }}en/" lang="en" hreflang="en">English</a>
     </div>
     <nav class="rmc-404__links" lang="zh-CN" aria-label="常用入口">
       <a href="{{ config.site_url }}server/">安装与配置</a>
@@ -47,7 +216,7 @@
     <div class="rmc-404__actions" lang="en">
       <a class="rmc-btn rmc-btn--primary" href="{{ config.site_url }}en/">English home</a>
       <a class="rmc-btn" href="{{ config.site_url }}en/features/">All features</a>
-      <a class="rmc-btn" href="{{ config.site_url }}" lang="zh-CN">中文</a>
+      <a class="rmc-btn md-select__link" href="{{ config.site_url }}" lang="zh-CN" hreflang="zh">中文</a>
     </div>
     <nav class="rmc-404__links" lang="en" aria-label="Common entries">
       <a href="{{ config.site_url }}en/server/">Installation</a>
@@ -58,5 +227,6 @@
       <a href="{{ config.site_url }}en/changelog/">Changelog</a>
     </nav>
     <!--/rmc:404:en-->
-  </div>
-{% endblock %}
+  </main>
+</body>
+</html>
