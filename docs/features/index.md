@@ -1,216 +1,234 @@
-# Feature overview
+---
+description: "当前发布版全部工具的功能总览，按分组列出每个工具的用途、参数与 Revit 年份支持。"
+---
 
-The server serves 87 tools: 35 read and 52 action. A read returns model data and changes nothing; an action changes the model or a file.
+# 功能总览
 
-## Browse by Revit year
+35 个读取 + 52 个动作，共 87 个工具
 
-| Revit year | Tools | Details |
+这一节是现有版本的 87 个工具。集成分支的 80 个工具按基座与自研分开，见 [新版基座工具目录](../platform/index.md)。
+
+## 版本入口 {#versions}
+
+本目录记录的是已发布的现有版本；集成分支尚未发布，两者工具数量与清单都不同。下表的状态、版本号与数量都从注册表读取。
+
+| | 已发布 0.9.0 | 集成分支 |
 | --- | --- | --- |
-| 2020 | 0 of 87 | [Revit 2020](v2020.md) |
-| 2022–2025, 2027 | 87 built | [Version support matrix](matrix.md) |
-| 2026 | 87 built, not live-verified | [Revit 2026](v2026.md) |
+| 版本 | 0.9.0 | 1.0.0 未发布（集成分支） |
+| 分支 | main | `integration/upstream-1.0` |
+| 工具 | 87 | 80 |
+| 目录 | index.md | [新版基座工具目录](../platform/index.md) |
 
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
+## 按 Revit 年份查阅 {#by-version}
 
-## Read tools (35)
-
-### Element registers
-
-| Tool | Summary |
+| Revit 年份 | 验证状态 |
 | --- | --- |
-| [Export element ID register](revit_export_element_ids.md) | Write the ID register of drawn model components to an Excel workbook. |
+| [Revit 2020](v2020.md) | 读取 19/35、动作 15/52 已实测；其余仅构建 |
+| [Revit 2026](v2026.md) | 读取 18/35、动作 8/52 已实测；其余仅构建 |
+| 2022–2025 / 2027 | 仅构建，未实测 |
 
-### Connection and core
+已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
 
-| Tool | Summary |
+## 全部功能 {#all-features}
+
+### 连接与文档 (3) {#group-connection}
+
+| 工具 | 用途 |
 | --- | --- |
-| [List Revit Jobs](revit_jobs.md) | List recent jobs, or wait up to wait_seconds (0 to 50, default 40) for the result of an action jobId. |
-| [Check Revit Connection](revit_ping.md) | Check the connection to Revit without reading the model. |
-| [Document Info](revit_document_info.md) | Read the active model's file name, Revit version, levels (elevations in mm), area schemes, worksets and view count. |
-| [Open Documents](revit_documents.md) | List every open document in one Revit process, including background documents. |
-| [Revit UI State](revit_ui_state.md) | Read the active document, open views, selection and open documents. |
-| [List Instances](revit_list_instances.md) | List Revit processes with documentName, documentPath, revitVersion, processId and pluginResponding. |
+| [检查连接](revit_ping.md)<br>`revit_ping` | 检查连接与插件版本 |
+| [文档概要](revit_document_info.md)<br>`revit_document_info` | 当前文档概要：文件名、Revit 版本、标高、面积方案、工作集、视图数 |
+| [Revit 实例列表](revit_list_instances.md)<br>`revit_list_instances` | 列出在跑的 Revit 实例及其打开的文档 |
 
-### Model queries
+### 查询与统计 (6) {#group-query}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Model Snapshot](revit_model_snapshot.md) | Read a schema version 1 project snapshot for batch audits. |
-| [Model Health Check](revit_model_health.md) | Read model quality counts: project metadata, file size, counts, units and the ten most frequent warning groups. |
-| [Links Status](revit_links_status.md) | Read RVT, CAD and image link status. |
-| [Shared Coordinates](revit_shared_coordinates.md) | Read project and survey coordinates: base and survey points, active site, project locations and link offsets (mm, degrees). |
-| [Parameter Fill Check](revit_parameter_fill_check.md) | Count filled, empty and missing parameters per parameter and category, with samples of empty and missing element IDs. |
-| [List Catalog](revit_list_catalog.md) | List catalog names for one section: categories, family-types, levels, area-schemes, views, worksets, phases or parameters. |
-| [Aggregate Elements](revit_aggregate_elements.md) | Summarize matching elements by one or two fields, with optional sum and average. |
-| [Query Elements](revit_query_elements.md) | Read a page of matching element rows. |
-| [Read Schedule Data](revit_schedule_data.md) | Read displayed schedule header and body cell text, with paging. |
-| [Element Details](revit_element_details.md) | Read parameters and geometry of an element by Revit ID, with its type parameters and related warnings. |
-| [List Warnings](revit_list_warnings.md) | Group model warnings by description text. |
-| [List Relations](revit_list_relations.md) | Read model object membership or dependencies. |
+| [界面状态](revit_ui_state.md)<br>`revit_ui_state` | 读取当前文档、打开的视图、选择集与所有打开的文档 |
+| [名称目录](revit_list_catalog.md)<br>`revit_list_catalog` | 查可用名字：类别、族类型、标高、面积方案、视图、工作集、阶段、参数 |
+| [分组统计](revit_aggregate_elements.md)<br>`revit_aggregate_elements` | 按 1–2 个字段分组统计数量，可附加求和与平均（mm / m² / m³） |
+| [构件查询](revit_query_elements.md)<br>`revit_query_elements` | 按类别/族/类型/标高/视图/工作集/参数过滤，分页读取构件明细 |
+| [构件参数与几何](revit_element_details.md)<br>`revit_element_details` | 单个构件的实例参数、类型参数与几何（mm） |
+| [构件关系](revit_list_relations.md)<br>`revit_list_relations` | 关系查询：标高的房间、面积方案成员、组内构件、嵌套族、视图样板依赖 |
 
-### Views and sheets
+### 视图与截图 (13) {#group-views}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [List Views](revit_list_views.md) | List non-template views with id, name, type, level, scale and template. |
-| [View Info](revit_view_info.md) | Inspect one view's template, display, categories, worksets, filters and links. |
-| [View Summary](revit_view_summary.md) | Read element categories and counts for a selected view. |
-| [Capture Elements](revit_capture_elements.md) | Render a highlighted PNG that marks 1 to 500 elements, for issue evidence. |
-| [Export View to PNG](revit_export_view.md) | Export a selected view to a PNG file on the MCP client. |
-| [View Elements](revit_view_elements.md) | Read one page of elements in a selected view, with IDs, category, family, type, level and measurements (mm, m2, m3). |
-| [View Warnings](revit_view_warnings.md) | Read warnings involving elements present in a selected view. |
+| [视图目录](revit_list_views.md)<br>`revit_list_views` | 列出视图，可按视图类型与名称过滤 |
+| [查看视图信息](revit_view_info.md)<br>`revit_view_info` | 查看单个视图的模板、类别、工作集、过滤器与链接 |
+| [视图统计](revit_view_summary.md)<br>`revit_view_summary` | 视图元数据 + 类别计数（各有多少、多少种类型） |
+| [导出视图图片](revit_export_view.md)<br>`revit_export_view` | 把视图导出成 PNG 图片（1–4000 像素） |
+| [视图构件明细](revit_view_elements.md)<br>`revit_view_elements` | 分页读取视图中的构件（可按类别过滤） |
+| [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关构件的警告 |
+| [激活视图](revit_activate_view.md)<br>`revit_activate_view` | 激活非样板视图，并按需缩放或框选构件 |
+| [关闭视图](revit_close_views.md)<br>`revit_close_views` | 关闭当前文档中打开的 UI 视图 |
+| [设置视图可见性](revit_set_view_visibility.md)<br>`revit_set_view_visibility` | 改单个视图的类别、工作集与过滤器可见性，dry_run 可预览 |
+| [创建视图](revit_create_view.md)<br>`revit_create_view` | 创建平面、剖面、三维或详图视图；包围盒坐标为模型毫米 |
+| [复制视图](revit_duplicate_view.md)<br>`revit_duplicate_view` | 复制视图，可带详图，也可作为从属视图 |
+| [应用视图样板](revit_apply_view_template.md)<br>`revit_apply_view_template` | 将匹配的视图样板应用到一个或多个视图 |
+| <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案 |
 
-### Families
+### 导出与检验 (12) {#group-export}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Audit Families](revit_family_audit.md) | Audit an open family or named project families without saving or loading changes. |
+| [检查 NWC 导出设置](revit_nwc_settings_check.md)<br>`revit_nwc_settings_check` | 解析工作站上的 NWC 导出设置 XML，不实际导出 |
+| [导出模型快照](revit_model_snapshot.md)<br>`revit_model_snapshot` | 读取 schema v1 项目快照用于批量审计（只读；关闭的工作集会使结果不完整） |
+| [模型检查](revit_model_health.md)<br>`revit_model_health` | 交付前体检：文件大小、各类计数、单位设置、数量最多的警告 |
+| [链接状态](revit_links_status.md)<br>`revit_links_status` | RVT / CAD / 图片链接的状态、路径与实例数 |
+| [共享坐标](revit_shared_coordinates.md)<br>`revit_shared_coordinates` | 项目基点、测量点、场地与链接的位移（mm）/旋转（°） |
+| [参数填充检查](revit_parameter_fill_check.md)<br>`revit_parameter_fill_check` | 参数的填充率：有值 / 空 / 缺失，并给出抽样 ID |
+| [模型警告](revit_list_warnings.md)<br>`revit_list_warnings` | 全模型警告按文本分组，可展开受影响构件 |
+| [导出模型文件](revit_export.md)<br>`revit_export` | 导出 PDF、DWG、IFC 或明细表 CSV，dry_run 返回计划文件名 |
+| [导出 Navisworks NWC](revit_export_nwc.md)<br>`revit_export_nwc` | 在 Revit 工作站导出 NWC，需装 Navisworks 导出器；覆盖已有文件需确认令牌 |
+| <span class="state part">自研</span> [导出构件 ID 清单](revit_export_element_ids.md)<br>`revit_export_element_ids` | 把模型中已绘制构件的 ID 清单写成 Excel（类别/族/类型/标高/构件ID/名称/工作集） |
+| [生成快照报告](revit_build_report.md)<br>`revit_build_report` | 从快照本地生成 Excel 报告，无需连接 Revit |
+| [问题登记表](revit_issue_register.md)<br>`revit_issue_register` | 生成带构件快照的问题登记表 .xlsx，已存在的文件不覆盖 |
 
-### Links
+### 选中与显示 (6) {#group-display}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Compare Link Datums](revit_compare_link_datums.md) | Compare host grids and levels with one loaded Revit link. |
+| [构件截图](revit_capture_elements.md)<br>`revit_capture_elements` | 生成标记 1–500 个构件的 PNG 截图，临时视图会回滚 |
+| [选择构件](revit_select.md)<br>`revit_select` | 在 Revit 里选中指定构件（空列表=清除选择） |
+| [定位显示构件](revit_show.md)<br>`revit_show` | 在视图里定位/高亮构件，必要时打开对应视图 |
+| [临时隔离显示](revit_isolate.md)<br>`revit_isolate` | 临时隔离显示（reset=true 恢复） |
+| [着色构件](revit_override_graphics.md)<br>`revit_override_graphics` | 在指定视图里给构件着色，reset 可还原本次会话的覆盖 |
+| [标注构件](revit_tag_elements.md)<br>`revit_tag_elements` | 在视图里按类别或构件 ID 加标记，房间标记需平面视图 |
 
-### Export
+### 编辑 (17) {#group-edit}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Check NWC Settings](revit_nwc_settings_check.md) | Parse a Navisworks exporter XML file on the Revit workstation without exporting. |
-| [Issue Register](revit_issue_register.md) | Write a new local .xlsx issue register with element snapshots and review documents. |
+| [执行 C# 代码](revit_execute_code.md)<br>`revit_execute_code` | 在 Revit 线程编译运行 C#，自动模式下自管一个事务与撤销记录 |
+| [撤销上一步](revit_undo_last.md)<br>`revit_undo_last` | 通过 Revit 自带撤销命令撤销本会话上一步 MCP 操作，仅在目标文档激活且撤销记录匹配时执行 |
+| [移动构件](revit_move.md)<br>`revit_move` | 按模型轴平移构件（mm） |
+| [旋转图元](revit_rotate.md)<br>`revit_rotate` | 绕 center_mm 竖直轴或包围盒中心旋转图元；dry_run 会回滚，成组、锁定等图元记入 skipped |
+| [复制构件](revit_copy.md)<br>`revit_copy` | 按毫米偏移复制 1 到 100 个构件，dry_run 会回滚 |
+| [镜像图元](revit_mirror.md)<br>`revit_mirror` | 沿过 point_mm 的 X 或 Y 平行线镜像；dry_run 回滚，copy 保留原图元 |
+| [更换类型](revit_change_type.md)<br>`revit_change_type` | 把构件批量换成同一个兼容类型，成组构件会被跳过 |
+| [更新参数](revit_update_parameters.md)<br>`revit_update_parameters` | 按与 revit_query_elements 相同的筛选条件更新图元参数；成组成员记入 skipped，dry_run 可预测结果 |
+| [放置非宿主族](revit_place_family.md)<br>`revit_place_family` | 在指定标高放置已载入的非宿主族实例，可绕 Z 旋转 |
+| [创建直墙](revit_create_wall.md)<br>`revit_create_wall` | 按两点建直墙（mm，指定标高、墙类型、高度） |
+| [生成管线](revit_create_mep_run.md)<br>`revit_create_mep_run` | 按 mm 点串生成风管、水管、桥架或线管，并连成一段 |
+| [从 CAD 生成墙体](revit_walls_from_cad.md)<br>`revit_walls_from_cad` | 按 CAD 线段配对成墙并连接开口，尺寸单位为毫米 |
+| [修改参数](revit_set_parameter.md)<br>`revit_set_parameter` | 按参数名写值（长度 mm、面积 m²，其余按内部单位） |
+| [删除构件](revit_delete.md)<br>`revit_delete` | 删除构件及其依赖 |
+| [批量处理模型](revit_process_models.md)<br>`revit_process_models` | 在交互会话中逐个打开模型执行步骤和 C# 代码并按需导出保存；原地保存与代码需 confirm_token 确认 |
+| <span class="state part">自研</span> [创建标高](revit_create_level.md)<br>`revit_create_level` | 在指定高程新建标高（mm） |
+| <span class="state part">自研</span> [创建楼板](revit_create_floor.md)<br>`revit_create_floor` | 按闭合轮廓建楼板（至少 3 个顶点，mm） |
 
-### Batch processing
+### 阶段 (2) {#group-phases}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Start batch collection](revit_batch_start.md) | Start a persistent, read-only run over local, UNC or RSN models. |
-| [Batch collection status](revit_batch_status.md) | Read durable run and model status after the initiating client exits. |
-| [Cancel batch collection](revit_batch_cancel.md) | Persist cancellation and prevent unstarted models from running. |
-| [Fetch batch snapshots](revit_batch_fetch.md) | Download completed snapshots to new local files without overwriting. |
-| [Build Snapshot Report](revit_build_report.md) | Build a local Excel report from snapshots without contacting Revit. |
+| <span class="state part">自研</span> [设置构件阶段](revit_set_phase.md)<br>`revit_set_phase` | 赋创建阶段 / 拆除阶段（空串清除，null 不变） |
+| <span class="state part">自研</span> [合并项目阶段](revit_merge_phases.md)<br>`revit_merge_phases` | 把一个阶段的引用并入另一个阶段并删除空阶段 |
 
-## Action tools (52)
+### 批量与 ID (2) {#group-ids}
 
-### Model editing
-
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Create level](revit_create_level.md) | Create a level at a given elevation in millimetres. |
-| [Create floor](revit_create_floor.md) | Create a floor from a closed XY boundary with at least three vertices. |
+| <span class="state part">自研</span> [同文档替换 ID](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | 同文档内换 ID：只对无宿主、无依赖的独立构件有效 |
+| <span class="state part">自研</span> [新模型重建 ID](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | 整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型 |
 
-### Phases
+### 文档与进程 (7) {#group-documents}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Set element phases](revit_set_phase.md) | Assign created and demolished phases; an empty string clears one and null leaves it unchanged. |
-| [Merge project phases](revit_merge_phases.md) | Reassign references to another phase and attempt to delete the emptied phase. |
+| [列出打开的文档](revit_documents.md)<br>`revit_documents` | 列出一个 Revit 进程中所有打开的文档，含后台文档 |
+| [打开模型](revit_open_document.md)<br>`revit_open_document` | 在工作站打开本地、UNC 或 RSN 模型，中央模型默认分离打开 |
+| [激活文档](revit_activate_document.md)<br>`revit_activate_document` | 按标题或路径引用激活一个已打开的文档 |
+| [新建模型](revit_new_document.md)<br>`revit_new_document` | 在工作站用模板新建项目或族文件 |
+| [关闭文档](revit_close_document.md)<br>`revit_close_document` | 关闭后台文档；首次调用不改任何内容，返回确认令牌 |
+| [保存文档](revit_save_document.md)<br>`revit_save_document` | 保存文档；首次调用只返回 confirm_token，不改动文件 |
+| [同步文档](revit_sync_document.md)<br>`revit_sync_document` | 将工作共享文档与中心文件同步；首次调用不改动任何内容，需用返回的 confirm_token 再确认 |
 
-### Id management
+### 批量作业 (7) {#group-batch}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Replace IDs in place](revit_reset_element_ids.md) | Replace eligible standalone elements with copies to obtain new IDs. |
-| [Rebuild IDs in new models](revit_rebuild_model_ids.md) | Copy selectable 3D-view components into one or more new models with fresh IDs. |
+| [作业列表](revit_jobs.md)<br>`revit_jobs` | 查看最近作业，或等待某个动作作业的结果 |
+| [取消作业](revit_cancel_job.md)<br>`revit_cancel_job` | 请求取消一个操作作业；已完成的更改保持提交状态 |
+| [批量操作](revit_run_actions.md)<br>`revit_run_actions` | 一次执行最多 50 个动作，共用一个撤销记录，首个失败整批回滚 |
+| [启动批量采集](revit_batch_start.md)<br>`revit_batch_start` | 对本地、UNC 或 RSN 模型启动持久只读采集 |
+| [批处理状态](revit_batch_status.md)<br>`revit_batch_status` | 发起客户端退出后，读取留存下来的运行与模型状态 |
+| [取消批量收集](revit_batch_cancel.md)<br>`revit_batch_cancel` | 持久化取消状态，阻止批量任务中未启动的模型继续运行 |
+| [获取批量快照](revit_batch_fetch.md)<br>`revit_batch_fetch` | 把已完成的快照下载为新的本地文件，不覆盖已有文件 |
 
-### View settings
+### 族 (4) {#group-families}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Set view lighting](revit_set_view_lighting.md) | Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme. |
+| [审计族](revit_family_audit.md)<br>`revit_family_audit` | 审计打开的族或按名称审计项目族，不保存或加载更改；detail=full 返回全部参数元数据 |
+| [加载族](revit_load_family.md)<br>`revit_load_family` | 在工作站把 .rfa 族文件加载进一个撤销步骤 |
+| [放置族实例](revit_place_families.md)<br>`revit_place_families` | 加载可选族并在一个事务与撤销项中放置实例 |
+| [编辑族](revit_edit_families.md)<br>`revit_edit_families` | 就地编辑已打开的族或项目族，dry_run 会回滚全部改动 |
 
-### Connection and core
+### 图纸与明细表 (4) {#group-sheets}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Undo Last Action](revit_undo_last.md) | Undo the last MCP action through Revit's own undo command. |
-| [Cancel Action Job](revit_cancel_job.md) | Request cancellation of an action jobId. |
+| [读取明细表数据](revit_schedule_data.md)<br>`revit_schedule_data` | 分页读取明细表表头与单元格显示文本 |
+| [创建图纸](revit_create_sheet.md)<br>`revit_create_sheet` | 用第一个已载入或指定的图框创建图纸 |
+| [图纸上布置视图](revit_place_views_on_sheet.md)<br>`revit_place_views_on_sheet` | 把视图和明细表布置到图纸上，坐标为图纸毫米 |
+| [创建明细表](revit_create_schedule.md)<br>`revit_create_schedule` | 为单个类别按命名字段和顺序创建明细表，支持筛选与排序分组；dry_run 会回滚 |
 
-### Model actions
+### 链接与协同 (4) {#group-links}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Move Elements](revit_move.md) | Move elements by dx_mm, dy_mm and dz_mm on model axes. |
-| [Rotate Elements](revit_rotate.md) | Rotate elements about a vertical axis through center_mm, or through their combined bounding box center. |
-| [Copy Elements](revit_copy.md) | Create 1 to 100 successive copies at multiples of the model-axis offset in mm. |
-| [Mirror Elements](revit_mirror.md) | Mirror across a model X or Y parallel line through point_mm; copy keeps originals. |
-| [Change Element Type](revit_change_type.md) | Change each element to one compatible type; family resolves duplicate type names. |
-| [Update Parameters](revit_update_parameters.md) | Update a parameter on elements matching the same filters as revit_query_elements. |
-| [Set Parameter](revit_set_parameter.md) | Set one instance or type parameter. |
-| [Delete Elements](revit_delete.md) | Delete elements and their Revit dependencies; the count includes dependents. |
-| [Run Actions](revit_run_actions.md) | Execute up to 50 actions with one undo step; the whole batch rolls back on its first failure. |
+| [对比链接标高轴网](revit_compare_link_datums.md)<br>`revit_compare_link_datums` | 对比宿主与一个已加载 Revit 链接的轴网和标高（不改动模型） |
+| [移除链接](revit_remove_links.md)<br>`revit_remove_links` | 删除所选链接类型及其实例；dry_run 预览，删除后 Revit 内不可撤销 |
+| [对齐链接基准](revit_align_link_datums.md)<br>`revit_align_link_datums` | 把宿主轴网与标高对齐到已链接模型，dry_run 可预览回滚 |
+| [链接 CAD 图纸](revit_link_cad.md)<br>`revit_link_cad` | 将 DWG 链接或导入到 Revit 工作站上的平面视图，返回 CAD 图层与毫米单位范围 |
 
-### Documents
+## 按模型对象浏览 {#objects}
 
-| Tool | Summary |
+视图相关工具按操作的模型对象再分一次：视图、图纸、明细表与视口显示。现有版本没有覆盖的对象组会指向集成分支的同类工具。
+
+### 视图 {#objects-views}
+
+| 工具 | 用途 |
 | --- | --- |
-| [Open Document](revit_open_document.md) | Open a local, UNC or RSN model. |
-| [Activate Document](revit_activate_document.md) | Activate an already open document by title or path reference. |
-| [New Document](revit_new_document.md) | Create a project or family from a template on the Revit workstation. |
-| [Close Document](revit_close_document.md) | Close a background document. |
-| [Save Document](revit_save_document.md) | Save a document. |
-| [Synchronize Document](revit_sync_document.md) | Synchronize a workshared document with central. |
+| [视图目录](revit_list_views.md)<br>`revit_list_views` | 列出视图，可按视图类型与名称过滤 |
+| [查看视图信息](revit_view_info.md)<br>`revit_view_info` | 查看单个视图的模板、类别、工作集、过滤器与链接 |
+| [视图统计](revit_view_summary.md)<br>`revit_view_summary` | 视图元数据 + 类别计数（各有多少、多少种类型） |
+| [导出视图图片](revit_export_view.md)<br>`revit_export_view` | 把视图导出成 PNG 图片（1–4000 像素） |
+| [视图构件明细](revit_view_elements.md)<br>`revit_view_elements` | 分页读取视图中的构件（可按类别过滤） |
+| [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | 只读该视图相关构件的警告 |
+| [激活视图](revit_activate_view.md)<br>`revit_activate_view` | 激活非样板视图，并按需缩放或框选构件 |
+| [关闭视图](revit_close_views.md)<br>`revit_close_views` | 关闭当前文档中打开的 UI 视图 |
+| [设置视图可见性](revit_set_view_visibility.md)<br>`revit_set_view_visibility` | 改单个视图的类别、工作集与过滤器可见性，dry_run 可预览 |
+| [创建视图](revit_create_view.md)<br>`revit_create_view` | 创建平面、剖面、三维或详图视图；包围盒坐标为模型毫米 |
+| [复制视图](revit_duplicate_view.md)<br>`revit_duplicate_view` | 复制视图，可带详图，也可作为从属视图 |
+| [应用视图样板](revit_apply_view_template.md)<br>`revit_apply_view_template` | 将匹配的视图样板应用到一个或多个视图 |
+| <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案 |
 
-### Views and sheets
+### 图纸 {#objects-sheets}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Activate View](revit_activate_view.md) | Activate a non-template view. |
-| [Close Views](revit_close_views.md) | Close open UI views in the active document. |
-| [Set View Visibility](revit_set_view_visibility.md) | Change category, workset and filter visibility in one view; dry_run previews. |
-| [Select Elements](revit_select.md) | Select element IDs for inspection in Revit; an empty list clears the selection. |
-| [Show Elements](revit_show.md) | Display elements in Revit, optionally selecting them; opens a level plan or 3D view when needed. |
-| [Isolate Elements](revit_isolate.md) | Temporarily isolate element IDs in the active view; an empty list resets. |
-| [Highlight Elements](revit_override_graphics.md) | Colour elements in selected model views; reset restores overrides saved in this Revit session. |
-| [Create View](revit_create_view.md) | Create a plan, section, 3D or drafting view. |
-| [Duplicate View](revit_duplicate_view.md) | Duplicate a view, optionally with detailing or as a dependent view. |
-| [Apply View Template](revit_apply_view_template.md) | Apply a matching view template to one or more views. |
-| [Create Sheet](revit_create_sheet.md) | Create a sheet with the first loaded or a named title block. |
-| [Place Views on Sheet](revit_place_views_on_sheet.md) | Place views and schedules on a sheet. |
-| [Tag Elements](revit_tag_elements.md) | Tag elements in a view, chosen by category names or by element IDs (exactly one of the two). |
-| [Create Schedule](revit_create_schedule.md) | Create a schedule for one category with the named fields in the given order, using Revit UI names such as Mark, Level or Count. |
+| [创建图纸](revit_create_sheet.md)<br>`revit_create_sheet` | 用第一个已载入或指定的图框创建图纸 |
+| [图纸上布置视图](revit_place_views_on_sheet.md)<br>`revit_place_views_on_sheet` | 把视图和明细表布置到图纸上，坐标为图纸毫米 |
 
-### Families
+### 明细表 {#objects-schedules}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Place Family](revit_place_family.md) | Place a loaded unhosted family on a named level. |
-| [Load Families](revit_load_family.md) | Load workstation .rfa files in one undo entry. |
-| [Place Families](revit_place_families.md) | Load optional families and place instances in one transaction and undo entry. |
-| [Edit Families](revit_edit_families.md) | Edit an open family in place, or named project families (exact names or ["*"]), one load cycle each. |
+| [读取明细表数据](revit_schedule_data.md)<br>`revit_schedule_data` | 分页读取明细表表头与单元格显示文本 |
+| [创建明细表](revit_create_schedule.md)<br>`revit_create_schedule` | 为单个类别按命名字段和顺序创建明细表，支持筛选与排序分组；dry_run 会回滚 |
 
-### Links
+### 视口与显示 {#objects-view-display}
 
-| Tool | Summary |
+| 工具 | 用途 |
 | --- | --- |
-| [Remove Links](revit_remove_links.md) | Delete selected link types and their instances; dry_run previews. |
-| [Align Link Datums](revit_align_link_datums.md) | Align host grids and levels to a loaded link, with optional creation and rollback preview. |
+| [构件截图](revit_capture_elements.md)<br>`revit_capture_elements` | 生成标记 1–500 个构件的 PNG 截图，临时视图会回滚 |
+| [选择构件](revit_select.md)<br>`revit_select` | 在 Revit 里选中指定构件（空列表=清除选择） |
+| [定位显示构件](revit_show.md)<br>`revit_show` | 在视图里定位/高亮构件，必要时打开对应视图 |
+| [临时隔离显示](revit_isolate.md)<br>`revit_isolate` | 临时隔离显示（reset=true 恢复） |
+| [着色构件](revit_override_graphics.md)<br>`revit_override_graphics` | 在指定视图里给构件着色，reset 可还原本次会话的覆盖 |
+| [标注构件](revit_tag_elements.md)<br>`revit_tag_elements` | 在视图里按类别或构件 ID 加标记，房间标记需平面视图 |
 
-### CAD and MEP
-
-| Tool | Summary |
-| --- | --- |
-| [Create Wall](revit_create_wall.md) | Create a straight wall on a named level. |
-| [Create MEP Run](revit_create_mep_run.md) | Create connected duct, pipe, cable tray or conduit segments from model mm points. |
-| [Link CAD Drawing](revit_link_cad.md) | Link or import a DWG into a plan view on the Revit workstation. |
-| [Build Walls from CAD](revit_walls_from_cad.md) | Bridge openings, pair parallel CAD lines and join basic walls in one undo entry. |
-
-### Export
-
-| Tool | Summary |
-| --- | --- |
-| [Export Model Files](revit_export.md) | Export PDF, DWG, IFC or schedule CSV files on the Revit workstation; dry_run returns planned file names. |
-| [Export Navisworks NWC](revit_export_nwc.md) | Export NWC on the Revit workstation; needs the Navisworks exporter. |
-
-### Batch processing
-
-| Tool | Summary |
-| --- | --- |
-| [Process Many Models](revit_process_models.md) | Open each model in the interactive session, run steps and C# code, export, save as requested, and close. |
-
-### Code execution
-
-| Tool | Summary |
-| --- | --- |
-| [Execute C# Code](revit_execute_code.md) | Compile and run C# against the live Revit API on the Revit thread. |
-
-[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)
+!!! warning "动作工具需要双门禁"
+    客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。

@@ -1,0 +1,48 @@
+---
+description: "就地编辑已打开的族，或对指定项目族逐个执行一个加载循环；`dry_run` 回滚全部改动。"
+---
+
+# 编辑族
+
+`revit_edit_families`
+
+<p class="facts"><span><b>分组</b> 族</span><span><b>类型</b> 动作</span><span><b>基座与自研的区分</b> 基座（上游）</span><span><b>状态</b> 未发布（集成分支）</span><span><b>发布版版本</b> 0.9.0</span><span><b>来源分支</b> <code>integration/upstream-1.0</code></span><span><b>来源提交</b> <code>55d6ea51f5100b73faf6f02621b973642f12b08e</code></span><span><b>发布版有同名工具</b> 没有</span><span><b>本页契约适用于发布版</b> 否</span></p>
+
+就地编辑已打开的族，或对指定项目族逐个执行一个加载循环；`dry_run` 回滚全部改动。
+
+## 参数 {#parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
+| `families` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `operations` | 是 | — | array | （集成分支契约未提供说明） |
+| `overwrite_parameter_values` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `stop_on_error` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+
+</div>
+
+### 通用参数 {#common-parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `document` | 否 | `null` | any | 打开多个模型时，用标题或路径指定目标文档。 |
+| `timeout_seconds` | 否 | `1800` | integer | 本次调用的等待上限（秒）。 |
+
+</div>
+
+## 功能说明（注册表原文） {#behavior}
+
+以下保留工具在注册表中声明的英文原文，作为契约来源。
+
+```text
+Edit an open family in place, or named project families (exact names or ["*"]), one load cycle each. A dry run rolls back all changes. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action.
+```
+
+---
+
+[返回目录](index.md) · [自研工具的移植状态](fork-tools.md)

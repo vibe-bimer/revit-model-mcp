@@ -1,66 +1,70 @@
-# Set element phases
+---
+description: "赋创建阶段 / 拆除阶段（空串清除，null 不变）"
+---
 
-Assign created and demolished phases; an empty string clears one and null leaves it unchanged.
+# 设置构件阶段
 
-**Group:** Phases · **Kind:** Action (opt-in) · **Since:** this fork's 1.0.0
+`revit_set_phase`
 
-This fork adds this tool; the rest of the catalogue comes from upstream 1.0.
+<p class="facts"><span><b>分组</b> 阶段</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.3.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 没有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 模型构件 / 参数</span><span><b>来源</b> 自研（本仓库）</span></p>
 
-!!! warning "Runs only on a read-write workstation"
+赋创建阶段 / 拆除阶段（空串清除，null 不变）
 
-    An action runs only while the workstation is not read-only: the machine policy
-    gate refuses action calls over every transport. The gate is the policy's
-    `ReadOnly` value, held in the registry under
-    `HKLM\Software\Policies\RevitModelMcp` or in
-    `%ProgramData%\RevitModelMcp\policy.json`. The multi-user installer sets `ReadOnly`
-    to `1` by default and writes the default `policy.json`, so a fresh machine install
-    refuses actions until an administrator allows writes; a per-user install writes no
-    policy (adr/0008). When both stores exist, the
-    registry value wins for every value it sets, and a policy that cannot be read
-    fails closed to read-only. The call names its target document, and with more
-    than one open document it is refused. `dry_run` returns the same verification
-    block without changing the model.
+!!! warning "动作工具需要双门禁"
+    客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
-!!! note "Usage notes"
+!!! note "使用提示"
+    阶段顺序检查的 API 只在 2022+ ，2020 走兜底
 
-    The phase order check uses the API that appears from Revit 2022.
-
-## Copyable prompts
+## 可复制提示词 {#prompts}
 
 ```text
-Mark these elements as demolished in the Existing phase
+把这些构件标成在“现有”阶段拆除
 ```
 
-## Parameters
+## 参数 {#parameters}
 
-| Name | Required | Default | Type | Meaning |
-| --- | --- | --- | --- | --- |
-| `element_ids` | Yes | — | `array of integer` | element ids whose phase changes |
-| `created_phase` | No | null | `string / null` | created phase name; an empty string clears it, null leaves it |
-| `demolished_phase` | No | null | `string / null` | demolished phase name; an empty string clears it, null leaves it unchanged |
-| `dry_run` | No | false | `boolean` | rehearse: execute, return the same verification block, then roll back |
+<div class="rmc-tablewrap" markdown="1">
 
-### Common parameters
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `element_ids` | 是 | — | `array<integer>` | 要改阶段的构件 ID |
+| `created_phase` | 否 | `null` | `string / null` | 创建阶段名；空串清除、null 不变 |
+| `demolished_phase` | 否 | `null` | `string / null` | 拆除阶段名；空串清除该标记、null 不变 |
+| `dry_run` | 否 | `false` | `boolean` | 彩排：执行后回滚，返回同样的校验块，不写模型 |
 
-| Name | Meaning |
+</div>
+
+### 通用参数 {#common-parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+
+</div>
+
+## 功能说明与返回结果 {#contract}
+
+按准确的阶段名称，指定构件的创建阶段或拆除阶段。
+
+每个阶段参数可以是 `revit_list_catalog(section="phases")` 返回的阶段名称，也可以是用于清除该指定的空字符串，或用于保持不变的 `null`；至少一个参数必须非 `null`。
+创建操作的 API 无法新增阶段；请先在 Revit 界面中创建新阶段。
+例如，`demolished_phase="现有"` 将构件标记为在该阶段拆除；`demolished_phase=""` 则清除拆除阶段。
+`dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+## Revit 年份支持 {#year-support}
+
+| Revit 年份 | 验证状态 |
 | --- | --- |
-| `document` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected. |
+| 2020 | <span class="state ok">已实测</span> |
+| 2026 | <span class="state part">仅构建，未实测</span> |
+| 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
 
-## Behavior and returned data
+已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
 
-Set the creation and demolition phase of elements.
+---
 
-An empty string clears a phase and null leaves it alone; at least one must be given.
-dry_run returns the same verification block without changing the model.
-
-## Revit year support
-
-| Revit year | State |
-| --- | --- |
-| 2020 | Not supported yet |
-| 2022–2025, 2027 | Built |
-| 2026 | Built |
-
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
-
-[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)
+[全部功能](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)

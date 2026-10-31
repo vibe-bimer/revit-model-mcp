@@ -1,0 +1,6838 @@
+{
+  "count": 80,
+  "provenance": {
+    "branch": "integration/upstream-1.0",
+    "commit": "55d6ea51f5100b73faf6f02621b973642f12b08e",
+    "source": "server tools/list plus docs/tool-manifest.json on the branch"
+  },
+  "tools": [
+    {
+      "description": "Change each element to one compatible type; family resolves duplicate type names. dry_run rolls back. Group members are reported in skipped.inGroup; the call is refused if every element is a group member.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "family": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "type_name": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          }
+        },
+        "required": [
+          "element_ids",
+          "type_name"
+        ],
+        "type": "object"
+      },
+      "name": "revit_change_type",
+      "readOnly": false,
+      "title": "Change Element Type",
+      "toolset": "actions"
+    },
+    {
+      "description": "Create 1 to 100 successive copies at multiples of the model-axis offset in mm. dry_run rolls back. Group members are reported in skipped.inGroup; the call is refused if every element is a group member.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "count": {
+            "default": 1,
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "dx_mm": {
+            "type": "number"
+          },
+          "dy_mm": {
+            "type": "number"
+          },
+          "dz_mm": {
+            "default": 0,
+            "type": "number"
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "element_ids",
+          "dx_mm",
+          "dy_mm"
+        ],
+        "type": "object"
+      },
+      "name": "revit_copy",
+      "readOnly": false,
+      "title": "Copy Elements",
+      "toolset": "actions"
+    },
+    {
+      "description": "Delete elements and their Revit dependencies; the count includes dependents. dry_run returns the count. Above 500 elements including dependents a confirm_token from a first call is needed; revit_run_actions refuses such deletions.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "element_ids"
+        ],
+        "type": "object"
+      },
+      "name": "revit_delete",
+      "readOnly": false,
+      "title": "Delete Elements",
+      "toolset": "actions"
+    },
+    {
+      "description": "Mirror across a model X or Y parallel line through point_mm; copy keeps originals. dry_run rolls back. Group members, pinned, hosted and constrained elements are reported in skipped.inGroup, skipped.pinned, skipped.hosted and skipped.constrained and are not changed; the call is refused if every element is a group member.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "axis": {
+            "enum": [
+              "x",
+              "y"
+            ],
+            "type": "string"
+          },
+          "copy": {
+            "default": true,
+            "type": "boolean"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "point_mm": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "element_ids",
+          "axis",
+          "point_mm"
+        ],
+        "type": "object"
+      },
+      "name": "revit_mirror",
+      "readOnly": false,
+      "title": "Mirror Elements",
+      "toolset": "actions"
+    },
+    {
+      "description": "Move elements by dx_mm, dy_mm and dz_mm on model axes. dry_run rolls back and returns the verification block. Group members, pinned, hosted and constrained elements are reported in skipped.inGroup, skipped.pinned, skipped.hosted and skipped.constrained and are not changed; the call is refused if every element is a group member.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "dx_mm": {
+            "type": "number"
+          },
+          "dy_mm": {
+            "type": "number"
+          },
+          "dz_mm": {
+            "default": 0,
+            "type": "number"
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "element_ids",
+          "dx_mm",
+          "dy_mm"
+        ],
+        "type": "object"
+      },
+      "name": "revit_move",
+      "readOnly": false,
+      "title": "Move Elements",
+      "toolset": "actions"
+    },
+    {
+      "description": "Rotate elements about a vertical axis through center_mm, or through their combined bounding box center. dry_run rolls back. Group members, pinned, hosted and constrained elements are reported in skipped.inGroup, skipped.pinned, skipped.hosted and skipped.constrained and are not changed; the call is refused if every element is a group member.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "angle_deg": {
+            "type": "number"
+          },
+          "center_mm": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "element_ids",
+          "angle_deg"
+        ],
+        "type": "object"
+      },
+      "name": "revit_rotate",
+      "readOnly": false,
+      "title": "Rotate Elements",
+      "toolset": "actions"
+    },
+    {
+      "description": "Execute up to 50 actions with one undo step; the whole batch rolls back on its first failure. dry_run rolls back and returns the verification block.",
+      "destructive": true,
+      "inputSchema": {
+        "$defs": {
+          "ActionStep": {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "move",
+                  "rotate",
+                  "copy",
+                  "mirror",
+                  "change_type",
+                  "update_parameters",
+                  "place_family",
+                  "load_family",
+                  "create_wall",
+                  "create_mep_run",
+                  "set_parameter",
+                  "delete",
+                  "select",
+                  "isolate",
+                  "create_view",
+                  "duplicate_view",
+                  "apply_view_template",
+                  "create_sheet",
+                  "override_graphics"
+                ],
+                "type": "string"
+              },
+              "args": {
+                "additionalProperties": true,
+                "type": "object"
+              }
+            },
+            "required": [
+              "action",
+              "args"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/$defs/ActionStep"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "steps"
+        ],
+        "type": "object"
+      },
+      "name": "revit_run_actions",
+      "readOnly": false,
+      "title": "Run Actions",
+      "toolset": "actions"
+    },
+    {
+      "description": "Set one instance or type parameter. parameter_id selects by BuiltInParameter name, shared GUID or ParameterElement ID; otherwise parameter takes a localized UI name, BuiltInParameter name or English alias, and ambiguous matches are refused. Value is a string, integer or number by storage type; lengths in mm, areas in m2. Group members fail with a clear message. dry_run rolls back and returns the verification block.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_id": {
+            "exclusiveMinimum": 0,
+            "maximum": 9223372036854775807,
+            "type": "integer"
+          },
+          "parameter": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "parameter_id": {
+            "anyOf": [
+              {
+                "pattern": "^(?:[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+|[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|0*[1-9][0-9]*)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "required": [
+          "element_id",
+          "parameter",
+          "value"
+        ],
+        "type": "object"
+      },
+      "name": "revit_set_parameter",
+      "readOnly": false,
+      "title": "Set Parameter",
+      "toolset": "actions"
+    },
+    {
+      "description": "Update a parameter on elements matching the same filters as revit_query_elements. Group members are reported in skipped.inGroup instead of failing the call; dry_run predicts this.",
+      "destructive": true,
+      "inputSchema": {
+        "$defs": {
+          "UpdateFilters": {
+            "additionalProperties": false,
+            "properties": {
+              "area_scheme": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "categories": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "family": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "level": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "parameter_filters": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "additionalProperties": true,
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "phase": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "type_name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "view": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "workset": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "type": "object"
+          }
+        },
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "filters": {
+            "$ref": "#/$defs/UpdateFilters"
+          },
+          "include_type_parameters": {
+            "default": false,
+            "type": "boolean"
+          },
+          "max_elements": {
+            "default": 5000,
+            "maximum": 20000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "parameter": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "parameter_id": {
+            "anyOf": [
+              {
+                "pattern": "^(?:[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+|[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}|0*[1-9][0-9]*)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "required": [
+          "filters",
+          "parameter",
+          "value"
+        ],
+        "type": "object"
+      },
+      "name": "revit_update_parameters",
+      "readOnly": false,
+      "title": "Update Parameters",
+      "toolset": "actions"
+    },
+    {
+      "description": "Persist cancellation and prevent unstarted models from running.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "run_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "type": "object"
+      },
+      "name": "revit_batch_cancel",
+      "readOnly": true,
+      "title": "Cancel batch collection",
+      "toolset": "batch"
+    },
+    {
+      "description": "Download completed snapshots to new local files without overwriting.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "output_dir": {
+            "type": "string"
+          },
+          "run_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "output_dir"
+        ],
+        "type": "object"
+      },
+      "name": "revit_batch_fetch",
+      "readOnly": true,
+      "title": "Fetch batch snapshots",
+      "toolset": "batch"
+    },
+    {
+      "description": "Start a persistent, read-only run over local, UNC or RSN models. open_timeout_minutes is the per-model open deadline (default 30, 45 when upgrading in memory).",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "folder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "open_timeout_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "parameter_rules": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "paths": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "recursive": {
+            "default": false,
+            "type": "boolean"
+          },
+          "years": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_batch_start",
+      "readOnly": true,
+      "title": "Start batch collection",
+      "toolset": "batch"
+    },
+    {
+      "description": "Read durable run and model status after the initiating client exits.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "run_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id"
+        ],
+        "type": "object"
+      },
+      "name": "revit_batch_status",
+      "readOnly": true,
+      "title": "Batch collection status",
+      "toolset": "batch"
+    },
+    {
+      "description": "Build a local Excel report from snapshots without contacting Revit.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "findings": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional findings with model, severity, rule, element_ids (or elementIds), and recommendation."
+          },
+          "output_path": {
+            "description": "New .xlsx file path, resolved on the machine running this server; existing files are never replaced.",
+            "type": "string"
+          },
+          "previous_dir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional directory of earlier snapshots matched by model title for the Changes sheet."
+          },
+          "snapshots_dir": {
+            "description": "Directory of schema-version-1 JSON snapshots on the MCP client machine.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "snapshots_dir",
+          "output_path"
+        ],
+        "type": "object"
+      },
+      "name": "revit_build_report",
+      "readOnly": true,
+      "title": "Build Snapshot Report",
+      "toolset": "batch"
+    },
+    {
+      "description": "Open each model in the interactive session, run steps and C# code, export, save as requested, and close. In-place saves and code need a confirm_token from the preview response. dry_run forces code.transaction=\"auto\" and reports the override in warnings. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action.",
+      "destructive": true,
+      "inputSchema": {
+        "$defs": {
+          "ActionStep": {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "enum": [
+                  "move",
+                  "rotate",
+                  "copy",
+                  "mirror",
+                  "change_type",
+                  "update_parameters",
+                  "place_family",
+                  "load_family",
+                  "create_wall",
+                  "create_mep_run",
+                  "set_parameter",
+                  "delete",
+                  "select",
+                  "isolate",
+                  "create_view",
+                  "duplicate_view",
+                  "apply_view_template",
+                  "create_sheet",
+                  "override_graphics"
+                ],
+                "type": "string"
+              },
+              "args": {
+                "additionalProperties": true,
+                "type": "object"
+              }
+            },
+            "required": [
+              "action",
+              "args"
+            ],
+            "type": "object"
+          },
+          "ProcessCode": {
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "maxLength": 200000,
+                "minLength": 1,
+                "type": "string"
+              },
+              "transaction": {
+                "default": "auto",
+                "enum": [
+                  "auto",
+                  "none"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "code"
+            ],
+            "type": "object"
+          },
+          "ProcessExport": {
+            "additionalProperties": false,
+            "properties": {
+              "all_sheets": {
+                "default": false,
+                "type": "boolean"
+              },
+              "format": {
+                "enum": [
+                  "pdf",
+                  "dwg",
+                  "ifc",
+                  "csv"
+                ],
+                "type": "string"
+              },
+              "options": {
+                "anyOf": [
+                  {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "output_dir": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "overwrite": {
+                "default": false,
+                "type": "boolean"
+              },
+              "sheet_set": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "sheets": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "exclusiveMinimum": 0,
+                          "maximum": 9223372036854775807,
+                          "type": "integer"
+                        }
+                      ]
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "views": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "exclusiveMinimum": 0,
+                          "maximum": 9223372036854775807,
+                          "type": "integer"
+                        }
+                      ]
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "format"
+            ],
+            "type": "object"
+          },
+          "ProcessOpen": {
+            "additionalProperties": false,
+            "properties": {
+              "audit": {
+                "default": false,
+                "type": "boolean"
+              },
+              "mode": {
+                "default": "detached",
+                "enum": [
+                  "detached",
+                  "detached_discard_worksets",
+                  "local_copy",
+                  "read_only_local"
+                ],
+                "type": "string"
+              },
+              "worksets": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "all",
+                      "none"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "additionalProperties": {
+                      "items": {
+                        "minLength": 1,
+                        "pattern": "\\S",
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "type": "object"
+                  }
+                ],
+                "default": "all"
+              }
+            },
+            "type": "object"
+          },
+          "ProcessSave": {
+            "additionalProperties": false,
+            "properties": {
+              "compact": {
+                "default": true,
+                "type": "boolean"
+              },
+              "mode": {
+                "default": "none",
+                "enum": [
+                  "none",
+                  "output_dir",
+                  "in_place"
+                ],
+                "type": "string"
+              },
+              "output_dir": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "overwrite": {
+                "default": false,
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProcessCode"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "exports": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ProcessExport"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "folder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "open": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProcessOpen"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "paths": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 500,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "pattern": {
+            "default": "*.rvt",
+            "type": "string"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "recursive": {
+            "default": false,
+            "type": "boolean"
+          },
+          "save": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProcessSave"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "steps": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ActionStep"
+                },
+                "maxItems": 50,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "stop_on_error": {
+            "default": false,
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "default": 14400,
+            "maximum": 14400,
+            "minimum": 30,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_process_models",
+      "readOnly": false,
+      "title": "Process Many Models",
+      "toolset": "batch"
+    },
+    {
+      "description": "Create connected duct, pipe, cable tray or conduit segments from model mm points. A missing Z uses the level elevation plus the kind's default offset. Unplaceable elbows are reported as unjoined pairs.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "connect_to": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9223372036854775807,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "diameter_mm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "height_mm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "kind": {
+            "enum": [
+              "duct",
+              "pipe",
+              "cable_tray",
+              "conduit"
+            ],
+            "type": "string"
+          },
+          "level": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "offset_mm": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "points_mm": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 2,
+              "type": "array"
+            },
+            "maxItems": 200,
+            "minItems": 2,
+            "type": "array"
+          },
+          "system_type": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "type_name": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "width_mm": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "kind",
+          "points_mm",
+          "level"
+        ],
+        "type": "object"
+      },
+      "name": "revit_create_mep_run",
+      "readOnly": false,
+      "title": "Create MEP Run",
+      "toolset": "cad-mep"
+    },
+    {
+      "description": "Create a straight wall on a named level. XY endpoints and height are in mm; a null wall_type uses the first basic type.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "end_mm": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "height_mm": {
+            "default": 3000,
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "level": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "start_mm": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "wall_type": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "start_mm",
+          "end_mm",
+          "level",
+          "wall_type"
+        ],
+        "type": "object"
+      },
+      "name": "revit_create_wall",
+      "readOnly": false,
+      "title": "Create Wall",
+      "toolset": "cad-mep"
+    },
+    {
+      "description": "Link or import a DWG into a plan view on the Revit workstation. Returns CAD layers and extents in mm.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "layers": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "level": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "link": {
+            "default": true,
+            "type": "boolean"
+          },
+          "origin": {
+            "default": "internal",
+            "enum": [
+              "internal",
+              "shared",
+              "center"
+            ],
+            "type": "string"
+          },
+          "path": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "default": 600,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          },
+          "units": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "mm",
+              "cm",
+              "m",
+              "in",
+              "ft"
+            ],
+            "type": "string"
+          },
+          "view": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9223372036854775807,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "revit_link_cad",
+      "readOnly": false,
+      "title": "Link CAD Drawing",
+      "toolset": "cad-mep"
+    },
+    {
+      "description": "Bridge openings, pair parallel CAD lines and join basic walls in one undo entry. Dimensions are mm. Joins Revit rejects are left out and reported as unjoinedEnds with unjoinedReasons; dry_run reports the same join numbers.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "cad_id": {
+            "exclusiveMinimum": 0,
+            "maximum": 9223372036854775807,
+            "type": "integer"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "height_mm": {
+            "default": 3000,
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "join": {
+            "default": true,
+            "type": "boolean"
+          },
+          "layers": {
+            "items": {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "level": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "max_gap_mm": {
+            "default": 3000,
+            "minimum": 0,
+            "type": "number"
+          },
+          "max_thickness_mm": {
+            "default": 700,
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "min_length_mm": {
+            "default": 300,
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "min_thickness_mm": {
+            "default": 80,
+            "exclusiveMinimum": 0,
+            "type": "number"
+          },
+          "timeout_seconds": {
+            "default": 600,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          },
+          "wall_type": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "cad_id",
+          "layers",
+          "level"
+        ],
+        "type": "object"
+      },
+      "name": "revit_walls_from_cad",
+      "readOnly": false,
+      "title": "Build Walls from CAD",
+      "toolset": "cad-mep"
+    },
+    {
+      "description": "Compile and run C# against the live Revit API on the Revit thread. Accepts a method body or a public static Script class with Execute(ScriptContext ctx). Auto mode owns one transaction and undo entry; transaction=\"none\" is refused by default. Needs confirm_token from a first call, which runs nothing; dry_run needs none and forces transaction=\"auto\". A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "code": {
+            "maxLength": 200000,
+            "minLength": 1,
+            "type": "string"
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "default": 600,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          },
+          "transaction": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "none"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "type": "object"
+      },
+      "name": "revit_execute_code",
+      "readOnly": false,
+      "title": "Execute C# Code",
+      "toolset": "code"
+    },
+    {
+      "description": "Request cancellation of an action jobId. Process-models stops before the next model and marks unstarted models cancelled; a single running Revit operation finishes, and completed changes stay committed.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "type": "object"
+      },
+      "name": "revit_cancel_job",
+      "readOnly": false,
+      "title": "Cancel Action Job",
+      "toolset": "core"
+    },
+    {
+      "description": "Read the active model's file name, Revit version, levels (elevations in mm), area schemes, worksets and view count. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_document_info",
+      "readOnly": true,
+      "title": "Document Info",
+      "toolset": "core"
+    },
+    {
+      "description": "List every open document in one Revit process, including background documents. Linked documents are listed only when include_linked is set. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "include_linked": {
+            "default": false,
+            "type": "boolean"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_documents",
+      "readOnly": true,
+      "title": "Open Documents",
+      "toolset": "core"
+    },
+    {
+      "description": "List recent jobs, or wait up to wait_seconds (0 to 50, default 40) for the result of an action jobId. Results stay on the workstation for 24 hours, across server restarts. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "wait_seconds": {
+            "default": 40,
+            "description": "Seconds to wait, 0 through 50.",
+            "maximum": 50,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_jobs",
+      "readOnly": true,
+      "title": "List Revit Jobs",
+      "toolset": "core"
+    },
+    {
+      "description": "List Revit processes with documentName, documentPath, revitVersion, processId and pluginResponding. Busy or unresponsive processes stay listed with pluginResponding=false. HTTP mode reports only its connected process.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_list_instances",
+      "readOnly": true,
+      "title": "List Instances",
+      "toolset": "core"
+    },
+    {
+      "description": "Check the connection to Revit without reading the model. Returns data=\"pong\", even when no document is active. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_ping",
+      "readOnly": true,
+      "title": "Check Revit Connection",
+      "toolset": "core"
+    },
+    {
+      "description": "Read the active document, open views, selection and open documents. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_ui_state",
+      "readOnly": true,
+      "title": "Revit UI State",
+      "toolset": "core"
+    },
+    {
+      "description": "Undo the last MCP action through Revit's own undo command. Runs only when the target document is active, no command is pending and Revit's last undo entry is the one this session recorded; otherwise the result carries a refusal reason.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_undo_last",
+      "readOnly": false,
+      "title": "Undo Last Action",
+      "toolset": "core"
+    },
+    {
+      "description": "Activate an already open document by title or path reference.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "document"
+        ],
+        "type": "object"
+      },
+      "name": "revit_activate_document",
+      "readOnly": false,
+      "title": "Activate Document",
+      "toolset": "documents"
+    },
+    {
+      "description": "Close a background document. Needs confirm_token from a first call, which changes nothing.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "save": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "document"
+        ],
+        "type": "object"
+      },
+      "name": "revit_close_document",
+      "readOnly": false,
+      "title": "Close Document",
+      "toolset": "documents"
+    },
+    {
+      "description": "Create a project or family from a template on the Revit workstation.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "activate": {
+            "default": true,
+            "type": "boolean"
+          },
+          "kind": {
+            "default": "project",
+            "enum": [
+              "project",
+              "family"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "save_as": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_new_document",
+      "readOnly": false,
+      "title": "New Document",
+      "toolset": "documents"
+    },
+    {
+      "description": "Open a local, UNC or RSN model. Central models open detached by default. Cloud paths are unsupported. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "activate": {
+            "default": false,
+            "type": "boolean"
+          },
+          "audit": {
+            "default": false,
+            "type": "boolean"
+          },
+          "mode": {
+            "default": "detached",
+            "enum": [
+              "detached",
+              "detached_discard_worksets",
+              "local_copy",
+              "read_only_local"
+            ],
+            "type": "string"
+          },
+          "path": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "worksets": {
+            "anyOf": [
+              {
+                "enum": [
+                  "all",
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "items": {
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              }
+            ],
+            "default": "all"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "revit_open_document",
+      "readOnly": false,
+      "title": "Open Document",
+      "toolset": "documents"
+    },
+    {
+      "description": "Save a document. Needs confirm_token from a first call, which changes nothing.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "compact": {
+            "default": false,
+            "type": "boolean"
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "type": "boolean"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "save_as": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "document"
+        ],
+        "type": "object"
+      },
+      "name": "revit_save_document",
+      "readOnly": false,
+      "title": "Save Document",
+      "toolset": "documents"
+    },
+    {
+      "description": "Synchronize a workshared document with central. Needs confirm_token from a first call, which changes nothing.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "comment": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "compact": {
+            "default": false,
+            "type": "boolean"
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "relinquish": {
+            "anyOf": [
+              {
+                "enum": [
+                  "all",
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              }
+            ],
+            "default": "all"
+          },
+          "save_local_after": {
+            "default": true,
+            "type": "boolean"
+          },
+          "save_local_before": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "document",
+          "comment"
+        ],
+        "type": "object"
+      },
+      "name": "revit_sync_document",
+      "readOnly": false,
+      "title": "Synchronize Document",
+      "toolset": "documents"
+    },
+    {
+      "description": "Export PDF, DWG, IFC or schedule CSV files on the Revit workstation; dry_run returns planned file names. Replacing existing files (overwrite=true) needs a confirm_token from a first call. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "all_sheets": {
+            "default": false,
+            "type": "boolean"
+          },
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "format": {
+            "enum": [
+              "pdf",
+              "dwg",
+              "ifc",
+              "csv"
+            ],
+            "type": "string"
+          },
+          "options": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "output_dir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "overwrite": {
+            "default": false,
+            "type": "boolean"
+          },
+          "sheet_set": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sheets": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "exclusiveMinimum": 0,
+                      "maximum": 9223372036854775807,
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "timeout_seconds": {
+            "default": 1800,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          },
+          "views": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "exclusiveMinimum": 0,
+                      "maximum": 9223372036854775807,
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "format"
+        ],
+        "type": "object"
+      },
+      "name": "revit_export",
+      "readOnly": false,
+      "title": "Export Model Files",
+      "toolset": "export"
+    },
+    {
+      "description": "Export NWC on the Revit workstation; needs the Navisworks exporter. settings_xml applies exporter XML values, explicit arguments take precedence. Replacing an existing file (overwrite=true) needs a confirm_token from a first call. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "convert_element_properties": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "convert_lights": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "convert_linked_cad_formats": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "coordinates": {
+            "anyOf": [
+              {
+                "enum": [
+                  "shared",
+                  "internal"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "divide_file_into_levels": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9223372036854775807,
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "export_element_ids": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "export_links": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "export_parts": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "export_room_as_attribute": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "export_room_geometry": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "export_urls": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "faceting_factor": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 100,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "find_missing_materials": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "overwrite": {
+            "default": false,
+            "type": "boolean"
+          },
+          "parameters": {
+            "anyOf": [
+              {
+                "enum": [
+                  "all",
+                  "elements",
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "path": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "enum": [
+                  "model",
+                  "view",
+                  "selection"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "settings_xml": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "timeout_seconds": {
+            "default": 1800,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          },
+          "view": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9223372036854775807,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "revit_export_nwc",
+      "readOnly": false,
+      "title": "Export Navisworks NWC",
+      "toolset": "export"
+    },
+    {
+      "description": "Write a new local .xlsx issue register with element snapshots and review documents. Takes 1 to 60 issues; captures at most 25 snapshots (by severity) within a 210-second budget, and failed snapshots become cell notes. Snapshots need local or SSH transport. Existing output files are refused. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "issues": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "output_path": {
+            "description": "New .xlsx issue register path, resolved on the machine running this server; existing files are refused.",
+            "type": "string"
+          },
+          "pixel_size": {
+            "default": 900,
+            "description": "PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images.",
+            "maximum": 4000,
+            "minimum": 32,
+            "type": "integer"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "project": {
+            "additionalProperties": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "output_path",
+          "project",
+          "issues"
+        ],
+        "type": "object"
+      },
+      "name": "revit_issue_register",
+      "readOnly": true,
+      "title": "Issue Register",
+      "toolset": "export"
+    },
+    {
+      "description": "Parse a Navisworks exporter XML file on the Revit workstation without exporting. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "settings_xml": {
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "settings_xml"
+        ],
+        "type": "object"
+      },
+      "name": "revit_nwc_settings_check",
+      "readOnly": true,
+      "title": "Check NWC Settings",
+      "toolset": "export"
+    },
+    {
+      "description": "Edit an open family in place, or named project families (exact names or [\"*\"]), one load cycle each. A dry run rolls back all changes. A long action can return status=running and jobId when the wait budget expires; it may already have changed the model, and revit_jobs returns its result. Resubmitting repeats the action.",
+      "destructive": true,
+      "inputSchema": {
+        "$defs": {
+          "AddSharedParameters": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "add_shared_parameters",
+                "type": "string"
+              },
+              "parameters": {
+                "items": {
+                  "$ref": "#/$defs/SharedParameter"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "replace_family_parameter": {
+                "default": false,
+                "type": "boolean"
+              },
+              "shared_parameter_file": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "op",
+              "parameters"
+            ],
+            "type": "object"
+          },
+          "Purge": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "purge",
+                "type": "string"
+              }
+            },
+            "required": [
+              "op"
+            ],
+            "type": "object"
+          },
+          "RemoveParameters": {
+            "additionalProperties": false,
+            "properties": {
+              "include_shared": {
+                "default": false,
+                "type": "boolean"
+              },
+              "names": {
+                "items": {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "op": {
+                "const": "remove_parameters",
+                "type": "string"
+              }
+            },
+            "required": [
+              "op",
+              "names"
+            ],
+            "type": "object"
+          },
+          "SetShared": {
+            "additionalProperties": false,
+            "properties": {
+              "op": {
+                "const": "set_shared",
+                "type": "string"
+              },
+              "shared": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "op",
+              "shared"
+            ],
+            "type": "object"
+          },
+          "SharedParameter": {
+            "additionalProperties": false,
+            "properties": {
+              "group": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "guid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "instance": {
+                "default": true,
+                "type": "boolean"
+              },
+              "name": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "group"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "families": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "maxItems": 200,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "operations": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "add_shared_parameters": "#/$defs/AddSharedParameters",
+                  "purge": "#/$defs/Purge",
+                  "remove_parameters": "#/$defs/RemoveParameters",
+                  "set_shared": "#/$defs/SetShared"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/AddSharedParameters"
+                },
+                {
+                  "$ref": "#/$defs/RemoveParameters"
+                },
+                {
+                  "$ref": "#/$defs/Purge"
+                },
+                {
+                  "$ref": "#/$defs/SetShared"
+                }
+              ]
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "overwrite_parameter_values": {
+            "default": false,
+            "type": "boolean"
+          },
+          "stop_on_error": {
+            "default": true,
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "default": 1800,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "operations"
+        ],
+        "type": "object"
+      },
+      "name": "revit_edit_families",
+      "readOnly": false,
+      "title": "Edit Families",
+      "toolset": "family"
+    },
+    {
+      "description": "Audit an open family or named project families without saving or loading changes. Project mode takes exact family names or [\"*\"]; family mode takes none. detail=\"summary\" returns parameter counts and up to 20 unused parameter names; detail=\"full\" returns all parameter metadata with group IDs and groupName labels. The wildcard audits the first 200 editable families sorted by name; data.skipped lists each remaining name and reason, with skippedCount. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "detail": {
+            "default": "summary",
+            "enum": [
+              "summary",
+              "full"
+            ],
+            "type": "string"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "families": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 200,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 600,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_family_audit",
+      "readOnly": true,
+      "title": "Audit Families",
+      "toolset": "family"
+    },
+    {
+      "description": "Load workstation .rfa files in one undo entry. Existing families are skipped unless overwrite is true.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "overwrite": {
+            "default": false,
+            "type": "boolean"
+          },
+          "overwrite_parameter_values": {
+            "default": false,
+            "type": "boolean"
+          },
+          "paths": {
+            "items": {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array"
+          },
+          "timeout_seconds": {
+            "default": 600,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "paths"
+        ],
+        "type": "object"
+      },
+      "name": "revit_load_family",
+      "readOnly": false,
+      "title": "Load Families",
+      "toolset": "family"
+    },
+    {
+      "description": "Load optional families and place instances in one transaction and undo entry.",
+      "destructive": true,
+      "inputSchema": {
+        "$defs": {
+          "FamilyPlacement": {
+            "additionalProperties": false,
+            "properties": {
+              "family": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "host_id": {
+                "anyOf": [
+                  {
+                    "exclusiveMinimum": 0,
+                    "maximum": 9223372036854775807,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "level": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "parameters": {
+                "anyOf": [
+                  {
+                    "patternProperties": {
+                      "\\S": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    },
+                    "propertyNames": {
+                      "minLength": 1
+                    },
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "rotation_deg": {
+                "default": 0,
+                "type": "number"
+              },
+              "type_name": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "x_mm": {
+                "type": "number"
+              },
+              "y_mm": {
+                "type": "number"
+              },
+              "z_mm": {
+                "default": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "family",
+              "type_name",
+              "x_mm",
+              "y_mm",
+              "level"
+            ],
+            "type": "object"
+          },
+          "RoomPlacement": {
+            "additionalProperties": false,
+            "properties": {
+              "family": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "level": {
+                "anyOf": [
+                  {
+                    "minLength": 1,
+                    "pattern": "\\S",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "parameters": {
+                "anyOf": [
+                  {
+                    "patternProperties": {
+                      "\\S": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "number"
+                          }
+                        ]
+                      }
+                    },
+                    "propertyNames": {
+                      "minLength": 1
+                    },
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "rooms": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "rotation_deg": {
+                "default": 0,
+                "type": "number"
+              },
+              "type_name": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "z_mm": {
+                "default": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "family",
+              "type_name"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "at_rooms": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RoomPlacement"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "load": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "placements": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/FamilyPlacement"
+                },
+                "maxItems": 2000,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "stop_on_error": {
+            "default": true,
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "default": 600,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_place_families",
+      "readOnly": false,
+      "title": "Place Families",
+      "toolset": "family"
+    },
+    {
+      "description": "Place a loaded unhosted family on a named level. family is a name or Family: Type; a null type_name uses the embedded or first type. XY is in mm, rotation in degrees.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "family": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "level": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "rotation_deg": {
+            "default": 0,
+            "type": "number"
+          },
+          "type_name": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "x_mm": {
+            "type": "number"
+          },
+          "y_mm": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "family",
+          "type_name",
+          "x_mm",
+          "y_mm",
+          "level"
+        ],
+        "type": "object"
+      },
+      "name": "revit_place_family",
+      "readOnly": false,
+      "title": "Place Family",
+      "toolset": "family"
+    },
+    {
+      "description": "Align host grids and levels to a loaded link, with optional creation and rollback preview. Does not create a monitor relationship.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "create_missing": {
+            "default": true,
+            "type": "boolean"
+          },
+          "create_plan_views": {
+            "default": false,
+            "type": "boolean"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "grid_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "include_pinned": {
+            "default": false,
+            "type": "boolean"
+          },
+          "kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "level_offset_mm": {
+            "default": 0,
+            "type": "number"
+          },
+          "level_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "link": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "name_map": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "plan_view_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "prefix": {
+            "default": "",
+            "type": "string"
+          },
+          "reuse_matching": {
+            "default": true,
+            "type": "boolean"
+          },
+          "suffix": {
+            "default": "",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "default": 600,
+            "maximum": 3600,
+            "minimum": 30,
+            "type": "integer"
+          },
+          "tolerance_mm": {
+            "default": 0.5,
+            "exclusiveMinimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "link"
+        ],
+        "type": "object"
+      },
+      "name": "revit_align_link_datums",
+      "readOnly": false,
+      "title": "Align Link Datums",
+      "toolset": "links"
+    },
+    {
+      "description": "Compare host grids and levels with one loaded Revit link. Changes nothing. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "level_offset_mm": {
+            "default": 0,
+            "type": "number"
+          },
+          "link": {
+            "type": "string"
+          },
+          "name_map": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "prefix": {
+            "default": "",
+            "type": "string"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "reuse_matching": {
+            "default": true,
+            "type": "boolean"
+          },
+          "suffix": {
+            "default": "",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "tolerance_mm": {
+            "default": 0.5,
+            "type": "number"
+          }
+        },
+        "required": [
+          "link"
+        ],
+        "type": "object"
+      },
+      "name": "revit_compare_link_datums",
+      "readOnly": true,
+      "title": "Compare Link Datums",
+      "toolset": "links"
+    },
+    {
+      "description": "Delete selected link types and their instances; dry_run previews. Cannot be undone in Revit. Needs confirm_token from a first call, which changes nothing.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "confirm_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "include_imported_cad": {
+            "default": false,
+            "type": "boolean"
+          },
+          "kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "revit",
+                    "cad",
+                    "point_cloud",
+                    "image"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "links": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "const": "*",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "required": [
+          "links"
+        ],
+        "type": "object"
+      },
+      "name": "revit_remove_links",
+      "readOnly": false,
+      "title": "Remove Links",
+      "toolset": "links"
+    },
+    {
+      "description": "Summarize matching elements by one or two fields, with optional sum and average. Lengths use mm, areas m2, volumes m3. For area totals, group by level and select the area scheme. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "area_scheme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exact area-scheme name, case-insensitive."
+          },
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "group_by": {
+            "description": "One or two distinct fields (e.g. category, family, type, level) or exact localized parameter names.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 1,
+            "type": "array"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "parameter_filters": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "AND-combined filters: parameter (exact localized name), operator (equals, contains, greater, less, empty, not-empty, exists) and value. Numbers use mm, m2, m3 or display units."
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "sum_field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Numeric field or parameter name to sum and average per group; lengths in mm, areas m2, volumes m3."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "type_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exact type name, case-insensitive."
+          },
+          "view": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exact non-template view name; limits the search to that view."
+          },
+          "workset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "group_by"
+        ],
+        "type": "object"
+      },
+      "name": "revit_aggregate_elements",
+      "readOnly": true,
+      "title": "Aggregate Elements",
+      "toolset": "read"
+    },
+    {
+      "description": "Read parameters and geometry of an element by Revit ID, with its type parameters and related warnings. Geometry is in model mm; roomCenterMm is a point inside the room. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "element_id": {
+            "description": "Revit element ID from revit_query_elements or revit_view_elements.",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "element_id"
+        ],
+        "type": "object"
+      },
+      "name": "revit_element_details",
+      "readOnly": true,
+      "title": "Element Details",
+      "toolset": "read"
+    },
+    {
+      "description": "Read RVT, CAD and image link status. Each list is capped at 100 entries; summary counts cover all links. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_links_status",
+      "readOnly": true,
+      "title": "Links Status",
+      "toolset": "read"
+    },
+    {
+      "description": "List catalog names for one section: categories, family-types, levels, area-schemes, views, worksets, phases or parameters. name_contains filters names case-insensitively; limit bounds results (default 200, maximum 2000). Returns total before the limit and hasMore. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "limit": {
+            "default": 200,
+            "maximum": 2000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "name_contains": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Case-insensitive substring of the view name."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "section": {
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "section"
+        ],
+        "type": "object"
+      },
+      "name": "revit_list_catalog",
+      "readOnly": true,
+      "title": "List Catalog",
+      "toolset": "read"
+    },
+    {
+      "description": "Read model object membership or dependencies. relation is level-rooms, area-scheme-elements or view-template-dependents (with source_name), or group-elements or nested-family (with source_id). A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "relation": {
+            "type": "string"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit ID of the source group (group-elements) or family instance (nested-family)."
+          },
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Source name, case-insensitive: a level (level-rooms), area scheme (area-scheme-elements) or view template (view-template-dependents)."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "relation"
+        ],
+        "type": "object"
+      },
+      "name": "revit_list_relations",
+      "readOnly": true,
+      "title": "List Relations",
+      "toolset": "read"
+    },
+    {
+      "description": "Group model warnings by description text. warning_text with include_elements=true returns the elements of one group. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "include_elements": {
+            "default": false,
+            "description": "Include affected elements (ID, category, name) per group. Default false returns counts only.",
+            "type": "boolean"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "warning_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exact warning description from revit_list_warnings, case-insensitive; an unmatched text is an error."
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_list_warnings",
+      "readOnly": true,
+      "title": "List Warnings",
+      "toolset": "read"
+    },
+    {
+      "description": "Read model quality counts: project metadata, file size, counts, units and the ten most frequent warning groups. Unavailable metrics are null and listed in skipped. output_path also writes an .xlsx health report with up to five snapshots. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "New .xlsx health report path, resolved on the machine running this server; parent must exist and existing files are refused."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_model_health",
+      "readOnly": true,
+      "title": "Model Health Check",
+      "toolset": "read"
+    },
+    {
+      "description": "Read a schema version 1 project snapshot for batch audits. Closed worksets can make the result incomplete. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "$defs": {
+          "ParameterRule": {
+            "additionalProperties": false,
+            "properties": {
+              "category": {
+                "type": "string"
+              },
+              "parameter": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "category",
+              "parameter"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "parameter_rules": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ParameterRule"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_model_snapshot",
+      "readOnly": true,
+      "title": "Model Snapshot",
+      "toolset": "read"
+    },
+    {
+      "description": "Count filled, empty and missing parameters per parameter and category, with samples of empty and missing element IDs. Numeric zero counts as filled. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "categories": {
+            "description": "Category names (1 to 20) from the categories catalog; matches any listed category.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "type": "array"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "include_types": {
+            "default": true,
+            "type": "boolean"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "parameters": {
+            "description": "Exact localized parameter names (1 to 30); names that do not match count as missing.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "type": "array"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "sample_limit": {
+            "default": 20,
+            "description": "Maximum sampled element IDs per empty and missing list, 1 to 100 (default 20); counts always cover all elements.",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "view": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exact non-template view name; limits the search to that view."
+          },
+          "workset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "categories",
+          "parameters"
+        ],
+        "type": "object"
+      },
+      "name": "revit_parameter_fill_check",
+      "readOnly": true,
+      "title": "Parameter Fill Check",
+      "toolset": "read"
+    },
+    {
+      "description": "Read a page of matching element rows. Lengths use mm, areas m2, volumes m3; optional geometry is in model mm. roomCenterMm is a point inside the room, a bounding-box centre can lie outside it. hasMore=true means further pages exist. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "area_scheme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exact area-scheme name, case-insensitive."
+          },
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "include_geometry": {
+            "default": false,
+            "description": "Include location, boundingBox and roomCenterMm in model mm. Default false; true enlarges the response.",
+            "type": "boolean"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "limit": {
+            "default": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "parameter_filters": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "AND-combined filters: parameter (exact localized name), operator (equals, contains, greater, less, empty, not-empty, exists) and value. Numbers use mm, m2, m3 or display units."
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "sort_direction": {
+            "default": "asc",
+            "description": "asc (default) or desc, case-insensitive.",
+            "type": "string"
+          },
+          "sort_field": {
+            "default": "id",
+            "description": "System field (e.g. id, category, level) or exact localized parameter name to sort by; default id.",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "type_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exact type name, case-insensitive."
+          },
+          "view": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Exact non-template view name; limits the search to that view."
+          },
+          "workset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_query_elements",
+      "readOnly": true,
+      "title": "Query Elements",
+      "toolset": "read"
+    },
+    {
+      "description": "Read displayed schedule header and body cell text, with paging. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "max_rows": {
+            "default": 500,
+            "maximum": 5000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "schedule": {
+            "description": "Exact schedule name or decimal Revit view ID. (Use the id when two schedules share a name.)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schedule"
+        ],
+        "type": "object"
+      },
+      "name": "revit_schedule_data",
+      "readOnly": true,
+      "title": "Read Schedule Data",
+      "toolset": "read"
+    },
+    {
+      "description": "Read project and survey coordinates: base and survey points, active site, project locations and link offsets (mm, degrees). Lists are capped at 100 with total counts. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_shared_coordinates",
+      "readOnly": true,
+      "title": "Shared Coordinates",
+      "toolset": "read"
+    },
+    {
+      "description": "Activate a non-template view. Zoom to fit, preserve zoom, or frame element IDs.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "activate_document": {
+            "default": false,
+            "type": "boolean"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Target document title or path reference."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "view": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "view_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "zoom": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fit",
+                  "none"
+                ],
+                "type": "string"
+              },
+              {
+                "items": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9223372036854775807,
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            ],
+            "default": "fit"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_activate_view",
+      "readOnly": false,
+      "title": "Activate View",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Apply a matching view template to one or more views.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "template": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "views": {
+            "items": {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "views",
+          "template"
+        ],
+        "type": "object"
+      },
+      "name": "revit_apply_view_template",
+      "readOnly": false,
+      "title": "Apply View Template",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Render a highlighted PNG that marks 1 to 500 elements, for issue evidence. Supports 3d or plan mode over local or SSH transport. The temporary view is rolled back. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "element_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "mode": {
+            "default": "3d",
+            "type": "string"
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath."
+          },
+          "padding_mm": {
+            "default": 1500,
+            "type": "number"
+          },
+          "pixel_size": {
+            "default": 1600,
+            "description": "PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images.",
+            "maximum": 4000,
+            "minimum": 32,
+            "type": "integer"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          }
+        },
+        "required": [
+          "element_ids"
+        ],
+        "type": "object"
+      },
+      "name": "revit_capture_elements",
+      "readOnly": true,
+      "title": "Capture Elements",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Close open UI views in the active document.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "keep_active": {
+            "default": true,
+            "type": "boolean"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "views": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_close_views",
+      "readOnly": false,
+      "title": "Close Views",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Create a schedule for one category with the named fields in the given order, using Revit UI names such as Mark, Level or Count. filters keep rows by field, operator and value; sort orders and, with header or footer, groups rows. Lengths in mm, areas in m2, volumes in m3. itemized=false collapses identical rows. Returns viewId and the resolved fields; unknown names are listed in skipped. dry_run rolls back.",
+      "destructive": true,
+      "inputSchema": {
+        "$defs": {
+          "ScheduleFilter": {
+            "additionalProperties": false,
+            "properties": {
+              "field": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "operator": {
+                "enum": [
+                  "equal",
+                  "not_equal",
+                  "greater_than",
+                  "greater_than_or_equal",
+                  "less_than",
+                  "less_than_or_equal",
+                  "contains",
+                  "not_contains",
+                  "begins_with",
+                  "not_begins_with",
+                  "ends_with",
+                  "not_ends_with",
+                  "has_value",
+                  "has_no_value"
+                ],
+                "type": "string"
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "field",
+              "operator"
+            ],
+            "type": "object"
+          },
+          "ScheduleSort": {
+            "additionalProperties": false,
+            "properties": {
+              "blank_line": {
+                "default": false,
+                "type": "boolean"
+              },
+              "descending": {
+                "default": false,
+                "type": "boolean"
+              },
+              "field": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "footer": {
+                "default": false,
+                "type": "boolean"
+              },
+              "header": {
+                "default": false,
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "field"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "category": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "fields": {
+            "items": {
+              "minLength": 1,
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array"
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ScheduleFilter"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "itemized": {
+            "default": true,
+            "type": "boolean"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sort": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ScheduleSort"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "category",
+          "fields"
+        ],
+        "type": "object"
+      },
+      "name": "revit_create_schedule",
+      "readOnly": false,
+      "title": "Create Schedule",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Create a sheet with the first loaded or a named title block.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "name": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "number": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "title_block": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "number",
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "revit_create_sheet",
+      "readOnly": false,
+      "title": "Create Sheet",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Create a plan, section, 3D or drafting view. Unbounded 3D views show the whole model, shaded, fine detail. Box coordinates are model mm.",
+      "destructive": true,
+      "inputSchema": {
+        "$defs": {
+          "ViewBox": {
+            "additionalProperties": false,
+            "properties": {
+              "max_mm": {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "min_mm": {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              }
+            },
+            "required": [
+              "min_mm",
+              "max_mm"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "box": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ViewBox"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "detail_level": {
+            "anyOf": [
+              {
+                "enum": [
+                  "coarse",
+                  "medium",
+                  "fine"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "display_style": {
+            "anyOf": [
+              {
+                "enum": [
+                  "hidden_line",
+                  "shaded",
+                  "consistent_colors",
+                  "realistic"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9223372036854775807,
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "kind": {
+            "enum": [
+              "floor_plan",
+              "ceiling_plan",
+              "structural_plan",
+              "section",
+              "3d",
+              "drafting"
+            ],
+            "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "name": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "scale": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "template": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "view_family_type": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "type": "object"
+      },
+      "name": "revit_create_view",
+      "readOnly": false,
+      "title": "Create View",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Duplicate a view, optionally with detailing or as a dependent view.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "mode": {
+            "default": "duplicate",
+            "enum": [
+              "duplicate",
+              "with_detailing",
+              "dependent"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "view": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_duplicate_view",
+      "readOnly": false,
+      "title": "Duplicate View",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Export a selected view to a PNG file on the MCP client. Does not change the active view or the model. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath."
+          },
+          "pixel_size": {
+            "default": 1600,
+            "description": "PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images.",
+            "maximum": 4000,
+            "minimum": 32,
+            "type": "integer"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "view": {
+            "description": "Exact non-template view name from revit_list_views, or a view ID as a decimal string.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_export_view",
+      "readOnly": true,
+      "title": "Export View to PNG",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Temporarily isolate element IDs in the active view; an empty list resets.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "reset": {
+            "default": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "element_ids"
+        ],
+        "type": "object"
+      },
+      "name": "revit_isolate",
+      "readOnly": false,
+      "title": "Isolate Elements",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "List non-template views with id, name, type, level, scale and template. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "name_contains": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Case-insensitive substring of the view name."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "view_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "English ViewType name such as FloorPlan or ThreeD, case-insensitive."
+          }
+        },
+        "type": "object"
+      },
+      "name": "revit_list_views",
+      "readOnly": true,
+      "title": "List Views",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Colour elements in selected model views; reset restores overrides saved in this Revit session.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "color": {
+            "default": "#FF0000",
+            "pattern": "^#[0-9A-Fa-f]{6}$",
+            "type": "string"
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "fill": {
+            "default": true,
+            "type": "boolean"
+          },
+          "halftone_others": {
+            "default": false,
+            "type": "boolean"
+          },
+          "line_weight": {
+            "anyOf": [
+              {
+                "maximum": 16,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "reset": {
+            "default": false,
+            "type": "boolean"
+          },
+          "transparency": {
+            "default": 0,
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "views": {
+            "anyOf": [
+              {
+                "enum": [
+                  "active",
+                  "all"
+                ],
+                "type": "string"
+              },
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "minLength": 1,
+                      "pattern": "\\S",
+                      "type": "string"
+                    },
+                    {
+                      "exclusiveMinimum": 0,
+                      "maximum": 9223372036854775807,
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "minItems": 1,
+                "type": "array"
+              }
+            ],
+            "default": "active"
+          }
+        },
+        "required": [
+          "element_ids"
+        ],
+        "type": "object"
+      },
+      "name": "revit_override_graphics",
+      "readOnly": false,
+      "title": "Highlight Elements",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Place views and schedules on a sheet. Coordinates are sheet mm.",
+      "destructive": true,
+      "inputSchema": {
+        "$defs": {
+          "SheetPlacement": {
+            "additionalProperties": false,
+            "properties": {
+              "view": {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              "x_mm": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "y_mm": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "required": [
+              "view"
+            ],
+            "type": "object"
+          }
+        },
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "sheet": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "views": {
+            "items": {
+              "$ref": "#/$defs/SheetPlacement"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "sheet",
+          "views"
+        ],
+        "type": "object"
+      },
+      "name": "revit_place_views_on_sheet",
+      "readOnly": false,
+      "title": "Place Views on Sheet",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Select element IDs for inspection in Revit; an empty list clears the selection.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "element_ids"
+        ],
+        "type": "object"
+      },
+      "name": "revit_select",
+      "readOnly": false,
+      "title": "Select Elements",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Set the lighting of one view: shadows, sun position, ground plane, background and the rendering lighting scheme.\n\n        `view` is an exact non-template view name or its decimal view ID, as revit_list_views reports it; a view without sun and shadow settings is refused.\n        Every other argument is optional and only the ones you pass change; the response reports the readings before and after under verification.before.lighting and verification.after.lighting, and names what moved in changedSettings.\n        `shadows` switches the view's per-view sun and shadow display: with it off Revit draws neither the sun path nor cast shadows, so the intensity settings stop showing; Revit exposes no API for the Graphic Display Options Shadows checkbox, so this per-view switch is the only shadow switch the tool can write, and a view whose sun and shadow settings are shared is refused.\n        `shadow_intensity` is 0 (no cast shadow) to 100 (black) and `sunlight_intensity` is 0 to 100.\n        `sun_date` (yyyy-MM-dd) and `sun_time` (24-hour HH:mm) fix a still-image sun position and are handed to Revit as local time; the readings report the stored instant as sunDateAndTimeUtc with the project time zone. Passing one keeps the other half, and both switch a sun study back to a still image.\n        `sun_azimuth_deg` (clockwise from north) and `sun_altitude_deg` (degrees above the horizon) set a fixed lighting-study sun instead, and must be passed together.\n        `ground_plane` uses the ground plane and `ground_plane_level` names its level; a level Revit does not already hold as a ground plane is marked as one and the response says so.\n        `background` is `sky` or `gradient` and works on 3D, section and elevation views; `background_colors` gives the three gradient colors as #RRGGBB (sky, horizon, ground).\n        `lighting_scheme` sets the rendering lighting source: exterior-sun, exterior-sun-and-artificial, exterior-artificial, interior-sun, interior-sun-and-artificial or interior-artificial.\n        Sun and shadow settings belong to the view; a view that shares them reports sunSettingsShared true and passes the change on to every view that shares them.\n        dry_run executes and rolls back, returning the same verification block without changing the model.\n        `document` addresses one specific open model when several are open; an unknown or ambiguous reference is rejected.\n        ",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "background": {
+            "anyOf": [
+              {
+                "enum": [
+                  "sky",
+                  "gradient"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "background_colors": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "ground_plane": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ground_plane_level": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "lighting_scheme": {
+            "anyOf": [
+              {
+                "enum": [
+                  "exterior-sun",
+                  "exterior-sun-and-artificial",
+                  "exterior-artificial",
+                  "interior-sun",
+                  "interior-sun-and-artificial",
+                  "interior-artificial"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "shadow_intensity": {
+            "anyOf": [
+              {
+                "maximum": 100,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "shadows": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sun_altitude_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sun_azimuth_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sun_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sun_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "sunlight_intensity": {
+            "anyOf": [
+              {
+                "maximum": 100,
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "view": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_set_view_lighting",
+      "readOnly": false,
+      "title": "Set View Lighting",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Change category, workset and filter visibility in one view; dry_run previews. Categories accept the Revit UI name, the BuiltInCategory name (OST_StructuralColumns), the English name or an ID.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "category_classes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "hide_categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "hide_categories_by_type": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "show_categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "template_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "detach",
+                  "edit_template",
+                  "duplicate_view"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "view": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "worksets": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_set_view_visibility",
+      "readOnly": false,
+      "title": "Set View Visibility",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Display elements in Revit, optionally selecting them; opens a level plan or 3D view when needed.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "element_ids": {
+            "items": {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "select": {
+            "default": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "element_ids"
+        ],
+        "type": "object"
+      },
+      "name": "revit_show",
+      "readOnly": false,
+      "title": "Show Elements",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Tag elements in a view, chosen by category names or by element IDs (exactly one of the two). Returns created tag IDs in createdElementIds; already tagged elements are skipped unless skip_tagged is false, and untaggable inputs are listed in skipped. tag_type matches a tag type name, a family name or \"Family: Type\"; the default tag type is used otherwise. Room tags need a plan view. dry_run rolls back and returns the tags that would be created.",
+      "destructive": true,
+      "inputSchema": {
+        "properties": {
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "minLength": 1,
+                  "pattern": "\\S",
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target open document; needed when several are open."
+          },
+          "dry_run": {
+            "default": false,
+            "type": "boolean"
+          },
+          "element_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9223372036854775807,
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "leader": {
+            "default": false,
+            "type": "boolean"
+          },
+          "max_elements": {
+            "default": 5000,
+            "maximum": 20000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "orientation": {
+            "default": "horizontal",
+            "enum": [
+              "horizontal",
+              "vertical"
+            ],
+            "type": "string"
+          },
+          "skip_tagged": {
+            "default": true,
+            "type": "boolean"
+          },
+          "tag_type": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "view": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "pattern": "\\S",
+                "type": "string"
+              },
+              {
+                "exclusiveMinimum": 0,
+                "maximum": 9223372036854775807,
+                "type": "integer"
+              }
+            ]
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_tag_elements",
+      "readOnly": false,
+      "title": "Tag Elements",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Read one page of elements in a selected view, with IDs, category, family, type, level and measurements (mm, m2, m3). A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "categories": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "limit": {
+            "default": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "view": {
+            "description": "Exact non-template view name from revit_list_views, or a view ID as a decimal string.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_view_elements",
+      "readOnly": true,
+      "title": "View Elements",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Inspect one view's template, display, categories, worksets, filters and links. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "view": {
+            "description": "Exact non-template view name from revit_list_views, or a view ID as a decimal string.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_view_info",
+      "readOnly": true,
+      "title": "View Info",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Read element categories and counts for a selected view. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "view": {
+            "description": "Exact non-template view name from revit_list_views, or a view ID as a decimal string.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_view_summary",
+      "readOnly": true,
+      "title": "View Summary",
+      "toolset": "views-sheets"
+    },
+    {
+      "description": "Read warnings involving elements present in a selected view. A warning may also involve elements outside the view. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.",
+      "destructive": false,
+      "inputSchema": {
+        "properties": {
+          "document": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Title or file name substring of the target document; needed when several Revit instances run."
+          },
+          "process_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Revit process ID; takes precedence over document."
+          },
+          "timeout_seconds": {
+            "default": 120,
+            "description": "Seconds to wait for a result (default 120).",
+            "type": "integer"
+          },
+          "view": {
+            "description": "Exact non-template view name from revit_list_views, or a view ID as a decimal string.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "view"
+        ],
+        "type": "object"
+      },
+      "name": "revit_view_warnings",
+      "readOnly": true,
+      "title": "View Warnings",
+      "toolset": "views-sheets"
+    }
+  ]
+}

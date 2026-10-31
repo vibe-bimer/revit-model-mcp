@@ -1,381 +1,181 @@
-# Transport
+<a id="transport"></a>
 
-`REVIT_MCP_HOST` selects `local`, `ssh:<alias>`, `http://host:port` or `https://host:port`.
-`--host` overrides it.
-`local`, the default, talks to the add-in over a per-process named pipe and falls back to the file channel.
-For a remote client, run the whole server on the workstation over SSH stdio; see [remote setups](#remote-setups).
-HTTP connects directly to the add-in and requires no SSH server or remote file transfer.
-The MCP client still communicates with the Python server over stdio.
+# 传输
 
-## Transport errors
+`REVIT_MCP_HOST` 用于选择 `local`、`ssh:<alias>`、`http://host:port` 或 `https://host:port`。
+该变量可选，未设置时默认 `local`。
+`--host` 会覆盖该设置。
+HTTP 直接连接插件，无需 SSH 服务器或远程文件传输。
+MCP 客户端仍通过 stdio 与 Python 服务器通信。
 
-Unavailable SSH, named pipe, and HTTP transports return a normal MCP tool result with `success:false`, `command`, `errorCode:"transport_unavailable"`, and `retryable:true`.
-The `error` message names the transport and reason and directs the client to retry when the workstation or tunnel is back.
-Transport failures do not close the stdio server.
-The [tool error codes](tools.md#errors-and-refusals) also define `read_only`, `policy_blocked`, and `action_failed`.
+<a id="http-configuration"></a>
 
-SSH connection quota exhaustion before a command starts, connection failures, missing or inaccessible transport executables, pipe disconnects, unreachable HTTP endpoints, and HTTP 503 use `transport_unavailable`.
-An execution timeout after a command starts remains a tool error.
-An HTTP request timeout also remains a tool error: a submitted job may still execute.
-The model and job result require inspection before retrying an action after a timeout.
+## HTTP 配置
 
-An invalid `REVIT_MCP_HOST` produces a startup configuration message on stderr and exit code 2.
-`--help` and `--version` remain available without starting a transport.
-An unexpected stdio run exception produces a diagnostic line on stderr and propagates to the caller.
-A keyboard interrupt exits successfully.
-
-## Named pipe
-
-Each add-in listens on `\\.\pipe\RevitModelMcp.<pid>` from startup.
-The pipe needs no port, URL reservation or settings, and it coexists with other MCP servers in the same Revit.
-Its ACL admits only the Windows user running Revit, and the add-in drops clients that connect from another computer.
-The heartbeat advertises `pipe/1` only after the pipe listens.
-
-`REVIT_MCP_HOST=local` reads the heartbeats in the channel directory directly.
-It uses the pipe when the selected instance lists `pipe/1` in `protocols`.
-Otherwise, or when the pipe cannot be opened, it uses the local file channel.
-Instance selection follows the file channel rules below.
-The server keeps one connection per Revit process and checks that `hello` returns the heartbeat's `pid` and `instanceId`.
-On Windows, it also checks the pipe server process ID when opening each connection and uses identification-only client credentials.
-
-### Protocol pipe/1
-
-Messages are UTF-8 JSON objects, one per line.
-Requests are limited to 1 MiB; a longer line gets a `message_rejected` error and closes the connection.
-Replies carry command results and have no size limit.
-A request may carry `id`; its reply echoes it.
-`hello` must come first on every connection.
-
-| Request | Reply |
-| --- | --- |
-| `{"type":"hello","protocol":"pipe/1","clientId":"…","clientName":"…"}` | `{"type":"hello","instanceId","pid","revitVersion","addinVersion","protocolVersion","commands","documents"}` |
-| `{"type":"submit","job":{…}}` | `{"type":"submitted","jobId","state","position"}` |
-| `{"type":"status","jobId":"…"}` | `{"type":"status","jobId","state","position","result"}`; `result` only when finished |
-| `{"type":"cancel","jobId":"…"}` | `{"type":"cancel","jobId","cancelled","state","message"}` |
-
-`job` is the same JSON object as a file job, and its `clientId` must equal the `hello` client ID.
-For every job it submitted, a connection receives `{"type":"job","jobId","state","position"}` when the state changes.
-It then receives one final `{"type":"job","jobId","state","result"}` with `state` `done`, `failed` or `cancelled` and the command response in `result`.
-Failures return `{"type":"error","id","error","message"}`.
-Codes include `client_id_changed`, `client_id_required`, `client_mismatch`, `duplicate_job_id`, `hello_required`, `internal_error`, `invalid_job`, `invalid_message`, `job_id_required`, `job_required`, `message_rejected`, `not_found`, `queue_full`, `read_only`, `submission_failed`, `unknown_type` and `unsupported_protocol`. `queue_full` includes `retryAfterMs`.
-
-Pipe, HTTP and file jobs share one per-Revit scheduler.
-A disconnect cancels that connection's queued jobs; a running job, and above all a running action, always finishes.
-A client that reconnects with the same `clientId` can send `status` for its unfinished job to get the result and resume its pushes.
-Completed read results expire ten minutes after completion, action results after 24 hours; see [result retention](#result-retention).
-`capture-elements` downloads one PNG through the same `data.fileName` artifact mechanism as `export-view` over local, pipe and SSH transports.
-It is unavailable over HTTP and returns `element snapshots need the local or SSH transport`; `/views/{name}/image` is unchanged.
-`revit_export_view` over the pipe moves the PNG from `ROOT\instances\<pid>\` to `output_path` or a new temporary directory.
-
-## HTTP configuration
-
-HTTP is opt-in and off by default; a default deployment uses only the named pipe and the local file channel.
-On first startup the add-in creates `%LOCALAPPDATA%\RevitModelMcp\settings.json` with these values:
+首次启动时，插件创建 `%LOCALAPPDATA%\RevitModelMcp\settings.json`：
 
 ```json
 {
-  "httpEnabled": false,
+  "httpEnabled": true,
   "httpBind": "127.0.0.1",
   "httpPort": 53110,
-  "token": "<generated 32-byte base64url token>",
-  "showActivityPaneOnAction": true,
-  "trustedNetworkRoots": [],
-  "updateCheck": true,
-  "maxStoredResponses": 256,
-  "maxStoredBytes": 67108864,
-  "requestReadTimeoutSeconds": 30,
-  "shutdownDrainSeconds": 5
+  "token": "<generated 32-byte base64url token>"
 }
 ```
 
-The token is per Windows user and persists across restarts.
-Settings and the `read-only` file remain in this default directory even when `REVIT_MCP_CHANNEL_DIR` overrides the file channel.
-The add-in creates and restricts the file with a protected NTFS ACL granting full control only to the current Windows user.
-Keep the token private and transfer it to the client's secret store through a trusted channel.
-The add-in never logs it.
-Do not put it in a URL, repository or shared shell history.
+令牌按 Windows 用户分配，重启后仍保留。
+即使 `REVIT_MCP_CHANNEL_DIR` 覆盖了文件通道目录，设置和 `allow-write` 文件仍位于这个默认目录中。
+插件创建该文件，并使用受保护的 NTFS ACL 限制访问，仅授予当前 Windows 用户完全控制权限。
+保持令牌私密，通过可信渠道将其转移到客户端的秘密存储中。
+插件永远不会将令牌写入日志。
+不要把令牌放入 URL、仓库或共享的 shell 历史记录。
 
-Revit environment variables override settings at startup: `REVIT_MCP_HTTP_ENABLED=0|1`, `REVIT_MCP_HTTP_BIND`, `REVIT_MCP_HTTP_PORT` and `REVIT_MCP_TOKEN`.
-Overrides are not written back to the settings file.
-Set `httpEnabled=true` in settings or `REVIT_MCP_HTTP_ENABLED=1` before launching Revit to enable HTTP.
-Assign each HTTP-enabled Revit process its own `REVIT_MCP_HTTP_PORT`; the settings file is shared by the Windows user.
-For example, launch one process from a PowerShell session with `$env:REVIT_MCP_HTTP_ENABLED = '1'` and `$env:REVIT_MCP_HTTP_PORT = '53111'`, and another with port `53112`.
-Each port requires its own URL reservation.
-Set `httpEnabled=false` or `REVIT_MCP_HTTP_ENABLED=0` to turn the listener off entirely.
+Revit 环境变量会在启动时覆盖设置：`REVIT_MCP_HTTP_ENABLED=0|1`、`REVIT_MCP_HTTP_BIND`、`REVIT_MCP_HTTP_PORT` 和 `REVIT_MCP_TOKEN`。
+插件还读取 `REVIT_MCP_ANSWER_DIALOGS=1`，让该 Revit 实例自动应答所有对话框；它同样必须在实例启动前设置，见[自动应答对话框](actions.md#answer-dialogs)。
+覆盖值不会写回设置文件。
+设置 `httpEnabled=false` 或 `REVIT_MCP_HTTP_ENABLED=0` 可彻底关闭监听器。
+修改监听器设置后需要重启 Revit。
+无效设置会禁用 HTTP，但文件通道仍可使用。
 
-**Upgrade note:** an existing `settings.json` with `httpEnabled:true` remains enabled after this default change.
-The stored value is preserved.
-To stop the listener, set it to `false` or set `REVIT_MCP_HTTP_ENABLED=0` before upgrading, then enable HTTP deliberately if wanted.
-Restart Revit after changing listener settings.
-Invalid settings disable HTTP and leave the file channel available.
+<a id="windows-url-reservation"></a>
 
-### Limits
+### Windows URL 预留
 
-These optional settings in `settings.json` bound memory and stalled clients.
-A missing key uses the default.
-A value outside its range disables HTTP, like any other invalid setting.
-The [settings reference](#settings-reference) lists every key.
+以提升权限运行的 `install.ps1` 安装过程，以及两种 MSI 安装包，都会为执行安装的 Windows 用户预留 `http://127.0.0.1:53110/`。
+单用户 MSI 会为此预留请求提升权限，同时仍保持按用户安装的范围。
+重复安装时会保留已有预留。
+应使用运行 Revit 的账户执行安装程序；若以其他账户或 SYSTEM 部署，需要为 Revit 用户另行设置预留。
+没有提升权限时，`install.ps1` 会完成文件安装，并打印需要在提升权限的命令提示符中执行一次的确切命令：
 
-| Setting | Default | Range | Meaning |
-| --- | --- | --- | --- |
-| `maxStoredResponses` | 256 | 1-10000 | Most completed results kept at once |
-| `maxStoredBytes` | 67108864 | 1048576-1073741824 | Most bytes of completed results kept at once |
-| `requestReadTimeoutSeconds` | 30 | 1-300 | Total time allowed to receive one request body |
-| `shutdownDrainSeconds` | 5 | 0-60 | Time to let in-flight requests finish when Revit shuts down |
-
-When a limit is exceeded, the add-in evicts the oldest completed results first.
-Queued and running jobs are never evicted, and the newest completed result is always kept, even if it alone exceeds `maxStoredBytes`.
-The limits apply to results of every transport, because all transports share one scheduler.
-
-### Result retention
-
-Two different stores hold results, so two different times apply.
-The scheduler keeps completed read results in memory for ten minutes after completion; they also disappear when Revit exits.
-Action results stay in memory for 24 hours and are also written to `jobs/<jobId>.json` in the instance directory, so `revit_jobs` can fetch them after an MCP server restart.
-The limits above can evict a result earlier.
-Over HTTP, a result that is no longer available returns status 410 with `"error":"expired"`; status 404 means the ID was never known.
-
-### Settings reference
-
-`%LOCALAPPDATA%\RevitModelMcp\settings.json` accepts these keys.
-An unknown key is ignored.
-Restart Revit after a change.
-
-| Key | Type | Default | Meaning |
-| --- | --- | --- | --- |
-| `httpEnabled` | boolean | `false` | Turns the HTTP listener on. `REVIT_MCP_HTTP_ENABLED` overrides it. |
-| `httpBind` | string | `"127.0.0.1"` | IPv4 interface address to bind; `0.0.0.0` must be explicit. `REVIT_MCP_HTTP_BIND` overrides it. |
-| `httpPort` | integer | `53110` | Listener port, 1-65535. `REVIT_MCP_HTTP_PORT` overrides it. |
-| `token` | string | generated | Bearer token: nonempty, no control characters. The add-in writes a random 32-byte token on first start. `REVIT_MCP_TOKEN` overrides it. |
-| `showActivityPaneOnAction` | boolean | `true` | Shows the MCP activity pane when an action runs. |
-| `trustedNetworkRoots` | array of strings | `[]` | UNC share roots such as `\\server\share` that file actions may use. See [security](security.md). |
-| `updateMode` | string | channel default | `off`, `notify` or `auto`. See [automatic updates](updates.md). |
-| `updateCheck` | boolean | `true` | `false` stops the add-in from checking for updates. A `false` in `%ProgramData%\RevitModelMcp\settings.json` applies to every user. See [automatic updates](updates.md). |
-| `maxStoredResponses` | integer | `256` | See [Limits](#limits). |
-| `maxStoredBytes` | integer | `67108864` | See [Limits](#limits). |
-| `requestReadTimeoutSeconds` | integer | `30` | See [Limits](#limits). |
-| `shutdownDrainSeconds` | integer | `5` | See [Limits](#limits). |
-
-The workstation `read-only` gate is a file next to `settings.json`, not a key.
-
-### Listener status
-
-The heartbeat and `revit_ping` report the listener state: `httpState` is `disabled`, `listening` or `failed`, and `httpReason` explains `disabled` and `failed`.
-`revit_ping` returns them as `httpListener` with `state` and `reason`; `revit_list_instances` returns `httpState` and `httpReason` over the local and SSH transports.
-After the listener starts, the add-in probes its own `/health` endpoint. An HTTP.sys 503 or another failed probe sets the state to `failed`.
-A reservation or port problem shows `failed` with the reason, and an invalid `settings.json` shows `failed` with a configuration reason.
-
-When the state is `failed`, or a client gets HTTP 503, check the reservations and the HTTP service from an elevated prompt on the Revit machine:
-
-```powershell
-netsh http show urlacl
-netsh http show servicestate
+```bat
+netsh http add urlacl url=http://127.0.0.1:53110/ user="DOMAIN\name"
 ```
 
-`show urlacl` must list the exact prefix, for example `http://127.0.0.1:53110/`, for the Windows user that runs Revit.
-`show servicestate` lists the request queues and URL groups that already own a prefix; another process on the same URL causes a 503.
-A leftover wildcard reservation for the same port, such as `http://+:53110/`, also causes a 503 self-probe failure.
-Remove that reservation from an elevated prompt with `netsh http delete urlacl url=http://+:53110/`, substituting the configured HTTP port.
+修改 `httpPort` 或 `httpBind` 后，需要设置匹配的 URL 预留。
+对于 `httpBind=0.0.0.0`，在预留前缀中使用 `+`。
+插件日志中的访问被拒绝警告会包含确切的配置前缀和修复命令。
+在预留建立且 Revit 重启之前，监听器保持停止状态。
 
-### Windows URL reservation
+MSI 卸载会移除默认预留；大版本升级会保留它。
+`install.ps1 -Uninstall` 会在移除当前用户最后一个已安装的 Revit 年份后删除预留；若没有提升权限，则打印移除命令。
+自定义预留需要手动移除。
 
-Default script and MSI installs neither register a URL ACL nor require a `netsh` command.
-URL reservation is a separate opt-in installation step; it does not change the listener settings.
-An elevated script install reserves the selected prefix only with `-EnableHttp`:
-
-```powershell
-.\install.ps1 -Year 2026 -EnableHttp -HttpBind 127.0.0.1 -HttpPort 53111
-```
-
-For a per-machine MSI, pass `HTTP_ENABLED=1 HTTP_URL_PREFIX="http://127.0.0.1:53111/"` to `msiexec /i <package.msi>` from an elevated prompt.
-The prefix must match the explicitly enabled Revit process.
-The SingleUser MSI installs without elevation and does not manage URL reservations. For HTTP with a per-user installation, use the exact `netsh http add urlacl` command printed by `install.ps1 -EnableHttp` when it is not elevated. Alternatively, use the MultiUser MSI from an elevated prompt with the HTTP properties above.
-An opted-in MultiUser MSI reserves the prefix for the built-in Users group, allowing any local interactive user to bind that prefix.
-Bearer-token authentication remains required.
-Without elevation, an opted-in script install prints the exact reservation command for an elevated command prompt.
-The script preserves existing reservations without claiming ownership.
-An opted-in MultiUser MSI install fails if its prefix already exists; omit `HTTP_ENABLED=1` to use a reservation managed outside that MSI.
-
-Changing `httpPort` or `httpBind` requires a matching URL reservation.
-Use `+` in the reservation prefix for `httpBind=0.0.0.0`.
-An access-denied warning in the add-in log includes the exact configured prefix and repair command.
-The listener remains stopped until the reservation exists and Revit restarts.
-
-MultiUser MSI uninstall removes only the prefix recorded for that installed product after successful registration.
-Major upgrades remove that owned reservation; pass the HTTP installation properties again to reserve a prefix for the new version.
-The script records a successfully created prefix under `%APPDATA%\Autodesk\Revit\Addins\RevitModelMcp-http-urlacl.txt`.
-`install.ps1 -Uninstall` removes that recorded prefix after the last installed Revit year for the current user, or prints its removal command when not elevated.
-Reservations from older installers without an ownership record, and manually managed reservations, require manual removal.
-
-After explicitly enabling HTTP, start Revit with a model open and check from PowerShell:
+安装后，启动 Revit 并打开模型，然后在 PowerShell 中检查：
 
 ```powershell
 Test-NetConnection 127.0.0.1 -Port 53110
 curl.exe -i http://127.0.0.1:53110/health
 ```
 
-The TCP check reports `TcpTestSucceeded: True`; `/health` returns HTTP 200.
+TCP 检查应报告 `TcpTestSucceeded: True`；`/health` 应返回 HTTP 200。
 
-### Client connection
+<a id="client-connection"></a>
 
-The client reads `REVIT_MCP_TOKEN`; `--token` overrides it.
-Prefer the environment populated by a secret store.
-With the token already available in the client environment:
+### 客户端连接
+
+客户端读取 `REVIT_MCP_TOKEN`；`--token` 会覆盖它。
+优先使用由秘密存储填充的环境变量。
+令牌已存在于客户端环境时：
 
 ```sh
 export REVIT_MCP_HOST=http://127.0.0.1:53110
 uv run --directory server revit-model-mcp
 ```
 
-HTTP has no built-in TLS.
-Use an SSH tunnel, Tailscale or a TLS reverse proxy; the client validates HTTPS certificates.
-Redirects are rejected to prevent forwarding the bearer token to another endpoint.
-`/health` is unauthenticated and reveals the Revit and add-in versions, supported commands, protocol version, active document name, process ID, startup identity (`startedUtc`) and read-only state.
-The Python client sends a fresh 32-byte random base64url nonce in `X-RevitMcp-Nonce` on every health request.
-The add-in answers with `X-RevitMcp-Proof`, the unpadded base64url HMAC-SHA256 of `revit-model-mcp/health/v1\n` followed by the decoded nonce.
-The HMAC key is the UTF-8 bytes of the token text sent after `Bearer `, including for an overridden `REVIT_MCP_TOKEN`.
-The client compares each proof before sending the token for a job.
-Health requests without a valid nonce keep the same response body and do not return a proof.
-An older add-in cannot supply the proof, so a newer Python client refuses jobs and asks for an add-in update; an older client works with a newer add-in.
-All other routes require `Authorization: Bearer <token>`.
+HTTP 没有内置 TLS。
+使用 SSH 隧道、Tailscale 或 TLS 反向代理；客户端会验证 HTTPS 证书。
+为避免将 Bearer 令牌转发到其他端点，客户端拒绝重定向。
+`/health` 不要求认证，会公开 Revit 版本、活动文档名称、进程 ID 和只读状态。
+其他所有路由都要求 `Authorization: Bearer <token>`。
 
-| Request | Result |
+| 请求 | 结果 |
 | --- | --- |
-| `GET /health` | `ok`, `revitVersion`, `addinVersion`, `protocolVersion`, `commands`, `documentName`, `processId`, `startedUtc`, `readOnly` |
-| `POST /jobs?timeout=120` | Enqueue a job; return its state, position and ID |
-| `GET /jobs/{id}` | State and position with HTTP 202 while pending; state and result with HTTP 200; HTTP 410 after expiry or eviction; HTTP 404 for an unknown ID |
-| `POST /jobs/{id}/cancel` | JSON body `{"clientId":"<server GUID>"}` cancels that client's queued job; running actions finish |
-| `GET /views/{name}/image?pixel=1600` | PNG bytes from the same view exporter used by `revit_export_view` |
+| `GET /health` | `ok`、`revitVersion`、`documentName`、`processId`、`readOnly` |
+| `POST /jobs?timeout=120` | 请求体为文件通道任务 JSON；最终响应 JSON 返回 HTTP 200 |
+| `GET /jobs/{id}` | 待处理时返回 HTTP 202；最终响应返回 HTTP 200；过期后返回 HTTP 404 |
+| `GET /views/{name}/image?pixel=1600` | 返回 PNG 字节，使用与 `revit_export_view` 相同的视图导出器 |
 
-POST waits default to 120 seconds and accept 0-600 seconds.
-HTTP 202 contains `jobId`, `state` and `position`; it means the accepted job is still queued or executing.
-A timeout or client disconnect does not cancel a job.
-Completed read results expire ten minutes after completion, action results after 24 hours; see [result retention](#result-retention).
-Do not resubmit an action after a timeout without checking its result and the model.
-The Python client submits once with `timeout=0`, then polls within `timeout_seconds`.
-Proof verification uses the existing health requests for each job and adds no HTTP request per job or poll.
-`REVIT_MCP_PICKUP_TIMEOUT_SECONDS` in the server environment configures file pickup; HTTP ignores this timeout.
+POST 默认等待 120 秒，接受 0–600 秒。
+HTTP 202 包含 `jobId`，表示已接受的任务仍在排队或执行。
+超时或客户端断开连接不会取消任务。
+结果在完成十分钟后过期。
+动作超时后，不要在检查结果和模型之前重新提交。
+Python 客户端以 `timeout=0` 提交一次，然后在 `timeout_seconds` 范围内轮询。
+`pickup_timeout_seconds` 仅适用于文件传输。
 
-HTTP 401 means the token is missing or invalid.
-HTTP 429 with `error:queue_full` means this client already has 16 queued jobs; `retryAfterMs` gives a retry hint.
-HTTP 408 means the request body was not fully received within `requestReadTimeoutSeconds`; the add-in closes that connection.
-HTTP 410 with `"error":"expired"` and `"retryable":false` means the result expired or was evicted by the limits above.
-It is final: do not poll it again, and inspect the model before resubmitting an action.
-HTTP 404 means the ID was never known to this add-in, so check the ID.
-HTTP 503 with `error:shutting_down` means Revit is closing.
-HTTP 400 with `error:invalid_request` means the job body is not valid UTF-8.
+HTTP 401 表示令牌缺失或无效。
+HTTP 409 表示另一个 HTTP 或文件任务占用了通道。
+工作站缺少 `allow-write` 门禁时，HTTP 403 会拒绝动作任务。
+MCP 动作工具还要求 Python 进程中启用 `REVIT_MCP_ALLOW_WRITE=1`。
+HTTP 任务使用已有的 ExternalEvent，并与文件通道共用同一时间只处理一个任务的规则。
+任务大小限制为 1 MiB。
 
-Direct HTTP `POST /jobs` validates a supplied `jobId` for action commands, whose results are persisted: the ID must be a 32-character hexadecimal GUID without dashes.
-An invalid value returns HTTP 400 with `error:invalid_job_id` and `message:"jobId must be a 32-character hexadecimal GUID without dashes."`.
-An absent or blank ID gets a generated ID.
-Read submissions do not enforce this format; `GET /jobs/{id}`, `POST /jobs/{id}/cancel`, and image requests with `jobId` look up the supplied ID and return HTTP 404 for an unknown ID.
-The Python HTTP transport URL-encodes lookup IDs and checks pending responses for a non-empty string ID, without GUID validation.
+视图名称必须进行 URL 编码；`pixel` 接受 1–4000。
+图像请求可能在 120 秒后返回包含 `jobId` 的 HTTP 202。
+轮询 `/jobs/{id}`，然后在图像 URL 中追加 `jobId={id}`，即可取回该次导出而不再次执行。
+可选的 `document` 查询参数必须与任务的 `targetDocument` 匹配。
+Python 导出器遵循这一路径，并保留响应元数据和本地 PNG 路径。
+以这种方式获取的 HTTP 图像产物与结果一同过期。
 
-HTTP 403 rejects action jobs while the workstation `read-only` gate file is present.
-MCP action tools return `success:false`, `error:"read-only mode"` and `errorCode:"read_only"` when `REVIT_MCP_READ_ONLY=1` in the Python process. A read-only refusal from the pipe or HTTP transport (pipe error `read_only`, HTTP 403) is returned the same way for actions.
-HTTP and file jobs share one per-Revit scheduler. The add-in executes one job at a time and rotates between clients.
-Jobs are limited to 1 MiB. The add-in returns HTTP 413 before reading a body
-whose `Content-Length` exceeds that limit, and also enforces the limit while
-streaming bodies without a declared length.
-The same limits and the read deadline apply to the cancel request body.
+每个 HTTP 端点属于一个 Revit 进程。
+若运行多个实例，应在启动前为每个进程的环境配置不同端口。
+端口已被占用时，后启动的实例会禁用 HTTP 并写入日志消息。
+HTTP 模式下，`revit_list_instances` 报告所连接端点对应的实例。
+执行前，会在 Revit API 上下文中检查 `targetDocument` 和 `targetProcessId`。
 
-When Revit shuts down, the add-in stops accepting connections, then finishes in-flight requests for up to `shutdownDrainSeconds`.
-Queued jobs end as `cancelled` with the error `Revit is closing.`, and requests waiting on them receive that job state before the listener stops.
-A job that was already running ends as `abandoned`, not `failed`, because Revit cannot interrupt it and the change may still have been applied.
-The result of an abandoned job has `"abandoned":true`; inspect the model before retrying it.
+<a id="remote-setups"></a>
 
-View names must be URL-encoded; `pixel` accepts 32-4000.
-Image requests can return HTTP 202 with `jobId` after 120 seconds.
-Poll `/jobs/{id}`, then append `jobId={id}` to the image URL to fetch that export without executing it again.
-The optional `document` query must match the job's `targetDocument`.
-The Python exporter follows this path and preserves response metadata and the local PNG path.
-HTTP image artifacts fetched this way expire with the result.
+## 远程配置
 
-Each HTTP endpoint belongs to one Revit process.
-The server checks PID and `startedUtc` through `/health` before submission and uses only the configured endpoint; it does not scan ports.
-The heartbeat advertises `httpPort` only after the listener binds successfully; disabled or failed listeners advertise null.
-For several instances, configure a distinct port in each process environment before launch.
-An occupied port disables HTTP for the later instance and produces a log message; its file channel remains available.
-`revit_list_instances` reports the connected endpoint in HTTP mode.
-`targetDocument` and `targetProcessId` are checked in the Revit API context before execution.
+对于没有管理员权限的企业电脑，使用方案 2 中由 IT 配置的 Tailscale，或方案 3 中已有的 SSH 访问。
+不要将端点暴露到办公局域网。
+如果两项服务都不可用，必须先由 IT 配置访问路由；本插件无法绕过这一要求。
 
-## Remote setups
+<a id="1-same-lan"></a>
 
-The recommended remote setup runs the whole server on the workstation and carries MCP stdio through SSH.
-For a corporate PC without administrator rights and without sshd, use option 2 with IT-provisioned Tailscale.
-Never expose the endpoint on the office LAN.
-If neither service is available, IT must provision a route first; this add-in cannot bypass that requirement.
+### 1. 同一局域网
 
-### Recommended: server over SSH stdio
-
-Install the server once on the Windows workstation, under the account that runs Revit:
-
-```powershell
-uv tool install revit-model-mcp
-```
-
-Register the client with `ssh` as the command, replacing `revit-pc` with the host alias from the client's SSH configuration:
-
-```json
-{
-  "mcpServers": {
-    "revit-model-mcp": {
-      "command": "ssh",
-      "args": ["revit-pc", "revit-model-mcp", "--redact-paths"]
-    }
-  }
-}
-```
-
-The remote server runs with its default `REVIT_MCP_HOST=local`, so it reaches Revit through the named pipe.
-MCP messages flow through the SSH session; no PowerShell process starts per job and no port opens.
-Set other server variables in the workstation user's environment, because the client's `env` block does not cross SSH.
-The SSH account must be the Windows user running Revit: the pipe ACL admits only that user.
-Key-based authentication avoids a password prompt that would block stdio.
-
-`ssh:<alias>` in option 4 remains the fallback when the server cannot run on the workstation.
-
-### 1. Same LAN
-
-Use this only on a trusted network where the workstation owner permits direct access.
-Set `httpBind` to `0.0.0.0` explicitly, or set `REVIT_MCP_HTTP_BIND=0.0.0.0` before starting Revit.
-Run once in an elevated Windows command prompt, replacing `<user>` with the account running Revit, such as `DOMAIN\name`:
+仅在可信网络中，且工作站所有者允许直接访问时使用。
+显式将 `httpBind` 设为 `0.0.0.0`，或在启动 Revit 前设置 `REVIT_MCP_HTTP_BIND=0.0.0.0`。
+在提升权限的 Windows 命令提示符中执行一次以下命令，将 `<user>` 替换为运行 Revit 的账户，例如 `DOMAIN\name`：
 
 ```bat
 netsh http add urlacl url=http://+:53110/ user=<user>
-netsh advfirewall firewall add rule name="Model MCP" dir=in action=allow protocol=TCP localport=53110
+netsh advfirewall firewall add rule name="Revit Model MCP" dir=in action=allow protocol=TCP localport=53110
 ```
 
-On the Mac at the clone root, replace `revit-host` with the workstation hostname and supply `REVIT_MCP_TOKEN` through the secret store:
+在 Mac 的克隆仓库根目录中，将 `revit-host` 替换为工作站主机名，并通过秘密存储提供 `REVIT_MCP_TOKEN`：
 
 ```sh
 export REVIT_MCP_HOST=http://revit-host:53110
 uv run --directory server revit-model-mcp
 ```
 
-The bearer token and model data are plaintext on this route.
-Prefer a tunnel whenever possible.
-The listener logs the required URL reservation command on access denied.
-Windows may also require an explicit loopback reservation under a restricted account.
-For a specific bind address, use that address in the URL ACL instead of `+`.
-See [Microsoft HttpListener prefix guidance](https://learn.microsoft.com/en-us/dotnet/api/system.net.httplistener?view=netframework-4.8.1).
+在这一路由上，Bearer 令牌和模型数据以明文传输。
+尽可能优先使用隧道。
+监听器遇到访问被拒绝时，会记录所需的 URL 预留命令。
+在受限账户下，Windows 还可能要求显式设置回环地址预留。
+对于特定绑定地址，在 URL ACL 中使用该地址，而非 `+`。
+参见 [Microsoft HttpListener 前缀指南](https://learn.microsoft.com/en-us/dotnet/api/system.net.httplistener?view=netframework-4.8.1)。
 
-### 2. Different networks: Tailscale
+<a id="2-different-networks-tailscale"></a>
 
-Install Tailscale on both machines and join the same permitted tailnet.
-Windows installation requires local administrator access once; IT must also provision the URL ACL and any required firewall permission for the Tailscale interface.
-Routine use then runs under the Revit user's account.
-Bind to the workstation's Tailscale IPv4 address instead of `0.0.0.0` when possible.
-Use that same address in the URL ACL and restrict firewall access to the permitted Tailscale peer.
-See [Tailscale installation for Windows](https://tailscale.com/docs/install/windows).
+### 2. 不同网络：Tailscale
+
+在两台机器上安装 Tailscale，并加入同一个经许可的 tailnet。
+Windows 安装需要一次本地管理员权限；IT 还必须配置 URL ACL 和 Tailscale 接口所需的防火墙权限。
+之后的日常使用以 Revit 用户的账户运行。
+尽可能绑定到工作站的 Tailscale IPv4 地址，而非 `0.0.0.0`。
+在 URL ACL 中使用同一地址，并将防火墙访问限制为获准的 Tailscale 对端。
+参见 [Tailscale Windows 安装文档](https://tailscale.com/docs/install/windows)。
 
 ```sh
 export REVIT_MCP_HOST=http://100.101.102.103:53110
 uv run --directory server revit-model-mcp
 ```
 
-For a Mac without administrator rights, standalone `tailscaled` and `tailscale` binaries can run in userspace mode with an HTTP proxy and user-owned state.
-With those binaries available in PATH:
+对于没有管理员权限的 Mac，独立的 `tailscaled` 和 `tailscale` 二进制程序可以在用户态模式下运行，使用 HTTP 代理和用户拥有的状态文件。
+确保这些程序位于 PATH 后：
 
 ```sh
 mkdir -p "$HOME/.local/state/tailscale-revit"
@@ -385,7 +185,7 @@ tailscaled --tun=userspace-networking \
   --outbound-http-proxy-listen=127.0.0.1:1055
 ```
 
-In another terminal:
+在另一个终端中：
 
 ```sh
 tailscale --socket="$HOME/.local/state/tailscale-revit/socket" up
@@ -395,262 +195,201 @@ export REVIT_MCP_HOST=http://100.101.102.103:53110
 uv run --directory server revit-model-mcp
 ```
 
-The Python HTTP transport honors these standard proxy environment variables.
-Userspace mode does not create a system VPN interface; the proxy supplies the route.
-See [Tailscale userspace networking](https://tailscale.com/docs/concepts/userspace-networking).
+Python HTTP 传输遵循这些标准代理环境变量。
+用户态模式不会创建系统 VPN 接口；访问路由由代理提供。
+参见 [Tailscale 用户态网络](https://tailscale.com/docs/concepts/userspace-networking)。
 
-### 3. Existing SSH: loopback port forward
+<a id="3-existing-ssh-loopback-port-forward"></a>
 
-This option keeps the workstation listener on `127.0.0.1` and is the safest setup when sshd is already available.
-It opens no new office-LAN port.
+### 3. 已有 SSH：回环端口转发
+
+此方案让工作站监听器继续绑定 `127.0.0.1`，在已有 sshd 的情况下是最安全的配置。
+它不会开放新的办公局域网端口。
 
 ```sh
 ssh -N -L 53110:127.0.0.1:53110 user@host
 ```
 
-In another terminal, with the bearer token in the environment:
+在另一个终端中，确保环境中已有 Bearer 令牌：
 
 ```sh
 export REVIT_MCP_HOST=http://127.0.0.1:53110
 uv run --directory server revit-model-mcp
 ```
 
-### 4. SSH file channel
+<a id="4-legacy-ssh-file-channel"></a>
 
-The existing transport remains available without HTTP:
+### 4. 旧版 SSH 文件通道
+
+不使用 HTTP 时，原有传输方式仍然可用：
 
 ```sh
 export REVIT_MCP_HOST=ssh:revit-host
 uv run --directory server revit-model-mcp
 ```
 
-The file channel needs no HTTP opt-in or URL reservation.
+若只需要文件通道，在工作站设置 `httpEnabled=false`。
 
-## File channel
+<a id="file-channel"></a>
 
-The default directory is `%LOCALAPPDATA%\RevitModelMcp` on the Windows account running Revit.
-Set `REVIT_MCP_CHANNEL_DIR` to an absolute Windows path to override it.
-The server and Revit must use the same directory.
-The Revit environment must contain the override before Revit starts.
-The add-in keeps new channel directories private and restricts existing default directories owned by the current user.
-If another account can write to the override directory, the add-in ignores the override and uses the private default directory for heartbeats, jobs, responses and exports.
-Set `REVIT_MCP_CHANNEL_DIR` on the server to that private default directory or remove the server override so discovery uses the same directory.
+## 文件通道
 
-Discovery reads `ROOT\instance_<pid>.json` only, where `ROOT` is the configured directory.
-Each v2 add-in owns `ROOT\instances\<pid>\`:
+默认目录位于运行 Revit 的 Windows 账户下，为 `%LOCALAPPDATA%\RevitModelMcp`。
+将 `REVIT_MCP_CHANNEL_DIR` 设置为绝对 Windows 路径即可覆盖它。
+服务器和 Revit 必须使用同一目录。
+覆盖设置必须在 Revit 启动前存在于其环境中。
 
-| Location | Role |
+| 文件 | 作用 |
 | --- | --- |
-| `ROOT\instance_<pid>.json` | Shared discovery heartbeat |
-| `ROOT\instances\<pid>\mcp_<uuid>.tmp` | Job before atomic publication |
-| `ROOT\instances\<pid>\job_<jobId>.json` | Published job awaiting pickup |
-| `ROOT\instances\<pid>\response_<timestamp>_<command>_<correlationId>.json` | Atomic correlated response |
-| `ROOT\instances\<pid>\view_*.png` | Exported view before download |
+| `mcp_<uuid>.tmp` | 发布前的 JSON 任务 |
+| `trigger.txt` | 已发布、等待拾取的任务 |
+| `response_<timestamp>_<command>_<correlationId>.json` | 插件响应 |
+| `view_<timestamp>_<id>.png` | 下载前导出的视图 |
+| `instance_<processId>.json` | 实例心跳 |
 
-Response temporary files also remain in the selected instance directory.
+文件传输独立于可选的 HTTP 监听器运行。
+Revit API 工作通过 ExternalEvent 执行。
+服务器停止后，待处理文件仍留在磁盘上。
+已发布的任务不会自动取消。
+通道依赖 Windows 文件权限。
 
-The server resolves a target before publishing any job.
-Actions and undirected reads require exactly one running Revit process.
-Directed reads require exactly one active document matching the case-insensitive title or file-name substring.
-Zero or multiple matches fail before publication.
-Actions retain their open-document resolution inside the selected process.
-After pickup, a directed read resolves the target among open documents and can read an inactive document.
-If the target closed, the error names the target and active documents and suggests passing `document` or calling `revit_activate_document`.
+<a id="local-host"></a>
 
-A fresh heartbeat and an existing process are pre-checks.
-For v2 the server performs a bounded ping handshake with a fresh `correlationId` in the selected directory.
-It checks the response correlation, `responder.processId` and unchanged heartbeat `startedUtc` before submitting the requested job.
-The handshake has a 60-second budget, including the SSH connection limiter.
-`pluginResponding=true` for v2 means this handshake succeeded.
-Timed-out instances remain in discovery with `pluginResponding=false`.
-Processes without a fresh heartbeat remain visible with empty document fields when no document filter is supplied.
-The server rejects execution on an unconfirmed channel.
+## 本地主机
 
-The selected PID, startup identity and directory remain fixed through polling, JSON/PNG reads and cleanup.
-Publication checks that the selected process still exists and that its v2 heartbeat identity is current.
-Atomic publication does not overwrite another job file.
-Cleanup affects only the selected directory and the current job's files.
-Two MCP clients targeting the same PID enqueue independently. Each server process supplies its own `clientId`.
-Reading inactive documents remains outside this protocol. Queued actions can be cancelled; running actions finish.
+`REVIT_MCP_HOST=local` 是默认设置。
+服务器在 Windows 上调用 `powershell.exe -NoProfile -NonInteractive -EncodedCommand`。
+该进程以当前 Windows 账户检查 Revit、发布任务并读取响应。
+此模式需要 PowerShell，以及一个已加载插件的运行中 Revit 实例。
+macOS 和 Linux 客户端通过 HTTP 或 SSH 访问 Windows。
 
-### Discovery heartbeat
+<a id="ssh-host"></a>
 
-The add-in rewrites `ROOT\instance_<pid>.json` atomically every five seconds.
-Discovery version 3 keeps the v2 fields and adds the pipe and the open documents:
+## SSH 主机
 
-| Field | Meaning |
-| --- | --- |
-| `processId`, `revitVersion`, `startedUtc`, `updatedUtc` | Process identity and heartbeat time |
-| `documentTitle`, `documentPath` | Active document, empty when none is active |
-| `fileChannelVersion` | `2` |
-| `httpPort` | Bound HTTP port, or null |
-| `discoveryVersion` | `3` |
-| `instanceId` | GUID generated once per Revit process lifetime |
-| `pipeName` | `RevitModelMcp.<pid>`; absent when the pipe failed to start |
-| `protocols` | `pipe/1` when listening, always `file/2`, and `http/1` when HTTP is bound |
-| `documents` | Every open non-linked document: `title`, `path`, `isActive`, `isFamilyDocument` |
-| `addinVersion`, `protocolVersion`, `commands` | Assembly informational version, protocol integer `1`, and supported command names |
+`REVIT_MCP_HOST=ssh:<alias>` 选择客户端 SSH 配置中的主机。
+`--host ssh:<alias>` 可在命令行中提供同一设置。
+客户端以批处理模式调用 `ssh`，连接超时为 45 秒。
+远程命令运行 Windows PowerShell，使用经 UTF-16LE base64 编码的脚本。
+主机别名会经过校验；PowerShell 路径字面量中的单引号会被转义。
+SSH 凭据和路由由用户的 SSH 配置管理。
 
-The server reads these fields from the selected heartbeat, pipe hello or HTTP health response.
-The server accepts an add-in only when `addinVersion` has the same major version as the server; see [Versions](feed-format.md#versions).
+响应和导出的 PNG 文件在 PowerShell 结果中以 base64 传输。
+服务器将图像解码到 `save_to` 或新建的临时目录中。
+目标文件已存在时会产生错误。
+MCP 结果包含图像路径和元数据，不包含 base64。
 
-`revit_list_instances` returns these fields in local pipe mode; path redaction also covers `documents[].path`.
+每次 SSH 调用默认都包含 `-o ControlMaster=auto -o ControlPath=<dir>/mux-%C -o ControlPersist=600`。
+同一连接上的命令会复用主连接，而非每次 PowerShell 调用都建立新的 TCP 连接。
+主连接在空闲后保留 600 秒。
+`<dir>` 使用非空的 `$XDG_RUNTIME_DIR`，否则使用 `/tmp/revit-model-mcp-<uid>/`。
+在 macOS 和 Linux 上，该目录会被创建或限制为 `0700` 权限。
+保持目录路径简短；`%C` 使用哈希连接标识符，以满足 Unix 套接字路径长度限制。
 
-### File protocol compatibility
+`REVIT_MCP_SSH_MUX=0` 会禁用这些内置多路复用选项。
+在不支持多路复用的客户端上使用它，例如 Windows 原生 OpenSSH。
+`REVIT_MCP_SSH_OPTIONS` 在内置选项之后、主机之前追加按 shell 引号规则解析的参数，例如 `-o ServerAliveInterval=30 -p 2222`。
+OpenSSH 对每个选项采用第一个值。
+若要自定义套接字路径或生命周期，需要设置 `REVIT_MCP_SSH_MUX=0`，并在 `REVIT_MCP_SSH_OPTIONS` 中提供全部三个 `Control*` 选项。
+local 模式忽略这两个变量，且不创建多路复用目录。
 
-The file channel version is `2`.
-The server refuses a heartbeat without `fileChannelVersion`, or with any other value, before publishing a job, and asks for an add-in of the same major version as the server.
-There is no fallback to a shared ROOT layout and no single-process exception.
-Update the server and the add-in together; see [Versions](feed-format.md#versions).
+同一个主机对象在任意滚动的 30 秒内最多启动五次 SSH 命令。
+轮询尝试之间等待十秒。
+任务准备和最终响应取回各使用一次命令。
+轮询期间的瞬时故障可以在剩余超时时间内重试。
+local 模式使用相同的文件操作和轮询，但没有 SSH 连接限流。
 
-The file transport operates independently of the optional HTTP listener.
-Revit API work runs through ExternalEvent.
-Pending files remain on disk if the server stops.
-There is no automatic cancellation of a published job.
-The channel relies on Windows file permissions.
+<a id="optional-activation"></a>
 
-## Local host
+## 可选的窗口激活
 
-`REVIT_MCP_HOST=local` is the default.
-The server reads heartbeats from the channel directory and prefers the [named pipe](#named-pipe).
-For add-ins without `pipe/1`, it invokes `powershell.exe -NoProfile -NonInteractive -EncodedCommand` on Windows.
-That process checks Revit, publishes jobs and reads responses under the current Windows account.
-Local mode requires a running Revit instance with the add-in loaded, and PowerShell for the file channel.
-macOS and Linux clients run the server on Windows over SSH stdio, or use HTTP or `ssh:<alias>`.
+将 `REVIT_MCP_ACTIVATE_TASK` 设为一个已有 Windows 计划任务的名称，该任务应负责激活 Revit。
+任务 60 秒仍未被拾取时，下一次检查可以调用该计划任务一次。
+仅当 `trigger.txt` 仍存在时才会激活。
+服务器会检查计划任务结果，并单独报告激活失败。
+计划任务是可选的，服务器永远不会创建它。
+默认拾取超时为 300 秒，之后另有独立的 120 秒响应超时。
 
-## SSH host
+<a id="path-redaction"></a>
 
-`REVIT_MCP_HOST=ssh:<alias>` selects a host in the client's SSH configuration.
-`--host ssh:<alias>` provides the same setting on the command line.
-The client invokes `ssh` with batch mode and a 45-second connection timeout.
-Keepalive defaults are `-o ServerAliveInterval=15 -o ServerAliveCountMax=3`.
-SSH checks the connection every 15 seconds and disconnects after three unanswered keepalive messages.
-It disables terminal allocation, agent forwarding, X11 forwarding, configured port forwards and local commands before applying `REVIT_MCP_SSH_OPTIONS`.
-The remote command runs Windows PowerShell with a UTF-16LE base64-encoded script.
-Host aliases are validated. PowerShell string literals escape ASCII and Unicode single quotes, and response file names and startup timestamps are validated before use.
-SSH credentials and routing belong to the user's SSH configuration.
+## 路径脱敏
 
-Responses and exported PNG files are transferred as base64 in the PowerShell result.
-The server checks the PNG signature and decodes the image into `output_path` or a new temporary directory.
-`output_path` must end in `.png`.
-An existing destination file produces an error.
-The MCP result contains the image path and metadata without base64.
+`REVIT_MCP_REDACT_PATHS=1` 或 `--redact-paths` 会移除响应 `documentPath` 和所有嵌套 `path` 字段中的目录部分，包括 RVT/CAD/图像链接路径。
+这适用于响应实例元数据和实例列表。
+图像的 `localPath` 仍可供 MCP 客户端使用。
+此选项不会清理通道文件，也不会处理模型数据和错误中的任意字符串。
+参见[服务器配置](../server/README.md#configuration)。
 
-Each SSH invocation includes `-o ControlMaster=auto -o ControlPath=<dir>/mux-%C -o ControlPersist=600` by default.
-Commands for the same connection reuse the master instead of opening a new TCP connection for each PowerShell call.
-The master persists for 600 idle seconds.
-`<dir>` is `$XDG_RUNTIME_DIR` when nonempty. Otherwise the server uses a per-user temporary directory outside shared `/tmp`, or `~/.cache/revit-model-mcp`.
-On macOS and Linux, the server verifies the directory is owned by the current user and is not a symlink before setting mode `0700`.
-If the socket path is too long, the server tries `~/.cache/rmm`. If the directory cannot be verified or the path is still too long, it disables multiplexing and logs a warning.
-`%C` provides a hashed connection identifier within the Unix socket path limit.
+<a id="client-registration"></a>
 
-`REVIT_MCP_SSH_MUX=0` disables these built-in multiplexing options.
-Use it on clients without multiplexing support, such as native Windows OpenSSH.
-`REVIT_MCP_SSH_OPTIONS` appends shell-quoted arguments after built-in options and before the host, for example `-o ServerAliveInterval=30 -p 2222`.
-OpenSSH uses the first value for an option.
-Explicit `ServerAliveInterval` and `ServerAliveCountMax` options in `REVIT_MCP_SSH_OPTIONS` replace their built-in defaults.
-A custom socket path or lifetime requires `REVIT_MCP_SSH_MUX=0` plus all three `Control*` options in `REVIT_MCP_SSH_OPTIONS`.
-Local mode ignores both variables and creates no multiplexing directory.
+## 客户端注册
 
-New SSH connections retain a limit of five per rolling 30 seconds within one host object.
-With built-in multiplexing, the first start and starts after 540 seconds without a successful SSH command count against the limit.
-Other multiplexed starts do not count. Without multiplexing, every SSH start counts.
-Polling waits ten seconds between attempts.
-Job preparation and final response retrieval each use one command.
-Transient failures during polling can be retried within the remaining timeout.
-Local mode uses the same file operations and polling without the SSH connection limiter.
-
-## Optional activation
-
-Set `REVIT_MCP_ACTIVATE_TASK` to the name of an existing Windows scheduled task that activates Revit.
-After 60 seconds without pickup the next check can invoke that task once.
-Activation only occurs if the current job file still exists.
-The server checks the task result and reports activation failure separately.
-The task is optional and is never created by the server.
-The default pickup timeout is 300 seconds, followed by a separate 120-second response timeout.
-`REVIT_MCP_PICKUP_TIMEOUT_SECONDS` in the server environment overrides the file pickup timeout for all tools.
-It accepts a positive integer; an invalid value raises `RevitChannelError` on first use.
-
-## Path redaction
-
-`REVIT_MCP_REDACT_PATHS=1` or `--redact-paths` strips directories from response `documentPath` and all nested `path` fields, including RVT/CAD/image link paths.
-This applies to responder metadata and instance listings.
-Image `localPath` remains available to the MCP client.
-The option does not sanitize channel files or arbitrary strings in model data and errors.
-See [server configuration](../server/README.md#configuration).
-
-## Client registration
-
-For a remote workstation, register the [server over SSH stdio](#recommended-server-over-ssh-stdio).
-With the loopback SSH tunnel above running, register the HTTP endpoint from the clone root:
+保持上述回环 SSH 隧道运行，从克隆仓库根目录注册端点：
 
 ```sh
 claude mcp add revit-model-mcp -e REVIT_MCP_HOST=http://127.0.0.1:53110 -e REVIT_MCP_REDACT_PATHS=1 -- uv run --directory "$PWD/server" revit-model-mcp
 ```
 
-The server process must inherit `REVIT_MCP_TOKEN` from the client's environment or secret configuration.
-For the SSH file channel, use `-e REVIT_MCP_HOST=ssh:revit-host` instead; no HTTP token is needed.
+服务器进程必须从客户端环境或秘密配置中继承 `REVIT_MCP_TOKEN`。
+若使用 SSH 文件通道，改用 `-e REVIT_MCP_HOST=ssh:revit-host`；无需 HTTP 令牌。
 
-## Request architecture
+<a id="request-architecture"></a>
+
+## 请求架构
 
 ```mermaid
 flowchart LR
-    Client[MCP client] <-->|stdio, optionally through SSH| Server[Python server]
-    Server <-->|named pipe pipe/1| Pipe[Add-in pipe listener]
-    Server <-->|local PowerShell or SSH| Channel[Windows file channel]
-    Server <-->|HTTP + bearer token| Endpoint[Add-in HTTP listener]
-    Pipe --> Scheduler[Job scheduler]
-    Channel --> Scheduler
-    Endpoint --> Scheduler
-    Scheduler <-->|ExternalEvent| Revit[Revit API]
+    Client[MCP 客户端] <-->|stdio| Server[Python 服务器]
+    Server <-->|本地 PowerShell 或 SSH| Channel[Windows 文件通道]
+    Channel <-->|ExternalEvent| Revit[Revit 插件]
+    Server <-->|HTTP + Bearer 令牌| Endpoint[插件 HTTP 监听器]
+    Endpoint <-->|ExternalEvent| Revit
 ```
 
-The server submits jobs over the named pipe or HTTP, or writes them to the Windows file channel.
-All three feed one scheduler; the add-in runs one job at a time through ExternalEvent.
-The pipe and HTTP return JSON directly; the file channel keeps its file-based responses.
-A heartbeat identifies each Revit instance, its open documents and its protocols.
-The default tools read model data and export images.
-Actions use the same channel and execute in the Revit API context.
-See [how it works](how-it-works.md), [architecture](architecture.md) and the [feed format](feed-format.md).
+服务器通过 HTTP 提交任务，或将任务写入 Windows 文件通道。
+插件通过同一个 ExternalEvent 处理两种通道，同一时间只接受一个任务。
+HTTP 直接返回 JSON 和 PNG；local 和 SSH 模式保留基于文件的响应。
+心跳标识每个 Revit 实例及其活动文档。
+默认工具读取模型数据和导出图像。
+显式启用的动作使用同一通道，并在 Revit API 上下文中执行。
+参见[工作原理](how-it-works.md)、[架构](architecture.md)和[数据格式](feed-format.md)。
 
-## Installation from a clone
+<a id="installation-from-a-clone"></a>
 
-The add-in requires Windows and Revit 2022-2027.
-Build with the .NET SDK selected by [`global.json`](../global.json).
-The server requires Python 3.11 or later, [uv](https://docs.astral.sh/uv/getting-started/installation/) and an MCP client.
-Clone on each machine that will build or run a component:
+## 从克隆仓库安装
+
+插件需要 Windows 和 Revit 2020–2027。
+使用 [`global.json`](../global.json) 指定的 .NET SDK 构建。
+服务器需要 Python 3.11 或更新版本、[uv](https://docs.astral.sh/uv/getting-started/installation/) 和一个 MCP 客户端。
+在需要构建或运行组件的每台机器上克隆仓库：
 
 ```sh
 git clone https://github.com/vibe-bimer/revit-model-mcp.git
 cd revit-model-mcp
 ```
 
-The commands below start from the repository root.
-For a downloaded script, use `Unblock-File .\install.ps1` to remove its downloaded-file block or `Set-ExecutionPolicy -Scope Process Bypass` for the current PowerShell session.
-On Windows, close Revit and build and install for Revit 2026:
+以下命令从仓库根目录执行。
+对于下载的脚本，可使用 `Unblock-File .\install.ps1` 移除下载文件阻止标记，或使用 `Set-ExecutionPolicy -Scope Process Bypass` 为当前 PowerShell 会话设置执行策略。
+在 Windows 上，关闭 Revit，然后为 Revit 2026 构建并安装：
 
 ```powershell
 .\install.ps1 -Year 2026 -Source Build
 ```
 
-Or install the latest GitHub release for every detected Revit year (2022-2027):
+也可以为检测到的所有 Revit 年份（2020–2027）安装最新 GitHub 发布版本：
 
 ```powershell
 .\install.ps1 -Source Release
 ```
 
-The inline build, copy and manifest-patching commands live in [`install.ps1`](../install.ps1).
-Installation uses `RevitModelMcp\` and `RevitModelMcp.addin` under `%APPDATA%\Autodesk\Revit\Addins\<year>`.
-Use `-Year 2024,2026` to select years and `-Version 0.2.0` to pin a release.
-`-Source Release` requires a release with an asset for each requested year: v0.1.0 ships R22-R26; v0.2.0 adds R27.
-Add `-SignThumbprint <thumbprint>` to sign installed DLLs with a local code-signing certificate on workstations where Revit shows the unsigned add-in dialog on every rebuild.
-Add `-RegisterClaude` to register the local server with Claude Code; both `claude` and `uv` must be on PATH.
-Use `-Uninstall -Year 2026` to remove that year's add-in; local settings remain intact.
-The script refuses to run while Revit is open unless `-Force` is supplied.
-Start Revit and open a model after installation, or restart it if it was already running.
-The add-in creates `%LOCALAPPDATA%\RevitModelMcp\instance_<processId>.json` and updates it every five seconds.
-It adds an "Activity" button (opens the MCP activity pane) and a "Connect AI app" button (registers the server in installed AI apps) in the MCP panel on the Add-Ins tab.
-
-## Batch transport
-
-[Batch collection](batch.md) writes durable run state under the workstation channel root. Its supervisor uses only the existing v2 per-PID file channel and validates the worker heartbeat identity before publication and termination. The Python tools use the existing local or SSH workstation host for state and artifact transfer. Direct HTTP batch tools are unavailable.
+内联构建、复制和清单修补命令位于 [`install.ps1`](../install.ps1)。
+安装会在 `%APPDATA%\Autodesk\Revit\Addins\<year>` 下使用 `RevitModelMcp\` 和 `RevitModelMcp.addin`。
+使用 `-Year 2024,2026` 选择年份，使用 `-Version 0.2.0` 固定发布版本。
+`-Source Release` 要求发布版本为每个请求的年份提供资产：v0.1.0 提供 R22–R26，v0.2.0 新增 R27，因此 Revit 2020 需要使用在发布工作流加入 R20 后生成的发布版本，或使用 `-Source Build`。
+对于每次重新构建后 Revit 都显示未签名插件对话框的工作站，可添加 `-SignThumbprint <thumbprint>`，使用本地代码签名证书签署已安装的 DLL。
+添加 `-RegisterClaude` 可向 Claude Code 注册本地服务器；`claude` 和 `uv` 都必须位于 PATH。
+使用 `-Uninstall -Year 2026` 移除该年份的插件；本地设置保持不变。
+Revit 打开时，脚本会拒绝运行，除非指定 `-Force`。
+安装后启动 Revit 并打开模型；若 Revit 已在运行，则重启它。
+插件创建 `%LOCALAPPDATA%\RevitModelMcp\instance_<processId>.json`，并每五秒更新一次。
+它不会添加功能区选项卡或按钮。

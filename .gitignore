@@ -41,7 +41,8 @@ uv.lock
 docs/screenshots/raw/
 
 # Documentation build output (tools/site is tracked source).
-/site/
+/site
+/site-lan/
 /site.new/
 /site.prev/
 /.site-build.lock

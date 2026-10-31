@@ -1,0 +1,107 @@
+{#-
+  Theme override.
+
+  Adds the head metadata the stock theme omits (description, Open Graph, Twitter card, theme colour
+  and structured data), preloads the two fonts that paint the first screen, and hangs a reading
+  progress bar off the header. Everything else is inherited unchanged, so an upstream theme update
+  cannot silently drop page furniture.
+-#}
+{% extends "base.html" %}
+
+{% block site_meta %}
+  {#- Own the whole metadata block instead of calling super(): the i18n plugin rewrites
+      config.extra.alternate to page-relative links after every hook has run, so the only reliable
+      source for absolute language-switch links is page.file.alternates, which lists exactly the
+      translations that exist for this page. -#}
+  {% set page_lang = config.theme.language or "zh" %}
+  {% set page_locale = "en_US" if page_lang == "en" else "zh_CN" %}
+  {% set page_description = page.meta.description if page and page.meta and page.meta.description
+    else (config.site_description or config.site_name) %}
+  {% set site_base = config.site_url or "/" %}
+  {% set translations = (page.file.alternates if page and page.file else {}) or {} %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="{{ page_description | e }}">
+  {% if page and page.meta and page.meta.author %}
+    <meta name="author" content="{{ page.meta.author }}">
+  {% elif config.site_author %}
+    <meta name="author" content="{{ config.site_author }}">
+  {% endif %}
+  {% if page and page.canonical_url %}
+    <link rel="canonical" href="{{ page.canonical_url }}">
+  {% endif %}
+  {% if page and page.previous_page %}
+    <link rel="prev" href="{{ page.previous_page.url | url }}">
+  {% endif %}
+  {% if page and page.next_page %}
+    <link rel="next" href="{{ page.next_page.url | url }}">
+  {% endif %}
+  {% for lang in translations | sort %}
+    {% set alt_path = translations[lang].url %}
+    {% if alt_path in ('.', './') %}{% set alt_path = '' %}{% endif %}
+    <link rel="alternate" href="{{ (site_base ~ alt_path) | url }}" hreflang="{{ lang }}">
+  {% endfor %}
+  <link rel="icon" href="{{ config.theme.favicon | url }}">
+  {#- Browsers and crawlers ask for /favicon.ico by convention whatever the icon links say.
+      docs/hooks.py writes that alias after the build, in both sizes the ico carries. -#}
+  <link rel="icon" href="{{ 'assets/favicon.ico' | url }}" sizes="16x16 32x32" type="image/x-icon">
+  <meta name="generator" content="mkdocs-{{ mkdocs_version }}">
+  {% set social_image = site_base ~ "assets/social-card.png" %}
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070d18" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ page.title | striptags | e if page and page.title else config.site_name }}">
+  <meta property="og:description" content="{{ page_description | e }}">
+  <meta property="og:url" content="{{ page.canonical_url if page and page.canonical_url else site_base }}">
+  <meta property="og:image" content="{{ social_image }}">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="{{ config.site_name }}">
+  <meta property="og:locale" content="{{ page_locale }}">
+  {% for lang in translations | sort %}
+    {% if lang != page_lang %}
+      <meta property="og:locale:alternate" content="{{ 'en_US' if lang == 'en' else 'zh_CN' }}">
+    {% endif %}
+  {% endfor %}
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page.title | striptags | e if page and page.title else config.site_name }}">
+  <meta name="twitter:description" content="{{ page_description | e }}">
+  <meta name="twitter:image" content="{{ social_image }}">
+{% endblock %}
+
+{% block extrahead %}
+  <link rel="preload" href="{{ 'assets/fonts/inter-latin.woff2' | url }}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{{ 'assets/fonts/space-grotesk-latin.woff2' | url }}" as="font" type="font/woff2" crossorigin>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": {{ config.site_name | tojson }},
+      "description": {{ (config.site_description or config.site_name) | tojson }},
+      "url": {{ config.site_url | tojson }},
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Windows",
+      "softwareVersion": {{ config.extra.mcp_version | default('', true) | tojson }},
+      "license": "https://opensource.org/licenses/MIT",
+      "codeRepository": {{ config.repo_url | tojson }},
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+  </script>
+{% endblock %}
+
+{% block header %}
+  {#- The theme only emits its skip link when the page has a table of contents, so the landing pages
+      and the 404 page would open without a way past the navigation. Those pages own a
+      `#rmc-main` content root, which this link reaches with the keyboard. -#}
+  {% if page.toc | first is not defined %}
+    <a class="md-skip" href="#rmc-main">{{ lang.t("action.skip") }}</a>
+  {% endif %}
+  {% include "partials/header.html" %}
+  <div class="rmc-progress" aria-hidden="true"><span class="rmc-progress__bar"></span></div>
+{% endblock %}
+
+{% block footer %}
+  {% include "partials/footer.html" %}
+{% endblock %}

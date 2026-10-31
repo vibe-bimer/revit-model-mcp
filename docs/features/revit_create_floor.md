@@ -1,66 +1,67 @@
-# Create floor
+---
+description: "按闭合轮廓建楼板（至少 3 个顶点，mm）"
+---
 
-Create a floor from a closed XY boundary with at least three vertices.
+# 创建楼板
 
-**Group:** Model editing · **Kind:** Action (opt-in) · **Since:** this fork's 1.0.0
+`revit_create_floor`
 
-This fork adds this tool; the rest of the catalogue comes from upstream 1.0.
+<p class="facts"><span><b>分组</b> 编辑</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.2.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 没有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 模型构件 / 参数</span><span><b>来源</b> 自研（本仓库）</span></p>
 
-!!! warning "Runs only on a read-write workstation"
+按闭合轮廓建楼板（至少 3 个顶点，mm）
 
-    An action runs only while the workstation is not read-only: the machine policy
-    gate refuses action calls over every transport. The gate is the policy's
-    `ReadOnly` value, held in the registry under
-    `HKLM\Software\Policies\RevitModelMcp` or in
-    `%ProgramData%\RevitModelMcp\policy.json`. The multi-user installer sets `ReadOnly`
-    to `1` by default and writes the default `policy.json`, so a fresh machine install
-    refuses actions until an administrator allows writes; a per-user install writes no
-    policy (adr/0008). When both stores exist, the
-    registry value wins for every value it sets, and a policy that cannot be read
-    fails closed to read-only. The call names its target document, and with more
-    than one open document it is refused. `dry_run` returns the same verification
-    block without changing the model.
+!!! warning "动作工具需要双门禁"
+    客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
-!!! note "Usage notes"
+!!! note "使用提示"
+    2020 走 Document.Create.NewFloor，2022+ 走 Floor.Create
 
-    The floor goes through `Floor.Create`, which needs Revit 2022 or later.
-
-## Copyable prompts
+## 可复制提示词 {#prompts}
 
 ```text
-Create a floor on 2F from these four points
+用这四个点在 2F 建一块楼板
 ```
 
-## Parameters
+## 参数 {#parameters}
 
-| Name | Required | Default | Type | Meaning |
-| --- | --- | --- | --- | --- |
-| `level` | Yes | — | `string` | level name, as revit_list_catalog reports it |
-| `points_mm` | Yes | — | `array of array of number` | at least three model XY vertices, each [x,y] in millimetres; the boundary closes automatically |
-| `dry_run` | No | false | `boolean` | rehearse: execute, return the same verification block, then roll back |
-| `floor_type` | No | null | `string / null` | floor-type name; required argument, but null selects the first floor type |
+<div class="rmc-tablewrap" markdown="1">
 
-### Common parameters
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `level` | 是 | — | `string` | 标高名称（用 revit_list_catalog 查到的本地化名称） |
+| `points_mm` | 是 | — | `array<array<number>>` | 至少 3 个模型 XY 顶点，每个顶点为 [x,y]（mm）；自动闭合轮廓 |
+| `dry_run` | 否 | `false` | `boolean` | 彩排：执行后回滚，返回同样的校验块，不写模型 |
+| `floor_type` | 否 | `null` | `string / null` | 楼板类型名称；必传参数，可传 null 使用第一个楼板类型 |
 
-| Name | Meaning |
+</div>
+
+### 通用参数 {#common-parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+
+</div>
+
+## 功能说明与返回结果 {#contract}
+
+根据闭合边界，在指定标高上创建楼板，用于布局。
+`points_mm` 是模型 XY 坐标系中的多边形顶点，单位为毫米（至少 3 个顶点；边界会自动闭合）；`floor_type` 为 `null` 时选择第一个楼板类型。
+`dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+## Revit 年份支持 {#year-support}
+
+| Revit 年份 | 验证状态 |
 | --- | --- |
-| `document` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected. |
+| 2020 | <span class="state ok">已实测</span> |
+| 2026 | <span class="state part">仅构建，未实测</span> |
+| 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
 
-## Behavior and returned data
+已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
 
-Create a floor from a closed boundary on a level.
+---
 
-`points_mm` is the polygon, three vertices or more, each [x, y] in millimetres; consecutive
-duplicates are refused. dry_run returns the same verification block without changing the model.
-
-## Revit year support
-
-| Revit year | State |
-| --- | --- |
-| 2020 | Not supported yet |
-| 2022–2025, 2027 | Built |
-| 2026 | Built |
-
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
-
-[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)
+[全部功能](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Fail closed on broken site links, missing anchors and navigation gaps."""
+"""Fail closed on broken site links, anchors, language pairs and navigation gaps."""
 
 from __future__ import annotations
 
 import argparse
+import json
+import posixpath
 import re
 import sys
 from dataclasses import dataclass, field
@@ -11,15 +13,33 @@ from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import unquote, urljoin, urlsplit
 
+import catalogs
+import contract_diff
 import yaml
+
+# A tool result must say which catalog it belongs to; these are the words the generated pages use.
+STATUS_MARKERS = {
+    "released": {"zh": ("已发布",), "en": ("Released",)},
+    "unreleased": {"zh": ("未发布",), "en": ("Unreleased",)},
+}
 
 
 @dataclass
 class PageInfo:
     links: list[str] = field(default_factory=list)
+    alternates: dict[str, str] = field(default_factory=dict)
     ids: set[str] = field(default_factory=set)
     article_text: list[str] = field(default_factory=list)
     canonical: str = ""
+    language: str = ""
+    description: str = ""
+    og_locale: str = ""
+    og_url: str = ""
+    og_description: str = ""
+    twitter_description: str = ""
+    edit_url: str = ""
+    robots: str = ""
+    language_links: dict[str, str] = field(default_factory=dict)
 
 
 class PageParser(HTMLParser):
@@ -31,6 +51,8 @@ class PageParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        if tag == "html":
+            self.info.language = attrs.get("lang", "")
         if "id" in attrs:
             self.info.ids.add(attrs["id"])
         if tag == "a" and "name" in attrs:
@@ -44,8 +66,35 @@ class PageParser(HTMLParser):
                 for item in attrs["srcset"].split(",")
                 if item.strip()
             )
-        if tag == "link" and "canonical" in attrs.get("rel", "").split():
-            self.info.canonical = attrs.get("href", "")
+        if tag == "meta":
+            key = attrs.get("name") or attrs.get("property") or ""
+            content = attrs.get("content", "")
+            if key == "description":
+                self.info.description = content
+            elif key == "og:locale":
+                self.info.og_locale = content
+            elif key == "og:url":
+                self.info.og_url = content
+            elif key == "og:description":
+                self.info.og_description = content
+            elif key == "twitter:description":
+                self.info.twitter_description = content
+            elif key == "robots":
+                self.info.robots = content.strip().lower()
+        if tag == "a" and "edit" in attrs.get("rel", "").split():
+            self.info.edit_url = attrs.get("href", "")
+        if (
+            tag == "a"
+            and "md-select__link" in attrs.get("class", "").split()
+            and "hreflang" in attrs
+        ):
+            self.info.language_links[attrs["hreflang"]] = attrs.get("href", "")
+        if tag == "link":
+            rel = attrs.get("rel", "").split()
+            if "alternate" in rel and "hreflang" in attrs:
+                self.info.alternates[attrs["hreflang"]] = attrs.get("href", "")
+            if "canonical" in rel:
+                self.info.canonical = attrs.get("href", "")
         if tag == "article":
             self.in_article = True
         if self.in_article and tag in ("code", "script", "style"):
@@ -63,9 +112,156 @@ class PageParser(HTMLParser):
 
 
 def parse_page(path: Path) -> PageInfo:
+    return parse_page_text(path.read_text(encoding="utf-8"))
+
+
+def parse_page_text(text: str) -> PageInfo:
     parser = PageParser()
-    parser.feed(path.read_text(encoding="utf-8"))
+    parser.feed(text)
     return parser.info
+
+
+# The wrapper the generators put around wide tables, and the script's fallback for the rest.
+WRAPPER_CLASS = "rmc-tablewrap"
+# Pages the generators own and the repository file each one comes from. A generated page can wrap
+# every wide table at the source, and its edit link must point at the file that produces it.
+GENERATED_SOURCES = {
+    "index.html": "tools/site/landing.py",
+    "features/": "tools/site/generate_features.py",
+    "platform/": "tools/site/platform_catalog.py",
+}
+# The directory prefixes among the generated pages, derived so the two facts cannot drift apart.
+GENERATED_PREFIXES = tuple(path for path in GENERATED_SOURCES if path.endswith("/"))
+# A table this wide cannot fit a phone, so it has to sit in a wrapper that may scroll.
+WIDE_TABLE_COLUMNS = 5
+CJK_RANGE = ("\u4e00", "\u9fff")
+
+
+def has_chinese(text: str) -> bool:
+    return any(CJK_RANGE[0] <= char <= CJK_RANGE[1] for char in text)
+
+
+@dataclass
+class TableShape:
+    header_cells: int = 0
+    scoped_cells: int = 0
+    wrapped: bool = False
+
+
+class A11yParser(HTMLParser):
+    """Collect the accessibility facts the gates assert: skip link, ids, table shape."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.language = ""
+        self.first_link: dict | None = None
+        self.skip_links: list[tuple[str, str]] = []
+        self.ids: dict[str, dict] = {}
+        self.tables: list[TableShape] = []
+        self._divs: list[bool] = []
+        self._table: TableShape | None = None
+        self._in_thead = False
+        self._in_skip = False
+        self._skip_text: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        values = {name: value or "" for name, value in attrs}
+        classes = values.get("class", "").split()
+        if tag == "html":
+            self.language = values.get("lang", "")
+        if "id" in values:
+            self.ids[values["id"]] = values
+        if tag == "a":
+            link = {"classes": classes, "href": values.get("href", "")}
+            if self.first_link is None:
+                self.first_link = link
+            if "md-skip" in classes:
+                self.skip_links.append((link["href"], ""))
+                self._in_skip = True
+                self._skip_text = []
+        if tag == "div":
+            self._divs.append(WRAPPER_CLASS in classes)
+        if tag == "table":
+            self._table = TableShape(wrapped=any(self._divs))
+        if tag == "thead" and self._table is not None:
+            self._in_thead = True
+        if tag == "th" and self._table is not None and self._in_thead:
+            self._table.header_cells += 1
+            if values.get("scope") == "col":
+                self._table.scoped_cells += 1
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "div" and self._divs:
+            self._divs.pop()
+        if tag == "table" and self._table is not None:
+            self.tables.append(self._table)
+            self._table = None
+        if tag == "thead":
+            self._in_thead = False
+        if tag == "a" and self._in_skip:
+            self._in_skip = False
+            href, _ = self.skip_links[-1]
+            self.skip_links[-1] = (href, " ".join("".join(self._skip_text).split()))
+
+    def handle_data(self, data: str) -> None:
+        if self._in_skip:
+            self._skip_text.append(data)
+
+
+def audit_skip_link(relative: str, html: str) -> list[str]:
+    """A page must open with a skip link that lands on a focusable content root."""
+    parser = A11yParser()
+    parser.feed(html)
+    if not parser.skip_links:
+        return [f"{relative}: missing skip link"]
+    errors = []
+    href, text = parser.skip_links[0]
+    if parser.first_link is not None and "md-skip" not in parser.first_link["classes"]:
+        errors.append(f"{relative}: skip link is not the first link on the page")
+    if not href.startswith("#"):
+        errors.append(f"{relative}: skip link href {href!r} is not a fragment")
+    else:
+        target = href[1:]
+        attrs = parser.ids.get(target)
+        if attrs is None:
+            errors.append(
+                f"{relative}: skip link target {href!r} is not an element on this page"
+            )
+        elif target == "rmc-main" and attrs.get("tabindex") != "-1":
+            errors.append(f'{relative}: skip target #{target} lacks tabindex="-1"')
+    # The page's own lang attribute is the truth: the error page is built in whichever locale the
+    # build wrote last, so a path prefix cannot say which language it speaks.
+    language = (parser.language or "").lower()
+    if language.startswith("en"):
+        english = True
+    elif language.startswith("zh"):
+        english = False
+    else:
+        english = relative.startswith("en/")
+    if english and has_chinese(text) or not english and not has_chinese(text):
+        errors.append(
+            f"{relative}: skip link text is not in the page language: {text!r}"
+        )
+    return errors
+
+
+def audit_table_semantics(relative: str, html: str) -> list[str]:
+    """Every table keeps its header association; wide tables may scroll from the keyboard."""
+    parser = A11yParser()
+    parser.feed(html)
+    generated = relative.removeprefix("en/").startswith(GENERATED_PREFIXES)
+    errors = []
+    for index, table in enumerate(parser.tables, 1):
+        where = f"{relative}: table {index}"
+        if not table.header_cells:
+            errors.append(f"{where} without a header row")
+        elif table.wrapped and table.scoped_cells != table.header_cells:
+            errors.append(f'{where} header cell without scope="col"')
+        elif (
+            generated and table.header_cells >= WIDE_TABLE_COLUMNS and not table.wrapped
+        ):
+            errors.append(f"{where} outside a scroll wrapper")
+    return errors
 
 
 def page_url(path: Path, site: Path) -> str:
@@ -90,21 +286,180 @@ def local_target(site: Path, url: str, base_url: str) -> tuple[Path, str] | None
     return candidate, unquote(parts.fragment)
 
 
-def audit_site(site: Path, base_url: str | None = None) -> tuple[list[str], dict]:
-    """Check every internal link and anchor in the built site."""
+def repo_file(href: str) -> str | None:
+    """Return the repository path an edit or blob URL points at."""
+    match = re.search(r"/(?:edit|blob)/[^/]+/(.+)$", href)
+    return match.group(1) if match else None
+
+
+def audit_error_pages(site: Path, base_url: str) -> list[str]:
+    """Check the page a mistyped URL lands on: its language, index status and switcher.
+
+    The error page is not a document. It takes no canonical URL and must stay out of the index,
+    and its language switcher has to offer the other language's home page rather than whichever
+    page happened to render last during the build.
+    """
+    errors = []
+    homes = {"zh": site / "index.html", "en": site / "en" / "index.html"}
+    for relative, language in (("404.html", "zh"), ("en/404.html", "en")):
+        path = site / relative
+        if not path.is_file():
+            errors.append(f"{relative}: missing error page")
+            continue
+        text = path.read_text(encoding="utf-8")
+        info = parse_page_text(text)
+        errors.extend(audit_skip_link(relative, text))
+        errors.extend(audit_table_semantics(relative, text))
+        if not info.language.lower().startswith(language):
+            errors.append(
+                f"{relative}: html language is {info.language!r}, expected {language}"
+            )
+        if info.robots != "noindex":
+            errors.append(f'{relative}: missing <meta name="robots" content="noindex">')
+        if info.canonical:
+            errors.append(
+                f"{relative}: error page declares a canonical URL {info.canonical!r}"
+            )
+        if not info.language_links:
+            errors.append(f"{relative}: no language switcher entries")
+        for hreflang, href in sorted(info.language_links.items()):
+            expected = homes.get(hreflang.split("-")[0].lower())
+            if expected is None:
+                continue
+            target = local_target(site, urljoin(base_url, href), base_url)
+            if target is None:
+                errors.append(
+                    f"{relative}: language entry {hreflang!r} leaves the site: {href!r}"
+                )
+            elif target[0].resolve() != expected.resolve():
+                landed = target[0].resolve().relative_to(site.resolve()).as_posix()
+                errors.append(
+                    f"{relative}: language entry {hreflang!r} points at {landed!r}, "
+                    f"expected {expected.relative_to(site).as_posix()!r}"
+                )
+    return errors
+
+
+def audit_site(
+    site: Path, base_url: str | None = None, root: Path | None = None
+) -> tuple[list[str], dict]:
     site = site.resolve()
     files = sorted(site.rglob("index.html"))
     if not files or not (site / "index.html").is_file():
-        return [f"Missing built site: {site}"], {"pages": 0, "links": 0}
-    parsed = {path: parse_page(path) for path in files}
+        return [f"Missing built site: {site}"], {
+            "pages": 0,
+            "zh": 0,
+            "en": 0,
+            "links": 0,
+        }
+    texts = {path: path.read_text(encoding="utf-8") for path in files}
+    parsed = {path: parse_page_text(text) for path, text in texts.items()}
     base_url = (
         base_url or parsed[site / "index.html"].canonical or "http://docs.invalid/"
     )
     base_url = base_url.rstrip("/") + "/"
     errors, total_links = [], 0
+    error_page = site / "404.html"
+    if not error_page.is_file():
+        errors.append("404.html: missing error page")
     for path, info in parsed.items():
         relative = path.relative_to(site).as_posix()
+        english = relative.startswith("en/")
+        errors.extend(audit_skip_link(relative, texts[path]))
+        errors.extend(audit_table_semantics(relative, texts[path]))
+        expected_lang = "en" if english else "zh"
         origin = urljoin(base_url, page_url(path, site).lstrip("/"))
+        if info.language != expected_lang:
+            errors.append(
+                f"{relative}: html language is {info.language!r}, expected {expected_lang}"
+            )
+        sibling = relative.removeprefix("en/")
+        wanted_locale = "en_US" if english else "zh_CN"
+        if info.og_locale != wanted_locale:
+            errors.append(
+                f"{relative}: og:locale is {info.og_locale!r}, expected {wanted_locale}"
+            )
+        description = " ".join(info.description.split())
+        if not description:
+            errors.append(f"{relative}: missing meta description")
+        else:
+            description_has_chinese = has_chinese(description)
+            if english and description_has_chinese:
+                errors.append(
+                    f"{relative}: description is not English: {description[:40]!r}"
+                )
+            elif not english and not description_has_chinese:
+                errors.append(
+                    f"{relative}: description is not Chinese: {description[:40]!r}"
+                )
+        for label, value in (
+            ("og:description", info.og_description),
+            ("twitter:description", info.twitter_description),
+        ):
+            summary = " ".join(value.split())
+            if not summary:
+                errors.append(f"{relative}: missing {label}")
+            elif english and has_chinese(summary):
+                errors.append(f"{relative}: {label} is not English")
+        parts = urlsplit(info.canonical)
+        if not info.canonical or not parts.scheme or not parts.netloc:
+            errors.append(f"{relative}: canonical {info.canonical!r} is not absolute")
+        elif info.canonical != origin:
+            errors.append(
+                f"{relative}: canonical {info.canonical!r} does not match build base {origin!r}"
+            )
+        if info.og_url != info.canonical:
+            errors.append(
+                f"{relative}: og:url {info.og_url!r} does not match canonical {info.canonical!r}"
+            )
+        translations = {"zh": sibling, "en": f"en/{sibling}"}
+        expected_langs = {
+            lang for lang, path in translations.items() if (site / path).is_file()
+        }
+        if set(info.alternates) != expected_langs:
+            errors.append(
+                f"{relative}: language-switch alternates are {sorted(info.alternates)}, "
+                f"expected {sorted(expected_langs)}"
+            )
+        for lang, href in info.alternates.items():
+            expected = site / translations.get(lang, "__unknown__")
+            parts = urlsplit(href)
+            target = local_target(site, urljoin(origin, href), base_url)
+            if (
+                not parts.scheme
+                or not parts.netloc
+                or target is None
+                or target[0] != expected
+                or not expected.is_file()
+            ):
+                errors.append(
+                    f"{relative}: wrong {lang} language-switch target {href!r}"
+                )
+        href = info.edit_url
+        expected_edit = next(
+            (
+                path
+                for prefix, path in GENERATED_SOURCES.items()
+                if sibling == prefix
+                or (prefix.endswith("/") and sibling.startswith(prefix))
+            ),
+            None,
+        )
+        if not href:
+            errors.append(f"{relative}: missing edit link")
+        elif expected_edit is not None:
+            if not href.endswith(expected_edit):
+                errors.append(
+                    f"{relative}: edit link {href!r} must point at {expected_edit}"
+                )
+        else:
+            path = repo_file(href)
+            if path is None:
+                errors.append(
+                    f"{relative}: edit link {href!r} is not a repository file"
+                )
+            elif root is not None and not (Path(root) / path).exists():
+                errors.append(f"{relative}: edit target {path} does not exist")
         for href in info.links:
             target = local_target(site, urljoin(origin, href), base_url)
             if target is None:
@@ -114,37 +469,39 @@ def audit_site(site: Path, base_url: str | None = None) -> tuple[list[str], dict
             if not destination.is_file():
                 errors.append(f"{relative}: missing target {href!r}")
             elif anchor and destination.suffix == ".html":
-                parsed_info = parsed.get(destination) or parse_page(destination)
+                if destination not in parsed:
+                    parsed_info = parse_page(destination)
+                else:
+                    parsed_info = parsed[destination]
                 if anchor not in parsed_info.ids:
                     errors.append(f"{relative}: missing anchor {href!r}")
-        if not "".join(info.article_text).strip():
+        text = "".join(info.article_text).strip()
+        cjk = sum("\u4e00" <= char <= "\u9fff" for char in text)
+        ratio = cjk / max(len(text), 1)
+        if not text:
             errors.append(f"{relative}: empty article")
-    return sorted(set(errors)), {"pages": len(files), "links": total_links}
+        elif english and ratio > 0.05:
+            errors.append(f"{relative}: excessive Chinese prose ({ratio:.1%})")
+        elif not english and ratio < 0.05:
+            errors.append(f"{relative}: too little Chinese prose ({ratio:.1%})")
+    if error_page.is_file():
+        # The error page is not an `index.html`, so it is outside the loop above.
+        error_text = error_page.read_text(encoding="utf-8")
+        errors.extend(audit_skip_link("404.html", error_text))
+        errors.extend(audit_table_semantics("404.html", error_text))
+    errors.extend(audit_error_pages(site, base_url))
+    zh = sum(not path.relative_to(site).as_posix().startswith("en/") for path in files)
+    return sorted(set(errors)), {
+        "pages": len(files),
+        "zh": zh,
+        "en": len(files) - zh,
+        "links": total_links,
+    }
 
 
-def expand_snippets(text: str, root: Path, depth: int = 0) -> str:
-    """Inline `--8<-- "path"` includes the way docs/hooks.py does before MkDocs sees them."""
-    if depth > 5:
-        return text
-    lines = []
-    for line in text.splitlines():
-        include = re.match(r'\s*--8<--\s+"([^"]+)"\s*$', line)
-        if include:
-            target = root / include.group(1)
-            if target.is_file():
-                lines.append(
-                    expand_snippets(target.read_text(encoding="utf-8"), root, depth + 1)
-                )
-                continue
-        lines.append(line)
-    return "\n".join(lines)
-
-
-def source_anchors(path: Path, root: Path | None = None) -> set[str]:
+def source_anchors(path: Path) -> set[str]:
     """Anchors a page offers: explicit ids plus heading slugs, as MkDocs resolves them."""
     text = path.read_text(encoding="utf-8")
-    if root is not None:
-        text = expand_snippets(text, root)
     anchors = set(re.findall(r'<a\s+(?:id|name)="([^"]+)"', text))
     anchors |= set(re.findall(r"\{#([A-Za-z0-9_.:-]+)\}", text))
     for line in text.splitlines():
@@ -167,7 +524,7 @@ def audit_source_anchors(root: Path) -> list[str]:
         + list(root.glob("*.md"))
         + list((root / "server").glob("*.md"))
     }
-    anchors = {path: source_anchors(path, root) for path in sources}
+    anchors = {path: source_anchors(path) for path in sources}
     errors = []
     for path, source in sorted(sources.items(), key=lambda item: str(item[1])):
         relative = source.relative_to(root).as_posix()
@@ -177,6 +534,18 @@ def audit_source_anchors(root: Path) -> list[str]:
             destination = (source.parent / unquote(target)).resolve()
             if destination not in sources:
                 continue
+            expected = (
+                relative.removesuffix(".md") + ".en.md"
+                if relative.endswith(".en.md")
+                else relative
+            )
+            sibling = (
+                destination.with_name(destination.stem + ".en.md")
+                if expected.endswith(".en.md")
+                else destination
+            )
+            if expected.endswith(".en.md") and sibling in sources:
+                destination = sibling
             if anchor in anchors[destination] or re.fullmatch(r"_\d+", anchor):
                 continue
             errors.append(
@@ -185,8 +554,53 @@ def audit_source_anchors(root: Path) -> list[str]:
     return errors
 
 
+def _catalog_dirs(root: Path) -> set[str] | None:
+    """Directories governed by the catalog manifest, or None when the root has no manifest."""
+    try:
+        data = catalogs.load(root)
+    except FileNotFoundError:
+        return None
+    return {data["release"]["directory"], data["integration"]["directory"]}
+
+
+def audit_twin_hints(root: Path) -> list[str]:
+    """Every same-name pair whose schemas differ must carry the auto diff hint on both pages.
+
+    The hint anchors on "{#contract-diff}". Its absence means a reader could copy a released
+    contract onto the branch (or the reverse) without seeing the difference.
+    """
+    content = root / "tools/site/content"
+    if (
+        not (content / "tools.json").is_file()
+        or not (content / "platform-tools.json").is_file()
+    ):
+        return []
+    released = json.loads((content / "tools.json").read_text(encoding="utf-8"))
+    platform = json.loads((content / "platform-tools.json").read_text(encoding="utf-8"))
+    release_schemas = {tool["name"]: tool["inputSchema"] for tool in released}
+    integration_schemas = {
+        tool["name"]: tool["inputSchema"] for tool in platform["tools"]
+    }
+    directories = _catalog_dirs(root) or set()
+    errors = []
+    for name in sorted(set(release_schemas) & set(integration_schemas)):
+        if not contract_diff.diff_schemas(
+            release_schemas[name], integration_schemas[name]
+        ):
+            continue
+        for directory in sorted(directories):
+            page = root / "docs" / directory / f"{name}.md"
+            if not page.is_file():
+                errors.append(f"Twin page missing: docs/{directory}/{name}.md")
+            elif "{#contract-diff}" not in page.read_text(encoding="utf-8"):
+                errors.append(
+                    f"docs/{directory}/{name}.md: missing contract-diff hint for the "
+                    f"same-name tool {name}"
+                )
+    return errors
+
+
 def audit_sources(root: Path) -> list[str]:
-    """Every documentation page is in the navigation, once, and every entry exists."""
     docs = root / "docs"
     config = yaml.safe_load((root / "mkdocs.yml").read_text(encoding="utf-8"))
 
@@ -203,16 +617,385 @@ def audit_sources(root: Path) -> list[str]:
     navigation = list(flatten(config["nav"]))
     errors = []
     pages = {p.relative_to(docs).as_posix() for p in docs.rglob("*.md")}
-    generated = {page for page in pages if page.startswith("features/")}
-    for orphan in sorted(generated - set(navigation)):
+    catalog_dirs = _catalog_dirs(root)
+    if catalog_dirs is None:
+        managed: tuple[str, ...] = ()
+        coverage_errors: list[str] = []
+    else:
+        managed = tuple(f"{directory}/" for directory in catalog_dirs)
+        coverage_errors = catalogs.coverage_errors(root)
+    unmanaged = {p for p in pages if not p.startswith(managed)}
+    chinese = {p for p in unmanaged if not p.endswith(".en.md")}
+    english = {
+        p.removesuffix(".en.md") + ".md" for p in unmanaged if p.endswith(".en.md")
+    }
+    for missing in sorted(chinese ^ english):
+        errors.append(f"Unpaired source page: {missing}")
+    chinese_all = {p for p in pages if not p.endswith(".en.md")}
+    for orphan in sorted(chinese_all - set(navigation)):
         errors.append(f"Page missing from navigation: {orphan}")
     for target in navigation:
-        if target not in pages:
+        if target not in chinese_all:
             errors.append(f"Navigation references missing source: {target}")
         if navigation.count(target) > 1:
             errors.append(f"Duplicate navigation entry: {target}")
+    errors += coverage_errors
+    errors += audit_twin_hints(root)
     errors += audit_source_anchors(root)
     return sorted(set(errors))
+
+
+TERMINOLOGY = (
+    ("元素", "构件", "a model element is a 构件 on every page"),
+    (
+        r"(?:写入|动作|双|权限|写)开关",
+        "门禁",
+        "the write permission is a 门禁; 开关 stays a display toggle verb",
+    ),
+)
+
+# Paths whose prose legitimately quotes a literal, keyed by path relative to docs/.
+TERMINOLOGY_WHITELIST: dict[str, set[str]] = {}
+
+
+def _prose_lines(path: Path):
+    """Original line numbers with fenced blocks skipped and inline code spans removed."""
+    in_fence = False
+    in_comment = False
+    for number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), start=1
+    ):
+        if line.lstrip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        if in_comment:
+            if "-->" in line:
+                in_comment = False
+            continue
+        if "<!--" in line:
+            if "-->" not in line.split("<!--", 1)[1]:
+                in_comment = True
+            line = re.sub(r"<!--.*?-->", "", line)
+        yield number, re.sub(r"`[^`\n]*`", "", line)
+
+
+def audit_terminology(
+    root: Path, whitelist: dict[str, set[str]] | None = None
+) -> list[str]:
+    """Report Chinese prose that uses a second word for a concept the site already named."""
+    docs = root / "docs"
+    if not docs.is_dir():
+        return []
+    allowed = TERMINOLOGY_WHITELIST if whitelist is None else whitelist
+    errors = []
+    for path in sorted(docs.rglob("*.md")):
+        if path.name.endswith(".en.md"):
+            continue
+        relative = path.relative_to(docs).as_posix()
+        skipped = allowed.get(relative, set())
+        for line_number, line in _prose_lines(path):
+            for pattern, preferred, reason in TERMINOLOGY:
+                for match in re.finditer(pattern, line):
+                    if match.group(0) in skipped:
+                        continue
+                    errors.append(
+                        f"docs/{relative}:{line_number}: '{match.group(0)}' — use "
+                        f"'{preferred}' ({reason})"
+                    )
+    return errors
+
+
+def audit_search_index(site: Path) -> list[str]:
+    """Every search entry must state its language, and a tool entry its tool name and status.
+
+    The search plugin writes one index for the whole site, so nothing in a result says which
+    language it is written in or which catalog it belongs to. The build adds those fields; this
+    audit keeps them honest against the pages that were rendered.
+    """
+    index = site / "search/search_index.json"
+    if not index.is_file():
+        return ["search index missing: search/search_index.json"]
+    data = json.loads(index.read_text(encoding="utf-8"))
+    docs = data.get("docs") or []
+    if not docs:
+        return ["search index has no entries"]
+    errors: list[str] = []
+    page_entries = {
+        doc.get("location", ""): doc
+        for doc in docs
+        if "#" not in doc.get("location", "")
+    }
+    for doc in docs:
+        location = doc.get("location", "")
+        lang = doc.get("lang")
+        if lang is None:
+            errors.append(f"search entry {location!r} is missing lang")
+            continue
+        expected = "en" if location.startswith("en/") else "zh"
+        if lang != expected:
+            errors.append(
+                f"search entry {location!r} has lang {lang!r}, expected {expected!r}"
+            )
+        page = site / (location.split("#", 1)[0] or "") / "index.html"
+        if page.is_file():
+            rendered = parse_page(page).language
+            if rendered and rendered != lang:
+                errors.append(
+                    f"search entry {location!r} has lang {lang!r} but the page renders {rendered!r}"
+                )
+        tool = doc.get("tool")
+        if not tool:
+            continue
+        if "#" in location:
+            # A section entry carries only that section's text, so it inherits the language, tool
+            # name and status of the page it belongs to.
+            if location.split("#", 1)[0].rstrip("/") + "/" not in page_entries:
+                errors.append(f"search entry {location!r} has no page entry of its own")
+            continue
+        text = f"{doc.get('title', '')} {doc.get('text', '')}"
+        if tool not in text:
+            errors.append(f"search entry {location!r} is missing tool name {tool}")
+        markers = STATUS_MARKERS.get(doc.get("status"), {}).get(lang, ())
+        if not any(marker in text for marker in markers):
+            errors.append(
+                f"search entry {location!r} is missing the status marker for "
+                f"{doc.get('status')!r}"
+            )
+    return errors
+
+
+class _MigrationRowParser(HTMLParser):
+    """Collect the tool names and link presence of every table row."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.rows: list[dict] = []
+        self.row: dict | None = None
+        self.code: list[str] | None = None
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "tr":
+            self.row = {"tools": [], "linked": False}
+        elif tag == "a" and self.row is not None:
+            self.row["linked"] = True
+        elif tag == "code":
+            self.code = []
+
+    def handle_endtag(self, tag):
+        if tag == "tr" and self.row is not None:
+            self.rows.append(self.row)
+            self.row = None
+        elif tag == "code" and self.code is not None:
+            if self.row is not None:
+                self.row["tools"].append("".join(self.code))
+            self.code = None
+
+    def handle_data(self, data):
+        if self.code is not None:
+            self.code.append(data)
+
+
+def audit_migration_table(site: Path) -> list[str]:
+    """Every migration table row must reach the page or the status anchor it describes."""
+    errors: list[str] = []
+    for relative in ("platform/fork-tools", "en/platform/fork-tools"):
+        page = site / relative / "index.html"
+        if not page.is_file():
+            continue
+        parser = _MigrationRowParser()
+        parser.feed(page.read_text(encoding="utf-8"))
+        for row in parser.rows:
+            for tool in row["tools"]:
+                if tool.startswith("revit_") and not row["linked"]:
+                    errors.append(f"{relative}: migration row for {tool} has no link")
+    return errors
+
+
+# -- shipped assets ---------------------------------------------------------
+#
+# The build ships whatever lands in the tree, so an asset nobody references reaches every visitor
+# as a download nobody asked for. A page, a stylesheet or a metadata block must reference each
+# shipped file; the entries below are the exceptions, and each says why.
+
+# The build writes these itself, and a browser or crawler asks for them by convention rather than
+# through a link in a page, so no page can reference them.
+CONVENTIONAL_FILES = frozenset(
+    {
+        "404.html",
+        "en/404.html",
+        "robots.txt",
+        "favicon.ico",
+        "sitemap.xml",
+        "sitemap.xml.gz",
+    }
+)
+# Per-directory sitemaps, plus the search machinery the theme's bundle loads at runtime.
+CONVENTIONAL_NAMES = frozenset({"sitemap.xml", "sitemap.xml.gz"})
+CONVENTIONAL_PREFIXES = (
+    "search/",
+    "assets/javascripts/workers/",
+    "overrides/",
+)
+# Shipped for a reason other than a page link, named one by one so the list stays reviewable.
+CONVENTIONAL_SOURCES = {
+    "assets/images/favicon.png": "Material's default icon, replaced by theme.favicon",
+    "assets/logo.svg": "the mark README.md embeds",
+    "assets/logo-white.svg": "declared as theme.logo in mkdocs.yml",
+    # The search worker importScripts these for the en/zh index, which no page links to directly.
+    # docs/hooks.py deletes every other lunr locale file, so anything else under lunr/ fails here.
+    "assets/javascripts/lunr/min/lunr.zh.min.js": "the search worker loads it for the Chinese index",
+    "assets/javascripts/lunr/min/lunr.multi.min.js": "the worker loads it for a two-language index",
+    "assets/javascripts/lunr/min/lunr.stemmer.support.min.js": "the worker loads shared stemmer support first",
+}
+REFERENCE_ATTRIBUTES = ("href", "src", "poster", "data")
+IMAGE_META = (
+    "og:image",
+    "og:image:url",
+    "og:image:secure_url",
+    "twitter:image",
+    "twitter:image:src",
+)
+CSS_URL = re.compile(r"""url\(\s*['"]?([^'")]+)['"]?\s*\)""")
+
+
+class _ReferenceParser(HTMLParser):
+    """Collects every URL a browser would fetch for a page, including social metadata."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.urls: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        values = dict(attrs)
+        for key in REFERENCE_ATTRIBUTES:
+            if values.get(key):
+                self.urls.append(values[key])
+        if values.get("srcset"):
+            self.urls.extend(
+                item.strip().split()[0]
+                for item in values["srcset"].split(",")
+                if item.strip()
+            )
+        if tag == "meta":
+            key = values.get("property") or values.get("name") or ""
+            if key in IMAGE_META and values.get("content"):
+                self.urls.append(values["content"])
+
+
+def _reference_paths(url: str, source: str) -> list[str]:
+    """Site-relative paths a URL may name, tolerating a deployment base path."""
+    split = urlsplit(url.strip())
+    if split.scheme or split.netloc:
+        # Absolute URLs are only read for their path: the origin is the deployment's own.
+        path = split.path
+    else:
+        path = split.path
+        if path and not path.startswith("/"):
+            path = posixpath.normpath(posixpath.join(posixpath.dirname(source), path))
+    path = path.lstrip("/")
+    if not path or path.startswith(".."):
+        return []
+    candidates = [path]
+    parts = path.split("/")
+    for index in range(1, len(parts)):
+        candidates.append("/".join(parts[index:]))
+    resolved = []
+    for candidate in candidates:
+        if candidate.endswith("/"):
+            resolved.append(candidate + "index.html")
+        else:
+            resolved.append(candidate)
+            if candidate.endswith("index.html") and "/" in candidate:
+                resolved.append(candidate[: -len("index.html")])
+    return resolved
+
+
+def collect_references(site: Path) -> set[str]:
+    """Every site-relative path a page, stylesheet or metadata block asks for."""
+    references: set[str] = set()
+    for page in sorted(site.rglob("*.html")):
+        relative = page.relative_to(site).as_posix()
+        parser = _ReferenceParser()
+        parser.feed(page.read_text(encoding="utf-8"))
+        for url in parser.urls:
+            references.update(_reference_paths(url, relative))
+    for sheet in sorted(site.rglob("*.css")):
+        relative = sheet.relative_to(site).as_posix()
+        text = sheet.read_text(encoding="utf-8", errors="replace")
+        for url in CSS_URL.findall(text):
+            references.update(_reference_paths(url, relative))
+    return references
+
+
+def is_conventional(relative: str) -> bool:
+    """Whether a shipped file is expected to have no referencing page."""
+    if relative in CONVENTIONAL_FILES or relative in CONVENTIONAL_SOURCES:
+        return True
+    if relative.rsplit("/", 1)[-1] in CONVENTIONAL_NAMES:
+        return True
+    return any(relative.startswith(prefix) for prefix in CONVENTIONAL_PREFIXES)
+
+
+def audit_assets(site: Path) -> tuple[list[str], dict[str, int]]:
+    """Every shipped file is referenced by a page or named in the conventional list."""
+    references = collect_references(site)
+    errors: list[str] = []
+    files = referenced = conventional = 0
+    for path in sorted(site.rglob("*")):
+        if not path.is_file() or path.name == "index.html":
+            # Pages are audited as pages; this gate is about what they pull in.
+            continue
+        relative = path.relative_to(site).as_posix()
+        files += 1
+        if relative in references:
+            referenced += 1
+        elif is_conventional(relative):
+            conventional += 1
+        else:
+            errors.append(
+                f"{relative}: shipped but no page, stylesheet or metadata block references it"
+            )
+    return errors, {
+        "files": files,
+        "referenced": referenced,
+        "conventional": conventional,
+    }
+
+
+def audit_deployment(site: Path) -> list[str]:
+    """The files that follow the deployment origin exist and agree with each other."""
+    errors: list[str] = []
+    robots = site / "robots.txt"
+    if not robots.is_file():
+        errors.append("robots.txt: missing from the build")
+    else:
+        text = robots.read_text(encoding="utf-8")
+        disallow_all = "Disallow: /\n" in text
+        sitemap = [
+            line for line in text.splitlines() if line.lower().startswith("sitemap:")
+        ]
+        if disallow_all and sitemap:
+            errors.append(
+                "robots.txt: a private origin asks crawlers out but still names a sitemap"
+            )
+        if not disallow_all and not sitemap:
+            errors.append(
+                "robots.txt: a public origin allows crawlers but names no sitemap"
+            )
+        if (
+            not disallow_all
+            and sitemap
+            and not sitemap[0].strip().endswith("/sitemap.xml")
+        ):
+            errors.append(
+                f"robots.txt: {sitemap[0].strip()} does not name the site sitemap"
+            )
+    for relative in ("favicon.ico", "404.html", "en/404.html"):
+        if not (site / relative).is_file():
+            errors.append(f"{relative}: missing from the build")
+    return errors
 
 
 def main() -> int:
@@ -220,9 +1003,23 @@ def main() -> int:
     parser.add_argument("--site-dir", type=Path, default=Path("site"))
     parser.add_argument("--base-url")
     args = parser.parse_args()
-    errors, stats = audit_site(args.site_dir, args.base_url)
+    errors, stats = audit_site(
+        args.site_dir, args.base_url, Path(__file__).resolve().parents[2]
+    )
     errors += audit_sources(Path(__file__).resolve().parents[2])
-    print(f"Pages: {stats['pages']}; checked internal references: {stats['links']}")
+    errors += audit_terminology(Path(__file__).resolve().parents[2])
+    errors += audit_search_index(args.site_dir)
+    errors += audit_migration_table(args.site_dir)
+    asset_errors, asset_stats = audit_assets(args.site_dir)
+    errors += asset_errors
+    errors += audit_deployment(args.site_dir)
+    print(
+        f"Pages: {stats['pages']} (zh {stats['zh']} / en {stats['en']}); checked internal references: {stats['links']}"
+    )
+    print(
+        f"Assets: {asset_stats['files']} shipped; referenced {asset_stats['referenced']}, "
+        f"conventional {asset_stats['conventional']}"
+    )
     print(f"Site/source errors: {len(errors)}")
     for error in errors[:80]:
         print(f"  {error}")

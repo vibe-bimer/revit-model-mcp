@@ -1,73 +1,49 @@
-# Security
+<a id="security"></a>
 
-See the [privacy policy](privacy.md) for data handling, retention and contact information.
+# 安全
 
-The model read API is always available.
-Action tools are refused by default: the multi-user installer writes the machine policy `ReadOnly=1` and ships a default
-`%ProgramData%\RevitModelMcp\policy.json` with `{"ReadOnly": true}`. An administrator allows actions with `ReadOnly=false`.
-`REVIT_MCP_READ_ONLY=1` in the Python server environment or the workstation `%LOCALAPPDATA%\RevitModelMcp\read-only` file
-also refuses them without hiding them, described in [actions](actions.md).
-`revit_execute_code` runs arbitrary C# with the Revit user's rights. It can read or write files and call network APIs. The read-only gates refuse this action. Every call except `dry_run` needs a five-minute, single-use confirmation token bound to the code hash, the transaction mode and the target document, and `transaction="none"`, which can change the model without a single undo entry, is refused by default. The token cannot make the code safe: it only forces a pause so that the user sees what will run. Submitted source is saved in the local audit directory and must be treated as sensitive.
-`revit_export_nwc` may write to a drive path or a UNC path on a trusted share unless read-only mode is active. It never transfers the NWC file to the client; logging omits the export path.
-UNC shares are denied by default for export, save, open, shared parameter files and NWC settings XML. Add approved `\\server\share` roots to the `trustedNetworkRoots` string array in `%LOCALAPPDATA%\RevitModelMcp\settings.json` and restart Revit; mapped drives remain allowed as drive paths.
-`RSN://` paths use Revit Server and are not restricted by `trustedNetworkRoots`.
-The default read surface covers ping, active document information, the open document list, instance information, catalogs, element queries and aggregates, views and their elements, element parameters, warnings, relations, PNG view export and the four coordinator tools for model health, links, shared coordinates and parameter fill.
-The [command executor](../src/RevitModelMcp.Addin/Control/ReadCommandExecutor.cs) and readers open no Revit transactions and expose no element creation, deletion, parameter setters or model save operations.
-Action tools are a separate surface. They create, change, delete, save, sync, close and export, and they stay refused until an administrator allows them.
-Irreversible or file-overwriting calls need a [confirmation token](actions.md#confirmation-tokens-for-irreversible-actions).
-View export calls `Document.ExportImage` and writes an image file.
-Channel jobs, responses, heartbeats and diagnostic logs also write files outside the model.
+数据处理、保留规则和联系方式见[隐私政策](privacy.md)。
 
-`REVIT_MCP_REDACT_PATHS=1` or `--redact-paths` removes directories from response `documentPath`, `path` and `centralPath` fields, including nested results and instance listings.
-It also reduces Windows drive and UNC paths in `confirmationText`, `summary`, `error`, `message`, `warning` and `warnings` strings at any depth to file names, including tool errors.
-Model names, parameter values, remaining message text and exported image `localPath` values remain visible.
-Redaction applies to outgoing Python responses, not channel files or add-in logs.
+模型 API 默认只读。
+除非启用 `REVIT_MCP_ALLOW_WRITE=1`，否则不会注册动作工具；执行动作还要求存在[动作](actions.md)中说明的工作站门禁文件。
+默认能力包括连通性检查、文档和实例信息、目录、构件查询和聚合、视图及其中的构件、构件参数、警告、关系、PNG 视图导出，以及模型健康、链接、共享坐标和参数填写检查这四个协调检查工具。
+[命令执行器](../src/RevitModelMcp.Addin/Control/ReadCommandExecutor.cs)和读取器不开启 Revit 事务，也不提供构件创建、删除、参数设置或模型保存操作。
+视图导出调用 `Document.ExportImage` 并写入图像文件。
+通道任务、响应、心跳和诊断日志也会在模型之外写入文件。
 
-HTTP binds to `127.0.0.1:53110` by default.
-A per-user 32-byte random bearer token is generated in `settings.json`; its protected NTFS ACL grants access only to the current user.
-The token is never logged.
-All HTTP routes except `/health` require it; health exposes the active document name and process information.
-Before sending that token, the Python HTTP client verifies a nonce proof from the add-in on the existing health request.
-There is no built-in TLS: put remote access behind a tunnel or a TLS proxy.
-Set `REVIT_MCP_HTTP_ENABLED=0` in Revit's environment or `httpEnabled=false` in settings to disable the listener entirely.
-MCP action calls are refused in read-only mode over every transport.
-Direct HTTP action jobs require the bearer token and are refused with HTTP 403 while the workstation read-only file is present; the Python server's `REVIT_MCP_READ_ONLY` setting does not apply to direct callers.
+`REVIT_MCP_REDACT_PATHS=1` 或 `--redact-paths` 将响应的 `documentPath` 和每个 `path` 字段缩减为文件名，包括链接和图像路径。
+这涵盖嵌套结果和实例列表。
+模型名称、参数值、错误文本、通道文件以及导出图像的 `localPath` 值仍然可见。
 
-The named pipe `\\.\pipe\RevitModelMcp.<pid>` has a protected ACL that grants access only to the Windows user running Revit.
-The add-in creates the first instance with that ACL and disables the pipe if the name is already in use.
-The add-in also drops any pipe client that connects from another computer.
-The pipe needs no token: holding the Revit user's credentials already grants access to the file channel and the model.
-Pipe requests are limited to 1 MiB, and action jobs are refused while the workstation `read-only` file exists.
+HTTP 默认绑定到 `127.0.0.1:53110`。
+每个用户的 `settings.json` 中会生成一个 32 字节随机 Bearer 令牌；文件受保护的 NTFS ACL 只授予当前用户访问权限。
+令牌永远不会写入日志。
+除 `/health` 外，所有 HTTP 路由都要求令牌；健康检查会暴露活动文档名称和进程信息。
+没有内置 TLS：远程访问应通过隧道或 TLS 代理。
+在 Revit 环境中设置 `REVIT_MCP_HTTP_ENABLED=0`，或在设置中设置 `httpEnabled=false`，可以彻底禁用监听器。
+通过任何传输方式进行的 MCP 动作调用都需要两道门禁。
+直接通过 HTTP 提交的动作任务要求 Bearer 令牌和工作站门禁；Python 注册开关不适用于直接调用方。
 
-SSH mode stores no credentials.
-Authentication and routing use the local OpenSSH configuration and agent.
-Running the server on the workstation over SSH stdio needs the same account as Revit and opens no additional port.
-The workstation `read-only` file refuses action jobs only. It does not restrict a person who holds an SSH key for the Revit account.
-For SSH stdio, prefix a dedicated public key entry in `authorized_keys` with `restrict,command="revit-model-mcp --redact-paths"`.
-Windows OpenSSH administrators place this entry in `%ProgramData%\ssh\administrators_authorized_keys`.
-The `ssh:<alias>` file channel requires a full shell key and cannot use this forced command.
-On macOS and Linux, the default multiplexing socket directory is verified as user-owned and set to mode `0700`; multiplexing is disabled if this fails.
-The Windows file channel relies on the account's filesystem permissions.
-See [transport](transport.md) and [security reporting](../SECURITY.md).
+SSH 模式不存储凭据。
+认证和路由使用本地 OpenSSH 配置和代理。
+默认的多路复用套接字目录在 macOS 和 Linux 上的权限为 `0700`。
+Windows 文件通道依赖账户的文件系统权限。
+参见[传输](transport.md)和[安全问题报告](../SECURITY.md)。
 
-## Document lifecycle safety
+<a id="verify-downloads"></a>
 
-Open, close, save and synchronize are refused in read-only mode, same as every other action. A central model opened through MCP defaults to detached mode. `local_copy` creates a new local file and leaves the central unchanged until an explicitly confirmed synchronization. Saving an open central model or saving under a known central path is refused.
+## 校验下载
 
-Save, sync and any close that can discard changes require a five-minute, single-use confirmation token. So do `revit_remove_links` without `dry_run`, `revit_export` and `revit_export_nwc` with `overwrite=true` when a target file exists, `revit_execute_code` without `dry_run`, and `revit_process_models` with `code`. These tokens guard against mistakes and against instructions injected into model data or tool output. They do not guard against an MCP client that confirms by itself, because the client receives the token. Use read-only mode for unattended runs. The first call only describes the operation. The client must show `confirmationText` and must not send the token back until the user explicitly agrees in chat. A failed verification or timeout can occur after Revit commits a change; inspect document state before a retry. Neither the token nor the action gate is a substitute for model backups and Revit permissions.
-
-## Verify downloads
-
-Release assets carry GitHub build provenance attestations.
-After downloading an asset, verify it with the GitHub CLI:
+发布资产附带 GitHub 构建来源证明（provenance attestation）。
+下载资产后，使用 GitHub CLI 校验：
 
 ```sh
 gh attestation verify RevitModelMcp-<version>-SingleUser.msi --owner vibe-bimer
 ```
 
-A successful command exits with code 0 and reports a verified attestation.
-Check that the repository is `vibe-bimer/revit-model-mcp`, the signer workflow is `.github/workflows/release.yml`, and the source commit matches the intended release tag.
-For an explicit repository and workflow constraint:
+成功时命令以退出码 0 结束，并报告已验证的证明。
+检查仓库是否为 `vibe-bimer/revit-model-mcp`，签名工作流是否为 `.github/workflows/release.yml`，以及源码提交是否与预期发布标签匹配。
+若要显式限制仓库和工作流：
 
 ```sh
 gh attestation verify RevitModelMcp-<version>-SingleUser.msi \
@@ -75,10 +51,9 @@ gh attestation verify RevitModelMcp-<version>-SingleUser.msi \
   --signer-workflow vibe-bimer/revit-model-mcp/.github/workflows/release.yml
 ```
 
-The same command accepts a per-year ZIP, wheel, source distribution, `.mcpb` or `SHA256SUMS.txt` in place of the MSI filename.
-In a non-interactive shell, add `--format json` or the command prints nothing.
-The attestation binds the downloaded file's digest to this repository's build workflow and a source commit.
-It does not certify that the program is safe or cover packages downloaded later by uv.
-The MSI and executable files are not Authenticode-signed; Windows may still show an unknown publisher warning.
-The bundle has no MCPB certificate signature.
-Attestations are available for releases built after provenance was enabled; older releases are not retroactively attested.
+同一命令也可以将 MSI 文件名替换为按年份发布的 ZIP、wheel、源码发行包、`.mcpb` 或 `SHA256SUMS.txt`。
+证明将下载文件的摘要绑定到本仓库的构建工作流和一个源码提交。
+它不证明程序安全，也不覆盖 uv 随后下载的包。
+MSI 和可执行文件未使用 Authenticode 签名；Windows 仍可能显示未知发布者警告。
+扩展包没有 MCPB 证书签名。
+来源证明适用于启用该功能后构建的发布版本；旧发布不会追溯补充证明。

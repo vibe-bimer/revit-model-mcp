@@ -1,5 +1,5 @@
-site_name: Revit Model MCP (vibe-bimer)
-copyright: Autodesk and Revit are registered trademarks or trademarks of Autodesk, Inc., and/or its subsidiaries and/or affiliates in the USA and/or other countries. Model MCP is an independent project and is not affiliated with or endorsed by Autodesk.
+site_name: Revit Model MCP
+site_description: "把 Autodesk Revit 模型接到 AI 助手：查询参数与几何、统计构件、检查模型、导出清单并编辑构件，默认只读。"
 site_url: https://vibe-bimer.github.io/revit-model-mcp/
 repo_url: https://github.com/vibe-bimer/revit-model-mcp
 repo_name: vibe-bimer/revit-model-mcp
@@ -7,50 +7,72 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  custom_dir: docs/overrides
   logo: assets/logo-white.svg
   favicon: assets/favicon.svg
+  # The three faces are self-hosted from assets/fonts, so the site renders identically on a network
+  # without Google Fonts and never sends a request to a third party.
+  font: false
   palette:
-    - media: '(prefers-color-scheme: light)'
+    # `media` makes the first visit follow the operating system instead of always starting light; the
+    # toggle keeps working and the choice is remembered per page path.
+    - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: custom
-      accent: custom
       toggle:
         icon: material/brightness-7
-        name: Switch to dark mode
-    - media: '(prefers-color-scheme: dark)'
+        name: 切换到深色
+    - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: custom
-      accent: custom
       toggle:
         icon: material/brightness-4
-        name: Switch to light mode
+        name: 切换到浅色
   features:
-    - navigation.instant
-    - navigation.tabs
-    - navigation.sections
+    - navigation.indexes
     - navigation.top
+    - navigation.tracking
+    - navigation.path
+    - navigation.footer
+    - header.autohide
+    # search.suggest keeps header suggestions. The 0.9 MB search index is fetched either way, and it
+    # is requested after `load`, so it costs bandwidth rather than first paint.
     - search.suggest
+    - search.highlight
+    - search.share
     - content.code.copy
+    - content.code.select
     - content.action.edit
     - toc.follow
 
 extra_css:
+  - stylesheets/fonts.css
   - stylesheets/extra.css
+  - stylesheets/landing.css
+extra_javascript:
+  - javascripts/search-catalog.js
+  - javascripts/search-enhance.js
+  - javascripts/site.js
 hooks:
   - docs/hooks.py
 watch:
-  - README.md
+  - tools/site/content
+  - server/pyproject.toml
   - server/README.md
+  - server/README.zh.md
   - CONTRIBUTING.md
+  - CONTRIBUTING.zh.md
   - CHANGELOG.md
+  - CHANGELOG.zh.md
   - SECURITY.md
+  - SECURITY.zh.md
 exclude_docs: |
   requirements.txt
-  requirements.in
   hooks.py
   __pycache__/
-  # The agent guidance is bilingual and lives in the repository, not on the site.
-  agents/
+  # The demo recording and the social card template live outside docs/ now, so nothing has to be
+  # excluded here. tools/site/check_site.py still fails the build if any unreferenced asset
+  # reaches the tree.
 
 validation:
   links:
@@ -67,199 +89,281 @@ markdown_extensions:
       permalink: true
   - pymdownx.highlight
   - pymdownx.superfences
+  - pymdownx.details
   - pymdownx.tabbed:
       alternate_style: true
-  - pymdownx.details
   - pymdownx.snippets:
       base_path: ['.']
       check_paths: true
 
 plugins:
   - search
-  - llmstxt:
-      full_output: llms-full.txt
-      sections:
-        Getting started:
-          - index.md
-          - install.md
-          - server.md
-          - contributing.md
-        Concepts:
-          - how-it-works.md
-          - transport.md
-          - batch.md
-          - security.md
-          - architecture.md
-          - updates.md
-          - admin/deployment.md
-          - admin/policy-reference.md
-          - admin/security-whitepaper.md
-          - admin/security-questionnaire.md
-          - design/model-audit.md
-        Reference:
-          - tools.md
-          - stability.md
-          - prompts.md
-          - actions.md
-          - validation.md
-          - feed-format.md
-          - mcp-specifications.md
-          - tested-clients.md
-          - not-doing.md
-          - roadmap.md
-          - changelog.md
-          - security-policy.md
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: false
+      reconfigure_material: true
+      languages:
+        - locale: zh
+          default: true
+          name: 简体中文
+          build: true
+        - locale: en
+          name: English
+          build: true
+          site_description: "Bring Autodesk Revit models to your AI assistant: inspect parameters and geometry, count elements, check models, export registers and edit elements. Read-only by default."
+          theme:
+            palette:
+              - media: "(prefers-color-scheme: light)"
+                scheme: default
+                primary: custom
+                toggle:
+                  icon: material/brightness-7
+                  name: Switch to dark
+              - media: "(prefers-color-scheme: dark)"
+                scheme: slate
+                primary: custom
+                toggle:
+                  icon: material/brightness-4
+                  name: Switch to light
+          nav_translations:
+            首页: Home
+            功能: Features
+            按 Revit 年份: By Revit year
+            读取功能: Read features
+            动作功能: Action features
+            连接与文档: Connection and documents
+            查询与统计: Query and totals
+            视图与截图: Views and snapshots
+            导出与检验: Export and checks
+            选中与显示: Selection and display
+            编辑: Editing
+            阶段: Phases
+            批量与 ID: Batch and IDs
+            新版基座: New platform
+            自研工具的移植状态: Fork tool migration status
+            连接与实例: Connection and instances
+            编辑原语: Editing primitives
+            文档生命周期: Document lifecycle
+            视图、图纸与明细表: Views, sheets and schedules
+            视图: Views
+            图纸: Sheets
+            明细表: Schedules
+            视口与显示: Viewports and display
+            族: Families
+            链接与基准: Links and datums
+            CAD 与 MEP: CAD and MEP
+            导出与登记: Export and registers
+            批处理与报告: Batch and reports
+            C# 逃生口: C# escape hatch
+            接入与使用: Setup and use
+            安装与配置: Installation and configuration
+            传输与接入: Transport and connection
+            工作原理: How it works
+            安全边界: Security boundaries
+            开发与参考: Development and reference
+            架构: Architecture
+            跨工具契约: Cross-tool contracts
+            读取契约: Read contracts
+            动作契约: Action contracts
+            文件通道格式: File channel format
+            工具开发: Tool development
+            新增 Revit 工具: Adding Revit tools
+            建模工具规格: Modeling tool specification
+            领域约定: Domain conventions
+            Issue 管理: Issue management
+            分诊标签: Triage labels
+            验证资料: Validation records
+            实测证据: Validation evidence
+            手工测试计划: Manual test plan
+            ID 重建性能记录: ID rebuild performance record
+            项目: Project
+            更新记录: Changelog
+            路线图: Roadmap
+            贡献指南: Contributing
+            隐私说明: Privacy
+            安全政策: Security policy
 
 nav:
-  - Home: index.md
-  - Guide:
-      - Requirements and install: install.md
-      - Server: server.md
-      - How it works: how-it-works.md
-      - Transport: transport.md
-      - Batch: batch.md
-      - Security: security.md
-      - Architecture: architecture.md
-      - Automatic updates: updates.md
+  - 首页: index.md
   # >>> features-nav
-  - Features:
-      - Feature overview: features/index.md
-      - Version support matrix: features/matrix.md
-      - Revit 2020 support: features/v2020.md
-      - Revit 2026 support: features/v2026.md
-      - Prompt library: features/prompts.md
-      - Read tools — Element registers:
-          - Export element ID register: features/revit_export_element_ids.md
-      - Read tools — Connection and core:
-          - List Revit Jobs: features/revit_jobs.md
-          - Check Revit Connection: features/revit_ping.md
-          - Document Info: features/revit_document_info.md
-          - Open Documents: features/revit_documents.md
-          - Revit UI State: features/revit_ui_state.md
-          - List Instances: features/revit_list_instances.md
-      - Read tools — Model queries:
-          - Model Snapshot: features/revit_model_snapshot.md
-          - Model Health Check: features/revit_model_health.md
-          - Links Status: features/revit_links_status.md
-          - Shared Coordinates: features/revit_shared_coordinates.md
-          - Parameter Fill Check: features/revit_parameter_fill_check.md
-          - List Catalog: features/revit_list_catalog.md
-          - Aggregate Elements: features/revit_aggregate_elements.md
-          - Query Elements: features/revit_query_elements.md
-          - Read Schedule Data: features/revit_schedule_data.md
-          - Element Details: features/revit_element_details.md
-          - List Warnings: features/revit_list_warnings.md
-          - List Relations: features/revit_list_relations.md
-      - Read tools — Views and sheets:
-          - List Views: features/revit_list_views.md
-          - View Info: features/revit_view_info.md
-          - View Summary: features/revit_view_summary.md
-          - Capture Elements: features/revit_capture_elements.md
-          - Export View to PNG: features/revit_export_view.md
-          - View Elements: features/revit_view_elements.md
-          - View Warnings: features/revit_view_warnings.md
-      - Read tools — Families:
-          - Audit Families: features/revit_family_audit.md
-      - Read tools — Links:
-          - Compare Link Datums: features/revit_compare_link_datums.md
-      - Read tools — Export:
-          - Check NWC Settings: features/revit_nwc_settings_check.md
-          - Issue Register: features/revit_issue_register.md
-      - Read tools — Batch processing:
-          - Start batch collection: features/revit_batch_start.md
-          - Batch collection status: features/revit_batch_status.md
-          - Cancel batch collection: features/revit_batch_cancel.md
-          - Fetch batch snapshots: features/revit_batch_fetch.md
-          - Build Snapshot Report: features/revit_build_report.md
-      - Action tools — Model editing:
-          - Create level: features/revit_create_level.md
-          - Create floor: features/revit_create_floor.md
-      - Action tools — Phases:
-          - Set element phases: features/revit_set_phase.md
-          - Merge project phases: features/revit_merge_phases.md
-      - Action tools — Id management:
-          - Replace IDs in place: features/revit_reset_element_ids.md
-          - Rebuild IDs in new models: features/revit_rebuild_model_ids.md
-      - Action tools — View settings:
-          - Set view lighting: features/revit_set_view_lighting.md
-      - Action tools — Connection and core:
-          - Undo Last Action: features/revit_undo_last.md
-          - Cancel Action Job: features/revit_cancel_job.md
-      - Action tools — Model actions:
-          - Move Elements: features/revit_move.md
-          - Rotate Elements: features/revit_rotate.md
-          - Copy Elements: features/revit_copy.md
-          - Mirror Elements: features/revit_mirror.md
-          - Change Element Type: features/revit_change_type.md
-          - Update Parameters: features/revit_update_parameters.md
-          - Set Parameter: features/revit_set_parameter.md
-          - Delete Elements: features/revit_delete.md
-          - Run Actions: features/revit_run_actions.md
-      - Action tools — Documents:
-          - Open Document: features/revit_open_document.md
-          - Activate Document: features/revit_activate_document.md
-          - New Document: features/revit_new_document.md
-          - Close Document: features/revit_close_document.md
-          - Save Document: features/revit_save_document.md
-          - Synchronize Document: features/revit_sync_document.md
-      - Action tools — Views and sheets:
-          - Activate View: features/revit_activate_view.md
-          - Close Views: features/revit_close_views.md
-          - Set View Visibility: features/revit_set_view_visibility.md
-          - Select Elements: features/revit_select.md
-          - Show Elements: features/revit_show.md
-          - Isolate Elements: features/revit_isolate.md
-          - Highlight Elements: features/revit_override_graphics.md
-          - Create View: features/revit_create_view.md
-          - Duplicate View: features/revit_duplicate_view.md
-          - Apply View Template: features/revit_apply_view_template.md
-          - Create Sheet: features/revit_create_sheet.md
-          - Place Views on Sheet: features/revit_place_views_on_sheet.md
-          - Tag Elements: features/revit_tag_elements.md
-          - Create Schedule: features/revit_create_schedule.md
-      - Action tools — Families:
-          - Place Family: features/revit_place_family.md
-          - Load Families: features/revit_load_family.md
-          - Place Families: features/revit_place_families.md
-          - Edit Families: features/revit_edit_families.md
-      - Action tools — Links:
-          - Remove Links: features/revit_remove_links.md
-          - Align Link Datums: features/revit_align_link_datums.md
-      - Action tools — CAD and MEP:
-          - Create Wall: features/revit_create_wall.md
-          - Create MEP Run: features/revit_create_mep_run.md
-          - Link CAD Drawing: features/revit_link_cad.md
-          - Build Walls from CAD: features/revit_walls_from_cad.md
-      - Action tools — Export:
-          - Export Model Files: features/revit_export.md
-          - Export Navisworks NWC: features/revit_export_nwc.md
-      - Action tools — Batch processing:
-          - Process Many Models: features/revit_process_models.md
-      - Action tools — Code execution:
-          - "Execute C# Code": features/revit_execute_code.md
+  - 功能:
+      - features/index.md
+      - 按 Revit 年份:
+          - Revit 2020: features/v2020.md
+          - Revit 2026: features/v2026.md
+          - features/matrix.md
+      - 读取功能:
+          - 连接与文档:
+              - features/revit_ping.md
+              - features/revit_document_info.md
+              - features/revit_list_instances.md
+          - 查询与统计:
+              - features/revit_list_catalog.md
+              - features/revit_aggregate_elements.md
+              - features/revit_query_elements.md
+              - features/revit_element_details.md
+              - features/revit_list_relations.md
+          - 视图与截图:
+              - features/revit_list_views.md
+              - features/revit_view_summary.md
+              - features/revit_export_view.md
+              - features/revit_view_elements.md
+              - features/revit_view_warnings.md
+          - 导出与检验:
+              - features/revit_model_health.md
+              - features/revit_links_status.md
+              - features/revit_shared_coordinates.md
+              - features/revit_parameter_fill_check.md
+              - features/revit_export_element_ids.md
+              - features/revit_list_warnings.md
+      - 动作功能:
+          - 视图与截图:
+              - features/revit_set_view_lighting.md
+          - 选中与显示:
+              - features/revit_select.md
+              - features/revit_show.md
+              - features/revit_isolate.md
+          - 编辑:
+              - features/revit_move.md
+              - features/revit_place_family.md
+              - features/revit_create_wall.md
+              - features/revit_create_floor.md
+              - features/revit_create_level.md
+              - features/revit_set_parameter.md
+              - features/revit_delete.md
+          - 阶段:
+              - features/revit_set_phase.md
+              - features/revit_merge_phases.md
+          - 批量与 ID:
+              - features/revit_reset_element_ids.md
+              - features/revit_rebuild_model_ids.md
+              - features/revit_batch.md
+      - features/prompts.md
   # <<< features-nav
-  - Administrators:
-      - Deployment: admin/deployment.md
-      - Policy reference: admin/policy-reference.md
-      - Security whitepaper: admin/security-whitepaper.md
-      - Security questionnaire: admin/security-questionnaire.md
-  - Design:
-      - Model audit: design/model-audit.md
-  - Reference:
-      - Tools: tools.md
-      - Stability: stability.md
-      - Tool manifest: tool-manifest.md
-      - Prompts and coordinator guide: prompts.md
-      - Actions: actions.md
-      - Validation: validation.md
-      - Feed format: feed-format.md
-      - MCP specifications: mcp-specifications.md
-      - Tested clients: tested-clients.md
-      - What it does not do: not-doing.md
-      - Roadmap: roadmap.md
-  - Project:
-      - Privacy: privacy.md
-      - Code signing: code-signing.md
-      - Contributing: contributing.md
-      - Changelog: changelog.md
-      - Security policy: security-policy.md
+  # >>> platform-nav
+  - 新版基座:
+      - platform/index.md
+      - 自研工具的移植状态: platform/fork-tools.md
+      - 连接与实例:
+          - platform/revit_cancel_job.md
+          - platform/revit_document_info.md
+          - platform/revit_documents.md
+          - platform/revit_jobs.md
+          - platform/revit_list_instances.md
+          - platform/revit_ping.md
+          - platform/revit_ui_state.md
+          - platform/revit_undo_last.md
+      - 查询与统计:
+          - platform/revit_aggregate_elements.md
+          - platform/revit_element_details.md
+          - platform/revit_links_status.md
+          - platform/revit_list_catalog.md
+          - platform/revit_list_relations.md
+          - platform/revit_list_warnings.md
+          - platform/revit_model_health.md
+          - platform/revit_model_snapshot.md
+          - platform/revit_parameter_fill_check.md
+          - platform/revit_query_elements.md
+          - platform/revit_schedule_data.md
+          - platform/revit_shared_coordinates.md
+      - 编辑原语:
+          - platform/revit_change_type.md
+          - platform/revit_copy.md
+          - platform/revit_delete.md
+          - platform/revit_mirror.md
+          - platform/revit_move.md
+          - platform/revit_rotate.md
+          - platform/revit_run_actions.md
+          - platform/revit_set_parameter.md
+          - platform/revit_update_parameters.md
+      - 文档生命周期:
+          - platform/revit_activate_document.md
+          - platform/revit_close_document.md
+          - platform/revit_new_document.md
+          - platform/revit_open_document.md
+          - platform/revit_save_document.md
+          - platform/revit_sync_document.md
+      - 视图、图纸与明细表:
+          - 视图:
+              - platform/revit_activate_view.md
+              - platform/revit_apply_view_template.md
+              - platform/revit_close_views.md
+              - platform/revit_create_view.md
+              - platform/revit_duplicate_view.md
+              - platform/revit_export_view.md
+              - platform/revit_list_views.md
+              - platform/revit_set_view_lighting.md
+              - platform/revit_set_view_visibility.md
+              - platform/revit_view_elements.md
+              - platform/revit_view_info.md
+              - platform/revit_view_summary.md
+              - platform/revit_view_warnings.md
+          - 图纸:
+              - platform/revit_create_sheet.md
+              - platform/revit_place_views_on_sheet.md
+          - 明细表:
+              - platform/revit_create_schedule.md
+          - 视口与显示:
+              - platform/revit_capture_elements.md
+              - platform/revit_isolate.md
+              - platform/revit_override_graphics.md
+              - platform/revit_select.md
+              - platform/revit_show.md
+              - platform/revit_tag_elements.md
+      - 族:
+          - platform/revit_edit_families.md
+          - platform/revit_family_audit.md
+          - platform/revit_load_family.md
+          - platform/revit_place_families.md
+          - platform/revit_place_family.md
+      - 链接与基准:
+          - platform/revit_align_link_datums.md
+          - platform/revit_compare_link_datums.md
+          - platform/revit_remove_links.md
+      - CAD 与 MEP:
+          - platform/revit_create_mep_run.md
+          - platform/revit_create_wall.md
+          - platform/revit_link_cad.md
+          - platform/revit_walls_from_cad.md
+      - 导出与登记:
+          - platform/revit_export.md
+          - platform/revit_export_nwc.md
+          - platform/revit_issue_register.md
+          - platform/revit_nwc_settings_check.md
+      - 批处理与报告:
+          - platform/revit_batch_cancel.md
+          - platform/revit_batch_fetch.md
+          - platform/revit_batch_start.md
+          - platform/revit_batch_status.md
+          - platform/revit_build_report.md
+          - platform/revit_process_models.md
+      - C# 逃生口:
+          - platform/revit_execute_code.md
+  # <<< platform-nav
+  - 接入与使用:
+      - 安装与配置: server.md
+      - 传输与接入: transport.md
+      - 工作原理: how-it-works.md
+      - 安全边界: security.md
+  - 开发与参考:
+      - 架构: architecture.md
+      - 跨工具契约:
+          - 读取契约: tools.md
+          - 动作契约: actions.md
+          - 文件通道格式: feed-format.md
+      - 工具开发:
+          - 新增 Revit 工具: agents/adding-revit-tools.md
+          - 建模工具规格: modeling-tools.md
+          - 领域约定: agents/domain.md
+          - Issue 管理: agents/issue-tracker.md
+          - 分诊标签: agents/triage-labels.md
+      - 验证资料:
+          - 实测证据: validation.md
+          - 手工测试计划: manual-test-plan.md
+          - ID 重建性能记录: rebuild-performance.md
+  - 项目:
+      - 更新记录: changelog.md
+      - 路线图: roadmap.md
+      - 贡献指南: contributing.md
+      - 隐私说明: privacy.md
+      - 安全政策: security-policy.md

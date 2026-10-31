@@ -1,34 +1,66 @@
-# Check Revit Connection
+---
+description: "检查连接与插件版本"
+---
 
-Check the connection to Revit without reading the model.
+# 检查连接
 
-**Group:** Connection and core · **Kind:** Read (read-only)
+`revit_ping`
 
-## Parameters
+<p class="facts"><span><b>分组</b> 连接与文档</span><span><b>类型</b> 读取（只读）</span><span><b>起始版本</b> 0.1.0</span><span><b>版本</b> 已发布 0.9.0</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span></p>
 
-| Name | Required | Default | Type | Meaning |
-| --- | --- | --- | --- | --- |
-| `process_id` | No | null | `integer / null` | Revit process ID; takes precedence over document. |
+检查连接与插件版本
 
-### Common parameters
+[同名集成分支页面](../platform/revit_ping.md)
 
-| Name | Meaning |
+## 可复制提示词 {#prompts}
+
+```text
+看看 Revit 插件在不在线
+```
+
+## 参数 {#parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `process_id` | 否 | `null` | `integer / null` | 多个运行实例中选定的目标 Revit 进程 |
+
+</div>
+
+### 通用参数 {#common-parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+| `timeout_seconds` | 否 | `120` | `integer` | 拾取任务后的结果等待预算（正整数秒，默认 120）；HTTP 使用它作为响应预算，不能覆盖插件内部执行上限。超时不代表待处理动作已取消 |
+
+</div>
+
+## 功能说明与返回结果 {#contract}
+
+!!! note "使用提示"
+    以下保留当前工具声明的完整译文。文件通道实现仍有例外：它可能返回 `success:false`、`partial:true` 的终态部分数据，而不抛出声明中的错误。完整结果必须满足 `success:true` 且 `partial:false`（或没有该字段）；等待超时不取消任务。详见[读取响应契约](../tools.md)。
+
+检查 RevitModelMcp 连接，不读取模型。
+
+返回 `data="pong"` 的响应，即使没有活动文档也会返回。
+连接失败或超时会报错；不返回部分结果。
+
+如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+
+## Revit 年份支持 {#year-support}
+
+| Revit 年份 | 验证状态 |
 | --- | --- |
-| `document` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected. |
-| `timeout_seconds` | Positive result-wait budget in seconds after pickup (default 120); HTTP uses it as the response budget. Does not override add-in execution limits; a timeout does not cancel a pending job. |
+| 2020 | <span class="state ok">已实测</span> |
+| 2026 | <span class="state ok">已实测</span> |
+| 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
 
-## Behavior and returned data
+已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
 
-Check the connection to Revit without reading the model. Returns data="pong", even when no document is active. A non-empty skipped list means the result is incomplete; skippedCount counts all skipped entries.
+---
 
-## Revit year support
-
-| Revit year | State |
-| --- | --- |
-| 2020 | Not supported yet |
-| 2022–2025, 2027 | Built |
-| 2026 | Built |
-
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
-
-[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)
+[全部功能](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)

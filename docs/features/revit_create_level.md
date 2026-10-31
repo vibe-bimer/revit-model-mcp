@@ -1,66 +1,68 @@
-# Create level
+---
+description: "在指定高程新建标高（mm）"
+---
 
-Create a level at a given elevation in millimetres.
+# 创建标高
 
-**Group:** Model editing · **Kind:** Action (opt-in) · **Since:** this fork's 1.0.0
+`revit_create_level`
 
-This fork adds this tool; the rest of the catalogue comes from upstream 1.0.
+<p class="facts"><span><b>分组</b> 编辑</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 0.10.0</span><span><b>版本</b> 未发布（1.0.0）</span><span><b>集成分支有同名工具</b> 没有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 模型构件 / 参数</span><span><b>来源</b> 自研（本仓库）</span></p>
 
-!!! warning "Runs only on a read-write workstation"
+在指定高程新建标高（mm）
 
-    An action runs only while the workstation is not read-only: the machine policy
-    gate refuses action calls over every transport. The gate is the policy's
-    `ReadOnly` value, held in the registry under
-    `HKLM\Software\Policies\RevitModelMcp` or in
-    `%ProgramData%\RevitModelMcp\policy.json`. The multi-user installer sets `ReadOnly`
-    to `1` by default and writes the default `policy.json`, so a fresh machine install
-    refuses actions until an administrator allows writes; a per-user install writes no
-    policy (adr/0008). When both stores exist, the
-    registry value wins for every value it sets, and a policy that cannot be read
-    fails closed to read-only. The call names its target document, and with more
-    than one open document it is refused. `dry_run` returns the same verification
-    block without changing the model.
+!!! warning "动作工具需要双门禁"
+    客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
-!!! note "Usage notes"
+!!! note "使用提示"
+    同名标高会被拒绝，避免后续工具解析到有歧义的标高
 
-    An existing level with the same name is refused, so a later tool never resolves an ambiguous level.
-
-## Copyable prompts
+## 可复制提示词 {#prompts}
 
 ```text
-Create a level named 4F at 15000 mm
+在 15000mm 处建一个叫 4F 的标高
 ```
 
-## Parameters
+## 参数 {#parameters}
 
-| Name | Required | Default | Type | Meaning |
-| --- | --- | --- | --- | --- |
-| `elevation_mm` | Yes | — | `number` | elevation in millimetres |
-| `name` | Yes | — | `string` | level name |
-| `create_view` | No | false | `boolean` | also create the matching floor plan view |
-| `dry_run` | No | false | `boolean` | rehearse: execute, return the same verification block, then roll back |
+<div class="rmc-tablewrap" markdown="1">
 
-### Common parameters
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `elevation_mm` | 是 | — | `number` | 高程（mm） |
+| `name` | 是 | — | `string` | 标高名称 |
+| `create_view` | 否 | `false` | `boolean` | 同时创建对应的楼层平面视图 |
+| `dry_run` | 否 | `false` | `boolean` | 彩排：执行后回滚，返回同样的校验块，不写模型 |
 
-| Name | Meaning |
+</div>
+
+### 通用参数 {#common-parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `document` | 否 | `null` | `string / null` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+
+</div>
+
+## 功能说明与返回结果 {#contract}
+
+在指定高程新建标高，用于布局。
+`name` 是标高名称；已存在同名标高时会被拒绝，这样后续工具永远不会解析到有歧义的标高。`elevation_mm` 是相对项目基点的毫米高程。
+`create_view` 为真时同时创建对应的楼层平面视图；视图类型按视图族选择，不按名称。
+`dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+## Revit 年份支持 {#year-support}
+
+| Revit 年份 | 验证状态 |
 | --- | --- |
-| `document` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected. |
+| 2020 | <span class="state ok">已实测</span> |
+| 2026 | <span class="state ok">已实测</span> |
+| 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
 
-## Behavior and returned data
+已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
 
-Create a level at an elevation, optionally with its floor plan.
+---
 
-A level whose name already exists is refused. dry_run returns the same verification block
-without changing the model.
-
-## Revit year support
-
-| Revit year | State |
-| --- | --- |
-| 2020 | Not supported yet |
-| 2022–2025, 2027 | Built |
-| 2026 | Built |
-
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
-
-[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)
+[全部功能](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)

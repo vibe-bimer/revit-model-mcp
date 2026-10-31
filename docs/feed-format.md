@@ -1,110 +1,80 @@
-# Feed format
+<a id="feed-format"></a>
 
-This page is the normative description of the channel between the server and the add-in: the JSON job and response format, the file channel and the version numbers of each contract.
-All JSON is UTF-8 with case-sensitive field names.
-The default channel directory is `%LOCALAPPDATA%\RevitModelMcp`.
+# 数据格式
 
-## Versions
+当前通道协议使用 UTF-8 JSON，字段名区分大小写。
+协议没有 `schemaVersion` 字段；程序包版本标识本文档描述的契约。
+独立插件的默认通道为 `%LOCALAPPDATA%\RevitModelMcp`。
 
-Each contract has its own version number. A number changes only for an incompatible change; a new optional field never changes it.
+<a id="files-and-directories"></a>
 
-| Version | Current value | Carried by | Meaning |
-|---|---|---|---|
-| `addinVersion` | the add-in's informational version | heartbeat, `pipe/1` hello reply, HTTP `/health` | The release of the add-in. The server accepts an add-in of the same major version only |
-| `protocolVersion` | `1` (integer) | heartbeat, `pipe/1` hello reply, HTTP `/health` | The job and response contract described on this page |
-| `fileChannelVersion` | `2` | heartbeat | The layout and publication rules of the channel directory, described in [File channel](transport.md#file-channel) |
-| `discoveryVersion` | `3` | heartbeat | The set of heartbeat fields. Readers ignore unknown fields |
-| `protocols` | `pipe/1`, `file/2`, `http/1` | heartbeat | The transports the instance offers |
-| `schemaVersion` | `1` | batch collection snapshot files | The layout of [model snapshots](batch.md) |
+## 文件与目录
 
-The server refuses an instance that does not meet all of these rules, before it publishes a job:
-
-- The add-in reports an `addinVersion` with the same major version as the server. An add-in of another major version, or one that reports no version, is refused with an error that names the major version it needs.
-- A file channel heartbeat reports `fileChannelVersion` `2`. A heartbeat without that field, or with another value, is refused.
-- The heartbeat `commands` list contains the command of the requested tool.
-
-There is no fallback layout for older add-ins. Update the server and the add-in together.
-Clients must ignore unknown response fields and unknown enum values.
-Channel commands that no MCP tool exposes are not part of the contract.
-
-## Files and directories
-
-| Location | Contents |
+| 位置 | 内容 |
 |---|---|
-| Channel directory | `job_<jobId>.json`, `mcp_<uuid>.tmp`, `response_<timestamp>_<command>.json`, `view_<timestamp>_<id>.png`, `instance_<processId>.json` and heartbeat `.tmp` files |
-| `%LOCALAPPDATA%\RevitModelMcp\settings.json` | HTTP listener settings and persistent bearer token |
-| `%LOCALAPPDATA%\RevitModelMcp\read-only` | Workstation action gate; file existence switches actions to read-only mode |
-| Windows Documents folder, `RevitModelMcp\Logs` | `RevitModelMcp-yyyyMMdd.log`, with numbered size rotations |
-| `%TEMP%\RevitModelMcp\Logs` | Log fallback when Documents is unavailable |
+| 通道目录 | `trigger.txt`、`mcp_<uuid>.tmp`、`response_<timestamp>_<command>_<correlationId>.json`、`view_<timestamp>_<id>.png`、`instance_<processId>.json` 和心跳 `.tmp` 文件 |
+| 通道目录，旧版快照 | `latest.json`、`latest.txt`、`snapshot_yyyyMMdd_HHmmss.json` |
+| 通道目录，旧版视图转储 | `views_dump_yyyyMMdd_HHmmss_fff.json` 及同名 `.txt`；数字后缀用于避免已有名称冲突 |
+| `%LOCALAPPDATA%\RevitModelMcp\settings.json` | HTTP 监听器设置和持久化 Bearer 令牌 |
+| `%LOCALAPPDATA%\RevitModelMcp\allow-write` | 工作站动作门禁；文件存在即启用动作 |
+| Windows“文档”文件夹下的 `RevitModelMcp\Logs` | `RevitModelMcp-yyyyMMdd.log`，以及按大小轮转产生的编号日志 |
+| `%TEMP%\RevitModelMcp\Logs` | “文档”文件夹不可用时的日志备用位置 |
 
-`REVIT_MCP_CHANNEL_DIR` overrides the channel directory in both the server and Revit environments.
-It does not relocate HTTP settings, the action gate or logs.
-Response timestamps use local time with millisecond precision and optional collision suffixes.
-HTTP stores completed response JSON in memory; exported PNGs still use the channel directory.
+`REVIT_MCP_CHANNEL_DIR` 在服务器和 Revit 环境中覆盖通道目录。
+它不会移动 HTTP 设置、动作门禁或日志。
+响应时间戳使用本地时间，精确到毫秒，并可带有避免名称冲突的后缀。
+HTTP 将已完成的响应 JSON 存储在内存中；导出的 PNG 仍使用通道目录。
 
-## Jobs
+<a id="jobs"></a>
 
-MCP tools translate snake_case arguments into channel JSON fields.
-The request `{"command":"ping"}` checks connectivity without an active model.
-Read jobs may contain `targetDocument`; actions add `targetProcessId` from instance discovery.
-Every server job contains a GUID `jobId`, a per-process GUID `clientId`, and `clientName` from MCP initialize (or `unknown`).
-The response envelope adds `client:{name,id}`, `jobId`, and `queuedMs`.
-Every read response also has top-level `skipped` and `skippedCount`. Each entry has `what` and `reason`. `skipped:[]` and `skippedCount:0` mean no fields were omitted. A non-empty list means the answer is incomplete. The list keeps the first 100 failures and `skippedCount` continues to count all failures. No overflow entry is added. Actions do not have these fields.
-When `REVIT_MCP_REDACT_PATHS=1`, path text in `reason` is reduced to file names.
-`family-audit` contains `families` only in project mode. `edit-families` contains `operations` and may contain `families`; the addressed Revit document determines the mode.
-`targetDocument` matches a case-insensitive substring of the active document title or path basename in the add-in.
-An HTTP endpoint also rejects jobs addressed to another process.
+## 任务
 
-| MCP arguments | JSON fields |
+MCP 工具将 snake_case 参数转换为通道 JSON 字段。
+请求 `{"command":"ping"}` 无需活动模型即可检查连接。
+读取任务可以包含 `targetDocument`；动作会添加实例发现得到的 `targetProcessId`。
+插件用 `targetDocument` 对活动文档标题或路径的文件名进行不区分大小写的子串匹配。
+HTTP 端点还会拒绝发往其他进程的任务。
+
+| MCP 参数 | JSON 字段 |
 |---|---|
 | `document` | `targetDocument` |
-| `element_id` | `id` for `element-details`; `elementId` for `set-parameter` |
-| `parameter_id` | `parameterId` for `set-parameter` |
+| `element_id` | `element-details` 使用 `id`；`set-parameter` 使用 `elementId` |
 | `element_ids` | `elementIds` |
-| `dry_run` | `dryRun` (optional boolean, defaults to false) |
-| `view_type`, `name_contains` | `viewType`, `nameContains` |
-| `pixel_size` | `pixelSize`; the server also sets `zoomToFit:true` |
-| `group_by`, `sum_field` | `groupBy`, `numericField` |
-| `type_name`, `area_scheme`, `parameter_filters` | `type`, `areaScheme`, `parameterFilters` for query filters; placement uses `typeName` |
-| `sort_field`, `sort_direction` | `sort:{field,direction}` |
-| `include_geometry`, `include_elements`, `warning_text` | `includeGeometry`, `includeElements`, `warningText` |
-| `source_id`, `source_name` | `sourceId`, `sourceName` |
-| `dx_mm`, `dy_mm`, `dz_mm`, `x_mm`, `y_mm` | `dxMm`, `dyMm`, `dzMm`, `xMm`, `yMm` |
-| `start_mm`, `end_mm`, `wall_type`, `height_mm`, `rotation_deg` | `startMm`, `endMm`, `wallType`, `heightMm`, `rotationDeg` |
-| `name_map`, `level_offset_mm`, `reuse_matching`, `tolerance_mm` | `nameMap`, `levelOffsetMm`, `reuseMatching`, `toleranceMm` |
-| `create_missing`, `level_type`, `grid_type`, `include_pinned`, `create_plan_views`, `plan_view_type` | `createMissing`, `levelType`, `gridType`, `includePinned`, `createPlanViews`, `planViewType` |
-| `hide_categories`, `show_categories`, `category_classes`, `hide_categories_by_type` | `hideCategories`, `showCategories`, `categoryClasses`, `hideCategoriesByType` |
-| `worksets`, `filters`, `template_mode` | `worksets:{hideMask,showMask}`, `filters`, `templateMode` |
-| `links`, `kinds`, `include_imported_cad` | `links` (always a list), `kinds`, `includeImportedCad` |
+| `dry_run` | `dryRun`（可选布尔值，默认为 false） |
+| `view_type`、`name_contains` | `viewType`、`nameContains` |
+| `pixel_size` | `pixelSize`；服务器还设置 `zoomToFit:true` |
+| `group_by`、`sum_field` | `groupBy`、`numericField` |
+| `type_name`、`area_scheme`、`parameter_filters` | 查询筛选条件使用 `type`、`areaScheme`、`parameterFilters`；放置操作使用 `typeName` |
+| `sort_field`、`sort_direction` | `sort:{field,direction}` |
+| `include_geometry`、`include_elements`、`warning_text` | `includeGeometry`、`includeElements`、`warningText` |
+| `source_id`、`source_name` | `sourceId`、`sourceName` |
+| `dx_mm`、`dy_mm`、`dz_mm`、`x_mm`、`y_mm` | `dxMm`、`dyMm`、`dzMm`、`xMm`、`yMm` |
+| `start_mm`、`end_mm`、`wall_type`、`height_mm`、`rotation_deg` | `startMm`、`endMm`、`wallType`、`heightMm`、`rotationDeg` |
 
-The new command names are `view-info`, `set-view-visibility` and `remove-links`. The last two are action commands and are refused in read-only mode. View visibility action responses include `data.visibility` with `changes` (`setting`, `before`, `after`), `categoryFailures`, `matchedWorksets` and `affectedViews`. Link removal responses include `data.linkRemoval.removed` records with type ID, name, kind and instance count, plus an optional warning.
+视图导出的 `save_to` 和超时是客户端选项，不是任务字段。Excel ID 清单的 `save_to` 会转换为任务中的 `saveTo`，因为工作簿写在 Revit 工作站上。文件传输会添加唯一的 `correlationId`；上述示例仅展示命令相关字段。
+`parameterFilters` 的条目包含 `parameter`、`operator` 和可选的 `value`。
+数值筛选值中，长度使用 mm、面积使用 m2、体积使用 m3。
+其他可测量筛选值使用文档的显示单位；不可测量的双精度数值使用内部值。
+返回的查询字段包含 `value`，以及可选的 `numericValue`、`unit`、`hasValue` 和 `source`。
+聚合使用这些数值；解释求和结果前应检查返回单位。
+参数默认值和单位见[工具表](../README.md#tools)。
+[任务构造器](../server/revit_model_mcp/universal_jobs.py)和[解析器](../src/RevitModelMcp.Core/Control/ControlJobParser.cs)定义了请求契约。
 
-`compare-link-datums` is a read job; `align-link-datums` is an action job. Their `data.items` use `aligned`, `differs` or `moved`, `missing_in_host` or `created`, `host_only`, `unsupported`, and action-only `skipped`. Distances are rounded to 0.1 mm and angles to 0.001 degrees. `data.summary` counts aligned, moved, created, host-only, unsupported and skipped items.
+<a id="coordinator-checks"></a>
 
-`output_path` and timeouts are client options, not job fields.
-`parameterFilters` entries contain `parameter`, `operator` and an optional `value`.
-A parameter filter matches the Revit parameter of that name, even when the name matches a built-in output field such as `Level` or `Name`.
-Output `fields` with those names return the built-in field value.
-Numeric filter values use mm for lengths, m2 for areas and m3 for volumes.
-Other measurable filter values use the document's display units; unmeasurable doubles use internal values.
-Returned query fields include `value`, optional `numericValue`, `unit`, `hasValue` and `source`.
-Aggregation uses these numeric values; inspect the returned unit before interpreting a sum.
-See the [tool reference](tools.md) for argument defaults and units.
-The [job builders](../server/revit_model_mcp/universal_jobs.py) and [parser](../src/RevitModelMcp.Core/Control/ControlJobParser.cs) define the request contract.
+### 协调检查
 
-### Coordinator checks
+这些任务使用读取响应封装，不需要动作门禁。
+它们都接受可选的 `targetDocument`；超时选项留在 Python 客户端。
+以下示例单独展示 `data`，不包含外层响应封装。
 
-These jobs use the read response envelope and require no action gate.
-All accept optional `targetDocument`; timeout options stay on the Python client.
-The following examples show `data` independently of that envelope.
-
-`model-health` job:
+`model-health` 任务：
 
 ```json
 {"command":"model-health"}
 ```
 
-Response data shape:
+响应数据结构：
 
 ```json
 {
@@ -117,26 +87,27 @@ Response data shape:
     "groupsModel":0,"groupsDetail":0,"groupTypes":0,"designOptions":0,"worksets":0,
     "linksRvt":0,"linksCad":0,"cadImports":0,"images":0},
   "topWarnings":[{"text":"Warning description","count":1}],
-  "units":{"length":"unit type id","area":"unit type id","volume":"unit type id"}
+  "units":{"length":"unit type id","area":"unit type id","volume":"unit type id"},
+  "skipped":[]
 }
 ```
 
-`elements` counts all non-type elements, including views and sheets.
-`familyTypesUnused` counts element types unreferenced by any non-type element's type ID.
-`linksRvt` counts RVT types; `linksCad` counts CAD types with external file references; `cadImports` and `images` count instances.
-`viewsNotOnSheets` excludes templates and includes plan, section, elevation, 3D, drafting and legend views absent from sheets.
-Unplaced rooms have nonpositive area and no location; not-enclosed rooms have nonpositive area and a location.
-`topWarnings` contains at most ten groups sorted by descending count.
-A failed metric is null and adds `{"what":"model health counts.rooms","reason":"description"}` to the top-level `skipped` list.
-`fileSizeBytes` is null without a saved path; an inaccessible file also records a skipped metric.
+`elements` 统计全部非类型构件，包括视图和图纸。
+`familyTypesUnused` 统计未被任何非类型构件的类型 ID 引用的构件类型。
+`linksRvt` 统计 RVT 类型；`linksCad` 统计具有外部文件引用的 CAD 类型；`cadImports` 和 `images` 统计实例。
+`viewsNotOnSheets` 排除模板，统计未放置在图纸上的平面、剖面、立面、三维、绘图和图例视图。
+未放置房间的面积不大于零且没有位置；未封闭房间的面积不大于零但有位置。
+`topWarnings` 最多包含十组，按计数降序排列。
+读取失败的指标为 null，并在 `skipped` 中添加 `{"metric":"counts.rooms","error":"description"}`。
+没有已保存路径时，`fileSizeBytes` 为 null；文件无法访问时还会记录一个跳过的指标。
 
-`links-status` job:
+`links-status` 任务：
 
 ```json
 {"command":"links-status"}
 ```
 
-Response data shape:
+响应数据结构：
 
 ```json
 {
@@ -148,20 +119,20 @@ Response data shape:
 }
 ```
 
-Each list contains at most 100 types, ordered by type ID; summary counts cover all types, while `cadImports` counts imported instances.
-RVT/CAD status is `Loaded`, `Unloaded`, `NotFound`, `LocallyUnloaded`, `InClosedWorkset` or `Other`.
-Images preserve Revit's `ImageTypeStatus`: `Loaded`, `Unloaded`, `FailedToLoad`, `Imported`, `Generated` or `Unknown`.
-Per-type read failures return `status:"Other"` and `error`; each failure also appears in the top-level `skipped` list. Unavailable paths are omitted.
-RVT `pathType` is `Absolute`, `Relative`, `Cloud`, `Server` or `Unknown`.
-The add-in supplies paths; the Python server reduces nested `path` fields to file names when `REVIT_MCP_REDACT_PATHS=1`.
+每个列表最多包含 100 个类型，按类型 ID 排序；汇总计数覆盖所有类型，而 `cadImports` 统计导入实例。
+RVT/CAD 状态为 `Loaded`、`Unloaded`、`NotFound`、`LocallyUnloaded`、`InClosedWorkset` 或 `Other`。
+图像保留 Revit 的 `ImageTypeStatus`：`Loaded`、`Unloaded`、`FailedToLoad`、`Imported`、`Generated` 或 `Unknown`。
+单个类型读取失败时返回 `status:"Other"` 和 `error`；不可用的路径被省略。
+RVT 的 `pathType` 为 `Absolute`、`Relative`、`Cloud`、`Server` 或 `Unknown`。
+插件提供路径；启用 `REVIT_MCP_REDACT_PATHS=1` 时，Python 服务器将嵌套 `path` 字段缩减为文件名。
 
-`shared-coordinates` job:
+`shared-coordinates` 任务：
 
 ```json
 {"command":"shared-coordinates"}
 ```
 
-Response data shape:
+响应数据结构：
 
 ```json
 {
@@ -175,23 +146,23 @@ Response data shape:
 }
 ```
 
-Coordinates use mm and angles use degrees, rounded to one decimal place.
-True north is the active location's project position angle at the internal origin.
-`clipped` reports the project base point API value, or null when unavailable.
-Link data describes the total transform; `hasOffset` compares that transform with identity before rounding, and `sharedSiteName` is null.
-Locations and link instances are capped at 100; total fields report uncapped counts.
+坐标使用 mm，角度使用度，均四舍五入到一位小数。
+真北角是活动项目位置在内部原点处的项目位置角度。
+`clipped` 报告项目基点的 API 值；不可用时为 null。
+链接数据描述总变换；`hasOffset` 在四舍五入前将该变换与单位变换比较，`sharedSiteName` 为 null。
+项目位置和链接实例最多列出 100 项；总数字段报告未截断的数量。
 
-`parameter-fill-check` job:
+`parameter-fill-check` 任务：
 
 ```json
 {"command":"parameter-fill-check","categories":["Walls","Doors"],"parameters":["Mark","Comments"],"level":"Level 1","workset":"Shell","view":"Plan","sampleLimit":20,"includeTypes":true}
 ```
 
-`categories` requires 1–20 names and `parameters` requires 1–30 names.
-Optional `level`, `workset` and `view` use the universal query filter semantics, including localized category resolution and unknown-name errors.
-`sampleLimit` defaults to 20 and rejects values outside 1–100; `includeTypes` defaults to true.
-Python arguments `sample_limit` and `include_types` map to `sampleLimit` and `includeTypes`.
-Response data shape:
+`categories` 要求 1–20 个名称，`parameters` 要求 1–30 个名称。
+可选的 `level`、`workset` 和 `view` 使用通用查询筛选语义，包括本地化类别解析和未知名称错误。
+`sampleLimit` 默认为 20，拒绝 1–100 之外的值；`includeTypes` 默认为 true。
+Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `includeTypes`。
+响应数据结构：
 
 ```json
 {
@@ -203,14 +174,16 @@ Response data shape:
 }
 ```
 
-Scope counts cover all matching non-type elements without pagination.
-Each parameter's `filled + empty + missing` equals `elements`; storage and owner counts include existing parameters only.
-Type fallback occurs only when the instance has no parameter with that name.
-A filled parameter has `HasValue`; strings also require non-whitespace text and element IDs must differ from `InvalidElementId`.
-Double and integer zero values count as filled when `HasValue` is true.
-Each sample list is capped independently at `sampleLimit`; `byCategory` contains only categories with matching elements.
+范围计数覆盖所有匹配的非类型构件，不分页。
+每个参数的 `filled + empty + missing` 等于 `elements`；存储类型和归属计数仅包含已存在的参数。
+只有实例上没有同名参数时，才回退到类型参数。
+已填写参数需要满足 `HasValue`；字符串还要求包含非空白文本，构件 ID 必须不同于 `InvalidElementId`。
+当 `HasValue` 为 true 时，双精度和整数的零值也计为已填写。
+每个采样列表独立限制在 `sampleLimit` 范围内；`byCategory` 仅包含存在匹配构件的类别。
 
-## Command responses
+<a id="command-responses"></a>
+
+## 命令响应
 
 ```json
 {
@@ -228,57 +201,62 @@ Each sample list is capped independently at `sampleLimit`; `byCategory` contains
 }
 ```
 
-`data` depends on the command and is omitted when null.
-`message` carries optional diagnostic text.
-Read failures use `success:false` and `message`; the Python server converts them to MCP tool errors.
-Partial reads use `success:false`, `partial:true` and any available `data`; the server also treats them as errors.
-Action failures retain the response object and add `error` and `errorCode`; see [Errors and refusals](tools.md#errors-and-refusals).
-`revit_list_instances` returns an object with `instances`, `skipped:[]` and `skippedCount:0` outside this response envelope.
+`data` 取决于命令，为 null 时省略。
+`message` 携带可选的诊断文本。
+读取失败使用 `success:false` 和 `message`；Python 服务器将其转换为 MCP 工具错误。
+部分读取使用 `success:false`、`partial:true` 和任何可用的 `data`。当前文件通道实现会在 `data` 为字典/列表且 `elapsedMs` 为正数时返回终态部分响应，虽然公开读取工具说明承诺此时抛出错误。只有 `success:true` 且 `partial:false`（或没有 `partial` 字段）时，才能将其作为完整统计结果。客户端等待响应超时仍会抛出错误，但不会取消任务。
+动作失败保留响应对象，并添加 `error`。
+`revit_list_instances` 直接返回实例对象列表，不使用该响应封装。
 
-| Action response field | Contract |
+| 动作响应字段 | 契约 |
 |---|---|
-| `activeView` | Active view name at response time, or an empty string without a document; supplied by the action executor |
-| `viewOpened` | Present for `show`; whether its explicit view-opening step opened a previously closed view |
-| `dialogsSuppressed` | Messages from successful TaskDialog overrides; an empty list is emitted for actions without overrides |
-| `warningsDismissed` | Warning descriptions from a successful transaction; omitted when empty and on failed actions |
-| `failedStep` | Present and null on single actions |
-| `data.closestFamilies` | Similar loaded family names with categories when a family is missing in the single-action tool; batches return only `steps[].error` text |
-| `data.parameterScope` | `instance` or `type` after `set-parameter`; type edits affect every instance using that type |
+| `activeView` | 响应时的活动视图名称；没有文档时为空字符串；由动作执行器提供 |
+| `viewOpened` | 在 `show` 中提供；表示其显式打开视图步骤是否打开了此前关闭的视图 |
+| `dialogsSuppressed` | 成功覆盖 TaskDialog 时产生的消息；没有覆盖的动作会输出空列表 |
+| `warningsDismissed` | 成功事务中消除的警告描述；为空或动作失败时省略 |
+| `failedStep` | 单个动作中提供，值为 null |
+| `data.closestFamilies` | 单动作工具找不到族时，返回相似的已加载族名称和类别；批量仅返回 `steps[].error` 文本 |
+| `data.parameterScope` | `set-parameter` 后为 `instance` 或 `type`；类型编辑影响所有使用该类型的实例 |
 
-Transport errors and target mismatches can occur before the action executor and omit these fields.
-See [response models](../src/RevitModelMcp.Core/Models/ReadCommandModels.cs) and [action models](../src/RevitModelMcp.Core/Control/ActionJobParser.cs).
+传输错误和目标不匹配可能发生在动作执行器之前，因而不包含这些字段。
+参见[响应模型](../src/RevitModelMcp.Core/Models/ReadCommandModels.cs)和[动作模型](../src/RevitModelMcp.Core/Control/ActionJobParser.cs)。
 
-Family responses have `data.mode` (`family` or `project`) and `data.families`. Audit entries include `parameters`, `purgeable`, `purgeableTotal` and `purgeCoverage`; skipped entries include a reason. Edit responses include `dryRun`, `committed`, `failedFamily`, per-family status and ordered operation results. `stopOnError=true` rolls back the project group and marks attempted families `rolledBack:true`. A timed-out response may follow a committed change; inspect the model before retrying.
+<a id="action-writes-and-batches"></a>
 
-## Action writes and batches
+## 动作写入与批量
 
-The file channel and HTTP accept `dryRun` on `move`, `place-family`, `create-wall`, `set-parameter`, `delete` and `batch`.
-Successful mutations always return `data.dryRun`.
-Successful dry runs return `data.rolledBack:true`; their prospective facts are read before rollback.
-An action that throws returns an error without a verification block.
-`verification.before` is captured before the change.
-Real writes re-read `verification.after` after commit.
-`verification.error` reports a failed post-commit re-read; the change itself is committed.
-Unavailable bounding boxes are omitted; available bounds are XYZ arrays in model mm rounded to one decimal.
-Parameter values are invariant strings with lengths in mm, areas in m2 and other doubles in internal units.
-For `set-parameter`, Python `parameter_id` maps to channel `parameterId`. The optional ID is a `BuiltInParameter` enum name, shared GUID or positive decimal `ParameterElement` ID. `parameter` remains required. A supplied ID must match exactly; there is no name fallback. Without an ID, a localized name, enum name or supported English alias must identify one parameter. Ambiguous matches fail and list every candidate with ID, name, storage type, owner and shared, built-in or project kind.
-Input `value` must be a JSON string for String storage, integer for Integer storage or finite number for Double storage. An integer JSON value is valid for Double storage. Boolean values and numeric strings are rejected. Empty strings clear String parameters.
-`verification.before.parameterId` and `verification.after.parameterId` contain the resolved stable ID.
-`owner` is `instance` or `type`.
+文件通道和 HTTP 接受 `move`、`place-family`、`create-wall`、`create-floor`、`set-phase`、`merge-phases`、`set-parameter`、`set-view-lighting`、`delete` 和 `batch` 的 `dryRun`。
+成功的修改始终返回 `data.dryRun`。
+成功的试运行返回 `data.rolledBack:true`；预期变化的事实在回滚前读取。
+动作抛出异常时返回错误，不包含验证块。
+`verification.before` 在修改前采集。
+实际写入在提交后重新读取 `verification.after`。
+`verification.error` 报告提交后的重新读取失败；修改本身已经提交。
+不可用的包围盒会被省略；可用边界为模型坐标系下以 mm 表示的 XYZ 数组，四舍五入到一位小数。
+参数值为不受区域设置影响的字符串：长度使用 mm、面积使用 m2、其他双精度值使用内部单位。
+`owner` 为 `instance` 或 `type`。
 
-| Command | `data.verification` shape |
+| 命令 | `data.verification` 结构 |
 |---|---|
 | `move` | `{"before":{"elements":[{"id":1,"category":"Walls","boundingBoxMinMm":[0,0,0],"boundingBoxMaxMm":[100,100,3000]}]},"after":{"elements":[{"id":1,"category":"Walls","boundingBoxMinMm":[10,0,0],"boundingBoxMaxMm":[110,100,3000]}]},"changed":[1]}` |
-| `set-parameter` | `{"before":{"id":1,"parameter":"Comments","parameterId":"ALL_MODEL_INSTANCE_COMMENTS","value":"","storageType":"String","owner":"instance"},"after":{"id":1,"parameter":"Comments","parameterId":"ALL_MODEL_INSTANCE_COMMENTS","value":"Reviewed","storageType":"String","owner":"instance"},"changed":[1]}` |
-| `place-family`, `create-wall` | `{"after":{"id":2,"category":"Walls","family":"Basic Wall","type":"Generic","level":"01","boundingBoxMinMm":[0,0,0],"boundingBoxMaxMm":[1000,200,3000]}}`; dry runs add `"wouldCreate":true` inside `verification`. |
+| `set-parameter` | `{"before":{"id":1,"parameter":"Comments","value":"","storageType":"String","owner":"instance"},"after":{"id":1,"parameter":"Comments","value":"Reviewed","storageType":"String","owner":"instance"},"changed":[1]}` |
+| `place-family`、`create-wall`、`create-floor` | `{"after":{"id":2,"category":"Walls","family":"Basic Wall","type":"Generic","level":"01","boundingBoxMinMm":[0,0,0],"boundingBoxMaxMm":[1000,200,3000]}}`；试运行会在 `verification` 内添加 `"wouldCreate":true`。 |
+| `set-phase` | `{"before":{"elements":[{"id":3,"category":"Walls","createdPhase":"新构造","demolishedPhase":""}]},"after":{"elements":[{"id":3,"category":"Walls","createdPhase":"现有","demolishedPhase":"拆除"}]},"changed":[3]}`；空字符串表示未分配阶段。 |
+| `merge-phases` | `{"before":{"sourcePhase":"临时","targetPhase":"新构造"},"after":{"reassignedCreated":12,"reassignedDemolished":3,"sourceRemaining":0}}`；`data.sourceDeleted` 和 `data.phaseDeleteError` 报告删除尝试。 |
 | `delete` | `{"before":{"requested":[1],"dependents":[2]},"after":{"stillPresent":[]},"changed":[1,2]}` |
+| `set-view-lighting` | `{"before":{"lighting":{"viewId":7,"view":"{3D}","viewType":"ThreeD","shadows":false,"shadowIntensity":50,"sunType":"OneDayStudy","sunDateAndTimeUtc":"2026-03-01T01:00:00Z","background":"None"}},"after":{"lighting":{"…":"改动后的同一组读数"}}}`；`data.changedSettings` 列出真正变化的项（如 `["shadows","sun_date_time"]`），`verification.changed` 保持为空，因为视图没有可报告的构件 ID。 |
 
-`changed` contains IDs whose rounded bounds or parameter values differ, or all IDs returned by `Document.Delete`.
-`dependents` excludes explicitly requested IDs.
-Creation IDs from a dry run are provisional.
-Creation metadata comes from the created element and its type and level.
+`changed` 包含四舍五入后的边界或参数值发生变化的 ID，或 `Document.Delete` 返回的全部 ID。
+`dependents` 不包含显式请求的 ID。
+`set-view-lighting` 不写 `changed`，改用顶层 `data.changedSettings` 报告视图设置的变化。
+`verification.*.lighting` 的读数为：`viewId`、`view`、`viewType`、`shadows`、`shadowIntensity`、`sunlightIntensity`、`sunType`、`sunDateAndTimeUtc`、`sunTimeZoneHours`、`sunUsesDst`、`sunAzimuthDeg`、`sunAltitudeDeg`（仅光照模式）、`sunSettingsShared`、`groundPlane`、`groundPlaneLevel`、`background`、`backgroundColors`（仅渐变）、`lightingScheme`（仅三维视图）；视图不暴露的项省略。
 
-A batch job contains a nonempty `steps` array of at most 50 command objects:
+`changed` 包含四舍五入后的边界或参数值发生变化的 ID，或 `Document.Delete` 返回的全部 ID。
+`dependents` 不包含显式请求的 ID。
+试运行产生的创建 ID 是临时的。
+创建元数据来自所创建构件及其类型和标高。
+
+批量任务包含一个非空的 `steps` 数组，最多有 50 个命令对象：
 
 ```json
 {"command":"batch","dryRun":false,"steps":[
@@ -287,51 +265,50 @@ A batch job contains a nonempty `steps` array of at most 50 command objects:
 ]}
 ```
 
-Steps use each command's normal channel fields.
-All steps are validated at parse time before execution; an invalid later step rejects the entire batch without executing any step and without `failedStep`.
-Allowed commands are `move`, `place-family`, `create-wall`, `set-parameter`, `delete`, `select` and `isolate`.
-Each model step uses its own transaction; the group is assimilated into the single undo entry `MCP (<clientName>): <short summary>`.
-A batch dry run retains each step's changes for subsequent steps and rolls back the group at the end.
-An individual channel step with `dryRun:true` (MCP `dry_run:true`) in a real batch is accepted and previews only that step.
-Selection is restored on batch rollback.
+步骤使用各命令正常的通道字段。
+执行前，在解析时校验所有步骤；即使后面的步骤无效，也会拒绝整个批量任务，不执行任何步骤，且不包含 `failedStep`。
+允许的命令为 `move`、`place-family`、`create-wall`、`create-floor`、`set-phase`、`set-parameter`、`set-view-lighting`、`delete`、`select` 和 `isolate`。
+每个模型步骤使用自己的事务；整个事务组被合并为单个撤销记录 `revit_batch`。
+批量试运行会保留各步骤的修改供后续步骤使用，并在最后回滚整个事务组。
+实际执行的批量中，单个通道步骤可以包含 `dryRun:true`（MCP 中为 `dry_run:true`）；这只预览该步骤。
+批量回滚会恢复选择状态。
 
-`data.steps[]` contains `index` (zero-based), `command`, `success`, and `data` or `error`.
-Each successful mutation's `data` carries the single-action verification shape.
-The first failed step stops execution; all attempted steps, including the failing one, carry `rolledBack:true`, as does any retained step data.
-An `Assimilate` failure is reported on the last step with `failedStep` pointing at that step.
-`data.undoName` is `"MCP (<clientName>): <short summary>"` (absent on a dry run), `data.committed` reports group assimilation, and `data.failedStep` is the failed index or null.
-Dry-run success has `committed:false`, `failedStep:null` and `rolledBack:true`.
-Verification records each step immediately; later steps can supersede those facts.
+`data.steps[]` 包含 `index`（从零开始）、`command`、`success`，以及 `data` 或 `error`。
+每个成功修改步骤的 `data` 携带与单动作相同的验证结构。
+首个失败步骤会停止执行；所有已尝试的步骤（包括失败步骤）及任何保留的步骤数据都带有 `rolledBack:true`。
+`Assimilate` 失败会报告在最后一步，`failedStep` 指向该步骤。
+`data.undoName` 为 `"revit_batch"`，`data.committed` 报告事务组合并情况，`data.failedStep` 为失败步骤索引或 null。
+成功的试运行为 `committed:false`、`failedStep:null` 和 `rolledBack:true`。
+验证立即记录每个步骤；后续步骤可能覆盖这些事实。
 
-## Geometry and image exports
+<a id="geometry-and-image-exports"></a>
 
-`export-nwc` is a gated action job and is excluded from `batch`. It accepts `path`, `scope`, `view`, `elementIds`, `coordinates`, `parameters`, all exporter Boolean options, `facetingFactor`, `overwrite` and `dryRun`. The add-in assigns every `NavisworksExportOptions` property explicitly. The response `data` includes `path`, `bytes`, `sha256`, `elapsedMs`, `scope`, `view`, `elementCount`, `options` with camelCase keys such as `exportElementIds` and `facetingFactor`, `dryRun` and `overwritten`. A dry run also reports `exporterAvailable` and `pathChecks` without writing a file. NWC bytes remain on the workstation.
+## 几何与图像导出
 
-`revit_element_details` returns `location`, `boundingBox` and `roomCenterMm` directly under `data` when available.
-`revit_query_elements(include_geometry=true)` includes them on each returned element.
-Point locations use `type:"point"`, `xMm`, `yMm`, `zMm`.
-Curve locations use `type:"curve"`, `startMm`, `endMm`, `lengthMm`.
-Bounding boxes use `minMm`, `maxMm`, `centerMm` arrays.
-`roomCenterMm` is a placed room's location point; it is not a computed geometric centroid.
-Coordinates use model axes in mm rounded to one decimal place.
+当数据可用时，`revit_element_details` 直接在 `data` 下返回 `location`、`boundingBox` 和 `roomCenterMm`。
+`revit_query_elements(include_geometry=true)` 会在每个返回构件上包含这些字段。
+点位置使用 `type:"point"`、`xMm`、`yMm`、`zMm`。
+曲线位置使用 `type:"curve"`、`startMm`、`endMm`、`lengthMm`。
+包围盒使用 `minMm`、`maxMm`、`centerMm` 数组。
+`roomCenterMm` 是已放置房间的位置点，而非计算得到的几何质心。
+坐标使用模型坐标轴，以 mm 表示，四舍五入到一位小数。
 
-Exports return `fileName`, `width`, `height`, `sizeBytes`, `viewName` and `viewType` in `data`.
-The Python server adds `localPath` after downloading the PNG.
-`width` and `height` are pixels; `sizeBytes` is the PNG size in bytes.
-See [HTTP endpoints](transport.md#http-configuration) for direct image retrieval.
+导出在 `data` 中返回 `fileName`、`width`、`height`、`sizeBytes`、`viewName` 和 `viewType`。
+Python 服务器下载 PNG 后添加 `localPath`。
+`width` 和 `height` 使用像素；`sizeBytes` 是 PNG 的字节大小。
+直接获取图像见 [HTTP 端点](transport.md#http-configuration)。
 
-## Heartbeats
+<a id="heartbeats-and-legacy-reports"></a>
 
-Heartbeat JSON contains `processId`, `revitVersion`, `documentTitle`, `documentPath` and `updatedUtc`.
-`updatedUtc` is an ISO 8601 UTC timestamp.
-The add-in writes every five seconds and the file client ignores records older than 60 seconds.
-The other fields are listed in [Discovery heartbeat](transport.md#discovery-heartbeat).
-HTTP instance discovery uses `/health` instead of heartbeat files.
+## 心跳与旧版报告
 
-## Document action responses
+心跳 JSON 包含 `processId`、`revitVersion`、`documentTitle`、`documentPath` 和 `updatedUtc`。
+`updatedUtc` 是 ISO 8601 UTC 时间戳。
+插件每五秒写入一次；文件客户端忽略超过 60 秒的记录。
+HTTP 实例发现使用 `/health`，而非心跳文件。
 
-The read command `documents` returns an array of open document states, including background documents. It does not require an active document or the action gate.
-
-Document lifecycle commands use the normal command response envelope. `open-document` returns `title`, `path`, `isWorkshared`, `isDetached`, `isCentral`, `openedAs`, `active`, `worksetsOpen` and `elapsedMs` in `data`. Open responses also report any suppressed dialogs in the envelope's `dialogsSuppressed` field.
-
-A save, sync or close operation requiring confirmation returns `success:true` and `data.needsConfirmation:true`, `data.confirmationText` and `data.confirmToken`. This response reports a pending operation; it does not mean the operation ran. The follow-up must repeat all arguments and add `confirmToken`. Invalid, consumed, expired or mismatched tokens return an error without making a change. The token expires five minutes after issuance.
+插件接受旧版快照和 `views-dump` 任务，但它们不是 MCP 工具。
+快照使用 [Snapshot 契约](../src/RevitModelMcp.Core/Models/Snapshot.cs)，不使用命令响应封装。
+视图转储使用 `command:"views-dump"`、`status`、时间戳、`responder`、进度计数，以及 [ViewDumpReport](../src/RevitModelMcp.Core/Models/ViewDumpReport.cs) 中的 `views` 列表。
+它们跟踪视图的打开和关闭，以及原始视图的恢复。
+旧版格式没有模式版本，不应视为稳定的外部 API。

@@ -1,35 +1,66 @@
-# Close Document
+---
+description: "关闭后台文档；首次调用不改任何内容，返回确认令牌"
+---
 
-Close a background document.
+# 关闭文档
 
-**Group:** Documents · **Kind:** Action (opt-in)
+`revit_close_document`
 
-## Parameters
+<p class="facts"><span><b>分组</b> 文档与进程</span><span><b>类型</b> 动作（需授权）</span><span><b>起始版本</b> 1.0.0</span><span><b>版本</b> 未发布（1.0.0）</span><span><b>集成分支有同名工具</b> 有</span><span><b>本页契约适用于发布版</b> 是</span><span><b>影响范围</b> 模型构件 / 参数</span></p>
 
-| Name | Required | Default | Type | Meaning |
-| --- | --- | --- | --- | --- |
-| `confirm_token` | No | null | `string / null` | — |
-| `process_id` | No | null | `integer / null` | — |
-| `save` | No | false | `boolean` | — |
+关闭后台文档；首次调用不改任何内容，返回确认令牌
 
-### Common parameters
+!!! warning "动作工具需要双门禁"
+    客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
-| Name | Meaning |
+[同名集成分支页面](../platform/revit_close_document.md)
+
+## 可复制提示词 {#prompts}
+
+```text
+关闭后台打开的"旧版示楼.rvt"，不要保存
+```
+
+## 参数 {#parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `confirm_token` | 否 | `null` | `string / null` | 首次调用返回、供第二次确认调用的令牌 |
+| `process_id` | 否 | `null` | `integer / null` | 目标 Revit 进程 ID（在多个运行实例中选定） |
+| `save` | 否 | `false` | `boolean` | 关闭前是否保存文档 |
+
+</div>
+
+### 通用参数 {#common-parameters}
+
+<div class="rmc-tablewrap" markdown="1">
+
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
+| --- | :--: | --- | --- | --- |
+| `document` | 是 | — | `string` | 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝 |
+
+</div>
+
+## 功能说明与返回结果 {#contract}
+
+关闭一个后台文档。
+
+需要先调用一次取得 `confirm_token`，首次调用不改变任何内容。
+
+如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
+
+## Revit 年份支持 {#year-support}
+
+| Revit 年份 | 验证状态 |
 | --- | --- |
-| `document` | Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected. |
+| 2020 | <span class="state part">仅构建，未实测</span> |
+| 2026 | <span class="state part">仅构建，未实测</span> |
+| 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
 
-## Behavior and returned data
+已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
 
-Close a background document. Needs confirm_token from a first call, which changes nothing.
+---
 
-## Revit year support
-
-| Revit year | State |
-| --- | --- |
-| 2020 | Not supported yet |
-| 2022–2025, 2027 | Built |
-| 2026 | Built |
-
-**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
-
-[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)
+[全部功能](index.md) · [版本支持矩阵](matrix.md) · [提示词库](prompts.md)
