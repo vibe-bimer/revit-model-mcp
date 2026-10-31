@@ -70,11 +70,9 @@ exclude_docs: |
   requirements.txt
   hooks.py
   __pycache__/
-  # 3.3 MB of GIF that no page, stylesheet, srcset, metadata block or script references, and the
-  # HTML page used to compose the social card. Both stay in the source and leave the build here;
-  # tools/site/check_site.py fails the build if any unreferenced asset still reaches the tree.
-  screenshots/revit-model-mcp_claude-desktop.gif
-  assets/social-card.html
+  # The demo recording and the social card template live outside docs/ now, so nothing has to be
+  # excluded here. tools/site/check_site.py still fails the build if any unreferenced asset
+  # reaches the tree.
 
 validation:
   links:

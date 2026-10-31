@@ -91,7 +91,7 @@ Call `revit_ping` in the MCP client and expect `success: true`.
 Claude Desktop runs on a Mac and connects to Revit 2026 on a Windows workstation.
 Both action gates are enabled in this recording.
 
-<img alt="Claude Desktop conversation on the left, Revit 2026 on the right: Claude reads the open model, finds the largest room, opens its plan and selects it, isolates it, places a chair and moves it, then cleans up" src="docs/screenshots/revit-model-mcp_claude-desktop.gif" width="100%">
+<img alt="Claude Desktop conversation on the left, Revit 2026 on the right: Claude reads the open model, finds the largest room, opens its plan and selects it, isolates it, places a chair and moves it, then cleans up" src="assets/revit-model-mcp_claude-desktop.gif" width="100%">
 
 What happens in the recording, in order:
 

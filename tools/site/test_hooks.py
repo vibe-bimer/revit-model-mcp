@@ -268,21 +268,21 @@ class ErrorPageContextTests(unittest.TestCase):
 
 
 class SourceReferenceTests(unittest.TestCase):
-    """The screenshots the build excludes are exactly the unreferenced ones."""
+    """Every source asset is referenced, and the build excludes nothing that ships."""
 
-    def test_the_unreferenced_gif_is_the_only_excluded_screenshot(self):
+    def test_no_screenshot_is_excluded_from_the_build(self):
         import yaml
 
         config = yaml.safe_load((ROOT / "mkdocs.yml").read_text(encoding="utf-8"))
         patterns = [
             line.strip()
             for line in str(config.get("exclude_docs", "")).splitlines()
-            if line.strip()
+            if line.strip() and not line.strip().startswith("#")
         ]
         excluded = {p for p in patterns if p.startswith("screenshots/")}
-        self.assertEqual(excluded, {"screenshots/revit-model-mcp_claude-desktop.gif"})
+        self.assertEqual(excluded, set())
 
-    def test_docs_sources_reference_every_other_screenshot(self):
+    def test_every_screenshot_in_the_source_tree_is_referenced(self):
         referenced = set()
         for source in list((ROOT / "docs").rglob("*.md")) + [
             ROOT / "tools" / "site" / "landing.py"
@@ -292,11 +292,25 @@ class SourceReferenceTests(unittest.TestCase):
         on_disk = {
             f"screenshots/{p.name}" for p in (ROOT / "docs/screenshots").iterdir()
         }
-        self.assertEqual(
-            on_disk - referenced, {"screenshots/revit-model-mcp_claude-desktop.gif"}
-        )
+        self.assertEqual(on_disk - referenced, set())
         self.assertIn("screenshots/revit-model-mcp_export-view_dark.png", referenced)
         self.assertIn("screenshots/revit-model-mcp_export-view_light.png", referenced)
+
+    def test_the_demo_recording_lives_outside_the_site_tree(self):
+        recording = ROOT / "assets" / "revit-model-mcp_claude-desktop.gif"
+        self.assertTrue(recording.is_file())
+        self.assertFalse(
+            (ROOT / "docs/screenshots/revit-model-mcp_claude-desktop.gif").exists()
+        )
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("assets/revit-model-mcp_claude-desktop.gif", readme)
+
+    def test_the_social_card_template_lives_outside_the_site_tree(self):
+        template = ROOT / "tools" / "site" / "assets" / "social-card.html"
+        self.assertTrue(template.is_file())
+        self.assertFalse((ROOT / "docs/assets/social-card.html").exists())
+        layout = (ROOT / "docs/overrides/main.html").read_text(encoding="utf-8")
+        self.assertIn("assets/social-card.png", layout)
 
 
 if __name__ == "__main__":
