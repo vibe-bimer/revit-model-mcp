@@ -27,17 +27,32 @@ groups:
   ids:
     zh: 批量与 ID
     en: Batch and ids
+  documents:
+    zh: 文档与进程
+    en: Documents and processes
+  batch:
+    zh: 批量作业
+    en: Batch jobs
+  families:
+    zh: 族
+    en: Families
+  sheets:
+    zh: 图纸与明细表
+    en: Sheets and schedules
+  links:
+    zh: 链接与协同
+    en: Links and coordination
 tools:
   revit_ping:
-    source: c5046b264798
+    source: 'f2b515ee3530'
     group: connection
     since: 0.1.0
     title:
-      zh: "检查连接"
-      en: "Check connection"
+      zh: 检查连接
+      en: Check connection
     summary:
       zh: 检查连接与插件版本
-      en: "Check whether the Revit add-in is reachable"
+      en: Check whether the Revit add-in is reachable
     years:
       '2020':
         state: validated
@@ -49,15 +64,15 @@ tools:
     - zh: 看看 Revit 插件在不在线
       en: Is the Revit add-in reachable?
   revit_document_info:
-    source: 82d16de3ed52
+    source: '713c86517834'
     group: connection
     since: 0.1.0
     title:
-      zh: "文档概要"
-      en: "Document overview"
+      zh: 文档概要
+      en: Document overview
     summary:
       zh: 当前文档概要：文件名、Revit 版本、标高、面积方案、工作集、视图数
-      en: "Read document metadata, levels, area schemes, worksets and view count"
+      en: Read document metadata, levels, area schemes, worksets and view count
     years:
       '2020':
         state: validated
@@ -69,15 +84,15 @@ tools:
     - zh: 当前打开的是哪个模型？有哪些标高？
       en: Which model is open, and which levels does it have?
   revit_model_health:
-    source: 1f79b1381d6c
+    source: 'c4a83fabaf1c'
     group: export
     since: 0.2.0
     title:
-      zh: "模型检查"
-      en: "Model health"
+      zh: 模型检查
+      en: Model health
     summary:
       zh: 交付前体检：文件大小、各类计数、单位设置、数量最多的警告
-      en: "Check file size, model counts, units and frequent warnings"
+      en: Check file size, model counts, units and frequent warnings
     years:
       '2020':
         state: validated
@@ -89,15 +104,15 @@ tools:
     - zh: 做一次交付前体检：文件大小、各类数量、单位设置、最多的警告
       en: 'Run a pre-handover health check: size, counts, units, top warnings'
   revit_links_status:
-    source: 8ec51fdf6786
+    source: 'eca81a38c35b'
     group: export
     since: 0.2.0
     title:
-      zh: "链接状态"
-      en: "Link status"
+      zh: 链接状态
+      en: Link status
     summary:
       zh: RVT / CAD / 图片链接的状态、路径与实例数
-      en: "Inspect RVT, CAD and image link status, paths and instance counts"
+      en: Inspect RVT, CAD and image link status, paths and instance counts
     years:
       '2020':
         state: validated
@@ -109,15 +124,15 @@ tools:
     - zh: 检查所有链接是否正常
       en: 'Check every link: RVT, CAD and images'
   revit_shared_coordinates:
-    source: 68b9837c21dd
+    source: 'f456424f4412'
     group: export
     since: 0.2.0
     title:
-      zh: "共享坐标"
-      en: "Shared coordinates"
+      zh: 共享坐标
+      en: Shared coordinates
     summary:
       zh: 项目基点、测量点、场地与链接的位移（mm）/旋转（°）
-      en: "Read base/survey points, sites and link offsets in mm and degrees"
+      en: Read base/survey points, sites and link offsets in mm and degrees
     years:
       '2020':
         state: validated
@@ -129,15 +144,15 @@ tools:
     - zh: 报告项目的共享坐标和链接位移
       en: Report the shared coordinates and link offsets
   revit_parameter_fill_check:
-    source: 2b42f82c5af8
+    source: '8b886aec60ab'
     group: export
     since: 0.2.0
     title:
-      zh: "参数填充检查"
-      en: "Parameter fill check"
+      zh: 参数填充检查
+      en: Parameter fill check
     summary:
       zh: 参数的填充率：有值 / 空 / 缺失，并给出抽样 ID
-      en: "Count filled, empty and missing parameter values and sample element IDs"
+      en: Count filled, empty and missing parameter values and sample element IDs
     years:
       '2020':
         state: validated
@@ -149,15 +164,15 @@ tools:
     - zh: 检查墙的防火等级填充率，给出空值的构件 ID
       en: How well is the fire rating filled in on walls? Give me the empty ids
   revit_list_catalog:
-    source: 9b346ece1e14
+    source: '15200725d19a'
     group: query
     since: 0.1.0
     title:
-      zh: "名称目录"
-      en: "Name catalog"
+      zh: 名称目录
+      en: Name catalog
     summary:
       zh: 查可用名字：类别、族类型、标高、面积方案、视图、工作集、阶段、参数
-      en: "Discover categories, family types, levels, area schemes, views, worksets, phases and parameters"
+      en: Discover categories, family types, levels, area schemes, views, worksets, phases and parameters
     years:
       '2020':
         state: validated
@@ -172,15 +187,15 @@ tools:
       zh: 查询与过滤都用这些名字
       en: Queries and filters use these exact names
   revit_aggregate_elements:
-    source: 526ca2e55260
+    source: '885dd2bc95b0'
     group: query
     since: 0.1.0
     title:
-      zh: "分组统计"
-      en: "Grouped totals"
+      zh: 分组统计
+      en: Grouped totals
     summary:
       zh: 按 1–2 个字段分组统计数量，可附加求和与平均（mm / m² / m³）
-      en: "Group by one or two fields, with counts and optional sum and average"
+      en: Group by one or two fields, with counts and optional sum and average
     years:
       '2020':
         state: validated
@@ -197,15 +212,15 @@ tools:
       zh: 回答“有多少”的首选，比逐条取明细快得多
       en: First choice for “how many” questions
   revit_query_elements:
-    source: 75aed63260b3
+    source: 'f19f48418eec'
     group: query
     since: 0.1.0
     title:
-      zh: "构件查询"
-      en: "Element query"
+      zh: 构件查询
+      en: Element query
     summary:
       zh: 按类别/族/类型/标高/视图/工作集/参数过滤，分页读取构件明细
-      en: "Filter and page through individual element rows"
+      en: Filter and page through individual element rows
     years:
       '2020':
         state: validated
@@ -217,15 +232,15 @@ tools:
     - zh: 列出 2F 上所有没填防火等级的门，给出 ID
       en: List the doors on 2F whose fire rating is empty, with ids
   revit_list_views:
-    source: 79ef41dc7de8
+    source: 'e8880f91d3fa'
     group: views
     since: 0.1.0
     title:
-      zh: "视图目录"
-      en: "View catalog"
+      zh: 视图目录
+      en: View catalog
     summary:
       zh: 列出视图，可按视图类型与名称过滤
-      en: "List views filtered by type and name"
+      en: List views filtered by type and name
     years:
       '2020':
         state: validated
@@ -237,15 +252,15 @@ tools:
     - zh: 列出所有平面视图
       en: List every floor plan view
   revit_view_summary:
-    source: 594ce2bbe1fb
+    source: 'c891d7099c57'
     group: views
     since: 0.1.0
     title:
-      zh: "视图统计"
-      en: "View summary"
+      zh: 视图统计
+      en: View summary
     summary:
       zh: 视图元数据 + 类别计数（各有多少、多少种类型）
-      en: "Read view metadata, category counts and number of distinct types"
+      en: Read view metadata, category counts and number of distinct types
     years:
       '2020':
         state: validated
@@ -257,15 +272,15 @@ tools:
     - zh: 三维视图里各类构件分别有多少个？
       en: What does the 3D view hold, category by category?
   revit_export_view:
-    source: e1fd1638ac9e
+    source: 'a1163a0c0d32'
     group: views
     since: 0.3.0
     title:
-      zh: "导出视图图片"
-      en: "Export view image"
+      zh: 导出视图图片
+      en: Export view image
     summary:
       zh: 把视图导出成 PNG 图片（1–4000 像素）
-      en: "Export a view as a PNG, from 1 to 4000 pixels"
+      en: Export a view as a PNG, from 1 to 4000 pixels
     years:
       '2020':
         state: validated
@@ -277,16 +292,16 @@ tools:
     - zh: 把 1F 平面导出成 PNG，宽度 2000 像素
       en: Export the 1F plan as a PNG, 2000 pixels wide
   revit_export_element_ids:
-    source: 59690caf9e5f
+    source: 'c091f63079d0'
     group: export
     origin: fork
     since: 0.8.0
     title:
-      zh: "导出构件 ID 清单"
-      en: "Export element ID register"
+      zh: 导出构件 ID 清单
+      en: Export element ID register
     summary:
       zh: 把模型中已绘制构件的 ID 清单写成 Excel（类别/族/类型/标高/构件ID/名称/工作集）
-      en: "Write the ID register of drawn model components to an Excel workbook"
+      en: Write the ID register of drawn model components to an Excel workbook
     years:
       '2020':
         state: validated
@@ -299,17 +314,17 @@ tools:
       en: Export the ID register of drawn model components to Excel, ordered by category, family and type
     note:
       zh: 文件写到 Revit 工作站上
-      en: 'The workbook is written on the Revit workstation. The column headers are Chinese Revit UI labels — 类别, 族, 类型, 标高, 构件ID, 名称 and 工作集 are category, family, type, level, element id, name and workset.'
+      en: The workbook is written on the Revit workstation. The column headers are Chinese Revit UI labels — 类别, 族, 类型, 标高, 构件ID, 名称 and 工作集 are category, family, type, level, element id, name and workset.
   revit_view_elements:
-    source: 4c4f085ce46a
+    source: '3176007180eb'
     group: views
     since: 0.2.0
     title:
-      zh: "视图构件明细"
-      en: "View element rows"
+      zh: 视图构件明细
+      en: View element rows
     summary:
       zh: 分页读取视图中的构件（可按类别过滤）
-      en: "Page through elements in a selected view, optionally filtered by category"
+      en: Page through elements in a selected view, optionally filtered by category
     years:
       '2020':
         state: validated
@@ -321,15 +336,15 @@ tools:
     - zh: 把三维视图里的构件列表给我，每页 200 条
       en: Page through the elements of the 3D view, 200 at a time
   revit_element_details:
-    source: 434de3d148eb
+    source: 'c0bf00b0f814'
     group: query
     since: 0.1.0
     title:
-      zh: "构件参数与几何"
-      en: "Element details"
+      zh: 构件参数与几何
+      en: Element details
     summary:
       zh: 单个构件的实例参数、类型参数与几何（mm）
-      en: "Read instance/type parameters and geometry for one element ID"
+      en: Read instance/type parameters and geometry for one element ID
     years:
       '2020':
         state: validated
@@ -344,15 +359,15 @@ tools:
       zh: 房间还会返回面积、体积与边界
       en: Rooms also return area, volume and boundaries
   revit_view_warnings:
-    source: fccedefd55d6
+    source: 'e836252b7fa0'
     group: views
     since: 0.4.0
     title:
-      zh: "视图相关警告"
-      en: "View warnings"
+      zh: 视图相关警告
+      en: View warnings
     summary:
       zh: 只读该视图相关构件的警告
-      en: "Read warnings involving elements present in a selected view"
+      en: Read warnings involving elements present in a selected view
     years:
       '2020':
         state: validated
@@ -364,15 +379,15 @@ tools:
     - zh: 这个视图里有哪些警告？
       en: Which warnings touch this view?
   revit_list_warnings:
-    source: 1a1cf9bcbce7
+    source: '5f071324cbc3'
     group: export
     since: 0.4.0
     title:
-      zh: "模型警告"
-      en: "Model warnings"
+      zh: 模型警告
+      en: Model warnings
     summary:
       zh: 全模型警告按文本分组，可展开受影响构件
-      en: "Group model warnings by description and inspect affected elements"
+      en: Group model warnings by description and inspect affected elements
     years:
       '2020':
         state: validated
@@ -384,15 +399,15 @@ tools:
     - zh: 列出数量最多的警告
       en: Group the model warnings by text
   revit_list_relations:
-    source: 965fb8fc8e78
+    source: 'a5978b8d2ced'
     group: query
     since: 0.7.0
     title:
-      zh: "构件关系"
-      en: "Element relations"
+      zh: 构件关系
+      en: Element relations
     summary:
       zh: 关系查询：标高的房间、面积方案成员、组内构件、嵌套族、视图样板依赖
-      en: "Read level rooms, area-scheme membership, group members, nested families and view-template dependents"
+      en: Read level rooms, area-scheme membership, group members, nested families and view-template dependents
     years:
       '2020':
         state: validated
@@ -404,15 +419,15 @@ tools:
     - zh: 1F 标高上都有哪些房间？
       en: Which rooms sit on level 1F?
   revit_list_instances:
-    source: cb2d527ff023
+    source: '7a9dcbcbbbb3'
     group: connection
     since: 0.6.0
     title:
-      zh: "Revit 实例列表"
-      en: "Revit instance list"
+      zh: Revit 实例列表
+      en: Revit instance list
     summary:
       zh: 列出在跑的 Revit 实例及其打开的文档
-      en: "List running Revit instances and their active documents"
+      en: List running Revit instances and their active documents
     years:
       '2020':
         state: validated
@@ -424,15 +439,15 @@ tools:
     - zh: 现在有几个 Revit 实例？各自打开什么模型？
       en: Which Revit instances are running, and what does each hold?
   revit_select:
-    source: 3b0ea70eb570
+    source: '43cb337219da'
     group: display
     since: 0.1.0
     title:
-      zh: "选择构件"
-      en: "Select elements"
+      zh: 选择构件
+      en: Select elements
     summary:
       zh: 在 Revit 里选中指定构件（空列表=清除选择）
-      en: "Select elements in Revit; an empty list clears the selection"
+      en: Select elements in Revit; an empty list clears the selection
     years:
       '2020':
         state: validated
@@ -447,15 +462,15 @@ tools:
       zh: 不改模型
       en: Does not change the model
   revit_show:
-    source: 3cdf84b8d9d1
+    source: 'c71c807d5db8'
     group: display
     since: 0.2.0
     title:
-      zh: "定位显示构件"
-      en: "Show elements"
+      zh: 定位显示构件
+      en: Show elements
     summary:
       zh: 在视图里定位/高亮构件，必要时打开对应视图
-      en: "Locate and highlight elements, opening a suitable view when needed"
+      en: Locate and highlight elements, opening a suitable view when needed
     years:
       '2020':
         state: validated
@@ -470,15 +485,15 @@ tools:
       zh: 不改模型
       en: Does not change the model
   revit_isolate:
-    source: 78e5d46528a3
+    source: 'f271939e4d03'
     group: display
     since: 0.2.0
     title:
-      zh: "临时隔离显示"
-      en: "Temporary isolation"
+      zh: 临时隔离显示
+      en: Temporary isolation
     summary:
       zh: 临时隔离显示（reset=true 恢复）
-      en: "Temporarily isolate selected elements or reset the active view"
+      en: Temporarily isolate selected elements or reset the active view
     years:
       '2020':
         state: validated
@@ -493,15 +508,15 @@ tools:
       zh: 临时效果，不写模型
       en: Temporary effect only
   revit_move:
-    source: 0bfded33b2f7
+    source: '9db2e14d4115'
     group: edit
     since: 0.1.0
     title:
-      zh: "移动构件"
-      en: "Move elements"
+      zh: 移动构件
+      en: Move elements
     summary:
       zh: 按模型轴平移构件（mm）
-      en: "Move elements by offsets along model axes in millimetres"
+      en: Move elements by offsets along model axes in millimetres
     years:
       '2020':
         state: validated
@@ -516,15 +531,15 @@ tools:
       zh: 支持 dry_run
       en: Supports dry_run
   revit_place_family:
-    source: 6383331ec37f
+    source: 'd7d1e53536ca'
     group: edit
     since: 0.2.0
     title:
-      zh: "放置非宿主族"
-      en: "Place unhosted family"
+      zh: 放置非宿主族
+      en: Place unhosted family
     summary:
       zh: 在指定标高放置已载入的非宿主族实例，可绕 Z 旋转
-      en: "Place a loaded unhosted family on a named level with optional Z rotation"
+      en: Place a loaded unhosted family on a named level with optional Z rotation
     years:
       '2020':
         state: validated
@@ -539,15 +554,15 @@ tools:
       zh: 2026 未真机验证
       en: Not run live on 2026
   revit_create_wall:
-    source: a47d1b8d9ac4
+    source: '768409437256'
     group: edit
     since: 0.2.0
     title:
-      zh: "创建直墙"
-      en: "Create straight wall"
+      zh: 创建直墙
+      en: Create straight wall
     summary:
       zh: 按两点建直墙（mm，指定标高、墙类型、高度）
-      en: "Create a wall from two XY points, a level, type and height"
+      en: Create a wall from two XY points, a level, type and height
     years:
       '2020':
         state: validated
@@ -559,16 +574,16 @@ tools:
     - zh: 在 1F 从 (0,0) 到 (6000,0) 建一道 200mm 墙
       en: Draw a 200 mm wall on 1F from 0,0 to 6000,0
   revit_create_floor:
-    source: 1223d02fae21
+    source: '05d38c39dfbb'
     group: edit
     origin: fork
     since: 0.2.0
     title:
-      zh: "创建楼板"
-      en: "Create floor"
+      zh: 创建楼板
+      en: Create floor
     summary:
       zh: 按闭合轮廓建楼板（至少 3 个顶点，mm）
-      en: "Create a floor from a closed XY boundary with at least three vertices"
+      en: Create a floor from a closed XY boundary with at least three vertices
     years:
       '2020':
         state: validated
@@ -583,16 +598,16 @@ tools:
       zh: 2020 走 Document.Create.NewFloor，2022+ 走 Floor.Create
       en: On 2020 it uses Document.Create.NewFloor, from 2022 Floor.Create
   revit_create_level:
-    source: e8a985c864e7
+    source: '68d2a6d6c941'
     group: edit
     origin: fork
     since: 0.10.0
     title:
-      zh: "创建标高"
-      en: "Create level"
+      zh: 创建标高
+      en: Create level
     summary:
       zh: 在指定高程新建标高（mm）
-      en: "Create a level at a given elevation in millimetres"
+      en: Create a level at a given elevation in millimetres
     years:
       '2020':
         state: validated
@@ -607,16 +622,16 @@ tools:
       zh: 同名标高会被拒绝，避免后续工具解析到有歧义的标高
       en: An existing level with the same name is refused, so a later tool never resolves an ambiguous level
   revit_set_phase:
-    source: d554282f0619
+    source: 'e6065da74fe8'
     group: phases
     origin: fork
     since: 0.3.0
     title:
-      zh: "设置构件阶段"
-      en: "Set element phases"
+      zh: 设置构件阶段
+      en: Set element phases
     summary:
       zh: 赋创建阶段 / 拆除阶段（空串清除，null 不变）
-      en: "Assign created/demolished phases; an empty string clears and null leaves unchanged"
+      en: Assign created/demolished phases; an empty string clears and null leaves unchanged
     years:
       '2020':
         state: validated
@@ -629,18 +644,18 @@ tools:
       en: Mark these elements as demolished in the Existing phase
     note:
       zh: 阶段顺序检查的 API 只在 2022+ ，2020 走兜底
-      en: 'The phase order API exists from 2022; 2020 uses a fallback. Phase names are Revit UI strings, so in the example demolished_phase="现有" the value is the Chinese label of the Existing phase.'
+      en: The phase order API exists from 2022; 2020 uses a fallback. Phase names are Revit UI strings, so in the example demolished_phase="现有" the value is the Chinese label of the Existing phase.
   revit_merge_phases:
-    source: e15e02257c26
+    source: '814d4b6f194d'
     group: phases
     origin: fork
     since: 0.3.0
     title:
-      zh: "合并项目阶段"
-      en: "Merge project phases"
+      zh: 合并项目阶段
+      en: Merge project phases
     summary:
       zh: 把一个阶段的引用并入另一个阶段并删除空阶段
-      en: "Reassign references to another phase and attempt to delete the emptied phase"
+      en: Reassign references to another phase and attempt to delete the emptied phase
     years:
       '2020':
         state: validated
@@ -655,15 +670,15 @@ tools:
       zh: 不可放进 batch
       en: Cannot run inside batch
   revit_set_parameter:
-    source: c3f91d6b805b
+    source: '4573f9a8a6c9'
     group: edit
     since: 0.1.0
     title:
-      zh: "修改参数"
-      en: "Edit parameter"
+      zh: 修改参数
+      en: Edit parameter
     summary:
       zh: 按参数名写值（长度 mm、面积 m²，其余按内部单位）
-      en: "Set a named parameter; lengths use mm, areas m² and other doubles internal units"
+      en: Set a named parameter; lengths use mm, areas m² and other doubles internal units
     years:
       '2020':
         state: validated
@@ -678,15 +693,15 @@ tools:
       zh: 支持 dry_run
       en: Supports dry_run
   revit_delete:
-    source: 925c54f302f6
+    source: '6ec510a16f9b'
     group: edit
     since: 0.1.0
     title:
-      zh: "删除构件"
-      en: "Delete elements"
+      zh: 删除构件
+      en: Delete elements
     summary:
       zh: 删除构件及其依赖
-      en: "Delete selected elements and their Revit dependencies"
+      en: Delete selected elements and their Revit dependencies
     years:
       '2020':
         state: validated
@@ -701,16 +716,16 @@ tools:
       zh: 支持 dry_run
       en: Supports dry_run
   revit_reset_element_ids:
-    source: f77c44a94e42
+    source: '43f1cb6a7669'
     group: ids
     origin: fork
     since: 0.8.0
     title:
-      zh: "同文档替换 ID"
-      en: "Replace IDs in place"
+      zh: 同文档替换 ID
+      en: Replace IDs in place
     summary:
       zh: 同文档内换 ID：只对无宿主、无依赖的独立构件有效
-      en: "Replace eligible standalone elements with copies to obtain new IDs"
+      en: Replace eligible standalone elements with copies to obtain new IDs
     years:
       '2020':
         state: validated
@@ -725,16 +740,16 @@ tools:
       zh: 先运行 dry_run；有宿主、有依赖、成组或属于 MEP 系统的构件会被拒绝
       en: Run dry_run first; hosted, dependent, grouped and MEP-system elements are refused
   revit_rebuild_model_ids:
-    source: 46f38a2677ec
+    source: '65e009899f59'
     group: ids
     origin: fork
     since: 0.8.0
     title:
-      zh: "新模型重建 ID"
-      en: "Rebuild IDs in new models"
+      zh: 新模型重建 ID
+      en: Rebuild IDs in new models
     summary:
       zh: 整模型换新 ID：把三维视图可选中的构件重建为一份或多份新模型
-      en: "Copy selectable 3D-view components into one or more new models with fresh IDs"
+      en: Copy selectable 3D-view components into one or more new models with fresh IDs
     years:
       '2020':
         state: validated
@@ -750,42 +765,17 @@ tools:
     note:
       zh: 源模型不变；仅复制三维视图可选构件及必要基准，不是完整项目克隆；逐份检查数量与 ID 映射
       en: The source stays unchanged; only selectable 3D-view elements and required datums are copied, not the full project; check every count and ID mapping
-  revit_batch:
-    source: b18166af7437
-    group: ids
-    since: 0.2.0
-    title:
-      zh: "批量动作"
-      en: "Batch actions"
-    summary:
-      zh: 1–50 步动作合并成一次撤销（revit_batch）
-      en: "Execute 1–50 actions as one undo step and roll back on the first failed step"
-    years:
-      '2020':
-        state: validated
-      '2026':
-        state: validated
-      other:
-        state: built
-    prompts:
-    - zh: 把这 10 个构件一起移动并改参数，做成一次撤销
-      en: Move and retag these ten elements as one undo step
-    - zh: 把这一批修改先用 dry_run 演示一遍
-      en: Show this batch of changes as a dry run first
-    note:
-      zh: 任一步首次失败都整体回滚
-      en: Rolls the whole batch back when a step fails
   revit_set_view_lighting:
-    source: 61dd66225c75
+    source: '9ac518c62db6'
     group: views
     origin: fork
     since: 0.10.0
     title:
-      zh: "设置视图光照"
-      en: "Set view lighting"
+      zh: 设置视图光照
+      en: Set view lighting
     summary:
       zh: 设置视图的阴影、太阳位置与强度、地面平面、背景和渲染光源方案
-      en: "Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme"
+      en: Set a view's shadows, sun position and intensities, ground plane, background and rendering lighting scheme
     years:
       '2020':
         state: validated
@@ -803,6 +793,1066 @@ tools:
     note:
       zh: 阳光与阴影设置属于视图；共享设置时改动会传递到共享该设置的其他视图，阴影开关在共享设置下不可用
       en: Sun and shadow settings belong to the view; a shared setting passes the change on to every view that shares it, and the shadow switch itself is unavailable when they are shared
+  revit_ui_state:
+    source: '6489b6c4a18c'
+    group: query
+    since: 1.0.0
+    title:
+      zh: 界面状态
+      en: Revit UI state
+    summary:
+      zh: 读取当前文档、打开的视图、选择集与所有打开的文档
+      en: Read the active document, open views, selection and open documents
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 我现在选中了什么？还开了哪些视图？
+      en: What is selected right now, and which views are open?
+  revit_activate_view:
+    source: 'ca1bafb9b8d2'
+    group: views
+    since: 1.0.0
+    title:
+      zh: 激活视图
+      en: Activate view
+    summary:
+      zh: 激活非样板视图，并按需缩放或框选构件
+      en: Activate a non-template view, then zoom to fit or frame element ids
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 打开 1F 平面并缩放到刚好放得下
+      en: Open the Level 1 plan and zoom to fit
+  revit_apply_view_template:
+    source: 'd270c76dbb4d'
+    group: views
+    since: 1.0.0
+    title:
+      zh: 应用视图样板
+      en: Apply view template
+    summary:
+      zh: 将匹配的视图样板应用到一个或多个视图
+      en: Apply a matching view template to one or more views
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把“MEP 出图”视图样板应用到所有暖通平面视图。
+      en: Apply the "MEP Documentation" view template to all HVAC plan views
+  revit_close_views:
+    source: 'ad6c93cd17f9'
+    group: views
+    since: 1.0.0
+    title:
+      zh: 关闭视图
+      en: Close views
+    summary:
+      zh: 关闭当前文档中打开的 UI 视图
+      en: Close open UI views in the active document
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 关闭除“L1 平面图”以外的所有打开视图。
+      en: Close every open view except the "L1 Plan"
+  revit_create_view:
+    source: 'b4f25dde4bce'
+    group: views
+    since: 1.0.0
+    title:
+      zh: 创建视图
+      en: Create view
+    summary:
+      zh: 创建平面、剖面、三维或详图视图；包围盒坐标为模型毫米
+      en: Create a plan, section, 3D or drafting view; box coordinates are model mm
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 创建一个名为"三层平面"的楼层平面视图，比例 1:100
+      en: Create a floor plan named Level 3 Plan at scale 1:100
+  revit_duplicate_view:
+    source: '4c6496337897'
+    group: views
+    since: 1.0.0
+    title:
+      zh: 复制视图
+      en: Duplicate view
+    summary:
+      zh: 复制视图，可带详图，也可作为从属视图
+      en: Duplicate a view, optionally with detailing or as a dependent view
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把 1F 平面复制一份带详图的副本
+      en: Duplicate the Level 1 plan with detailing
+  revit_set_view_visibility:
+    source: 'c21f29c8fb93'
+    group: views
+    since: 1.0.0
+    title:
+      zh: 设置视图可见性
+      en: Set View Visibility
+    summary:
+      zh: 改单个视图的类别、工作集与过滤器可见性，dry_run 可预览
+      en: Change category, workset and filter visibility in one view, with a dry-run preview
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 在平面视图 'A-101' 里隐藏 OST_StructuralColumns 类别，先用 dry_run 预览。
+      en: Hide the OST_StructuralColumns category in the 'A-101' plan view, previewing with a dry run first.
+  revit_view_info:
+    source: '5ed83c5c9144'
+    group: views
+    since: 1.0.0
+    title:
+      zh: 查看视图信息
+      en: View Info
+    summary:
+      zh: 查看单个视图的模板、类别、工作集、过滤器与链接
+      en: Inspect one view's template, display, categories, worksets, filters and links
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 给我看看楼层平面视图 'Level 1' 的类别可见性、工作集和过滤器设置。
+      en: Tell me the category visibility, worksets and filters of the 'Level 1' floor plan view.
+  revit_build_report:
+    source: '711824cc9bc3'
+    group: export
+    since: 1.0.0
+    title:
+      zh: 生成快照报告
+      en: Build snapshot report
+    summary:
+      zh: 从快照本地生成 Excel 报告，无需连接 Revit
+      en: Build a local Excel report from snapshots without contacting Revit
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把 snapshots 目录里的快照汇总成一份 Excel 报告
+      en: Turn the snapshots in the snapshots folder into an Excel report
+  revit_export:
+    source: '6cc9e1c1b412'
+    group: export
+    since: 1.0.0
+    title:
+      zh: 导出模型文件
+      en: Export Model Files
+    summary:
+      zh: 导出 PDF、DWG、IFC 或明细表 CSV，dry_run 返回计划文件名
+      en: Export PDF, DWG, IFC or schedule CSV files; a dry run returns planned names
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把视图 'A-101' 导出成 PDF 到 'C:\Out'，先用 dry_run 看计划文件名。
+      en: Export the 'A-101' view to PDF in 'C:\Out', showing the planned file names with a dry run first.
+  revit_export_nwc:
+    source: 'cb16d479dc3c'
+    group: export
+    since: 1.0.0
+    title:
+      zh: 导出 Navisworks NWC
+      en: Export Navisworks NWC
+    summary:
+      zh: 在 Revit 工作站导出 NWC，需装 Navisworks 导出器；覆盖已有文件需确认令牌
+      en: Export NWC on the Revit workstation; needs the Navisworks exporter, and overwriting needs a confirm token
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把当前视图导出成 NWC 到 D:\\output\\塔楼.nwc，文件已存在就覆盖
+      en: Export the current view to D:\output\tower.nwc and overwrite it if it already exists
+  revit_issue_register:
+    source: 'f6846d22ae59'
+    group: export
+    since: 1.0.0
+    title:
+      zh: 问题登记表
+      en: Issue register
+    summary:
+      zh: 生成带构件快照的问题登记表 .xlsx，已存在的文件不覆盖
+      en: Write a new .xlsx issue register with element snapshots and review documents
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把这 8 个问题整理成一份问题登记表 .xlsx
+      en: Turn these eight issues into an .xlsx issue register
+  revit_model_snapshot:
+    source: '02c7dccd661f'
+    group: export
+    since: 1.0.0
+    title:
+      zh: 导出模型快照
+      en: Model snapshot
+    summary:
+      zh: 读取 schema v1 项目快照用于批量审计（只读；关闭的工作集会使结果不完整）
+      en: Read a schema version 1 project snapshot for batch audits; closed worksets can leave it incomplete
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 给当前项目导出一份模型快照，我要做批量审计。
+      en: Export a model snapshot of the current project for a batch audit
+  revit_nwc_settings_check:
+    source: '1bd57b29238f'
+    group: export
+    since: 1.0.0
+    title:
+      zh: 检查 NWC 导出设置
+      en: Check NWC Settings
+    summary:
+      zh: 解析工作站上的 NWC 导出设置 XML，不实际导出
+      en: Parse a Navisworks exporter XML on the workstation without exporting
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 帮我看看 Revit 工作站上 NWC 导出设置 XML 里配了什么，先别导出。
+      en: Check what the Navisworks exporter settings XML on the Revit workstation contains, without exporting.
+  revit_capture_elements:
+    source: '2f4491d558d7'
+    group: display
+    since: 1.0.0
+    title:
+      zh: 构件截图
+      en: Capture elements
+    summary:
+      zh: 生成标记 1–500 个构件的 PNG 截图，临时视图会回滚
+      en: Render a PNG marking 1 to 500 elements; the temporary view is rolled back
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把 1F 平面上这几根梁高亮截一张图，做问题记录用
+      en: Highlight these beams in the Level 1 plan as a PNG for an issue record
+  revit_override_graphics:
+    source: 'a63e16c3abdb'
+    group: display
+    since: 1.0.0
+    title:
+      zh: 着色构件
+      en: Highlight elements
+    summary:
+      zh: 在指定视图里给构件着色，reset 可还原本次会话的覆盖
+      en: Colour elements in selected views; reset restores this session's overrides
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把这几根柱子在 1F 平面涂成红色，其他构件调淡
+      en: Colour these columns red in the Level 1 plan and halftone the rest
+  revit_tag_elements:
+    source: 'a37919655b3c'
+    group: display
+    since: 1.0.0
+    title:
+      zh: 标注构件
+      en: Tag elements
+    summary:
+      zh: 在视图里按类别或构件 ID 加标记，房间标记需平面视图
+      en: Tag elements by category or element ids in a view; room tags need a plan view
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 给 1F 平面上所有门加上标记
+      en: Tag every door on the Level 1 plan
+  revit_change_type:
+    source: 'c92792ab8366'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 更换类型
+      en: Change element type
+    summary:
+      zh: 把构件批量换成同一个兼容类型，成组构件会被跳过
+      en: Change each element to one compatible type; group members are skipped
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把这些墙换成 200mm 的混凝土墙
+      en: Change these walls to the 200 mm concrete wall type
+  revit_copy:
+    source: '39bfbc17e4ad'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 复制构件
+      en: Copy Elements
+    summary:
+      zh: 按毫米偏移复制 1 到 100 个构件，dry_run 会回滚
+      en: Copy elements 1 to 100 times at a millimetre offset, rolled back on a dry run
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把选中的墙沿 X 方向偏移 3000 毫米复制 5 份。
+      en: Copy the selected walls 5 times with a 3000 mm offset along X.
+  revit_create_mep_run:
+    source: 'be0eafebf625'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 生成管线
+      en: Create MEP run
+    summary:
+      zh: 按 mm 点串生成风管、水管、桥架或线管，并连成一段
+      en: Create connected duct, pipe, tray or conduit runs from points in mm
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 在 3F 上从这几个点拉一条 DN100 的水管
+      en: Draw a DN100 pipe through these points on Level 3
+  revit_execute_code:
+    source: '733b52633b1d'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 执行 C# 代码
+      en: Execute C# code
+    summary:
+      zh: 在 Revit 线程编译运行 C#，自动模式下自管一个事务与撤销记录
+      en: Compile and run C# on the Revit thread; auto mode owns one transaction and undo entry
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 跑一段 C#，把当前视图里所有墙的注释参数改成 Review
+      en: Run C# that sets the Comments parameter on every wall to Review
+  revit_mirror:
+    source: 'ff757969a2c5'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 镜像图元
+      en: Mirror elements
+    summary:
+      zh: 沿过 point_mm 的 X 或 Y 平行线镜像；dry_run 回滚，copy 保留原图元
+      en: Mirror elements across a model X or Y parallel line through point_mm; dry_run rolls back
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把选中的三面外墙沿过 (0, 0) 的 Y 轴平行线镜像，并保留原件
+      en: Mirror the three selected walls across the Y-parallel line through (0, 0) and keep the originals
+  revit_process_models:
+    source: '0ec456b819f9'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 批量处理模型
+      en: Process many models
+    summary:
+      zh: 在交互会话中逐个打开模型执行步骤和 C# 代码并按需导出保存；原地保存与代码需 confirm_token 确认
+      en: Open each model in the interactive session, run steps and C# code, and export or save as requested; in-place saves and code need a confirm_token
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 批量打开 D:/models 下的模型，导出 PNG 并另存为新文件，不要原地保存。
+      en: Batch-open the models under D:/models, export PNGs and save as new files instead of saving in place
+  revit_rotate:
+    source: 'f6103af88601'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 旋转图元
+      en: Rotate elements
+    summary:
+      zh: 绕 center_mm 竖直轴或包围盒中心旋转图元；dry_run 会回滚，成组、锁定等图元记入 skipped
+      en: Rotate elements about a vertical axis through center_mm or their bounding-box center; dry_run rolls back, group, pinned and hosted elements are skipped
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把选中的 3 根柱子绕原点旋转 30 度，先用 dry_run 预览结果。
+      en: Rotate the three selected columns 30 degrees around the origin; preview with dry_run first
+  revit_undo_last:
+    source: 'bfbbbf84839b'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 撤销上一步
+      en: Undo last action
+    summary:
+      zh: 通过 Revit 自带撤销命令撤销本会话上一步 MCP 操作，仅在目标文档激活且撤销记录匹配时执行
+      en: Undo the last MCP action via Revit's own undo command, only when the target document is active and the session's undo entry matches
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 撤销你刚才在活动文档里执行的最后一步操作。
+      en: Undo the last action you just made in the active document
+  revit_update_parameters:
+    source: 'bcb4253ab4ea'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 更新参数
+      en: Update parameters
+    summary:
+      zh: 按与 revit_query_elements 相同的筛选条件更新图元参数；成组成员记入 skipped，dry_run 可预测结果
+      en: Update a parameter on elements matching the same filters as revit_query_elements; group members are skipped and dry_run predicts the outcome
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把一层所有墙的 Comments 参数改成“待检查”，先 dry_run 预览影响范围。
+      en: Set the Comments parameter to "to be checked" on all level 1 walls; predict the impact with dry_run first
+  revit_walls_from_cad:
+    source: '0b8be48afe4f'
+    group: edit
+    since: 1.0.0
+    title:
+      zh: 从 CAD 生成墙体
+      en: Build Walls from CAD
+    summary:
+      zh: 按 CAD 线段配对成墙并连接开口，尺寸单位为毫米
+      en: Pair CAD lines into joined basic walls, bridging openings, with millimetre dimensions
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 用底图 'Level 1' 的 CAD 线生成基本墙体，高 3000 毫米并连接两端。
+      en: Build basic walls from the 'Level 1' underlay CAD lines, 3000 mm high, and join the ends.
+  revit_activate_document:
+    source: '08003b4f1ee7'
+    group: documents
+    since: 1.0.0
+    title:
+      zh: 激活文档
+      en: Activate document
+    summary:
+      zh: 按标题或路径引用激活一个已打开的文档
+      en: Activate an already open document by title or path reference
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把后台打开的"塔楼 B.rvt"切换为活动文档
+      en: Make the background document Tower B.rvt active
+  revit_close_document:
+    source: '9ace6ead5e71'
+    group: documents
+    since: 1.0.0
+    title:
+      zh: 关闭文档
+      en: Close document
+    summary:
+      zh: 关闭后台文档；首次调用不改任何内容，返回确认令牌
+      en: Close a background document; the first call changes nothing and returns the confirm token
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 关闭后台打开的"旧版示楼.rvt"，不要保存
+      en: Close the background document Old Sample Tower.rvt without saving
+  revit_documents:
+    source: '291dc1dd5810'
+    group: documents
+    since: 1.0.0
+    title:
+      zh: 列出打开的文档
+      en: List open documents
+    summary:
+      zh: 列出一个 Revit 进程中所有打开的文档，含后台文档
+      en: List every open document in one Revit process, including background documents
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 这个进程里现在打开了哪些文档？把链接文档也列出来
+      en: Which documents are open right now, including linked ones?
+  revit_new_document:
+    source: '943e761c6275'
+    group: documents
+    since: 1.0.0
+    title:
+      zh: 新建模型
+      en: New Document
+    summary:
+      zh: 在工作站用模板新建项目或族文件
+      en: Create a project or family from a template on the Revit workstation
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 用 'Metric Generic Model.rte' 模板新建一个项目，命名为 '塔楼方案'。
+      en: Create a new project from the 'Metric Generic Model.rte' template named 'Tower Scheme'.
+  revit_open_document:
+    source: '0c9ab4534ad5'
+    group: documents
+    since: 1.0.0
+    title:
+      zh: 打开模型
+      en: Open Document
+    summary:
+      zh: 在工作站打开本地、UNC 或 RSN 模型，中央模型默认分离打开
+      en: Open a local, UNC or RSN model on the workstation; central models open detached
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 帮我打开中央模型 'Tower.rvt'，用分离模式打开。
+      en: Open the central model 'Tower.rvt' for me in detached mode.
+  revit_save_document:
+    source: 'd47054184d65'
+    group: documents
+    since: 1.0.0
+    title:
+      zh: 保存文档
+      en: Save document
+    summary:
+      zh: 保存文档；首次调用只返回 confirm_token，不改动文件
+      en: Save a document; the first call only returns a confirm_token and changes nothing
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把当前模型存盘，覆盖原文件
+      en: Save the current model over the existing file
+  revit_sync_document:
+    source: '1b046e57fc30'
+    group: documents
+    since: 1.0.0
+    title:
+      zh: 同步文档
+      en: Synchronize document
+    summary:
+      zh: 将工作共享文档与中心文件同步；首次调用不改动任何内容，需用返回的 confirm_token 再确认
+      en: Synchronize a workshared document with central; the first call changes nothing and returns the confirm_token needed to proceed
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把当前工作共享文档同步到中心文件，备注“更新门窗标注”。
+      en: Synchronize the current workshared document with central, comment "update door and window tags"
+  revit_batch_cancel:
+    source: 'c32c2aa46639'
+    group: batch
+    since: 1.0.0
+    title:
+      zh: 取消批量收集
+      en: Cancel batch collection
+    summary:
+      zh: 持久化取消状态，阻止批量任务中未启动的模型继续运行
+      en: Persist cancellation and prevent unstarted models from running
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 取消 run_id 为 a1b2c3 的批量任务，还没开始的模型就别再跑了。
+      en: Cancel the batch run with run_id a1b2c3 so the unstarted models do not run
+  revit_batch_fetch:
+    source: 'dc6879a82f74'
+    group: batch
+    since: 1.0.0
+    title:
+      zh: 获取批量快照
+      en: Fetch Batch Snapshots
+    summary:
+      zh: 把已完成的快照下载为新的本地文件，不覆盖已有文件
+      en: Download completed snapshots to new local files without overwriting them
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把批次 'run-2026-10-31' 的快照下载到 'C:\Snapshots'，别覆盖已有文件。
+      en: Download the snapshots for batch run 'run-2026-10-31' into 'C:\Snapshots' without overwriting existing files.
+  revit_batch_start:
+    source: '8475b4dbfe17'
+    group: batch
+    since: 1.0.0
+    title:
+      zh: 启动批量采集
+      en: Start batch collection
+    summary:
+      zh: 对本地、UNC 或 RSN 模型启动持久只读采集
+      en: Start a persistent, read-only run over local, UNC or RSN models
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 扫描 \\fileserver\models 下的所有 RVT 模型并开始批量采集
+      en: Scan all RVT models under \\fileserver\models and start a batch collection
+  revit_batch_status:
+    source: 'd6b1eb3527eb'
+    group: batch
+    since: 1.0.0
+    title:
+      zh: 批处理状态
+      en: Batch collection status
+    summary:
+      zh: 发起客户端退出后，读取留存下来的运行与模型状态
+      en: Read durable run and model status after the initiating client exits
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 刚才那个批处理跑完了吗？客户端已经关了
+      en: Did that batch finish? The client already closed
+  revit_cancel_job:
+    source: '48e4c2b729f1'
+    group: batch
+    since: 1.0.0
+    title:
+      zh: 取消作业
+      en: Cancel action job
+    summary:
+      zh: 请求取消一个操作作业；已完成的更改保持提交状态
+      en: Request cancellation of an action job; completed changes stay committed
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把还在跑的那个批量作业 job-1234 取消掉
+      en: Cancel the batch job job-1234 that is still running
+  revit_jobs:
+    source: '09cbbc9117f1'
+    group: batch
+    since: 1.0.0
+    title:
+      zh: 作业列表
+      en: List jobs
+    summary:
+      zh: 查看最近作业，或等待某个动作作业的结果
+      en: List recent jobs, or wait up to wait_seconds for one action result
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 最近跑过哪些作业？顺便等一下 jobId 为 3 的那个结果
+      en: Which jobs ran recently? Also wait for the jobId 3 result
+  revit_run_actions:
+    source: '77cc32d4b5e2'
+    group: batch
+    since: 1.0.0
+    title:
+      zh: 批量操作
+      en: Run actions
+    summary:
+      zh: 一次执行最多 50 个动作，共用一个撤销记录，首个失败整批回滚
+      en: Run up to 50 actions as one undo step; the batch rolls back on first failure
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 一口气把这 20 个视图都导出成 PDF
+      en: Export these 20 views to PDF in one go
+  revit_edit_families:
+    source: '0587bed910fe'
+    group: families
+    since: 1.0.0
+    title:
+      zh: 编辑族
+      en: Edit Families
+    summary:
+      zh: 就地编辑已打开的族或项目族，dry_run 会回滚全部改动
+      en: Edit an open family in place or named project families, rolled back on a dry run
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 帮我编辑项目族 'M_Column' 的可见性参数，先用 dry_run 预览。
+      en: Edit the visibility parameter of the project family 'M_Column', previewing with a dry run first.
+  revit_family_audit:
+    source: 'ec3fd8a76022'
+    group: families
+    since: 1.0.0
+    title:
+      zh: 审计族
+      en: Audit families
+    summary:
+      zh: 审计打开的族或按名称审计项目族，不保存或加载更改；detail=full 返回全部参数元数据
+      en: Audit an open family or named project families without saving or loading changes; detail=full returns all parameter metadata
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 用通配符审计项目里的所有族，看看哪些参数没有被使用？
+      en: Audit all families in the project with the wildcard and show which parameters are unused
+  revit_load_family:
+    source: '93eb74f8ef7f'
+    group: families
+    since: 1.0.0
+    title:
+      zh: 加载族
+      en: Load Families
+    summary:
+      zh: 在工作站把 .rfa 族文件加载进一个撤销步骤
+      en: Load .rfa family files on the workstation in a single undo entry
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把 'C:\Families\M_Column.rfa' 和 'M_Beam.rfa' 加载进当前模型。
+      en: Load 'C:\Families\M_Column.rfa' and 'M_Beam.rfa' into the current model.
+  revit_place_families:
+    source: 'e72de7ae05fa'
+    group: families
+    since: 1.0.0
+    title:
+      zh: 放置族实例
+      en: Place families
+    summary:
+      zh: 加载可选族并在一个事务与撤销项中放置实例
+      en: Load optional families and place instances in one transaction and undo entry
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 先加载"双开门"族，然后在会议室里放置两个实例
+      en: Load the Double Door family, then place two instances in the meeting room
+  revit_create_schedule:
+    source: 'd03667198453'
+    group: sheets
+    since: 1.0.0
+    title:
+      zh: 创建明细表
+      en: Create schedule
+    summary:
+      zh: 为单个类别按命名字段和顺序创建明细表，支持筛选与排序分组；dry_run 会回滚
+      en: Create a schedule for one category with named fields in order, with filtering and sorting/grouping; dry_run rolls back
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 给“门”类别建一个明细表，字段按 Mark、Level、Count 排列，命名为“门窗统计”。
+      en: Create a schedule for the Doors category with fields Mark, Level, Count in that order, named "Door and Window Takeoff"
+  revit_create_sheet:
+    source: '0294679b0de0'
+    group: sheets
+    since: 1.0.0
+    title:
+      zh: 创建图纸
+      en: Create Sheet
+    summary:
+      zh: 用第一个已载入或指定的图框创建图纸
+      en: Create a sheet with the first loaded or a named title block
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 创建一张编号 'A-102'、名称 '二层平面图' 的图纸，用 'A1' 图框。
+      en: Create a sheet numbered 'A-102' named 'Level 2 Floor Plan' using the 'A1' title block.
+  revit_place_views_on_sheet:
+    source: 'dc874ffaf3f1'
+    group: sheets
+    since: 1.0.0
+    title:
+      zh: 图纸上布置视图
+      en: Place views on sheet
+    summary:
+      zh: 把视图和明细表布置到图纸上，坐标为图纸毫米
+      en: Place views and schedules on a sheet; coordinates are sheet mm
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把"首层平面"视图放到 A101 图纸的 (300, 200) 位置
+      en: Place the Level 1 Plan view on sheet A101 at (300, 200)
+  revit_schedule_data:
+    source: '1c21d3d0b898'
+    group: sheets
+    since: 1.0.0
+    title:
+      zh: 读取明细表数据
+      en: Read schedule data
+    summary:
+      zh: 分页读取明细表表头与单元格显示文本
+      en: Read displayed schedule header and body cell text, with paging
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把"门窗明细表"前 100 行的数据读出来
+      en: Read the first 100 rows of the Door Schedule
+  revit_align_link_datums:
+    source: 'b022226ad7fc'
+    group: links
+    since: 1.0.0
+    title:
+      zh: 对齐链接基准
+      en: Align Link Datums
+    summary:
+      zh: 把宿主轴网与标高对齐到已链接模型，dry_run 可预览回滚
+      en: Align host grids and levels to a loaded link, with a dry-run rollback preview
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把当前模型的轴网和标高对齐到已链接模型 'StructureLink.rvt'，公差 5 毫米。
+      en: Align the host grids and levels to the loaded link 'StructureLink.rvt' with a 5 mm tolerance.
+  revit_compare_link_datums:
+    source: '8bf597c28707'
+    group: links
+    since: 1.0.0
+    title:
+      zh: 对比链接标高轴网
+      en: Compare link datums
+    summary:
+      zh: 对比宿主与一个已加载 Revit 链接的轴网和标高（不改动模型）
+      en: Compare host grids and levels with one loaded Revit link; changes nothing
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 对比一下链接模型“结构参考.rvt”里的轴网和标高与当前项目有哪些差异？
+      en: Compare the grids and levels of the linked model "Structure Ref.rvt" against the current project
+  revit_link_cad:
+    source: 'c1850f047c2e'
+    group: links
+    since: 1.0.0
+    title:
+      zh: 链接 CAD 图纸
+      en: Link CAD drawing
+    summary:
+      zh: 将 DWG 链接或导入到 Revit 工作站上的平面视图，返回 CAD 图层与毫米单位范围
+      en: Link or import a DWG into a plan view on the Revit workstation and return CAD layers and extents in mm
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把 D:/drawings/L1-plan.dwg 链接到“L1 平面图”视图里。
+      en: Link D:/drawings/L1-plan.dwg into the "L1 Plan" view
+  revit_remove_links:
+    source: '1d9257b07911'
+    group: links
+    since: 1.0.0
+    title:
+      zh: 移除链接
+      en: Remove links
+    summary:
+      zh: 删除所选链接类型及其实例；dry_run 预览，删除后 Revit 内不可撤销
+      en: Delete selected link types and their instances; dry_run previews, and Revit cannot undo it
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 先用 dry_run 预览，然后删除当前文档里的所有 Revit 链接
+      en: Preview with dry_run first, then remove all Revit links from this document
 year_notes:
   '2020':
     zh:
@@ -820,7 +1870,7 @@ year_notes:
     - Phases use the API that appears from 2022, with no order-check fallback
 param_notes:
   revit_rebuild_model_ids:
-    source: 46f38a2677ec
+    source: '65e009899f59'
     destination_path:
       zh: 新模型路径（.rvt）；含 {n} 时按份编号
       en: new model path (.rvt); {n} numbers the copies
@@ -835,9 +1885,9 @@ param_notes:
       en: create and remove N temporary levels to advance new-document IDs; use different seeds across runs and verify overlap in the mappings
     dry_run:
       zh: 彩排：在临时新文档中复制并给出映射，不保存目标文件；源模型始终不变
-      en: 'rehearse in a temporary new document and report the mapping without saving; the source always stays unchanged'
+      en: rehearse in a temporary new document and report the mapping without saving; the source always stays unchanged
   revit_batch:
-    source: b18166af7437
+    source: 'b18166af7437'
     steps:
       zh: 1–50 个动作步骤；任一步首次失败都整体回滚
       en: one to fifty action steps; the batch rolls back when a step fails
@@ -845,7 +1895,7 @@ param_notes:
       zh: 彩排：执行后回滚，返回同样的校验块
       en: 'rehearse: execute, return the same verification block, then roll back'
   revit_aggregate_elements:
-    source: 526ca2e55260
+    source: '885dd2bc95b0'
     group_by:
       zh: 1–2 个分组字段（category/family/type/level 或参数名）
       en: 'one or two grouping fields: category, family, type, level or a parameter name'
@@ -867,8 +1917,11 @@ param_notes:
     workset:
       zh: 工作集过滤
       en: workset filter
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程 ID，优先于 `document`
+      en: Revit process ID; takes precedence over document.
   revit_query_elements:
-    source: 75aed63260b3
+    source: 'f19f48418eec'
     fields:
       zh: 要返回的字段；缺省返回常用字段
       en: fields to return; the tool picks its usual ones by default
@@ -896,21 +1949,33 @@ param_notes:
     workset:
       zh: 工作集过滤
       en: workset filter
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
   revit_export_view:
-    source: e1fd1638ac9e
+    source: 'a1163a0c0d32'
     save_to:
       zh: MCP 客户端机器上的新 PNG 文件路径，不是 Revit 工作站路径；文件已存在会报错
       en: New PNG path on the MCP client machine, not the Revit workstation; an existing file is an error
+    output_path:
+      zh: 新的 PNG 文件路径，在运行本服务器的机器上解析；文件已存在时报错。默认为 `null` 时下载到临时目录并返回 `localPath`
+      en: New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath.
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
   revit_export_element_ids:
-    source: 59690caf9e5f
+    source: 'c091f63079d0'
     fields:
       zh: 要写进表格的列；缺省为 类别/族/类型/标高/构件ID/名称/工作集
       en: columns to write; the defaults are category, family, type, level, component id, name and workset
     save_to:
       zh: 工作站上的 xlsx 绝对路径；文件已存在会报错
       en: absolute .xlsx path on the Revit workstation; an existing file is an error
+    path:
+      zh: 导出构件 ID 的文件路径
+      en: path of the exported element id file
   revit_reset_element_ids:
-    source: f77c44a94e42
+    source: '43f1cb6a7669'
     element_ids:
       zh: 要换 ID 的构件；有宿主、有依赖、成组或属于 MEP 系统的会被拒绝
       en: elements to replace; hosted, dependent, grouped or MEP system members are refused
@@ -918,7 +1983,7 @@ param_notes:
       zh: 彩排：替换后回滚，先跑一次看哪些构件不合格
       en: 'rehearse: replace, report the mapping, then roll back'
   revit_parameter_fill_check:
-    source: 2b42f82c5af8
+    source: '8b886aec60ab'
     include_types:
       zh: 实例上找不到参数时，是否回退到类型参数（默认 true）；不是把类型构件额外计数
       en: fall back to type parameters when absent on the instance (true by default); does not add type elements to the count
@@ -928,18 +1993,24 @@ param_notes:
     workset:
       zh: 只统计该工作集里的构件
       en: restrict to one workset
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
   revit_view_elements:
-    source: 4c4f085ce46a
+    source: '3176007180eb'
     categories:
       zh: 只列出这些类别的构件
       en: only list these categories
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
   revit_select:
-    source: 3b0ea70eb570
+    source: '43cb337219da'
     element_ids:
       zh: 要选中的构件 ID；传空列表清除选择
       en: element ids to select; an empty list clears the selection
   revit_show:
-    source: 3cdf84b8d9d1
+    source: 'c71c807d5db8'
     element_ids:
       zh: 要在视图里显示/选中的构件 ID
       en: element ids to show and select
@@ -947,17 +2018,17 @@ param_notes:
       zh: false 时只定位不改变当前选择
       en: false locates the elements without changing the selection
   revit_isolate:
-    source: 78e5d46528a3
+    source: 'f271939e4d03'
     element_ids:
       zh: 要隔离显示的构件 ID；配合 reset=true 恢复
       en: element ids to isolate; combine with reset=true to restore
   revit_move:
-    source: 0bfded33b2f7
+    source: '9db2e14d4115'
     element_ids:
       zh: 要移动的构件 ID
       en: element ids to move
   revit_place_family:
-    source: 6383331ec37f
+    source: 'd7d1e53536ca'
     x_mm:
       zh: 模型 X 坐标（mm）
       en: model X in millimetres
@@ -968,7 +2039,7 @@ param_notes:
       zh: 绕 Z 轴旋转角度（°）
       en: rotation about Z in degrees
   revit_create_wall:
-    source: a47d1b8d9ac4
+    source: '768409437256'
     start_mm:
       zh: 起点坐标 [x, y]（mm）
       en: start point [x, y] in millimetres
@@ -979,7 +2050,7 @@ param_notes:
       zh: 墙高（mm，默认 3000）
       en: wall height in millimetres (3000 by default)
   revit_create_level:
-    source: e8a985c864e7
+    source: '68d2a6d6c941'
     name:
       zh: 标高名称
       en: level name
@@ -990,7 +2061,7 @@ param_notes:
       zh: 同时创建对应的楼层平面视图
       en: also create the matching floor plan view
   revit_set_phase:
-    source: d554282f0619
+    source: 'e6065da74fe8'
     element_ids:
       zh: 要改阶段的构件 ID
       en: element ids whose phase changes
@@ -1001,7 +2072,7 @@ param_notes:
       zh: 拆除阶段名；空串清除该标记、null 不变
       en: demolished phase name; an empty string clears it, null leaves it unchanged
   revit_merge_phases:
-    source: e15e02257c26
+    source: '814d4b6f194d'
     source_phase:
       zh: 被合并掉的阶段名（合并后删除）
       en: the phase that is merged away and then deleted
@@ -1009,7 +2080,7 @@ param_notes:
       zh: 接收引用的阶段名
       en: the phase that receives the references
   revit_set_view_lighting:
-    source: 61dd66225c75
+    source: '9ac518c62db6'
     view:
       zh: 视图名称（与 revit_list_views 一致）或十进制视图 ID；非样板视图
       en: view name as revit_list_views reports it, or its decimal view ID; a non-template view
@@ -1044,7 +2115,7 @@ param_notes:
       zh: 视图背景 sky 或 gradient，仅三维、剖切和立面视图支持
       en: 'view background: sky or gradient, on 3D, section and elevation views only'
     background_colors:
-      zh: "渐变三色（天顶、地平线、地面），如 #C8DEF0"
+      zh: '渐变三色（天顶、地平线、地面），如 #C8DEF0'
       en: 'gradient colors (sky, horizon, ground), for example #C8DEF0'
     lighting_scheme:
       zh: 渲染光源方案：室外或室内，配阳光、人工光或两者
@@ -1052,6 +2123,839 @@ param_notes:
     dry_run:
       zh: 彩排：改完读取并回滚，返回与真实写入相同的读数
       en: 'rehearse: change, read, then roll back, returning the same readings as a real write'
+  revit_jobs:
+    source: '09cbbc9117f1'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    job_id:
+      zh: 要查询或等待结果的动作作业 ID
+      en: id of the action job whose result is fetched or waited for
+    wait_seconds:
+      zh: 等待任务结果的秒数（0 至 50）
+      en: Seconds to wait, 0 through 50.
+  revit_compare_link_datums:
+    source: '8bf597c28707'
+    link:
+      zh: 要比较的已链接 Revit 模型名称
+      en: name of the loaded Revit link to compare against
+    reuse_matching:
+      zh: 是否复用已匹配的轴网与标高
+      en: reuse already matched grids and levels
+    kinds:
+      zh: 要比较的链接类别
+      en: link kinds to compare
+    prefix:
+      zh: 用于筛选链接的名称前缀
+      en: name prefix filter for links
+    tolerance_mm:
+      zh: 比较基准点时的容差（单位 mm）
+      en: tolerance when comparing datum points (in mm)
+    level_offset_mm:
+      zh: 比较标高时施加的垂直偏移（单位 mm）
+      en: vertical offset applied to link levels while comparing (mm)
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
+    name_map:
+      zh: 宿主名称到链接名称的映射
+      en: Mapping of host datum names to link datum names.
+    suffix:
+      zh: 匹配到的轴网与标高名称所加后缀
+      en: Suffix appended to matched grid and level names.
+  revit_nwc_settings_check:
+    source: '1bd57b29238f'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    settings_xml:
+      zh: 工作站上 Navisworks 导出器 XML 文件的路径
+      en: Path of the Navisworks exporter XML file on the Revit workstation.
+  revit_documents:
+    source: '291dc1dd5810'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    include_linked:
+      zh: 是否列出链接文档
+      en: whether linked documents are listed
+  revit_model_health:
+    source: 'c4a83fabaf1c'
+    output_path:
+      zh: 新建 `.xlsx` 健康报告路径，在服务器所在机器解析；上级目录须存在且不覆盖已有文件
+      en: New .xlsx health report path, resolved on the machine running this server; parent must exist and existing files are refused.
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_list_views:
+    source: 'e8880f91d3fa'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+  revit_schedule_data:
+    source: '1c21d3d0b898'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    max_rows:
+      zh: 单页最多读取的明细表行数
+      en: maximum number of schedule rows read in one page
+    schedule:
+      zh: 精确的明细表名称或十进制视图 ID
+      en: Exact schedule name or decimal Revit view ID. (Use the id when two schedules share a name.)
+  revit_capture_elements:
+    source: '2f4491d558d7'
+    padding_mm:
+      zh: 截图构件四周的留白宽度（单位 mm）
+      en: padding around the captured elements, in mm
+    mode:
+      zh: 捕捉模式，`3d` 表示三维视图
+      en: capture mode, 3d for the three-dimensional view
+    output_path:
+      zh: 新的 PNG 输出路径，在运行本服务的机器上解析
+      en: New PNG path, resolved on the machine running this server; an existing file is an error. Default null downloads to a temporary directory and returns localPath.
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_list_relations:
+    source: 'a5978b8d2ced'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+  revit_open_document:
+    source: '0c9ab4534ad5'
+    activate:
+      zh: 打开后是否激活该文档
+      en: activate the document after opening it
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    mode:
+      zh: 打开方式：`detached`、`detached_discard_worksets`、`local_copy` 或 `read_only_local`
+      en: 'open mode: detached, detached_discard_worksets, local_copy or read_only_local'
+    path:
+      zh: 要打开的模型文件路径
+      en: path of the model to open on the Revit workstation
+    audit:
+      zh: 是否在打开后审计模型
+      en: Whether the model is audited after opening.
+    worksets:
+      zh: 工作集处理：`all`、`none` 或打开与关闭列表
+      en: Workset handling, all, none, or open and close name lists.
+  revit_activate_view:
+    source: 'ca1bafb9b8d2'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    activate_document:
+      zh: 是否同时激活该文档
+      en: whether the document is activated as well
+    zoom:
+      zh: 缩放方式：`fit`、`none` 或按构件 ID 取景
+      en: Zoom handling, fit the view, keep the current zoom, or frame element IDs.
+  revit_close_views:
+    source: 'ad6c93cd17f9'
+    views:
+      zh: 要关闭的视图名称列表
+      en: names of the views to close
+    keep_active:
+      zh: 是否保留当前激活的视图
+      en: whether to keep the active view open
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
+  revit_new_document:
+    source: '943e761c6275'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    kind:
+      zh: 新文档类型，`project` 或 `family`
+      en: 'kind of new document: project or family'
+    template:
+      zh: 新文档使用的模板文件
+      en: template file for the new document
+    name:
+      zh: 新建文档的名称
+      en: name given to the new document
+    activate:
+      zh: 是否让新文档成为活动文档
+      en: Whether the new document becomes the active document.
+    save_as:
+      zh: 新建文档另存到的文件路径
+      en: Path the new document is saved to.
+  revit_close_document:
+    source: '9ace6ead5e71'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    confirm_token:
+      zh: 首次调用返回、供第二次确认调用的令牌
+      en: token returned by a first call and passed to a second confirming call
+    save:
+      zh: 关闭前是否保存文档
+      en: Whether the document is saved before closing.
+  revit_save_document:
+    source: 'd47054184d65'
+    process_id:
+      zh: 目标 Revit 进程 ID（在多个运行实例中选定）
+      en: Revit process ID; takes precedence over document.
+    compact:
+      zh: 保存时是否压缩文件
+      en: whether to compact the file when saving
+    confirm_token:
+      zh: 首次调用返回、供第二次确认调用的令牌
+      en: token returned by a first call and passed to a second confirming call
+    save_as:
+      zh: 文档另存到的文件路径
+      en: Path the document is saved to.
+  revit_sync_document:
+    source: '1b046e57fc30'
+    confirm_token:
+      zh: 首次调用返回的令牌，用于第二次确认调用
+      en: token returned by the first call, sent in the second confirming call
+    save_local_before:
+      zh: 同步前是否先保存本地副本
+      en: save the local copy before synchronizing
+    comment:
+      zh: 同步提交时附带的说明
+      en: comment recorded with the sync
+    relinquish:
+      zh: 要放弃所有权的用户，`all` 表示全部用户
+      en: users whose ownership is relinquished, all for every user
+    compact:
+      zh: 同步时是否压缩中央模型
+      en: whether the central model is compacted during synchronisation
+    save_local_after:
+      zh: 同步后是否保存本地副本
+      en: whether the local copy is saved after synchronisation
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程
+      en: Target Revit process chosen among the running instances.
+  revit_set_view_visibility:
+    source: 'c21f29c8fb93'
+    hide_categories_by_type:
+      zh: 按类型名称隐藏的类别列表
+      en: category names to hide by type
+    filters:
+      zh: 视图可见性过滤条件
+      en: visibility filters applied to the view
+    template_mode:
+      zh: 可见性模板的应用模式
+      en: visibility template mode
+    hide_categories:
+      zh: 要隐藏的类别名称或 ID 列表
+      en: categories to hide, by name or id
+    worksets:
+      zh: 工作集可见性，含 `hide_mask` 与 `show_mask` 列表
+      en: workset visibility, with hide_mask and show_mask lists
+    category_classes:
+      zh: 按类别子类名控制的可见性
+      en: Visibility per category class, keyed by category name.
+    show_categories:
+      zh: 要在视图中显示的类别列表
+      en: Categories to make visible in the view.
+  revit_remove_links:
+    source: '1d9257b07911'
+    confirm_token:
+      zh: 首次调用返回的令牌，用于第二次确认调用
+      en: token returned by the first call, sent in the second confirming call
+    kinds:
+      zh: 要移除的链接类别
+      en: link kinds to remove
+    links:
+      zh: 要删除的链接名称或 ID 列表，或 `*` 表示全部
+      en: links to delete, by name or id, or * for all of them
+    include_imported_cad:
+      zh: 是否一并移除导入的 CAD 实例
+      en: Whether imported CAD instances are removed as well.
+  revit_execute_code:
+    source: '733b52633b1d'
+    code:
+      zh: 要编译并运行的 C# 代码正文
+      en: C# code to compile and run
+    transaction:
+      zh: 事务模式，`auto` 或 `none`
+      en: 'transaction mode: auto or none'
+    confirm_token:
+      zh: 首次调用返回、用于第二次确认调用的令牌
+      en: Token returned by a first call, passed back to confirm a second call.
+  revit_align_link_datums:
+    source: 'b022226ad7fc'
+    create_plan_views:
+      zh: 是否同时创建平面视图
+      en: create plan views for the aligned datums
+    level_offset_mm:
+      zh: 标高对齐的高程偏移量（单位 mm）
+      en: vertical offset applied to the aligned levels, in mm
+    plan_view_type:
+      zh: 新建平面视图所用的视图族类型名称
+      en: view family type name for the created plan views
+    tolerance_mm:
+      zh: 轴网与标高对齐的容差（单位 mm）
+      en: tolerance for grid and level alignment, in mm
+    include_pinned:
+      zh: 是否包含已固定的链接
+      en: whether to include pinned links
+    link:
+      zh: 要对齐的链接名称
+      en: name of the link to align
+    reuse_matching:
+      zh: 是否复用已有的基准点匹配
+      en: whether to reuse existing datum matches
+    create_missing:
+      zh: 缺失的宿主基准是否自动创建
+      en: whether missing host datums are created
+    kinds:
+      zh: 要对齐的基准类型列表：`grids` 或 `levels`
+      en: 'datum kinds to align: grids or levels'
+    name_map:
+      zh: 链接基准名到宿主基准名的映射表
+      en: map from link datum names to host datum names
+    suffix:
+      zh: 新建宿主基准名称添加的后缀
+      en: suffix appended to the names of created host datums
+    grid_type:
+      zh: 对齐所用的轴网类型名称
+      en: Name of the grid type to align to.
+    level_type:
+      zh: 对齐所用的标高类型名称
+      en: Name of the level type to align to.
+    prefix:
+      zh: 匹配到的轴网与标高名称所加前缀
+      en: Prefix added to matched grid and level names.
+  revit_override_graphics:
+    source: 'a63e16c3abdb'
+    fill:
+      zh: 是否填充覆盖的图形
+      en: fill the graphics override
+    views:
+      zh: 要应用覆盖的视图，`active` 表示当前视图
+      en: views to override; `active` means the active view
+    line_weight:
+      zh: 要覆盖的线宽值
+      en: line weight value to override
+    color:
+      zh: 覆盖颜色的十六进制值，如 `#FF0000`
+      en: hex colour applied by the override, such as
+    transparency:
+      zh: 覆盖颜色的透明度百分比（0-100）
+      en: transparency percentage of the override colour, 0 to 100
+    halftone_others:
+      zh: 其他构件是否以半色调显示
+      en: Whether other elements are drawn in halftone.
+  revit_mirror:
+    source: 'ff757969a2c5'
+    axis:
+      zh: 镜像所沿的模型轴向：`x` 或 `y`
+      en: 'model axis to mirror across: `x` or `y`'
+    point_mm:
+      zh: 镜像参考点坐标列表（单位 mm）
+      en: coordinates of the mirror reference point (in mm)
+    copy:
+      zh: 是否保留原构件
+      en: Whether the original elements are kept.
+  revit_update_parameters:
+    source: 'bcb4253ab4ea'
+    include_type_parameters:
+      zh: 是否同时更新类型参数
+      en: also update type parameters
+    parameter_id:
+      zh: 要更新的参数 ID
+      en: id of the parameter to update
+    filters:
+      zh: 与 `revit_query_elements` 相同的构件筛选条件
+      en: element filters in the same shape as revit_query_elements
+    max_elements:
+      zh: 最多更新的构件数量
+      en: Maximum number of elements to update.
+  revit_load_family:
+    source: '93eb74f8ef7f'
+    paths:
+      zh: 要加载的 `.rfa` 文件路径列表
+      en: paths of the `.rfa` files to load
+    overwrite_parameter_values:
+      zh: 替换族时是否覆盖已有参数值
+      en: whether existing parameter values are overwritten when a family is replaced
+  revit_place_families:
+    source: 'e72de7ae05fa'
+    stop_on_error:
+      zh: 出错时是否停止继续放置
+      en: stop placing instances at the first error
+    load:
+      zh: 要加载的族文件
+      en: family file to load
+    placements:
+      zh: 要放置的族实例列表，含族名、类型与坐标
+      en: family instances to place, each with family, type and coordinates
+    at_rooms:
+      zh: 按房间放置族实例的规则，含族、类型、标高与房间
+      en: Placement of one family instance per room, with family, type, level and rooms.
+  revit_create_mep_run:
+    source: 'be0eafebf625'
+    kind:
+      zh: 管线类型：`duct` 或 `pipe` 或 `cable_tray` 或 `conduit`
+      en: 'run kind: `duct`, `pipe`, `cable_tray` or `conduit`'
+    diameter_mm:
+      zh: 管道直径（单位 mm）
+      en: diameter of the pipe run (in mm)
+    system_type:
+      zh: 管道所属的系统类型
+      en: mechanical system type of the pipe run
+    height_mm:
+      zh: 风管或桥架的截面高度（单位 mm）
+      en: section height of the duct or cable tray (mm)
+    width_mm:
+      zh: 风管或桥架的截面宽度（单位 mm）
+      en: section width of the duct or cable tray (mm)
+    connect_to:
+      zh: 新建管段要连接的构件 ID
+      en: Element ID the new run connects to.
+    offset_mm:
+      zh: 管段相对标高的偏移（单位 mm）
+      en: Offset of the run from the level, in mm.
+  revit_link_cad:
+    source: 'c1850f047c2e'
+    layers:
+      zh: 要链接的 CAD 图层名称列表
+      en: CAD layer names to link
+    units:
+      zh: CAD 文件的单位：`auto` 或 `mm` 或 `cm` 或 `m` 或 `in` 或 `ft`
+      en: 'units of the CAD file: `auto`, `mm`, `cm`, `m`, `in` or `ft`'
+    origin:
+      zh: CAD 原点定位方式：`internal`、`shared` 或 `center`
+      en: 'origin placement: internal, shared or center'
+    path:
+      zh: 要链接或导入的 CAD 文件路径
+      en: path of the CAD file to link or import
+    link:
+      zh: DWG 以链接方式加入还是导入
+      en: Whether the DWG is linked instead of imported.
+  revit_walls_from_cad:
+    source: '0b8be48afe4f'
+    layers:
+      zh: 用于建墙的 CAD 图层名称列表
+      en: CAD layer names used to create walls
+    min_thickness_mm:
+      zh: 生成墙体的最小厚度（单位 mm）
+      en: minimum thickness of the created walls, in mm
+    height_mm:
+      zh: 生成墙体的默认高度（单位 mm）
+      en: default height of generated walls (in mm)
+    max_thickness_mm:
+      zh: 识别墙体的最大厚度（单位 mm）
+      en: maximum wall thickness to detect (in mm)
+    join:
+      zh: 是否在端点处连接生成的墙体
+      en: whether the created walls are joined at their ends
+    min_length_mm:
+      zh: 可成墙的最短 CAD 线段长度（单位 mm）
+      en: minimum length of a CAD segment that becomes a wall (mm)
+    cad_id:
+      zh: 导入 CAD 实例的构件 ID
+      en: Element ID of the imported CAD instance.
+    max_gap_mm:
+      zh: CAD 线之间可跨越的最大间隙（单位 mm）
+      en: Largest gap bridged between CAD lines, in mm.
+  revit_create_view:
+    source: 'b4f25dde4bce'
+    kind:
+      zh: 视图类型：`floor_plan` 或 `ceiling_plan` 或 `structural_plan` 或 `section` 或 `3d` 或 `drafting`
+      en: 'view kind: `floor_plan`, `ceiling_plan`, `structural_plan`, `section`, `3d` or `drafting`'
+    view_family_type:
+      zh: 新建视图所用的视图族类型名称
+      en: view family type name for the new view
+    detail_level:
+      zh: 新视图的详细程度
+      en: detail level of the new view
+    scale:
+      zh: 新视图的比例
+      en: scale of the new view
+    display_style:
+      zh: 视图显示样式，如 `hidden_line` 或 `shaded`
+      en: 'display style of the view: hidden_line, shaded, consistent_colors or realistic'
+    template:
+      zh: 创建视图时套用的视图模板名称
+      en: name of the view template applied to the new view
+    box:
+      zh: 视图裁剪框，含 `min_mm` 与 `max_mm` 模型坐标
+      en: View box with min_mm and max_mm model coordinates.
+    name:
+      zh: 新建视图的名称
+      en: Name of the new view.
+  revit_apply_view_template:
+    source: 'd270c76dbb4d'
+    views:
+      zh: 要套用视图模板的视图名称列表
+      en: names of the views to apply the template to
+    template:
+      zh: 要套用的视图模板名称
+      en: name of the view template to apply
+  revit_place_views_on_sheet:
+    source: 'dc874ffaf3f1'
+    sheet:
+      zh: 要放置视图的图纸名称
+      en: name of the sheet that receives the views
+    views:
+      zh: 要放置的视图列表，含视图引用与图纸坐标
+      en: Views to place, each with a view reference and sheet coordinates.
+  revit_tag_elements:
+    source: 'a37919655b3c'
+    orientation:
+      zh: 标签文字方向：`horizontal` 或 `vertical`
+      en: 'tag orientation: `horizontal` or `vertical`'
+    leader:
+      zh: 是否添加引线
+      en: whether to add a leader to the tag
+    tag_type:
+      zh: 要使用的标记类型
+      en: tag type to place
+    max_elements:
+      zh: 本次最多标注的构件数量
+      en: maximum number of elements tagged in one call
+    skip_tagged:
+      zh: 是否跳过已标注的构件
+      en: Whether already tagged elements are skipped.
+  revit_create_schedule:
+    source: 'd03667198453'
+    filters:
+      zh: 明细表筛选条件列表，按字段、运算符和值
+      en: schedule filters by field, operator and value
+    name:
+      zh: 新明细表的名称
+      en: name of the new schedule
+    category:
+      zh: 要创建明细表的构件类别名称
+      en: category name the schedule is created for
+    sort:
+      zh: 排序与分组规则列表，含字段与升降序
+      en: sort and grouping rules, each with a field and a direction
+    itemized:
+      zh: 是否将相同行逐条列出
+      en: Whether identical rows are kept separate.
+  revit_set_parameter:
+    source: '4573f9a8a6c9'
+    parameter_id:
+      zh: 参数标识：`BuiltInParameter` 名称、共享 GUID 或参数 ID
+      en: 'parameter identifier: BuiltInParameter name, shared GUID or parameter id'
+  revit_export:
+    source: '6cc9e1c1b412'
+    format:
+      zh: 导出格式：`pdf` 或 `dwg` 或 `ifc` 或 `csv`
+      en: 'export format: `pdf`, `dwg`, `ifc` or `csv`'
+    sheets:
+      zh: 要导出的图纸名称或 ID 列表
+      en: names or ids of the sheets to export
+    all_sheets:
+      zh: 是否导出全部图纸
+      en: whether to export all sheets
+    output_dir:
+      zh: 导出文件的输出目录
+      en: output directory for the exported files
+    confirm_token:
+      zh: 首次调用返回、供第二次确认调用的令牌
+      en: token returned by a first call and passed to a second confirming call
+    sheet_set:
+      zh: 要导出的图集名称
+      en: name of the sheet set to export
+    options:
+      zh: 按导出格式区分的选项
+      en: Export options, by output format.
+    views:
+      zh: 要导出的视图列表
+      en: Views to export.
+  revit_export_nwc:
+    source: 'cb16d479dc3c'
+    convert_lights:
+      zh: 是否把灯具转换为 `.nwc` 几何
+      en: convert lights into NWC geometry
+    export_element_ids:
+      zh: 是否在 `.nwc` 中导出构件 ID
+      en: export element ids into the NWC file
+    export_room_geometry:
+      zh: 是否在 `.nwc` 中导出房间几何
+      en: export room geometry into the NWC file
+    path:
+      zh: 导出的 `.nwc` 文件路径
+      en: path of the exported `.nwc` file
+    confirm_token:
+      zh: 首次调用返回、用于第二次确认调用的令牌
+      en: token returned by the first call and passed to a second confirming call
+    coordinates:
+      zh: 导出使用的坐标系
+      en: coordinate system used for the export
+    export_parts:
+      zh: 要导出的模型部件
+      en: parts of the model to export
+    faceting_factor:
+      zh: 导出面片细分因子
+      en: faceting factor applied to the export
+    settings_xml:
+      zh: 导出设置文件路径
+      en: path of the export settings file
+    convert_element_properties:
+      zh: 是否把构件属性转换为 NWC 属性
+      en: whether element properties are converted to NWC attributes
+    divide_file_into_levels:
+      zh: 是否按标高拆分导出文件
+      en: whether the exported file is divided into levels
+    export_room_as_attribute:
+      zh: 是否把房间导出为属性
+      en: whether rooms are exported as attributes
+    find_missing_materials:
+      zh: 是否查找缺失的材质
+      en: whether missing materials are found and reported
+    convert_linked_cad_formats:
+      zh: 是否在导出时转换链接的 CAD 格式
+      en: Whether linked CAD formats are converted during export.
+    export_links:
+      zh: 是否随文件导出链接模型
+      en: Whether linked models are exported with the file.
+    export_urls:
+      zh: 是否随文件导出 URL
+      en: Whether URLs are exported with the file.
+    scope:
+      zh: 导出范围：`model`、`view` 或 `selection`
+      en: Export scope, model, view, or selection.
+  revit_process_models:
+    source: '0ec456b819f9'
+    confirm_token:
+      zh: 首次调用返回的令牌，用于第二次确认调用
+      en: token returned by the first call, sent in the second confirming call
+    paths:
+      zh: 要处理的模型路径列表
+      en: paths of the models to process
+    save:
+      zh: 保存设置，模式为 `none`、`output_dir` 或 `in_place`
+      en: 'save settings: `none`, `output_dir` or `in_place`'
+    folder:
+      zh: 要处理的模型文件夹
+      en: folder of models to process
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程 ID
+      en: Revit process ID of the instance to process
+    code:
+      zh: 要在每个模型中运行的 C# 代码，含事务方式
+      en: C# code to run in each model, with its transaction mode
+    open:
+      zh: 打开每个模型的方式，含模式与工作集设置
+      en: how each model is opened, with mode and workset settings
+    recursive:
+      zh: 是否递归处理文件夹中的子目录
+      en: whether subfolders of the folder are included
+    exports:
+      zh: 对每个模型执行的导出请求列表
+      en: Export requests applied to each processed model.
+    pattern:
+      zh: 文件名匹配模式，以 `.rvt` 结尾
+      en: File name pattern ending in .rvt.
+    stop_on_error:
+      zh: 遇到错误时是否停止处理
+      en: Whether processing stops at the first error.
+  revit_edit_families:
+    source: '0587bed910fe'
+    overwrite_parameter_values:
+      zh: 加载族时是否覆盖已有参数值
+      en: overwrite existing parameter values when loading families
+    families:
+      zh: 要编辑的族文件
+      en: families to edit
+    operations:
+      zh: 族编辑操作列表，含增删参数、清理与赋值
+      en: family edit operations, such as adding, removing or purging parameters
+    stop_on_error:
+      zh: 遇到错误时是否停止编辑
+      en: Whether editing stops at the first error.
+  revit_batch_start:
+    source: '8475b4dbfe17'
+    open_timeout_minutes:
+      zh: 每个模型打开的超时上限（单位分钟）
+      en: per-model open deadline, in minutes
+    years:
+      zh: 要采集的 Revit 版本年份列表
+      en: Revit release years to collect
+    paths:
+      zh: 批量处理的模型文件路径
+      en: model file paths to process in the batch
+    folder:
+      zh: 要扫描的模型目录路径
+      en: path of the folder scanned for models
+    recursive:
+      zh: 是否扫描子目录中的模型
+      en: whether subfolders are scanned for models
+    parameter_rules:
+      zh: 快照要包含的类别与参数对列表
+      en: Category and parameter pairs included in the snapshot.
+  revit_batch_fetch:
+    source: 'dc6879a82f74'
+    run_id:
+      zh: 批量采集运行的 `run_id` 标识
+      en: run id of the batch collection
+    output_dir:
+      zh: 快照下载到的本地目录
+      en: local directory the snapshots are downloaded into
+  revit_build_report:
+    source: '711824cc9bc3'
+    snapshots_dir:
+      zh: 存放 schema 版本 1 JSON 快照的目录，位于 MCP 客户端机器
+      en: Directory of schema-version-1 JSON snapshots on the MCP client machine.
+    output_path:
+      zh: 新的 `.xlsx` 文件路径，在运行本服务器的机器上解析；已有文件不会被覆盖
+      en: New .xlsx file path, resolved on the machine running this server; existing files are never replaced.
+    previous_dir:
+      zh: 用于「变更」工作表比对的早期快照目录，可选
+      en: Optional directory of earlier snapshots matched by model title for the Changes sheet.
+    findings:
+      zh: 可选的发现项，含 model、severity、rule、`element_ids` 与 recommendation
+      en: Optional findings with model, severity, rule, element_ids (or elementIds), and recommendation.
+  revit_issue_register:
+    source: 'f6846d22ae59'
+    project:
+      zh: 项目元数据对象
+      en: project metadata object
+    output_path:
+      zh: 新的 `.xlsx` 问题登记表路径，在运行本服务器的机器上解析；已有文件会被拒绝
+      en: New .xlsx issue register path, resolved on the machine running this server; existing files are refused.
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
+    issues:
+      zh: 问题条目列表，含标题、类别、发现与严重级别
+      en: Issue objects with title, category, finding and severity.
+  revit_document_info:
+    source: '713c86517834'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程 ID，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_model_snapshot:
+    source: '02c7dccd661f'
+    parameter_rules:
+      zh: 快照中参数的取值规则
+      en: value rules applied to parameters in the snapshot
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
+  revit_links_status:
+    source: 'eca81a38c35b'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程 ID，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_view_summary:
+    source: 'c891d7099c57'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程 ID，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_view_warnings:
+    source: 'e836252b7fa0'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程 ID，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_family_audit:
+    source: 'ec3fd8a76022'
+    families:
+      zh: 要审核的族文件
+      en: families to audit
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
+    detail:
+      zh: 审计明细级别：`summary` 或 `full`
+      en: Detail level of the family audit, summary or full.
+  revit_activate_document:
+    source: '08003b4f1ee7'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程 ID
+      en: Revit process ID of the instance to activate
+  revit_cancel_job:
+    source: '48e4c2b729f1'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程 ID
+      en: Revit process ID of the instance running the job to cancel
+    job_id:
+      zh: 要取消的任务 ID
+      en: Identifier of the job to cancel.
+  revit_rotate:
+    source: 'f6103af88601'
+    center_mm:
+      zh: 旋转中心坐标（单位 mm）
+      en: coordinates of the rotation center (in mm)
+    angle_deg:
+      zh: 旋转角度（单位：度）
+      en: Rotation angle in degrees.
+  revit_duplicate_view:
+    source: '4c6496337897'
+    name:
+      zh: 副本视图的名称
+      en: name of the duplicated view
+    mode:
+      zh: 复制方式：`duplicate`、`with_detailing` 或 `dependent`
+      en: Duplication mode, duplicate, with_detailing, or dependent.
+  revit_create_sheet:
+    source: '0294679b0de0'
+    number:
+      zh: 新建图纸的编号
+      en: sheet number
+    title_block:
+      zh: 图框名称，未指定时用首个已加载图框
+      en: name of the title block, or the first loaded one
+    name:
+      zh: 新建图纸的名称
+      en: Name of the new sheet.
+  revit_batch_cancel:
+    source: 'c32c2aa46639'
+    run_id:
+      zh: 要取消的批处理运行 ID
+      en: id of the batch run to cancel
+  revit_ping:
+    source: 'f2b515ee3530'
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
+  revit_shared_coordinates:
+    source: 'f456424f4412'
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
+  revit_list_warnings:
+    source: '5f071324cbc3'
+    process_id:
+      zh: 多个运行实例中选定的目标 Revit 进程
+      en: Revit process ID; takes precedence over document.
+  revit_copy:
+    source: '39bfbc17e4ad'
+    count:
+      zh: 连续复制的次数
+      en: number of successive copies to create
+  revit_ui_state:
+    source: '6489b6c4a18c'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_list_catalog:
+    source: '15200725d19a'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_view_info:
+    source: '5ed83c5c9144'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_element_details:
+    source: 'c0bf00b0f814'
+    process_id:
+      zh: 在多个运行实例中选定的目标 Revit 进程，优先于 `document`
+      en: Revit process ID; takes precedence over document.
+  revit_delete:
+    source: '6ec510a16f9b'
+    confirm_token:
+      zh: 首次调用返回、用于第二次确认调用的令牌
+      en: Token returned by a first call, passed back to confirm a second call.
+  revit_batch_status:
+    source: 'd6b1eb3527eb'
+    run_id:
+      zh: 批处理运行的 ID
+      en: Identifier of the batch run.
 param_defaults:
   element_ids:
     zh: 构件 ID 列表（无单位的 Revit ID）
@@ -1160,34 +3064,34 @@ param_defaults:
     en: value to write; lengths in millimetres, areas in m², other doubles in internal units
   document:
     zh: 文档标题或文件名的不区分大小写子串；读取时用于选择 Revit 实例，多个实例时必须唯一；动作时用于选择实例中已打开的文档，多个文档时必填。未知或歧义目标会被拒绝
-    en: 'Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected'
+    en: Case-insensitive document-title or file-name substring. Reads use it to address an instance; it must be unique with multiple instances. Actions use it to choose an open document in the addressed instance; required with multiple open documents. Unknown or ambiguous targets are rejected
   timeout_seconds:
     zh: 拾取任务后的结果等待预算（正整数秒，默认 120）；HTTP 使用它作为响应预算，不能覆盖插件内部执行上限。超时不代表待处理动作已取消
-    en: 'Positive result-wait budget in seconds after pickup (default 120); HTTP uses it as the response budget. Does not override add-in execution limits; a timeout does not cancel a pending job'
+    en: Positive result-wait budget in seconds after pickup (default 120); HTTP uses it as the response budget. Does not override add-in execution limits; a timeout does not cancel a pending job
   pickup_timeout_seconds:
     zh: local / SSH 等待插件拾取任务的预算（正整数秒，默认 300）；HTTP 忽略。拾取超时后待处理任务仍可能执行
-    en: 'Positive seconds to wait for pickup over local or SSH (default 300); ignored over HTTP. A pending job may still execute after pickup times out'
+    en: Positive seconds to wait for pickup over local or SSH (default 300); ignored over HTTP. A pending job may still execute after pickup times out
   area_scheme:
     zh: 面积方案的精确本地化名称（由 area-schemes 目录获取）；选择后仅查询该方案的面积构件，并与其它过滤条件共同生效
-    en: 'Exact localized area-scheme name from the area-schemes catalog; restricts results to its areas and combines with the other filters'
+    en: Exact localized area-scheme name from the area-schemes catalog; restricts results to its areas and combines with the other filters
   reset:
     zh: true 时恢复当前视图的临时隐藏 / 隔离；配合空 element_ids 列表使用
-    en: 'Set true with an empty element_ids list to reset temporary hide/isolate in the active view'
+    en: Set true with an empty element_ids list to reset temporary hide/isolate in the active view
   dx_mm:
     zh: 沿模型 X 轴的位移（mm），不是最终坐标
-    en: 'Offset along model X in millimetres, not the final coordinate'
+    en: Offset along model X in millimetres, not the final coordinate
   dy_mm:
     zh: 沿模型 Y 轴的位移（mm），不是最终坐标
-    en: 'Offset along model Y in millimetres, not the final coordinate'
+    en: Offset along model Y in millimetres, not the final coordinate
   dz_mm:
     zh: 沿模型 Z 轴的位移（mm，默认 0），不是最终坐标
-    en: 'Offset along model Z in millimetres (default 0), not the final coordinate'
+    en: Offset along model Z in millimetres (default 0), not the final coordinate
   wall_type:
     zh: 基本墙类型名称；必传参数，可传 null 使用第一个基本墙类型
-    en: 'Basic wall-type name; required argument, but null selects the first basic wall type'
+    en: Basic wall-type name; required argument, but null selects the first basic wall type
   floor_type:
     zh: 楼板类型名称；必传参数，可传 null 使用第一个楼板类型
-    en: 'Floor-type name; required argument, but null selects the first floor type'
+    en: Floor-type name; required argument, but null selects the first floor type
   points_mm:
     zh: 至少 3 个模型 XY 顶点，每个顶点为 [x,y]（mm）；自动闭合轮廓
-    en: 'At least three model XY vertices, each [x,y] in millimetres; the boundary closes automatically'
+    en: At least three model XY vertices, each [x,y] in millimetres; the boundary closes automatically

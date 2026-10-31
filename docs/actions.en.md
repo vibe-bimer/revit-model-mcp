@@ -49,7 +49,7 @@ See the [feature overview](features/index.md) for each tool's full parameter tab
 | `revit_set_view_lighting` | `view`, `shadows=null`, `shadow_intensity=null`, `sunlight_intensity=null`, `sun_date=null`, `sun_time=null`, `sun_azimuth_deg=null`, `sun_altitude_deg=null`, `ground_plane=null`, `ground_plane_level=null`, `background=null`, `background_colors=null`, `lighting_scheme=null`, `dry_run=false` | Set one non-template view's lighting by view name or view ID: shadows, sun and shadow intensities, sun date and time or a fixed lighting-study azimuth and altitude, ground plane, background and rendering lighting scheme. The response reports the readings before and after under `verification.before.lighting` and `verification.after.lighting`, and names what moved in `changedSettings`. |
 | `revit_delete` | `element_ids` | Delete nonempty IDs and their dependents. |
 | `revit_reset_element_ids` | `element_ids`, `dry_run=false` | Replace elements with copies so Revit assigns new IDs; reports `idMapping` and refuses an element when deletion would remove dependents, when it is hosted or grouped, when it is an MEP curve or an MEP system member (a copy does not rejoin the network, and Revit re-heals the run around the deleted original), or when Revit cannot copy it. |
-| `revit_batch` | `steps`, `dry_run=false` | Execute 1–50 actions with a single undo entry named `revit_batch`. |
+| `revit_run_actions` | `steps`, `dry_run=false` | Execute 1–50 actions with a single undo entry; the first failing step rolls the whole batch back. |
 | `revit_rebuild_model_ids` | `destination_path`, `view=null`, `template_path=null`, `overwrite=false`, `remove_template_levels=true`, `seed=0`, `duplicate_names="override"`, `copies=1`, `dry_run=false` | Copy the selectable components of a 3D view into a new model, so Revit assigns every element a fresh ID; the open model is never changed. Levels, grids and reference planes travel first so hosts resolve; cameras, the sun path, the section box, views and elements without a category are left behind and reported under `excluded`. Views, sheets, schedules, annotations, phases, worksets, MEP systems and unselected hosts do not travel, so the result is geometry, types and parameters. Data reports `count`, `newIdMin`/`newIdMax`, `sourceCategoryCounts`, `copiedCategoryCounts` and an `idMapping` verified against category and type. |
 
 `type_name`, `wall_type` and `floor_type` are required arguments that accept `null`.
@@ -124,7 +124,7 @@ For example, setting Comments on element 123 returns:
 
 ## Batch execution
 
-`revit_batch` takes action names and their normal snake_case arguments. Set `document` once on the batch, not inside each step's `args`:
+`revit_run_actions` takes action names and their normal snake_case arguments. Set `document` once on the batch, not inside each step's `args`:
 
 ```json
 {
@@ -136,7 +136,7 @@ For example, setting Comments on element 123 returns:
 }
 ```
 
-A successful batch assimilates its transactions into one undo entry named `revit_batch`.
+A successful batch assimilates its transactions into one undo entry; the undo-menu name starts with `MCP (`, followed by the client name and the batch summary.
 The first failed step rolls back the entire batch; every attempted step, including the failing one, carries `rolledBack:true`.
 An `Assimilate` failure is reported on the last step with `failedStep` pointing at it.
 All steps are validated before execution; an invalid later step rejects the whole batch without executing anything and without `failedStep`.
@@ -144,7 +144,7 @@ Results include zero-based `index`, `command`, `success` and `data` or `error` p
 A batch dry run executes every step against preceding steps' changes, then rolls back the group and restores the original selection.
 A per-step `dry_run:true` inside a real batch is accepted and previews only that step.
 Verification describes each step's immediate result; subsequent steps may change those elements again.
-Batches accept 1–50 steps and take their step actions from the `revit_batch` `action` enum, which includes the two UI tools `select` and `isolate`; `show`, nested batches and unknown argument keys are rejected.
+Batches accept 1–50 steps and take their step actions from the `revit_run_actions` `action` enum, which includes the two UI tools `select` and `isolate`; `show`, nested batches and unknown argument keys are rejected.
 
 ## Navigation, dialogs and family names
 
@@ -160,7 +160,7 @@ During action execution, the handler attempts to dismiss TaskDialog prompts with
 Messages from successful overrides appear in `dialogsSuppressed`.
 The dialog handler is removed in `finally`, including on errors.
 For the single-action `revit_place_family` tool, missing families return up to five similar names with their family categories in `closestFamilies`; unrelated names are omitted.
-Inside `revit_batch`, a missing family surfaces only as `steps[].error` text; `closestFamilies` is unavailable.
+Inside `revit_run_actions`, a missing family surfaces only as `steps[].error` text; `closestFamilies` is unavailable.
 For `Family: Type`, `type_name=null` uses the embedded type; a conflicting `type_name` is rejected.
 For a family name alone, `type_name=null` selects the first loaded type.
 
@@ -217,7 +217,7 @@ ElementId and read-only parameters cannot be set.
 Responses from the action executor include `activeView`, including action errors.
 Transport rejection and target-mismatch responses may omit action metadata.
 Model changes and temporary isolation use individual transactions named after the tool.
-`revit_batch` wraps the per-step transactions in a `TransactionGroup` named `revit_batch` and assimilates them into one undo entry.
+`revit_run_actions` wraps the per-step transactions in a `TransactionGroup` and assimilates them into one undo entry.
 Warnings at commit are dismissed and reported on successful actions.
 Errors permit one `FixElements` or `SetValue` resolution when Revit allows it; unresolved or repeated errors roll back the transaction.
 Selection and navigation use UI calls without model transactions.

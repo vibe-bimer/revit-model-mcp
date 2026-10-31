@@ -264,7 +264,9 @@ class FeatureGeneratorTests(unittest.TestCase):
         )
 
     def test_missing_business_parameters_use_explicit_message(self):
-        tool = next(item for item in self.tools if item["name"] == "revit_ping")
+        tool = next(
+            item for item in self.tools if item["name"] == "revit_list_instances"
+        )
         page = generate_features.tool_page(
             tool,
             self.capabilities["tools"][tool["name"]],
@@ -276,13 +278,24 @@ class FeatureGeneratorTests(unittest.TestCase):
         self.assertIn("### 通用参数", page)
 
     def test_released_page_names_the_release_version_and_status(self):
-        tool = self.tools[0]
-        cap = self.capabilities["tools"][tool["name"]]
+        released = next(item for item in self.tools if item["name"] == "revit_ping")
         page = generate_features.tool_page(
-            tool, cap, "zh", self.capabilities, self.contracts
+            released,
+            self.capabilities["tools"][released["name"]],
+            "zh",
+            self.capabilities,
+            self.contracts,
         )
-        self.assertIn(generate_features.RELEASE_VERSION, page)
-        self.assertIn("已发布", page)
+        self.assertIn("已发布 0.9.0", page)
+        unreleased = next(item for item in self.tools if item["name"] == "revit_jobs")
+        page = generate_features.tool_page(
+            unreleased,
+            self.capabilities["tools"][unreleased["name"]],
+            "zh",
+            self.capabilities,
+            self.contracts,
+        )
+        self.assertIn("未发布（1.0.0）", page)
 
     def test_released_page_links_and_diffs_its_integration_twin(self):
         platform_tools, _ = platform_catalog.load_platform()
@@ -297,9 +310,10 @@ class FeatureGeneratorTests(unittest.TestCase):
             integration["revit_export_view"],
         )
         self.assertIn("(../platform/revit_export_view.md)", page)
-        self.assertIn("{#contract-diff}", page)
+        # The main server and the integration branch now agree on this contract, so the
+        # auto diff section is not required; the twin link still has to be.
+        self.assertIn("集成分支有同名工具", page)
         self.assertIn("output_path", page)
-        self.assertIn("save_to", page)
 
     def test_released_page_without_twin_has_no_diff_section(self):
         platform_tools, _ = platform_catalog.load_platform()

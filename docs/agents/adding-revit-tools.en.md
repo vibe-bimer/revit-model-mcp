@@ -96,7 +96,7 @@ Design notes:
   exact name.
 - Verifier: before is empty, after is the created element metadata with its
   bounding box, mirroring `revit_place_family`.
-- Add `create_floor` to `_BATCH_FIELDS` so it composes in `revit_batch`.
+- Add `create_floor` to `_BATCH_FIELDS` so it composes in `revit_run_actions`.
 - Test matrix: dry-run rollback, real create plus verification, wrong type
   name error, open loop rejection.
 

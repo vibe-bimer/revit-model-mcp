@@ -73,7 +73,7 @@ python3 revit-corpus/scripts/corpus_query.py 'Floor' -k class --show
 - 接受模型坐标中的 mm 点，用 `Line.CreateBound` 线段构造 `CurveLoop`，并显式闭合边界。
 - 通过 `FloorType` 的 `FilteredElementCollector` 按名称解析 `floor_type`（`null` 选择第一个基本楼板类型）；按精确名称解析 `level`。
 - 校验器：变更前为空，变更后为新建构件的元数据及包围盒，与 `revit_place_family` 一致。
-- 将 `create_floor` 加入 `_BATCH_FIELDS`，使其可以组合进 `revit_batch`。
+- 将 `create_floor` 加入 `_BATCH_FIELDS`，使其可以组合进 `revit_run_actions`。
 - 测试矩阵：试运行回滚、真实创建及校验、错误类型名报错、拒绝未闭合边界。
 
 <a id="build-and-deploy"></a>

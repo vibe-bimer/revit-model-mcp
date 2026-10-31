@@ -490,6 +490,52 @@ def _catalog_surfaces() -> dict[str, dict]:
     }
 
 
+def _tool_release_status() -> dict[str, dict]:
+    """Map each tool to the release status its own page claims.
+
+    The catalog-level status only holds when every tool in the directory shares one version. A
+    tool whose `since` is newer than the last released version is announced as unreleased on its
+    page, so the search entry must say the same or the result badge lies about the surface.
+    """
+    name = "rmm_tool_release_status"
+    if name in sys.modules:
+        return sys.modules[name]
+    import yaml
+
+    module = _catalog_module()
+    release = module.release()
+    released = release.released_version or release.version
+    capabilities = yaml.safe_load(
+        (ROOT / "tools/site/content/capabilities.yaml").read_text(encoding="utf-8")
+    )
+    status_map: dict[str, dict] = {}
+    for tool, cap in (capabilities.get("tools") or {}).items():
+        since = str((cap or {}).get("since") or "").strip()
+        if not since:
+            continue
+        newer = _version_key(since) > _version_key(released) if released else False
+        status_map[tool] = (
+            {"status": "unreleased", "version": release.version}
+            if newer
+            else {"status": "released", "version": released}
+        )
+    sys.modules[name] = status_map
+    return status_map
+
+
+def _version_key(value: str) -> tuple[int, ...]:
+    parts: list[int] = []
+    for chunk in value.strip().split("."):
+        digits = ""
+        for char in chunk:
+            if char.isdigit():
+                digits += char
+            else:
+                break
+        parts.append(int(digits or 0))
+    return tuple(parts)
+
+
 def search_record(location: str, surfaces: dict[str, dict] | None = None) -> dict:
     """Describe one search index entry by language, tool name and catalog status.
 
@@ -509,6 +555,10 @@ def search_record(location: str, surfaces: dict[str, dict] | None = None) -> dic
             break
     if found:
         record["tool"] = found.group("tool")
+        # A tool page in the release catalog may claim a different status than the catalog at
+        # large; the page's own fact bar is the truth the result badge must match.
+        if record.get("catalog") == "release":
+            record.update(_tool_release_status().get(record["tool"], {}))
     # An empty version says nothing a reader can use, so it is not stored.
     if not record.get("version"):
         record.pop("version", None)

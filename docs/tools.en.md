@@ -83,3 +83,10 @@ All coordinates use model axes in millimetres rounded to one decimal place.
 | `roomCenterMm` | `[x,y,z]` from a placed room's location. Use `roomCenterMm` when placing something inside a room. A bounding box centre may lie outside a nonrectangular room. |
 
 Unavailable geometry is omitted.
+
+<a id="toolsets"></a>
+## Toolsets
+
+The `REVIT_MCP_TOOLSETS` environment variable or the `--toolsets` argument decides which tools `tools/list` exposes: a comma-separated list of `all` (default), `core`, `read`, `actions`, `documents`, `views-sheets`, `family`, `links`, `cad-mep`, `export`, `batch` and `code`.
+`core` is always included; `--toolsets` overrides the environment variable; an unknown name stops the server instead of being ignored.
+A toolset limits visibility only. It is not a permission: read-only mode, confirmation tokens and the add-in's own checks still apply to every tool that is listed.

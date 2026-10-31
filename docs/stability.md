@@ -8,7 +8,7 @@ A breaking change to anything in the first list needs a major release.
 - MCP tool names, and the names, types, defaults and required status of their input parameters.
 - The meaning of documented parameters and of documented enum values, for inputs and outputs.
 - Documented response fields: names, types and units. `success`, `error`, `partial`, `status`, `jobId`, `needsConfirmation`, `confirmationText`, `confirmToken`, `skipped` and `skippedCount` are covered. The literal `error` value `read-only mode` is covered.
-- The server command line (`--host`, `--redact-paths`, `--token`) and the `REVIT_MCP_*` environment variables listed in the [server documentation](server.md#configuration).
+- The server command line (`--host`, `--redact-paths`, `--token`) and the `REVIT_MCP_*` environment variables listed in the [server documentation](server.md).
 - The keys, types and meaning of `settings.json`, described in [HTTP configuration](transport.md#http-configuration), and the `read-only` gate file.
 - The `pipe/1` protocol, file channel version 2, the HTTP routes, headers and status codes, and the snapshot `schemaVersion` 1. See [transport](transport.md).
 - The names of the console script, the release wheel and the bundle.

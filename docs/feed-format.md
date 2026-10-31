@@ -268,7 +268,7 @@ Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `in
 步骤使用各命令正常的通道字段。
 执行前，在解析时校验所有步骤；即使后面的步骤无效，也会拒绝整个批量任务，不执行任何步骤，且不包含 `failedStep`。
 允许的命令为 `move`、`place-family`、`create-wall`、`create-floor`、`set-phase`、`set-parameter`、`set-view-lighting`、`delete`、`select` 和 `isolate`。
-每个模型步骤使用自己的事务；整个事务组被合并为单个撤销记录 `revit_batch`。
+每个模型步骤使用自己的事务；整个事务组被合并为单个撤销记录（撤销名以 `MCP (` 开头，后跟客户端名与批次摘要）。
 批量试运行会保留各步骤的修改供后续步骤使用，并在最后回滚整个事务组。
 实际执行的批量中，单个通道步骤可以包含 `dryRun:true`（MCP 中为 `dry_run:true`）；这只预览该步骤。
 批量回滚会恢复选择状态。
@@ -277,7 +277,7 @@ Python 参数 `sample_limit` 和 `include_types` 映射为 `sampleLimit` 和 `in
 每个成功修改步骤的 `data` 携带与单动作相同的验证结构。
 首个失败步骤会停止执行；所有已尝试的步骤（包括失败步骤）及任何保留的步骤数据都带有 `rolledBack:true`。
 `Assimilate` 失败会报告在最后一步，`failedStep` 指向该步骤。
-`data.undoName` 为 `"revit_batch"`，`data.committed` 报告事务组合并情况，`data.failedStep` 为失败步骤索引或 null。
+`data.undoName` 是该撤销记录的名称，`data.committed` 报告事务组合并情况，`data.failedStep` 为失败步骤索引或 null。
 成功的试运行为 `committed:false`、`failedStep:null` 和 `rolledBack:true`。
 验证立即记录每个步骤；后续步骤可能覆盖这些事实。
 
@@ -307,8 +307,5 @@ Python 服务器下载 PNG 后添加 `localPath`。
 插件每五秒写入一次；文件客户端忽略超过 60 秒的记录。
 HTTP 实例发现使用 `/health`，而非心跳文件。
 
-插件接受旧版快照和 `views-dump` 任务，但它们不是 MCP 工具。
-快照使用 [Snapshot 契约](../src/RevitModelMcp.Core/Models/Snapshot.cs)，不使用命令响应封装。
-视图转储使用 `command:"views-dump"`、`status`、时间戳、`responder`、进度计数，以及 [ViewDumpReport](../src/RevitModelMcp.Core/Models/ViewDumpReport.cs) 中的 `views` 列表。
-它们跟踪视图的打开和关闭，以及原始视图的恢复。
-旧版格式没有模式版本，不应视为稳定的外部 API。
+插件还接受 `model-snapshot` 任务（含批量变体 `batch-snapshot`），它们同样不是 MCP 工具，而是供批处理与审计流程读取项目快照。
+快照的请求与响应契约定义在 [ModelSnapshotModels](../src/RevitModelMcp.Core/Models/ModelSnapshotModels.cs)（模式版本 1），不使用命令响应封装。

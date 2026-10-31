@@ -1,5 +1,6 @@
 site_name: Revit Model MCP
 site_description: "把 Autodesk Revit 模型接到 AI 助手：查询参数与几何、统计构件、检查模型、导出清单并编辑构件，默认只读。"
+copyright: Autodesk and Revit are registered trademarks or trademarks of Autodesk, Inc., and/or its subsidiaries and/or affiliates in the USA and/or other countries. Model MCP is an independent project and is not affiliated with or endorsed by Autodesk.
 site_url: https://vibe-bimer.github.io/revit-model-mcp/
 repo_url: https://github.com/vibe-bimer/revit-model-mcp
 repo_name: vibe-bimer/revit-model-mcp
@@ -68,6 +69,7 @@ watch:
   - SECURITY.zh.md
 exclude_docs: |
   requirements.txt
+  requirements.in
   hooks.py
   __pycache__/
   # The demo recording and the social card template live outside docs/ now, so nothing has to be
@@ -100,7 +102,10 @@ plugins:
   - search
   - i18n:
       docs_structure: suffix
-      fallback_to_default: false
+      # English is the language of every inherited upstream page; until a zh translation
+      # exists, the /en/ build serves the same (English) file instead of dropping the page
+      # from the English navigation. See ADR-0007 for the declared-coverage policy.
+      fallback_to_default: true
       reconfigure_material: true
       languages:
         - locale: zh
@@ -157,6 +162,7 @@ plugins:
             C# 逃生口: C# escape hatch
             接入与使用: Setup and use
             安装与配置: Installation and configuration
+            环境要求与安装: Requirements and installation
             传输与接入: Transport and connection
             工作原理: How it works
             安全边界: Security boundaries
@@ -198,6 +204,7 @@ nav:
               - features/revit_document_info.md
               - features/revit_list_instances.md
           - 查询与统计:
+              - features/revit_ui_state.md
               - features/revit_list_catalog.md
               - features/revit_aggregate_elements.md
               - features/revit_query_elements.md
@@ -205,39 +212,102 @@ nav:
               - features/revit_list_relations.md
           - 视图与截图:
               - features/revit_list_views.md
+              - features/revit_view_info.md
               - features/revit_view_summary.md
               - features/revit_export_view.md
               - features/revit_view_elements.md
               - features/revit_view_warnings.md
           - 导出与检验:
+              - features/revit_nwc_settings_check.md
+              - features/revit_model_snapshot.md
               - features/revit_model_health.md
               - features/revit_links_status.md
               - features/revit_shared_coordinates.md
               - features/revit_parameter_fill_check.md
-              - features/revit_export_element_ids.md
               - features/revit_list_warnings.md
+              - features/revit_export_element_ids.md
+              - features/revit_build_report.md
+              - features/revit_issue_register.md
+          - 选中与显示:
+              - features/revit_capture_elements.md
+          - 文档与进程:
+              - features/revit_documents.md
+          - 批量作业:
+              - features/revit_jobs.md
+              - features/revit_batch_start.md
+              - features/revit_batch_status.md
+              - features/revit_batch_cancel.md
+              - features/revit_batch_fetch.md
+          - 族:
+              - features/revit_family_audit.md
+          - 图纸与明细表:
+              - features/revit_schedule_data.md
+          - 链接与协同:
+              - features/revit_compare_link_datums.md
       - 动作功能:
           - 视图与截图:
+              - features/revit_activate_view.md
+              - features/revit_close_views.md
+              - features/revit_set_view_visibility.md
+              - features/revit_create_view.md
+              - features/revit_duplicate_view.md
+              - features/revit_apply_view_template.md
               - features/revit_set_view_lighting.md
+          - 导出与检验:
+              - features/revit_export.md
+              - features/revit_export_nwc.md
           - 选中与显示:
               - features/revit_select.md
               - features/revit_show.md
               - features/revit_isolate.md
+              - features/revit_override_graphics.md
+              - features/revit_tag_elements.md
           - 编辑:
+              - features/revit_execute_code.md
+              - features/revit_undo_last.md
               - features/revit_move.md
+              - features/revit_rotate.md
+              - features/revit_copy.md
+              - features/revit_mirror.md
+              - features/revit_change_type.md
+              - features/revit_update_parameters.md
               - features/revit_place_family.md
               - features/revit_create_wall.md
-              - features/revit_create_floor.md
-              - features/revit_create_level.md
+              - features/revit_create_mep_run.md
+              - features/revit_walls_from_cad.md
               - features/revit_set_parameter.md
               - features/revit_delete.md
+              - features/revit_process_models.md
+              - features/revit_create_level.md
+              - features/revit_create_floor.md
           - 阶段:
               - features/revit_set_phase.md
               - features/revit_merge_phases.md
           - 批量与 ID:
               - features/revit_reset_element_ids.md
               - features/revit_rebuild_model_ids.md
-              - features/revit_batch.md
+          - 文档与进程:
+              - features/revit_open_document.md
+              - features/revit_activate_document.md
+              - features/revit_new_document.md
+              - features/revit_close_document.md
+              - features/revit_save_document.md
+              - features/revit_sync_document.md
+          - 批量作业:
+              - features/revit_cancel_job.md
+              - features/revit_run_actions.md
+          - 族:
+              - features/revit_load_family.md
+              - features/revit_place_families.md
+              - features/revit_edit_families.md
+          - 图纸与明细表:
+              - features/revit_create_sheet.md
+              - features/revit_place_views_on_sheet.md
+              - features/revit_create_schedule.md
+          - 链接与协同:
+              - features/revit_remove_links.md
+              - features/revit_align_link_datums.md
+              - features/revit_link_cad.md
       - features/prompts.md
   # <<< features-nav
   # >>> platform-nav
@@ -342,18 +412,32 @@ nav:
   # <<< platform-nav
   - 接入与使用:
       - 安装与配置: server.md
+      - 环境要求与安装: install.md
       - 传输与接入: transport.md
+      - 批量采集: batch.md
+      - 稳定性: stability.md
+      - 更新与升级: updates.md
       - 工作原理: how-it-works.md
       - 安全边界: security.md
+      - 管理员指南:
+          - 部署指南: admin/deployment.md
+          - 策略参考: admin/policy-reference.md
+          - 安全白皮书: admin/security-whitepaper.md
+          - 安全问卷: admin/security-questionnaire.md
   - 开发与参考:
       - 架构: architecture.md
       - 跨工具契约:
           - 读取契约: tools.md
           - 动作契约: actions.md
           - 文件通道格式: feed-format.md
+          - 工具清单: tool-manifest.md
+          - MCP 规范问答: mcp-specifications.md
       - 工具开发:
           - 新增 Revit 工具: agents/adding-revit-tools.md
           - 建模工具规格: modeling-tools.md
+          - 模型审计设计: design/model-audit.md
+          - 提示词: prompts.md
+          - 不做什么: not-doing.md
           - 领域约定: agents/domain.md
           - Issue 管理: agents/issue-tracker.md
           - 分诊标签: agents/triage-labels.md
@@ -361,9 +445,11 @@ nav:
           - 实测证据: validation.md
           - 手工测试计划: manual-test-plan.md
           - ID 重建性能记录: rebuild-performance.md
+          - 客户端实测: tested-clients.md
   - 项目:
       - 更新记录: changelog.md
       - 路线图: roadmap.md
       - 贡献指南: contributing.md
       - 隐私说明: privacy.md
       - 安全政策: security-policy.md
+      - 代码签名: code-signing.md

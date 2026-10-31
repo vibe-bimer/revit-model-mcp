@@ -41,6 +41,7 @@ UPSTREAM_REFERENCES_ALLOWED = {
     "AGENTS.md": "states the rule that forbids reusing upstream's identity",
     "CONTRIBUTING.md": "points at sharafutdinovdi/.github for the code of conduct and caller workflows",
     "CHANGELOG.md": "historical release record",
+    "CHANGELOG.zh.md": "historical release record (Chinese translation)",
     "docs/roadmap.md": "upstream issue numbers in the inherited roadmap",
     "docs/validation.md": "cites the upstream validation branch, issues and pull requests",
     "docs/design/model-audit.md": "cites upstream issues for the inherited audit design",

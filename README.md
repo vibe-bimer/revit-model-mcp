@@ -15,7 +15,7 @@ Every change is one named undo entry in Revit, and a fresh install is read-only 
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/vibe-bimer/revit-model-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/vibe-bimer/revit-model-mcp)
 [![MIT](https://img.shields.io/badge/license-MIT-5C6F88?style=flat-square)](LICENSE)
 
-<img alt="Claude Desktop conversation on the left, Revit 2026 on the right: Claude reads the open model, finds the largest room, opens its plan and selects it, isolates it, places a chair and moves it, then cleans up" src="docs/screenshots/revit-model-mcp_claude-desktop.gif" width="100%">
+<img alt="Claude Desktop conversation on the left, Revit 2026 on the right: Claude reads the open model, finds the largest room, opens its plan and selects it, isolates it, places a chair and moves it, then cleans up" src="assets/revit-model-mcp_claude-desktop.gif" width="100%">
 
 Claude Desktop runs on a Mac and connects to Revit 2026 on a Windows workstation.
 Actions are enabled in this recording.

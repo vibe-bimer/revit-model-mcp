@@ -25,7 +25,7 @@
 - 标高与类型按**名称精确解析**；`type_name`、`wall_type` 这类参数是**可传 `null` 的必填参数**。
 - 每个动作都接受通用参数 `document=null`，并支持 `dry_run=false`；试运行执行后回滚，返回同形 `verification`。
 - 创建类动作的成功响应含 `verification.after = { id, category, family, type, level, boundingBoxMinMm, boundingBoxMaxMm }`，试运行时追加 `wouldCreate: true`。
-- 所有首批工具都可进入 `revit_batch`（单次撤销、最多 50 步）。
+- 所有首批工具都可进入 `revit_run_actions`（单次撤销、最多 50 步）。
 - 两道写入门禁（`REVIT_MCP_ALLOW_WRITE=1` 与工作站 `allow-write`）与「动作不得保存模型」不因新工具放宽。
 
 <a id="batch-one"></a>

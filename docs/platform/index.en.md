@@ -14,20 +14,20 @@ Each catalog records one version: the current release is published and the integ
 
 | | Current release | Integration branch |
 | --- | --- | --- |
-| Status | Released 0.9.0 | Unreleased (integration branch) |
+| Status | Released 1.0.0 | Unreleased (integration branch) |
 | Branch | main | `integration/upstream-1.0` |
-| Tools | 35 | 80 |
+| Tools | 87 | 80 |
 | Catalog | [Feature overview](../features/index.md) | index.md |
 
 ## Two catalogs {#catalogs}
 
-The current release is 0.9.0. The integration branch is the new line built on the upstream 1.0 base. Their tool counts and names differ, so they are not interchangeable.
+The current release is 1.0.0. The integration branch is the new line built on the upstream 1.0 base. Their tool counts and names differ, so they are not interchangeable.
 
 | | Current release | Integration branch |
 | --- | --- | --- |
-| Tools | 35 | 80 |
-| Read | 19 | 34 |
-| Action | 16 | 46 |
+| Tools | 87 | 80 |
+| Read | 35 | 34 |
+| Action | 52 | 46 |
 | Released | Released | Unreleased |
 | Branch | main | `integration/upstream-1.0` |
 

@@ -95,19 +95,19 @@ class FeatureIndexTests(unittest.TestCase):
             self.assertIn("{#objects}", page)
             for key in ("views", "sheets", "schedules", "view-display"):
                 self.assertIn(f"{{#objects-{key}}}", page)
-            self.assertIn("(../platform/index.md#objects-sheets)", page)
-            self.assertIn("(../platform/index.md#objects-schedules)", page)
+            # Every object group currently has release tools, so no group defers to the branch.
+            self.assertNotIn("(../platform/index.md#objects-sheets)", page)
 
-    def test_an_empty_object_group_does_not_emit_a_header_only_table(self):
-        # A table with nothing but its header reads as a defect; the pointer to the branch catalog
-        # is the whole content of that section.
+    def test_no_object_group_emits_a_header_only_table(self):
+        # A table with nothing but its header reads as a defect; an empty group points at the
+        # branch catalog instead of emitting the bare header.
         for lang in ("zh", "en"):
             page = self.page(lang)
-            for key in ("sheets", "schedules"):
-                start = page.index(f"{{#objects-{key}}}")
-                end = page.index("###", start)
-                section = page[start:end]
-                self.assertNotIn("| --- | --- |", section, section)
+            start = page.index("{#objects}")
+            body = page[start:]
+            for line, rest in zip(body.splitlines(), body.splitlines()[1:]):
+                if line.startswith("| --- | --- |") and rest.strip():
+                    self.assertTrue(rest.startswith("| ["), (line, rest))
 
     def test_object_groups_list_every_grouped_release_tool(self):
         page = self.page("zh")
@@ -244,10 +244,7 @@ class SearchIndexEnrichmentTests(unittest.TestCase):
             docs["features/revit_export_view/"]["tool"], "revit_export_view"
         )
         self.assertEqual(docs["features/revit_export_view/"]["status"], "released")
-        self.assertEqual(
-            docs["features/revit_export_view/"]["version"],
-            generate_features.RELEASE_VERSION,
-        )
+        self.assertEqual(docs["features/revit_export_view/"]["version"], "0.9.0")
         self.assertEqual(docs["en/features/revit_export_view/"]["lang"], "en")
         self.assertEqual(docs["en/features/revit_export_view/"]["catalog"], "release")
         self.assertEqual(docs["platform/revit_export_view/"]["status"], "unreleased")

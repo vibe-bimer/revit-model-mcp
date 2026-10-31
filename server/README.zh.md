@@ -10,7 +10,7 @@ Python 包通过 MCP stdio 提供 Revit 工具，默认只读。
 
 ## 安装与运行
 
-本 fork 把 wheel 发布在 GitHub Releases 上，不发布到 PyPI。`uvx revit-model-mcp` 在 PyPI 上解析到上游项目，那是另一个服务器，因此必须显式指定本 fork 的发布产物：
+本 fork 把 wheel 发布在 GitHub Releases 上，不发布到 PyPI。用 `uvx` 直接安装这个名字会在 PyPI 上解析到上游项目，那是另一个服务器，因此必须显式指定本 fork 的发布产物：
 
 ```sh
 SERVER="git+https://github.com/vibe-bimer/revit-model-mcp@v<version>"

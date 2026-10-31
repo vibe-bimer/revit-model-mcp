@@ -179,20 +179,15 @@ class PageTests(unittest.TestCase):
         self.assertIn(platform_catalog.COMMIT, page)
         self.assertIn("(../features/revit_export_view.md)", page)
         self.assertIn("{#contract-diff}", page)
-        self.assertIn("output_path", page)
-        self.assertIn("save_to", page)
+        self.assertIn("同名工具的契约与发布版 1.0.0 一致", page)
 
-    def test_a_branch_only_tool_has_no_release_twin_section(self):
-        name = next(
-            tool["name"]
-            for tool in self.tools
-            if tool["name"] not in self.released_names
-        )
-        tool = next(t for t in self.tools if t["name"] == name)
-        page = platform_catalog.tool_page(tool, self.released, "zh")
+    def test_a_page_without_a_release_twin_has_no_diff_section(self):
+        tool = self.tools[0]
+        released = [item for item in self.released if item["name"] != tool["name"]]
+        page = platform_catalog.tool_page(tool, released, "zh")
         self.assertIn("未发布", page)
         self.assertNotIn("{#contract-diff}", page)
-        self.assertNotIn(f"(../features/{name}.md)", page)
+        self.assertNotIn(f"(../features/{tool['name']}.md)", page)
 
     def test_generate_is_deterministic(self):
         self.assertEqual(platform_catalog.generate(), platform_catalog.generate())

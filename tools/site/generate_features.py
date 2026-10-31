@@ -43,6 +43,7 @@ PLATFORM_NAV_START = platform_catalog.NAV_START
 PLATFORM_NAV_END = platform_catalog.NAV_END
 COMMON_PARAMETERS = {"document", "timeout_seconds", "pickup_timeout_seconds"}
 RELEASE_VERSION = catalogs.release().version
+RELEASE_RELEASED_VERSION = catalogs.release().released_version
 RELEASE_STATUS = catalogs.release().status
 LABELS = {
     "zh": {
@@ -77,7 +78,7 @@ LABELS = {
         "entry": "目录",
         "platform_page": "新版基座工具目录",
         "objects": "按模型对象浏览",
-        "objects_intro": "视图相关工具按操作的模型对象再分一次：视图、图纸、明细表与视口显示。现有版本没有图纸和明细表的工具，对应位置指向集成分支的同类工具。",
+        "objects_intro": "视图相关工具按操作的模型对象再分一次：视图、图纸、明细表与视口显示。现有版本没有覆盖的对象组会指向集成分支的同类工具。",
         "branch_tools": "集成分支有 {count} 个同类工具",
         "index": "功能总览",
         "matrix": "版本支持矩阵",
@@ -95,6 +96,7 @@ LABELS = {
         "no_specific": "此工具没有额外业务参数，使用下列通用参数即可。",
         "version": "版本",
         "released": "已发布",
+        "unreleased": "未发布",
         "twin_fact": "集成分支有同名工具",
         "applies_fact": "本页契约适用于发布版",
         "applies_yes": "是",
@@ -160,6 +162,7 @@ LABELS = {
         "no_specific": "No additional business parameters; use the common parameters below.",
         "version": "Version",
         "released": "Released",
+        "unreleased": "Unreleased",
         "twin_fact": "Same-name tool on the integration branch",
         "applies_fact": "This contract applies to the release",
         "applies_yes": "Yes",
@@ -231,7 +234,7 @@ def refresh_capability_sources(tools: list[dict]) -> int:
         if name not in wanted:
             continue
         block = lines[start + 1 : end]
-        entry = f"    source: {wanted[name]}\n"
+        entry = f"    source: '{wanted[name]}'\n"  # quoted: a bare 12-hex digit parses as int
         for index, line in enumerate(block):
             if re.match(r"^    source: '?[0-9a-f]{12}'?\s*$", line):
                 block[index] = entry
@@ -382,6 +385,33 @@ def year_counts(tools: list[dict], capabilities: dict, year: str, lang: str) -> 
     return f"{result['read']}/{result['read_total']} reads and {result['write']}/{result['write_total']} actions validated live; the rest are build-only"
 
 
+def _version_cell(cap: dict, labels: dict) -> str:
+    """Say released only for tools that ship in a published version.
+
+    The tree may carry a version that no release has published yet. A tool whose
+    `since` is newer than the last released version exists only in the tree, so the
+    page says unreleased and names the tree version in parentheses instead of
+    claiming a release that has not happened.
+    """
+    released = RELEASE_RELEASED_VERSION
+    since = str(cap.get("since") or "").strip()
+    if released and _version_key(since) > _version_key(released):
+        return (
+            f"{labels['unreleased']}（{RELEASE_VERSION}）"
+            if labels["unreleased"] == "未发布"
+            else f"{labels['unreleased']} ({RELEASE_VERSION})"
+        )
+    shown = released or RELEASE_VERSION
+    return f"{labels['released']} {shown}"
+
+
+def _version_key(value: str) -> tuple:
+    parts = []
+    for chunk in str(value).split("."):
+        parts.append((0, int(chunk)) if chunk.isdigit() else (1, chunk))
+    return tuple(parts)
+
+
 def tool_page(
     tool: dict,
     cap: dict,
@@ -396,7 +426,7 @@ def tool_page(
         f"<b>{labels['group']}</b> {capabilities['groups'][cap['group']][lang]}",
         f"<b>{labels['kind']}</b> {labels['read' if read_only else 'write']}",
         f"<b>{labels['since']}</b> {cap['since']}",
-        f"<b>{labels['version']}</b> {labels['released']} {RELEASE_VERSION}",
+        f"<b>{labels['version']}</b> {_version_cell(cap, labels)}",
         f"<b>{labels['twin_fact']}</b> {labels['twin_yes'] if twin is not None else labels['twin_no']}",
         f"<b>{labels['applies_fact']}</b> {labels['applies_yes']}",
     ]
@@ -439,7 +469,9 @@ def tool_page(
             out += [f"- {line}" for line in contract_diff.render_changes(changes, lang)]
             out += [
                 "",
-                labels["contract_diff_note"].format(version=RELEASE_VERSION),
+                labels["contract_diff_note"].format(
+                    version=RELEASE_RELEASED_VERSION or RELEASE_VERSION
+                ),
                 "",
             ]
     out += [f"## {labels['prompts']} {{#prompts}}", ""]
@@ -523,9 +555,9 @@ def index_page(
         "",
         labels["versions_intro"],
         "",
-        f"| | {labels['released']} {RELEASE_VERSION} | {platform_catalog.LABELS[lang]['platform']} |",
+        f"| | {labels['released']} {RELEASE_RELEASED_VERSION or RELEASE_VERSION} | {platform_catalog.LABELS[lang]['platform']} |",
         "| --- | --- | --- |",
-        f"| {labels['version']} | {RELEASE_VERSION} | {platform_catalog.LABELS[lang]['unreleased_fact']} |",
+        f"| {labels['version']} | {RELEASE_RELEASED_VERSION or RELEASE_VERSION} | {RELEASE_VERSION} {platform_catalog.LABELS[lang]['unreleased_fact']} |",
         f"| {platform_catalog.LABELS[lang]['branch']} | main | `{platform_catalog.BRANCH}` |",
         f"| {labels['tools']} | {len(tools)} | {branch_count} |",
         f"| {labels['entry']} | index.md | [{labels['platform_page']}](../platform/index.md) |",

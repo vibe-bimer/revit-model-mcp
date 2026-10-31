@@ -4,10 +4,13 @@
 
 本页记录本项目所有值得关注的变更。
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)。
+
 版本遵循[语义化版本规范](https://semver.org/spec/v2.0.0.html)。
 
 !!! note "完整中文翻译与权威来源"
     本页逐条翻译英文 [CHANGELOG.md](CHANGELOG.md)，保留版本、日期、分类、Issue 和提交链接，不以摘要替代历史明细。release-please 维护的英文日志是发布记录的权威来源；不得手工修改英文日志或版本字段。中文页仅翻译已记录的变更，不增加发布声明或真机验证结论。
+
+    从 1.0.0 起的条目目前只有英文版，中文翻译待补。
 
 <a id="090-2026-09-30"></a>
 ## [0.9.0](https://github.com/vibe-bimer/revit-model-mcp/compare/v0.8.1...v0.9.0)（2026-09-30）

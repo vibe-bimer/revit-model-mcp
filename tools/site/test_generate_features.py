@@ -170,7 +170,7 @@ class RefreshTests(FixtureCase):
         self.assertEqual(changed, 1)
         text = self.capabilities.read_text(encoding="utf-8")
         self.assertIn("# hand-written comments survive a refresh", text)
-        self.assertIn(f"    source: {source_of(DESCRIPTION)}", text)
+        self.assertIn(f"    source: '{source_of(DESCRIPTION)}'", text)
         self.assertEqual(text.count("source:"), 1)
 
 

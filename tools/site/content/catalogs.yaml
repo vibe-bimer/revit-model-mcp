@@ -1,3 +1,23 @@
+# Upstream pages that arrive as English prose (ADR-0007). They ship in the default
+# tree unchanged until a zh translation exists; the language audits exempt exactly
+# these paths and still fail on any undeclared English page.
+inherited_pages:
+  - admin/deployment.md
+  - admin/policy-reference.md
+  - admin/security-questionnaire.md
+  - admin/security-whitepaper.md
+  - batch.md
+  - code-signing.md
+  - design/model-audit.md
+  - install.md
+  - mcp-specifications.md
+  - not-doing.md
+  - prompts.md
+  - stability.md
+  - tested-clients.md
+  - tool-manifest.md
+  - updates.md
+
 # Declarative catalog manifest for the documentation site.
 #
 # Two catalogs are published side by side and must never be confused:
@@ -22,6 +42,10 @@ release:
     file: server/pyproject.toml
     format: toml
     pointer: project.version
+  # The last version that was actually published. A tool whose `since` is at or
+  # below this ships in a release; a newer one exists only in the tree, so its
+  # page says unreleased instead of claiming a release that has not happened.
+  released_version: 0.9.0
 
 integration:
   directory: platform

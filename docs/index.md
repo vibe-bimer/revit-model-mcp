@@ -11,12 +11,12 @@ hide:
   <div class="rmc-hero__grid" aria-hidden="true"></div>
   <div class="rmc-hero__inner">
     <div class="rmc-hero__copy">
-      <p class="rmc-eyebrow"><span class="rmc-eyebrow__dot" aria-hidden="true"></span>插件 / MCP 版本 0.9.0</p>
+      <p class="rmc-eyebrow"><span class="rmc-eyebrow__dot" aria-hidden="true"></span>插件 / MCP 版本 1.0.0</p>
       <h1 class="rmc-hero__title">Revit Model MCP</h1>
       <p class="rmc-hero__lede">把 Autodesk Revit 模型接到 AI 助手上：查参数与几何、统计构件、检查模型、导出清单、编辑构件，以及复制模型并换新 ID。默认只读，动作需要双门禁。</p>
       <p class="rmc-hero__actions">
         <a class="rmc-btn rmc-btn--primary" href="server/">开始安装</a>
-        <a class="rmc-btn" href="features/">浏览 35 个功能</a>
+        <a class="rmc-btn" href="features/">浏览 87 个功能</a>
       </p>
     </div>
     <div class="rmc-hero__art"><svg class="rmc-frame" xmlns="http://www.w3.org/2000/svg" viewBox="8 52 620 400" role="img" aria-labelledby="rmc-frame-title">
@@ -79,12 +79,12 @@ hide:
   <dl class="rmc-spec">
     <div class="rmc-spec__cell">
       <dt>读取工具</dt>
-      <dd>19</dd>
+      <dd>35</dd>
       <p>只读模型与视图</p>
     </div>
     <div class="rmc-spec__cell">
       <dt>动作工具</dt>
-      <dd>16</dd>
+      <dd>52</dd>
       <p>需双门禁授权</p>
     </div>
     <div class="rmc-spec__cell">
@@ -104,7 +104,7 @@ hide:
   <header class="rmc-section__head">
     <span class="rmc-section__num" aria-hidden="true">↗</span>
     <h2 class="rmc-section__title">新版底座与移植进展</h2>
-    <p class="rmc-section__lede">当前网站的 35 个工具对应现有版本。新版正在独立分支上集成，尚未作为当前版本发布。</p>
+    <p class="rmc-section__lede">当前网站的 87 个工具对应现有版本。新版正在独立分支上集成，尚未作为当前版本发布。</p>
     <a class="rmc-section__link" href="platform/">按基座与自研查阅 80 个工具</a>
     <a class="rmc-section__link" href="https://github.com/vibe-bimer/revit-model-mcp/issues/27">查看集成规格与进展</a>
   </header>
@@ -179,7 +179,7 @@ hide:
   <header class="rmc-section__head">
     <span class="rmc-section__num" aria-hidden="true">02</span>
     <h2 class="rmc-section__title">能力范围</h2>
-    <p class="rmc-section__lede">按场景分成 8 组，共 35 个工具。每个工具页都有用途、参数、返回结果与限制。</p>
+    <p class="rmc-section__lede">按场景分成 13 组，共 87 个工具。每个工具页都有用途、参数、返回结果与限制。</p>
     <a class="rmc-section__link" href="features/">功能总览</a>
   </header>
   <div class="rmc-caps">
@@ -195,9 +195,9 @@ hide:
         <span class="rmc-cap__num" aria-hidden="true">02</span>
         <span class="rmc-cap__body">
           <span class="rmc-cap__name">查询与统计</span>
-          <span class="rmc-cap__desc">查可用名字：类别、族类型、标高、面积方案、视图、工作集、阶段、参数</span>
+          <span class="rmc-cap__desc">读取当前文档、打开的视图、选择集与所有打开的文档</span>
         </span>
-        <span class="rmc-cap__count">5</span>
+        <span class="rmc-cap__count">6</span>
       </a>
       <a class="rmc-cap" href="features/#group-views">
         <span class="rmc-cap__num" aria-hidden="true">03</span>
@@ -205,31 +205,31 @@ hide:
           <span class="rmc-cap__name">视图与截图</span>
           <span class="rmc-cap__desc">列出视图，可按视图类型与名称过滤</span>
         </span>
-        <span class="rmc-cap__count">6</span>
+        <span class="rmc-cap__count">13</span>
       </a>
       <a class="rmc-cap" href="features/#group-export">
         <span class="rmc-cap__num" aria-hidden="true">04</span>
         <span class="rmc-cap__body">
           <span class="rmc-cap__name">导出与检验</span>
-          <span class="rmc-cap__desc">交付前体检：文件大小、各类计数、单位设置、数量最多的警告</span>
+          <span class="rmc-cap__desc">解析工作站上的 NWC 导出设置 XML，不实际导出</span>
         </span>
-        <span class="rmc-cap__count">6</span>
+        <span class="rmc-cap__count">12</span>
       </a>
       <a class="rmc-cap" href="features/#group-display">
         <span class="rmc-cap__num" aria-hidden="true">05</span>
         <span class="rmc-cap__body">
           <span class="rmc-cap__name">选中与显示</span>
-          <span class="rmc-cap__desc">在 Revit 里选中指定构件（空列表=清除选择）</span>
+          <span class="rmc-cap__desc">生成标记 1–500 个构件的 PNG 截图，临时视图会回滚</span>
         </span>
-        <span class="rmc-cap__count">3</span>
+        <span class="rmc-cap__count">6</span>
       </a>
       <a class="rmc-cap" href="features/#group-edit">
         <span class="rmc-cap__num" aria-hidden="true">06</span>
         <span class="rmc-cap__body">
           <span class="rmc-cap__name">编辑</span>
-          <span class="rmc-cap__desc">按模型轴平移构件（mm）</span>
+          <span class="rmc-cap__desc">在 Revit 线程编译运行 C#，自动模式下自管一个事务与撤销记录</span>
         </span>
-        <span class="rmc-cap__count">7</span>
+        <span class="rmc-cap__count">17</span>
       </a>
       <a class="rmc-cap" href="features/#group-phases">
         <span class="rmc-cap__num" aria-hidden="true">07</span>
@@ -245,7 +245,47 @@ hide:
           <span class="rmc-cap__name">批量与 ID</span>
           <span class="rmc-cap__desc">同文档内换 ID：只对无宿主、无依赖的独立构件有效</span>
         </span>
-        <span class="rmc-cap__count">3</span>
+        <span class="rmc-cap__count">2</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-documents">
+        <span class="rmc-cap__num" aria-hidden="true">09</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">文档与进程</span>
+          <span class="rmc-cap__desc">列出一个 Revit 进程中所有打开的文档，含后台文档</span>
+        </span>
+        <span class="rmc-cap__count">7</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-batch">
+        <span class="rmc-cap__num" aria-hidden="true">10</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">批量作业</span>
+          <span class="rmc-cap__desc">查看最近作业，或等待某个动作作业的结果</span>
+        </span>
+        <span class="rmc-cap__count">7</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-families">
+        <span class="rmc-cap__num" aria-hidden="true">11</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">族</span>
+          <span class="rmc-cap__desc">审计打开的族或按名称审计项目族，不保存或加载更改；detail=full 返回全部参数元数据</span>
+        </span>
+        <span class="rmc-cap__count">4</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-sheets">
+        <span class="rmc-cap__num" aria-hidden="true">12</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">图纸与明细表</span>
+          <span class="rmc-cap__desc">分页读取明细表表头与单元格显示文本</span>
+        </span>
+        <span class="rmc-cap__count">4</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-links">
+        <span class="rmc-cap__num" aria-hidden="true">13</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">链接与协同</span>
+          <span class="rmc-cap__desc">对比宿主与一个已加载 Revit 链接的轴网和标高（不改动模型）</span>
+        </span>
+        <span class="rmc-cap__count">4</span>
       </a>
   </div>
 </section>

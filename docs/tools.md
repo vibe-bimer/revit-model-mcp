@@ -89,3 +89,10 @@ HTTP 模式下，`revit_list_instances` 报告所连接的 Revit 进程。
 | `roomCenterMm` | 已放置房间的位置 `[x,y,z]`。在房间内放置物体时使用 `roomCenterMm`。包围盒中心可能位于非矩形房间之外。 |
 
 不可用的几何字段省略。
+
+<a id="toolsets"></a>
+## 工具集
+
+`REVIT_MCP_TOOLSETS` 环境变量或 `--toolsets` 参数决定 `tools/list` 暴露哪些工具：逗号分隔的名字，取值 `all`（默认）、`core`、`read`、`actions`、`documents`、`views-sheets`、`family`、`links`、`cad-mep`、`export`、`batch`、`code`。
+`core` 恒被包含；`--toolsets` 覆盖环境变量；未知名字会让服务器启动失败，而不是静默忽略。
+工具集只限制可见性，不是权限：只读模式、确认令牌与插件的自身检查对列出的每个工具仍然生效。

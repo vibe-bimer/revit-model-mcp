@@ -36,6 +36,7 @@ class Catalog:
     languages: tuple[str, ...]
     page_languages: dict[str, tuple[str, ...]]
     version: str
+    released_version: str = ""
 
 
 def manifest_path(root: Path | None = None) -> Path:
@@ -56,7 +57,14 @@ def load(root: Path | None = None) -> dict:
 
 def dump_yaml(data: dict) -> str:
     """Serialise a manifest back to YAML; used by tests that build temporary roots."""
-    payload = {key: dict(value) for key, value in data.items()}
+    payload = {}
+    for key, value in data.items():
+        if isinstance(value, dict):
+            payload[key] = dict(value)
+        elif isinstance(value, (list, tuple)):
+            payload[key] = list(value)
+        else:
+            payload[key] = value
     for key in ("release", "integration"):
         payload[key]["languages"] = list(payload[key]["languages"])
         payload[key]["page_languages"] = {
@@ -101,6 +109,7 @@ def release(root: Path | None = None) -> Catalog:
         languages=data["languages"],
         page_languages=data["page_languages"],
         version=read_version(data["version"], root),
+        released_version=str(data.get("released_version") or "").strip(),
     )
 
 
@@ -119,6 +128,20 @@ def integration(root: Path | None = None) -> Catalog:
 
 def fork_tools(root: Path | None = None) -> dict:
     return dict(load(root).get("fork_tools") or {})
+
+
+def inherited_pages(root: Path | None = None) -> frozenset[str]:
+    """Docs paths the site ships in English only until a zh translation exists.
+
+    Inherited upstream pages arrive as English prose in the default (Chinese) tree. ADR-0007
+    keeps them bilingual-by-declaration instead of forcing a translation, so the language
+    audits exempt exactly the paths listed here and still fail on anything undeclared.
+    """
+    try:
+        pages = load(root).get("inherited_pages") or []
+    except FileNotFoundError:
+        return frozenset()
+    return frozenset(str(page).strip() for page in pages if str(page).strip())
 
 
 OBJECT_ORDER = ("views", "sheets", "schedules", "view-display")

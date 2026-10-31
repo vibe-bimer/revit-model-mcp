@@ -23,5 +23,5 @@ Review date: 2026-09-12.
 - Dependency reproducibility: floating NuGet and Python ranges can change restores; pin the resolved graph before promising reproducible binaries.
 - Compatibility: no live validation of reads or actions on Revit 2022–2025 or 2027 in the 2026-09-12 validation pass; CI compilation does not verify HTTP ACL behavior or live execution.
 - Publishing: v0.1.0 ships GitHub release assets; MCP Registry and PyPI publishing are unavailable.
-- Batch undo: the Revit undo menu label (`revit_batch`) cannot be verified through the API.
+- Batch undo: the Revit undo menu label (`revit_run_actions`) cannot be verified through the API.
 - Installation: `install.ps1` has no rollback across years if a later year fails.

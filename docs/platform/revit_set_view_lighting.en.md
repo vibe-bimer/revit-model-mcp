@@ -6,7 +6,7 @@ description: "Set the lighting of one view: shadows, sun position, ground plane,
 
 `revit_set_view_lighting`
 
-<p class="facts"><span><b>Group</b> Views, sheets and schedules</span><span><b>Kind</b> Action</span><span><b>Base and fork tools</b> Fork (this repository) · Grafted</span><span><b>Status</b> Unreleased (integration branch)</span><span><b>Release version</b> 0.9.0</span><span><b>Source branch</b> <code>integration/upstream-1.0</code></span><span><b>Source commit</b> <code>55d6ea51f5100b73faf6f02621b973642f12b08e</code></span><span><b>Same-name tool in the release</b> Yes, but the parameters differ</span><span><b>This contract applies to the release</b> No</span></p>
+<p class="facts"><span><b>Group</b> Views, sheets and schedules</span><span><b>Kind</b> Action</span><span><b>Base and fork tools</b> Fork (this repository) · Grafted</span><span><b>Status</b> Unreleased (integration branch)</span><span><b>Release version</b> 1.0.0</span><span><b>Source branch</b> <code>integration/upstream-1.0</code></span><span><b>Source commit</b> <code>55d6ea51f5100b73faf6f02621b973642f12b08e</code></span><span><b>Same-name tool in the release</b> Yes, with identical parameters</span><span><b>This contract applies to the release</b> No</span></p>
 
 !!! note "Usage notes"
     Attached through the fork registry and the seven fallback hooks; the Python tool and its unit tests pass. C# compilation and live validation still happen on Windows CI and the workstation.
@@ -15,12 +15,7 @@ description: "Set the lighting of one view: shadows, sun position, ground plane,
 
 ## Contract differences from the release {#contract-diff}
 
-The table below is computed from the registry inputSchema; it is not a hand-written list.
-
-- Parameter ground_plane_level (anyOf[0]) pattern: release \S / integration —
-- Parameter view pattern: release \S / integration —
-
-This contract belongs to the integration branch, not to release 0.9.0; copying the branch parameters fails on the release.
+The same-name tool has an identical contract to release 1.0.0.
 
 ## Parameters {#parameters}
 

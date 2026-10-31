@@ -11,12 +11,12 @@ hide:
   <div class="rmc-hero__grid" aria-hidden="true"></div>
   <div class="rmc-hero__inner">
     <div class="rmc-hero__copy">
-      <p class="rmc-eyebrow"><span class="rmc-eyebrow__dot" aria-hidden="true"></span>Add-in / MCP version 0.9.0</p>
+      <p class="rmc-eyebrow"><span class="rmc-eyebrow__dot" aria-hidden="true"></span>Add-in / MCP version 1.0.0</p>
       <h1 class="rmc-hero__title">Revit Model MCP</h1>
       <p class="rmc-hero__lede">Bring Autodesk Revit models to your AI assistant: inspect parameters and geometry, count elements, check models, export registers, edit elements, and copy models with new IDs. Read-only by default; actions need both gates.</p>
       <p class="rmc-hero__actions">
         <a class="rmc-btn rmc-btn--primary" href="server/">Install and connect</a>
-        <a class="rmc-btn" href="features/">Browse 35 features</a>
+        <a class="rmc-btn" href="features/">Browse 87 features</a>
       </p>
     </div>
     <div class="rmc-hero__art"><svg class="rmc-frame" xmlns="http://www.w3.org/2000/svg" viewBox="8 52 620 400" role="img" aria-labelledby="rmc-frame-title">
@@ -79,12 +79,12 @@ hide:
   <dl class="rmc-spec">
     <div class="rmc-spec__cell">
       <dt>Read tools</dt>
-      <dd>19</dd>
+      <dd>35</dd>
       <p>Models and views</p>
     </div>
     <div class="rmc-spec__cell">
       <dt>Action tools</dt>
-      <dd>16</dd>
+      <dd>52</dd>
       <p>Both gates required</p>
     </div>
     <div class="rmc-spec__cell">
@@ -104,7 +104,7 @@ hide:
   <header class="rmc-section__head">
     <span class="rmc-section__num" aria-hidden="true">↗</span>
     <h2 class="rmc-section__title">New platform and migration progress</h2>
-    <p class="rmc-section__lede">The 35 tools on this site describe the current release. The new platform is being integrated on a separate branch and is not yet released.</p>
+    <p class="rmc-section__lede">The 87 tools on this site describe the current release. The new platform is being integrated on a separate branch and is not yet released.</p>
     <a class="rmc-section__link" href="platform/">Browse the 80 tools by origin</a>
     <a class="rmc-section__link" href="https://github.com/vibe-bimer/revit-model-mcp/issues/27">View the integration specification and progress</a>
   </header>
@@ -179,7 +179,7 @@ hide:
   <header class="rmc-section__head">
     <span class="rmc-section__num" aria-hidden="true">02</span>
     <h2 class="rmc-section__title">What it covers</h2>
-    <p class="rmc-section__lede">Grouped into 8 task areas, 35 tools in total. Every tool page carries its purpose, parameters, returned data and limits.</p>
+    <p class="rmc-section__lede">Grouped into 13 task areas, 87 tools in total. Every tool page carries its purpose, parameters, returned data and limits.</p>
     <a class="rmc-section__link" href="features/">Feature overview</a>
   </header>
   <div class="rmc-caps">
@@ -195,9 +195,9 @@ hide:
         <span class="rmc-cap__num" aria-hidden="true">02</span>
         <span class="rmc-cap__body">
           <span class="rmc-cap__name">Query and totals</span>
-          <span class="rmc-cap__desc">Discover categories, family types, levels, area schemes, views, worksets, phases and parameters</span>
+          <span class="rmc-cap__desc">Read the active document, open views, selection and open documents</span>
         </span>
-        <span class="rmc-cap__count">5</span>
+        <span class="rmc-cap__count">6</span>
       </a>
       <a class="rmc-cap" href="features/#group-views">
         <span class="rmc-cap__num" aria-hidden="true">03</span>
@@ -205,31 +205,31 @@ hide:
           <span class="rmc-cap__name">Views and snapshots</span>
           <span class="rmc-cap__desc">List views filtered by type and name</span>
         </span>
-        <span class="rmc-cap__count">6</span>
+        <span class="rmc-cap__count">13</span>
       </a>
       <a class="rmc-cap" href="features/#group-export">
         <span class="rmc-cap__num" aria-hidden="true">04</span>
         <span class="rmc-cap__body">
           <span class="rmc-cap__name">Export and checks</span>
-          <span class="rmc-cap__desc">Check file size, model counts, units and frequent warnings</span>
+          <span class="rmc-cap__desc">Parse a Navisworks exporter XML on the workstation without exporting</span>
         </span>
-        <span class="rmc-cap__count">6</span>
+        <span class="rmc-cap__count">12</span>
       </a>
       <a class="rmc-cap" href="features/#group-display">
         <span class="rmc-cap__num" aria-hidden="true">05</span>
         <span class="rmc-cap__body">
           <span class="rmc-cap__name">Selection and display</span>
-          <span class="rmc-cap__desc">Select elements in Revit; an empty list clears the selection</span>
+          <span class="rmc-cap__desc">Render a PNG marking 1 to 500 elements; the temporary view is rolled back</span>
         </span>
-        <span class="rmc-cap__count">3</span>
+        <span class="rmc-cap__count">6</span>
       </a>
       <a class="rmc-cap" href="features/#group-edit">
         <span class="rmc-cap__num" aria-hidden="true">06</span>
         <span class="rmc-cap__body">
           <span class="rmc-cap__name">Editing</span>
-          <span class="rmc-cap__desc">Move elements by offsets along model axes in millimetres</span>
+          <span class="rmc-cap__desc">Compile and run C# on the Revit thread; auto mode owns one transaction and undo entry</span>
         </span>
-        <span class="rmc-cap__count">7</span>
+        <span class="rmc-cap__count">17</span>
       </a>
       <a class="rmc-cap" href="features/#group-phases">
         <span class="rmc-cap__num" aria-hidden="true">07</span>
@@ -245,7 +245,47 @@ hide:
           <span class="rmc-cap__name">Batch and ids</span>
           <span class="rmc-cap__desc">Replace eligible standalone elements with copies to obtain new IDs</span>
         </span>
-        <span class="rmc-cap__count">3</span>
+        <span class="rmc-cap__count">2</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-documents">
+        <span class="rmc-cap__num" aria-hidden="true">09</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">Documents and processes</span>
+          <span class="rmc-cap__desc">List every open document in one Revit process, including background documents</span>
+        </span>
+        <span class="rmc-cap__count">7</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-batch">
+        <span class="rmc-cap__num" aria-hidden="true">10</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">Batch jobs</span>
+          <span class="rmc-cap__desc">List recent jobs, or wait up to wait_seconds for one action result</span>
+        </span>
+        <span class="rmc-cap__count">7</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-families">
+        <span class="rmc-cap__num" aria-hidden="true">11</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">Families</span>
+          <span class="rmc-cap__desc">Audit an open family or named project families without saving or loading changes; detail=full returns all parameter metadata</span>
+        </span>
+        <span class="rmc-cap__count">4</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-sheets">
+        <span class="rmc-cap__num" aria-hidden="true">12</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">Sheets and schedules</span>
+          <span class="rmc-cap__desc">Read displayed schedule header and body cell text, with paging</span>
+        </span>
+        <span class="rmc-cap__count">4</span>
+      </a>
+      <a class="rmc-cap" href="features/#group-links">
+        <span class="rmc-cap__num" aria-hidden="true">13</span>
+        <span class="rmc-cap__body">
+          <span class="rmc-cap__name">Links and coordination</span>
+          <span class="rmc-cap__desc">Compare host grids and levels with one loaded Revit link; changes nothing</span>
+        </span>
+        <span class="rmc-cap__count">4</span>
       </a>
   </div>
 </section>

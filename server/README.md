@@ -91,7 +91,7 @@ Boolean server variables accept `1`, `true`, `yes`, `on` and `0`, `false`, `no`,
 | `REVIT_MCP_RSN_REST_BASE` | Add-in (batch supervisor) | Unset | `AdminRESTService.svc/` URL of the Revit Server host. Required to read RSN model metadata before a batch run. |
 
 The add-in also reads `REVIT_MCP_BATCH_WORKER`; the batch supervisor sets it on worker processes, so do not set it yourself.
-See the [settings reference](../docs/transport.md#settings-reference) for the `settings.json` keys.
+See the [settings reference](../docs/transport.md#http-configuration) for the `settings.json` keys.
 
 `revit_family_audit` is a read tool. It inspects an open family when `families` is omitted, or exact family names / `["*"]` in a project. `revit_edit_families` applies ordered shared-parameter, removal, purge and shared-flag operations. Project edits use one family load per family and one undo entry; `dry_run=true` rolls back. The edit tool is refused in read-only mode. Family audit defaults to a 600-second response budget; family edits default to 1800 seconds.
 

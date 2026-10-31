@@ -29,7 +29,7 @@ Revit 2020 检查于 2026-09-28 和 2026-09-29 进行，使用 Windows 工作站
 `revit_rebuild_model_ids` 将 `建筑结构.rvt` 中 899 个可选构件复制到新模型，源模型保持不变；新模型打开时没有提示框，其三维视图包含 900 个构件，并保留源模型的墙和标高类型。
 在 0.9.0 构建上，单个任务用 165 s 写出该模型的十份副本（每份 16.5 s）：每份包含 899 个构件，`idMappingVerified=true`，没有任何 ID 出现在两份副本中，ID 区间为 2473–4256、19259–21042、……、44771–46554。
 截图和 JSON 证据位于 [`validation-assets` 分支](https://github.com/vibe-bimer/revit-model-mcp/tree/validation-assets)。
-Revit 批处理（`revit_batch`）在撤销菜单中的标签无法通过 API 验证。
+Revit 批处理（`revit_run_actions`）在撤销菜单中的标签无法通过 API 验证。
 
 `revit_create_level`（首批建模工具的第一个，2026-10-02）在 2020 与 2026 两个年份都完成了真机验收，使用 `建筑结构.rvt` 与由它升级另存而来的 `mcp-verify-2026.rvt`。
 两个年份上：`dry_run` 回滚后 `isModified` 仍为 `false`；真实写入建出标高并回报 `verification.after = { id, category: "标高", name, elevationMm }`；同名标高被拒绝并回报 `Level '1F' already exists at 0 mm.`；`create_view=true` 使视图数从 52 增到 53。

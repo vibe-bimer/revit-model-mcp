@@ -362,6 +362,11 @@ def audit_site(
     error_page = site / "404.html"
     if not error_page.is_file():
         errors.append("404.html: missing error page")
+    inherited_built: set[str] = set()
+    if root is not None:
+        for page in catalogs.inherited_pages(root):
+            stem = page.removesuffix(".md")
+            inherited_built.update({f"{stem}/index.html", f"en/{stem}/index.html"})
     for path, info in parsed.items():
         relative = path.relative_to(site).as_posix()
         english = relative.startswith("en/")
@@ -480,6 +485,10 @@ def audit_site(
         ratio = cjk / max(len(text), 1)
         if not text:
             errors.append(f"{relative}: empty article")
+        elif relative in inherited_built:
+            # Declared inherited pages carry English prose in both trees until translated
+            # (ADR-0007); their prose language is a declaration, not an accident to police.
+            pass
         elif english and ratio > 0.05:
             errors.append(f"{relative}: excessive Chinese prose ({ratio:.1%})")
         elif not english and ratio < 0.05:
@@ -625,9 +634,12 @@ def audit_sources(root: Path) -> list[str]:
         managed = tuple(f"{directory}/" for directory in catalog_dirs)
         coverage_errors = catalogs.coverage_errors(root)
     unmanaged = {p for p in pages if not p.startswith(managed)}
-    chinese = {p for p in unmanaged if not p.endswith(".en.md")}
+    declared = catalogs.inherited_pages(root)
+    chinese = {p for p in unmanaged if not p.endswith(".en.md") and p not in declared}
     english = {
-        p.removesuffix(".en.md") + ".md" for p in unmanaged if p.endswith(".en.md")
+        p.removesuffix(".en.md") + ".md"
+        for p in unmanaged
+        if p.endswith(".en.md") and p.removesuffix(".en.md") + ".md" not in declared
     }
     for missing in sorted(chinese ^ english):
         errors.append(f"Unpaired source page: {missing}")

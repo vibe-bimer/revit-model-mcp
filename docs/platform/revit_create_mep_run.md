@@ -6,9 +6,15 @@ description: "按模型毫米坐标点创建相连的风管、水管、桥架或
 
 `revit_create_mep_run`
 
-<p class="facts"><span><b>分组</b> CAD 与 MEP</span><span><b>类型</b> 动作</span><span><b>基座与自研的区分</b> 基座（上游）</span><span><b>状态</b> 未发布（集成分支）</span><span><b>发布版版本</b> 0.9.0</span><span><b>来源分支</b> <code>integration/upstream-1.0</code></span><span><b>来源提交</b> <code>55d6ea51f5100b73faf6f02621b973642f12b08e</code></span><span><b>发布版有同名工具</b> 没有</span><span><b>本页契约适用于发布版</b> 否</span></p>
+<p class="facts"><span><b>分组</b> CAD 与 MEP</span><span><b>类型</b> 动作</span><span><b>基座与自研的区分</b> 基座（上游）</span><span><b>状态</b> 未发布（集成分支）</span><span><b>发布版版本</b> 1.0.0</span><span><b>来源分支</b> <code>integration/upstream-1.0</code></span><span><b>来源提交</b> <code>55d6ea51f5100b73faf6f02621b973642f12b08e</code></span><span><b>发布版有同名工具</b> 有，参数一致</span><span><b>本页契约适用于发布版</b> 否</span></p>
 
 按模型毫米坐标点创建相连的风管、水管、桥架或线管段；缺失的 Z 取标高加该类默认偏移。
+
+[同名发布版页面](../features/revit_create_mep_run.md)
+
+## 与发布版的契约差异 {#contract-diff}
+
+同名工具的契约与发布版 1.0.0 一致。
 
 ## 参数 {#parameters}
 

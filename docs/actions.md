@@ -51,7 +51,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 | `revit_set_view_lighting` | `view`、`shadows=null`、`shadow_intensity=null`、`sunlight_intensity=null`、`sun_date=null`、`sun_time=null`、`sun_azimuth_deg=null`、`sun_altitude_deg=null`、`ground_plane=null`、`ground_plane_level=null`、`background=null`、`background_colors=null`、`lighting_scheme=null`、`dry_run=false` | 按视图名称或视图 ID 设置一个非样板视图的光照：阴影开关、阳光与阴影强度、太阳日期与时间或固定光照方位角／高度角、地面平面、背景与渲染光源方案。响应在 `verification.before.lighting`／`verification.after.lighting` 给出改动前后的读数，并用 `changedSettings` 列出真正变化的项。 |
 | `revit_delete` | `element_ids` | 删除非空 ID 列表中的构件及其依赖。 |
 | `revit_reset_element_ids` | `element_ids`、`dry_run=false` | 用副本替换构件，让 Revit 分配新 ID；报告 `idMapping`。若删除会移除依赖、构件有宿主或属于组、构件是 MEP 曲线或 MEP 系统成员（副本不会重新接入网络，Revit 会在删除的原构件周围自动修复管线），或 Revit 无法复制该构件，则拒绝替换。 |
-| `revit_batch` | `steps`、`dry_run=false` | 执行 1–50 个动作，合并为名为 `revit_batch` 的一次撤销记录。 |
+| `revit_run_actions` | `steps`、`dry_run=false` | 执行 1–50 个动作，合并为一次撤销记录；首个失败步骤回滚整批。 |
 | `revit_rebuild_model_ids` | `destination_path`、`view=null`、`template_path=null`、`overwrite=false`、`remove_template_levels=true`、`seed=0`、`duplicate_names="override"`、`copies=1`、`dry_run=false` | 将三维视图中可选择的构件复制到新模型，让 Revit 为每个构件分配新 ID；不改变已打开模型。先复制标高、轴网和参照平面，以解析宿主；相机、太阳路径、剖面框、视图及无类别构件不复制，并在 `excluded` 中报告。视图、图纸、明细表、注释、阶段、工作集、MEP 系统和未选中的宿主均不带入，因此结果保留几何、类型和参数。数据报告 `count`、`newIdMin`／`newIdMax`、`sourceCategoryCounts`、`copiedCategoryCounts`，以及按类别和类型校验的 `idMapping`。 |
 
 `type_name`、`wall_type` 和 `floor_type` 是接受 `null` 的必填参数。
@@ -131,7 +131,7 @@ Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从�
 <a id="batch-execution"></a>
 ## 批次执行
 
-`revit_batch` 接受动作名及其通常的 snake_case 参数。应在批次上统一设置 `document`，不要放入各步骤的 `args`：
+`revit_run_actions` 接受动作名及其通常的 snake_case 参数。应在批次上统一设置 `document`，不要放入各步骤的 `args`：
 
 ```json
 {
@@ -143,7 +143,7 @@ Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从�
 }
 ```
 
-成功批次将各事务合并为名为 `revit_batch` 的一次撤销记录。
+成功批次将各事务合并为一次撤销记录；撤销菜单中的名称以 `MCP (` 开头，后跟客户端名与批次摘要。
 第一个失败步骤使整个批次回滚；所有尝试过的步骤，包括失败步骤，均带有 `rolledBack:true`。
 `Assimilate` 失败记录在最后一个步骤上，`failedStep` 指向该步骤。
 执行前验证所有步骤；后面的步骤无效也会拒绝整个批次，不执行任何动作，且不带 `failedStep`。
@@ -151,7 +151,7 @@ Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从�
 批次试运行逐步执行，每一步都可看到前面步骤的修改，最后回滚整个事务组并恢复原选择集。
 真实批次中的单步 `dry_run:true` 可以使用，只预览该步骤。
 验证描述各步骤的即时结果；后续步骤可能再次改变这些构件。
-批次接受 1–50 步，步骤动作取自 `revit_batch` 的 `action` 枚举，其中包括 `select` 和 `isolate` 这两个 UI 工具；`show`、嵌套批次以及未知参数键会被拒绝。
+批次接受 1–50 步，步骤动作取自 `revit_run_actions` 的 `action` 枚举，其中包括 `select` 和 `isolate` 这两个 UI 工具；`show`、嵌套批次以及未知参数键会被拒绝。
 
 <a id="navigation-dialogs-and-family-names"></a>
 ## 导航、对话框与族名称
@@ -168,7 +168,7 @@ Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从�
 成功覆盖的提示文本记录在 `dialogsSuppressed` 中。
 对话框处理器在 `finally` 中移除，错误路径也不例外。
 单动作 `revit_place_family` 遇到缺失族时，在 `closestFamilies` 中返回最多五个相近名称及其族类别；不返回无关名称。
-在 `revit_batch` 内，缺失族只作为 `steps[].error` 文本报告，不提供 `closestFamilies`。
+在 `revit_run_actions` 内，缺失族只作为 `steps[].error` 文本报告，不提供 `closestFamilies`。
 使用 `Family: Type` 时，`type_name=null` 使用其中指定的类型；另行提供冲突的 `type_name` 会被拒绝。
 只提供族名称时，`type_name=null` 选择第一个已载入类型。
 
@@ -227,7 +227,7 @@ Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从�
 动作执行器的响应包含 `activeView`，动作错误也不例外。
 传输拒绝和目标不匹配响应可能省略动作元数据。
 模型修改和临时隔离使用以工具命名的独立事务。
-`revit_batch` 以名为 `revit_batch` 的 `TransactionGroup` 包裹各步骤事务，并将它们合并为一次撤销记录。
+`revit_run_actions` 用一个 `TransactionGroup` 包裹各步骤事务，并将它们合并为一次撤销记录。
 提交时的警告会被忽略，并在成功动作中报告。
 Revit 允许时，错误可尝试一次 `FixElements` 或 `SetValue` 解决；未解决或重复错误使事务回滚。
 选择与导航使用界面调用，不使用模型事务。

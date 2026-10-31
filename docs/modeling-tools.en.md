@@ -25,7 +25,7 @@ These carry over from the repository as it stands; they are not new decisions:
 - Levels and types are resolved by **exact name**; parameters such as `type_name` and `wall_type` are **required parameters that accept `null`**.
 - Every action accepts the common `document=null` argument and supports `dry_run=false`; a dry run executes, rolls back and returns a `verification` block of the same shape.
 - A successful create action carries `verification.after = { id, category, family, type, level, boundingBoxMinMm, boundingBoxMaxMm }`, and a dry run adds `wouldCreate: true`.
-- Every first-batch tool can go into `revit_batch` (one undo step, at most 50 steps).
+- Every first-batch tool can go into `revit_run_actions` (one undo step, at most 50 steps).
 - The two write gates (`REVIT_MCP_ALLOW_WRITE=1` and the workstation `allow-write` file) and the rule that actions must not save the model are not relaxed for the new tools.
 
 <a id="batch-one"></a>

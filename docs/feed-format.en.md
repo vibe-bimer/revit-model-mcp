@@ -253,7 +253,7 @@ A batch job contains a nonempty `steps` array of at most 50 command objects:
 Steps use each command's normal channel fields.
 All steps are validated at parse time before execution; an invalid later step rejects the entire batch without executing any step and without `failedStep`.
 Allowed commands are `move`, `place-family`, `create-wall`, `create-floor`, `set-phase`, `set-parameter`, `set-view-lighting`, `delete`, `select` and `isolate`.
-Each model step uses its own transaction; the group is assimilated into the single undo entry `revit_batch`.
+Each model step uses its own transaction; the group is assimilated into a single undo entry whose name starts with `MCP (`, followed by the client name and the batch summary.
 A batch dry run retains each step's changes for subsequent steps and rolls back the group at the end.
 An individual channel step with `dryRun:true` (MCP `dry_run:true`) in a real batch is accepted and previews only that step.
 Selection is restored on batch rollback.
@@ -262,7 +262,7 @@ Selection is restored on batch rollback.
 Each successful mutation's `data` carries the single-action verification shape.
 The first failed step stops execution; all attempted steps, including the failing one, carry `rolledBack:true`, as does any retained step data.
 An `Assimilate` failure is reported on the last step with `failedStep` pointing at that step.
-`data.undoName` is `"revit_batch"`, `data.committed` reports group assimilation, and `data.failedStep` is the failed index or null.
+`data.undoName` is that undo entry's name, `data.committed` reports group assimilation, and `data.failedStep` is the failed index or null.
 Dry-run success has `committed:false`, `failedStep:null` and `rolledBack:true`.
 Verification records each step immediately; later steps can supersede those facts.
 
@@ -288,8 +288,5 @@ Heartbeat JSON contains `processId`, `revitVersion`, `documentTitle`, `documentP
 The add-in writes every five seconds and the file client ignores records older than 60 seconds.
 HTTP instance discovery uses `/health` instead of heartbeat files.
 
-Legacy snapshots and `views-dump` jobs are accepted by the add-in but are not MCP tools.
-Snapshots use the [Snapshot contract](../src/RevitModelMcp.Core/Models/Snapshot.cs), without the command response envelope.
-View dumps use `command:"views-dump"`, `status`, timestamps, `responder`, progress counts and a `views` list from [ViewDumpReport](../src/RevitModelMcp.Core/Models/ViewDumpReport.cs).
-They track opened/closed views and restoration of the original view.
-Legacy formats have no schema version and should not be treated as a stable external API.
+The add-in also accepts `model-snapshot` jobs (including the batch variant `batch-snapshot`); they are not MCP tools either but feed batch runs and audits with project snapshots.
+The snapshot request and response contract lives in [ModelSnapshotModels](../src/RevitModelMcp.Core/Models/ModelSnapshotModels.cs) (schema version 1), without the command response envelope.

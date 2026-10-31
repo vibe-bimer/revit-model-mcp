@@ -5,7 +5,7 @@ It starts a separate Revit worker, opens one model at a time in the background, 
 The existing snapshot reader supplies schema version 1 JSON.
 Batch collection does not save, synchronize, start transactions, or expose action commands to the worker.
 
-For changes, scripts, exports, or saved copies across many models, use [`revit_process_models`](actions.md#process-many-models). It runs in the user's interactive Revit session, processes one model at a time, and closes each background document. The collector in this guide remains read-only and uses a separate worker.
+For changes, scripts, exports, or saved copies across many models, use [`revit_process_models`](features/revit_process_models.md). It runs in the user's interactive Revit session, processes one model at a time, and closes each background document. The collector in this guide remains read-only and uses a separate worker.
 
 ## Before the first batch run
 
@@ -39,7 +39,7 @@ Its lifetime is independent of the MCP client.
 `revit_batch_status(run_id)` reads persisted progress and marks unfinished models failed when the recorded supervisor process has exited.
 Completed and failed models stay terminal on restart.
 An interrupted running model returns to pending when the supervisor restarts.
-`revit_batch_start` and `revit_batch_cancel` are refused in server and workstation read-only mode; see the [unattended execution policy](actions.md#unattended-execution-policy).
+`revit_batch_start` and `revit_batch_cancel` are refused in server and workstation read-only mode; see the [unattended execution policy](actions.md#gates).
 `revit_batch_cancel(run_id)` writes a durable cancellation marker, stops new work, closes an opened model without saving when possible, and marks remaining models cancelled.
 `revit_batch_fetch(run_id, output_dir)` accepts completed, failed, and cancelled runs.
 It downloads snapshots from completed models to new client files.

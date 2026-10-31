@@ -157,7 +157,7 @@
 | 13 | `revit_delete` | 先 dry run，检查包含依赖的 ID，再仅删除已批准的测试构件；核对存活检查和返回数量 | 删除数量含依赖；丢弃副本或经授权使用 Revit UI 撤销 | [ ] |
 | 14 | `revit_reset_element_ids` | **必须先 dry run**：检查 `ineligible` 原因和 `idMapping`；合格／不合格混选时真实执行须整组拒绝。对已批准的全合格测试副本，确认旧 ID 消失、新副本及保留的类型／类别 | **不可逆，不依赖撤销。** 拒绝有宿主、属组、有依赖、MEP 曲线／系统成员及不可复制构件。丢弃副本并恢复备份；不原地赋 ID，也不把旧 ID 写入参数 | [ ] |
 | 15 | `revit_rebuild_model_ids` | Dry run 有映射但无保存文件。真实执行到新的工作站 `destination_path`；检查 `saved`、源／副本数量、排除项、每个 ID 映射。覆盖视图／模板、`seed`、重名模式、`copies`／`{n}` 路径，逐项检查 `copyResults` | 源模型不变、不保存。未经批准不覆盖；检查所有输出。只复制三维视图可选构件及基准对象，不是完整项目归档；不保留视图／图纸／明细表／注释／阶段／工作集／MEP 系统／未选宿主 | [ ] |
-| 16 | `revit_batch` | 先 dry run，再执行 1–50 个已批准步骤；核对预期验证、回滚及选择恢复。真实成功只有一个 `revit_batch` 撤销项；首个执行失败回滚事务组；检查 `committed`、从零计数的 `failedStep` 及各步结果 | 使用一次性副本；后续步骤参数无效须在任何执行前拒绝。允许名称：`move`、`place_family`、`create_wall`、`create_floor`、`create_level`、`set_phase`、`set_parameter`、`set_view_lighting`、`delete`、`select`、`isolate`；不允许 `show`、阶段合并、换 ID／重建 ID 或嵌套批处理 | [ ] |
+| 16 | `revit_run_actions` | 先 dry run，再执行 1–50 个已批准步骤；核对预期验证、回滚及选择恢复。真实成功只有一个批次撤销项；首个执行失败回滚事务组；检查 `committed`、从零计数的 `failedStep` 及各步结果 | 使用一次性副本；后续步骤参数无效须在任何执行前拒绝。允许名称：`move`、`place_family`、`create_wall`、`create_floor`、`create_level`、`set_phase`、`set_parameter`、`set_view_lighting`、`delete`、`select`、`isolate`；不允许 `show`、阶段合并、换 ID／重建 ID 或嵌套批处理 | [ ] |
 
 - [ ] **4.1 门禁反向测试**：服务器动作标志关闭时，即使有工作站门禁，动作也不在 `tools/list` 中；标志打开但无工作站门禁时，已列出的动作被拒绝。删除工作站门禁无需重启 Revit 即生效。读取仍可使用。
 - [ ] **4.2 HTTP 令牌门禁**：不带 Bearer 令牌的直接 HTTP 动作被拒绝；`/health` 无令牌也可使用。
