@@ -63,6 +63,13 @@ def test_a_binary_change_is_counted_by_name_not_by_lines(budget, config):
     assert hooks == {"src/RevitModelMcp.Addin/Application.cs": 0}
 
 
+def test_a_refreshed_dependency_lock_is_a_known_read_not_an_unowned_change(budget, config):
+    # The dependency audit refreshes these two locks in place; the budget must
+    # own that change instead of failing it as an unowned upstream file.
+    assert budget.classify("server/uv.lock", config) == "read"
+    assert budget.classify("server/requirements.docker.txt", config) == "read"
+
+
 def test_a_removal_is_asserted_and_never_counted_as_a_read(budget, config):
     numstat = "0\t12\tserver/server.json"
     hooks, other, unowned, removed = budget.changed_lines(numstat, config)

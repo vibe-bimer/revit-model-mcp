@@ -75,6 +75,8 @@
     "release-please-config.json": "no registry manifest to bump",
     "server/README.md": "the fork's own install and release identity",
     "server/pyproject.toml": "the fork's project URLs",
+    "server/requirements.docker.txt": "the dependency audit refreshes the hash-pinned docker list with the lock",
+    "server/uv.lock": "the dependency audit refreshes the lock past published CVEs",
     "server/revit_model_mcp/actions.py": "one registration call, one import and the step union",
     "server/revit_model_mcp/revit_channel.py": "the release page the update check reads",
     "server/revit_model_mcp/server.py": "one registration call and one import",
