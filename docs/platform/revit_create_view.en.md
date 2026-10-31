@@ -12,21 +12,23 @@ description: "Create a plan, section, 3D or drafting view. Unbounded 3D views sh
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `box` | No | `null` | any |  |
-| `detail_level` | No | `null` | any |  |
-| `display_style` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `element_ids` | No | `null` | any |  |
-| `kind` | Yes | — | string |  |
-| `level` | No | `null` | any |  |
-| `name` | No | `null` | any |  |
-| `scale` | No | `null` | any |  |
-| `template` | No | `null` | any |  |
-| `view_family_type` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `box` | No | `null` | any |
+| `detail_level` | No | `null` | any |
+| `display_style` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `element_ids` | No | `null` | any |
+| `kind` | Yes | — | string |
+| `level` | No | `null` | any |
+| `name` | No | `null` | any |
+| `scale` | No | `null` | any |
+| `template` | No | `null` | any |
+| `view_family_type` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

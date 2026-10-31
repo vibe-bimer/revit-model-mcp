@@ -27,9 +27,9 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `limit` | No | `200` | integer |  |
+| `limit` | No | `200` | integer | (not documented in the branch contract) |
 | `name_contains` | No | `null` | any | Case-insensitive substring of the view name. |
-| `section` | Yes | — | string |  |
+| `section` | Yes | — | string | (not documented in the branch contract) |
 
 </div>
 

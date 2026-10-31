@@ -12,15 +12,17 @@ description: "Mirror across a model X or Y parallel line through point_mm; copy 
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `axis` | Yes | — | string |  |
-| `copy` | No | `true` | boolean |  |
-| `dry_run` | No | `false` | boolean |  |
-| `element_ids` | Yes | — | array |  |
-| `point_mm` | Yes | — | array |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `axis` | Yes | — | string |
+| `copy` | No | `true` | boolean |
+| `dry_run` | No | `false` | boolean |
+| `element_ids` | Yes | — | array |
+| `point_mm` | Yes | — | array |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

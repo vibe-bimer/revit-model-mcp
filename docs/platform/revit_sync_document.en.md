@@ -12,27 +12,31 @@ description: "Synchronize a workshared document with central. Needs confirm_toke
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `comment` | Yes | — | string |  |
-| `compact` | No | `false` | boolean |  |
-| `confirm_token` | No | `null` | any |  |
-| `relinquish` | No | `"all"` | any |  |
-| `save_local_after` | No | `true` | boolean |  |
-| `save_local_before` | No | `true` | boolean |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `comment` | Yes | — | string |
+| `compact` | No | `false` | boolean |
+| `confirm_token` | No | `null` | any |
+| `relinquish` | No | `"all"` | any |
+| `save_local_after` | No | `true` | boolean |
+| `save_local_before` | No | `true` | boolean |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `document` | Yes | — | string |  |
-| `process_id` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `document` | Yes | — | string |
+| `process_id` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ## Behavior (registry text) {#behavior}
 

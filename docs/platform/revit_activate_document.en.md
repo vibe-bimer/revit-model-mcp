@@ -16,12 +16,14 @@ No additional business parameters; use the common parameters below.
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `document` | Yes | — | string |  |
-| `process_id` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `document` | Yes | — | string |
+| `process_id` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ## Behavior (registry text) {#behavior}
 

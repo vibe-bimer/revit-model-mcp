@@ -12,19 +12,21 @@ description: "Tag elements in a view, chosen by category names or by element IDs
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `categories` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `element_ids` | No | `null` | any |  |
-| `leader` | No | `false` | boolean |  |
-| `max_elements` | No | `5000` | integer |  |
-| `orientation` | No | `"horizontal"` | string |  |
-| `skip_tagged` | No | `true` | boolean |  |
-| `tag_type` | No | `null` | any |  |
-| `view` | Yes | — | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `categories` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `element_ids` | No | `null` | any |
+| `leader` | No | `false` | boolean |
+| `max_elements` | No | `5000` | integer |
+| `orientation` | No | `"horizontal"` | string |
+| `skip_tagged` | No | `true` | boolean |
+| `tag_type` | No | `null` | any |
+| `view` | Yes | — | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

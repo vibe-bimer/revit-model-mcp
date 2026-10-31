@@ -12,15 +12,17 @@ description: "Load optional families and place instances in one transaction and 
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `at_rooms` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `load` | No | `null` | any |  |
-| `placements` | No | `null` | any |  |
-| `stop_on_error` | No | `true` | boolean |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `at_rooms` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `load` | No | `null` | any |
+| `placements` | No | `null` | any |
+| `stop_on_error` | No | `true` | boolean |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -29,7 +31,7 @@ description: "Load optional families and place instances in one transaction and 
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | `600` | integer |  |
+| `timeout_seconds` | No | `600` | integer | (not documented in the branch contract) |
 
 </div>
 

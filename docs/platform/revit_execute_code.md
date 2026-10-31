@@ -16,10 +16,10 @@ description: "在 Revit 线程上编译并运行 C#，可直接调用 Revit API�
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `code` | 是 | — | string |  |
+| `code` | 是 | — | string | （集成分支契约未提供说明） |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `transaction` | 否 | `"auto"` | string |  |
+| `transaction` | 否 | `"auto"` | string | （集成分支契约未提供说明） |
 
 </div>
 

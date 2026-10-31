@@ -16,16 +16,16 @@ description: "在 Revit 工作站导出 PDF、DWG、IFC 或明细表 CSV；`dry_
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `all_sheets` | 否 | `false` | boolean |  |
+| `all_sheets` | 否 | `false` | boolean | （集成分支契约未提供说明） |
 | `confirm_token` | 否 | `null` | any | 首次调用返回的确认令牌，用于确认破坏性操作。 |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `format` | 是 | — | string |  |
-| `options` | 否 | `null` | any |  |
-| `output_dir` | 否 | `null` | any |  |
-| `overwrite` | 否 | `false` | boolean |  |
-| `sheet_set` | 否 | `null` | any |  |
-| `sheets` | 否 | `null` | any |  |
-| `views` | 否 | `null` | any |  |
+| `format` | 是 | — | string | （集成分支契约未提供说明） |
+| `options` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `output_dir` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `overwrite` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `sheet_set` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `sheets` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `views` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

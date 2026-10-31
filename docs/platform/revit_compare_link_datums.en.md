@@ -12,18 +12,20 @@ description: "Compare host grids and levels with one loaded Revit link. Changes 
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `kinds` | No | `null` | any |  |
-| `level_offset_mm` | No | `0` | number |  |
-| `link` | Yes | — | string |  |
-| `name_map` | No | `null` | any |  |
-| `prefix` | No | `""` | string |  |
-| `reuse_matching` | No | `true` | boolean |  |
-| `suffix` | No | `""` | string |  |
-| `tolerance_mm` | No | `0.5` | number |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `kinds` | No | `null` | any |
+| `level_offset_mm` | No | `0` | number |
+| `link` | Yes | — | string |
+| `name_map` | No | `null` | any |
+| `prefix` | No | `""` | string |
+| `reuse_matching` | No | `true` | boolean |
+| `suffix` | No | `""` | string |
+| `tolerance_mm` | No | `0.5` | number |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

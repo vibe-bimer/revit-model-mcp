@@ -12,11 +12,13 @@ description: "Persist cancellation and prevent unstarted models from running."
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `run_id` | Yes | — | string |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `run_id` | Yes | — | string |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ## Behavior (registry text) {#behavior}
 

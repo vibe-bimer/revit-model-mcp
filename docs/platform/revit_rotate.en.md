@@ -12,14 +12,16 @@ description: "Rotate elements about a vertical axis through center_mm, or throug
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `angle_deg` | Yes | — | number |  |
-| `center_mm` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `element_ids` | Yes | — | array |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `angle_deg` | Yes | — | number |
+| `center_mm` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `element_ids` | Yes | — | array |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

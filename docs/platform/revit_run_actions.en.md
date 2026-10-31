@@ -12,12 +12,14 @@ description: "Execute up to 50 actions with one undo step; the whole batch rolls
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `dry_run` | No | `false` | boolean |  |
-| `steps` | Yes | — | array |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `dry_run` | No | `false` | boolean |
+| `steps` | Yes | — | array |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

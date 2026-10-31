@@ -27,7 +27,7 @@ description: "读取模型对象的归属或依赖关系，如标高与房间、
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `relation` | 是 | — | string |  |
+| `relation` | 是 | — | string | （集成分支契约未提供说明） |
 | `source_id` | 否 | `null` | any | Revit ID of the source group (group-elements) or family instance (nested-family). |
 | `source_name` | 否 | `null` | any | Source name, case-insensitive: a level (level-rooms), area scheme (area-scheme-elements) or view template (view-template-dependents). |
 

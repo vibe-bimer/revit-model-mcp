@@ -16,11 +16,11 @@ description: "沿模型轴按毫米偏移创建 1 到 100 份连续副本；`dry
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `count` | 否 | `1` | integer |  |
+| `count` | 否 | `1` | integer | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `dx_mm` | 是 | — | number |  |
-| `dy_mm` | 是 | — | number |  |
-| `dz_mm` | 否 | `0` | number |  |
+| `dx_mm` | 是 | — | number | （集成分支契约未提供说明） |
+| `dy_mm` | 是 | — | number | （集成分支契约未提供说明） |
+| `dz_mm` | 否 | `0` | number | （集成分支契约未提供说明） |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
 
 </div>

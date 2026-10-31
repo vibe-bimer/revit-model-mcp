@@ -17,10 +17,10 @@ description: "就地编辑已打开的族，或对指定项目族逐个执行一
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `families` | 否 | `null` | any |  |
-| `operations` | 是 | — | array |  |
-| `overwrite_parameter_values` | 否 | `false` | boolean |  |
-| `stop_on_error` | 否 | `true` | boolean |  |
+| `families` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `operations` | 是 | — | array | （集成分支契约未提供说明） |
+| `overwrite_parameter_values` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `stop_on_error` | 否 | `true` | boolean | （集成分支契约未提供说明） |
 
 </div>
 

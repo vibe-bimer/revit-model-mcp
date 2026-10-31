@@ -16,17 +16,17 @@ description: "创建平面、剖面、三维或绘图视图；无边界三维视
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `box` | 否 | `null` | any |  |
-| `detail_level` | 否 | `null` | any |  |
-| `display_style` | 否 | `null` | any |  |
+| `box` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `detail_level` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `display_style` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 否 | `null` | any | 要处理的构件 Revit ID 列表。 |
-| `kind` | 是 | — | string |  |
-| `level` | 否 | `null` | any |  |
-| `name` | 否 | `null` | any |  |
-| `scale` | 否 | `null` | any |  |
-| `template` | 否 | `null` | any |  |
-| `view_family_type` | 否 | `null` | any |  |
+| `kind` | 是 | — | string | （集成分支契约未提供说明） |
+| `level` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `name` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `scale` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `template` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `view_family_type` | 否 | `null` | any | （集成分支契约未提供说明） |
 
 </div>
 

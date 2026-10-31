@@ -14,11 +14,13 @@ description: "持久化取消标记，尚未开始的模型不再运行；已开
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `run_id` | 是 | — | string |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `run_id` | 是 | — | string |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ## 功能说明（注册表原文） {#behavior}
 

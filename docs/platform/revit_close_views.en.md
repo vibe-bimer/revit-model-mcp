@@ -12,22 +12,26 @@ description: "Close open UI views in the active document."
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `keep_active` | No | `true` | boolean |  |
-| `views` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `keep_active` | No | `true` | boolean |
+| `views` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `process_id` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `process_id` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ## Behavior (registry text) {#behavior}
 

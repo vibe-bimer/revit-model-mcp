@@ -12,25 +12,29 @@ description: "Open a local, UNC or RSN model. Central models open detached by de
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `activate` | No | `false` | boolean |  |
-| `audit` | No | `false` | boolean |  |
-| `mode` | No | `"detached"` | string |  |
-| `path` | Yes | — | string |  |
-| `worksets` | No | `"all"` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `activate` | No | `false` | boolean |
+| `audit` | No | `false` | boolean |
+| `mode` | No | `"detached"` | string |
+| `path` | Yes | — | string |
+| `worksets` | No | `"all"` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `process_id` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `process_id` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ## Behavior (registry text) {#behavior}
 

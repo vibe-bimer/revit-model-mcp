@@ -12,14 +12,16 @@ description: "Load workstation .rfa files in one undo entry. Existing families a
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `dry_run` | No | `false` | boolean |  |
-| `overwrite` | No | `false` | boolean |  |
-| `overwrite_parameter_values` | No | `false` | boolean |  |
-| `paths` | Yes | — | array |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `dry_run` | No | `false` | boolean |
+| `overwrite` | No | `false` | boolean |
+| `overwrite_parameter_values` | No | `false` | boolean |
+| `paths` | Yes | — | array |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -28,7 +30,7 @@ description: "Load workstation .rfa files in one undo entry. Existing families a
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | `600` | integer |  |
+| `timeout_seconds` | No | `600` | integer | (not documented in the branch contract) |
 
 </div>
 

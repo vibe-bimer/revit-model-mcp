@@ -16,10 +16,10 @@ description: "生成本地 xlsx 问题登记表，含构件快照与审阅文档
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `issues` | 是 | — | array |  |
+| `issues` | 是 | — | array | （集成分支契约未提供说明） |
 | `output_path` | 是 | — | string | New .xlsx issue register path, resolved on the machine running this server; existing files are refused. |
 | `pixel_size` | 否 | `900` | integer | PNG size in pixels along the fitted dimension, 32 to 4000 (default 1600); Revit rejects smaller images. |
-| `project` | 是 | — | object |  |
+| `project` | 是 | — | object | （集成分支契约未提供说明） |
 
 </div>
 

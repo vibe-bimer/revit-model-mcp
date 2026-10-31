@@ -12,11 +12,13 @@ description: "Request cancellation of an action jobId. Process-models stops befo
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `job_id` | Yes | — | string |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `job_id` | Yes | — | string |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -25,7 +27,7 @@ description: "Request cancellation of an action jobId. Process-models stops befo
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
-| `process_id` | No | `null` | any |  |
+| `process_id` | No | `null` | any | (not documented in the branch contract) |
 
 </div>
 

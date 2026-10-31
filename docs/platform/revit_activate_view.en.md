@@ -12,14 +12,16 @@ description: "Activate a non-template view. Zoom to fit, preserve zoom, or frame
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `activate_document` | No | `false` | boolean |  |
-| `view` | Yes | — | string |  |
-| `view_type` | No | `null` | any |  |
-| `zoom` | No | `"fit"` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `activate_document` | No | `false` | boolean |
+| `view` | Yes | — | string |
+| `view_type` | No | `null` | any |
+| `zoom` | No | `"fit"` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -28,7 +30,7 @@ description: "Activate a non-template view. Zoom to fit, preserve zoom, or frame
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Target document title or path reference. |
-| `process_id` | No | `null` | any |  |
+| `process_id` | No | `null` | any | (not documented in the branch contract) |
 
 </div>
 

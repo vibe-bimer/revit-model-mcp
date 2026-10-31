@@ -31,7 +31,7 @@ description: "列出某一类目录：类目、族类型、标高、面积方案
 | --- | :--: | --- | --- | --- |
 | `limit` | 否 | `200` | integer | 返回条数上限。 |
 | `name_contains` | 否 | `null` | any | Case-insensitive substring of the view name. |
-| `section` | 是 | — | string |  |
+| `section` | 是 | — | string | （集成分支契约未提供说明） |
 
 </div>
 

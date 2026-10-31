@@ -12,16 +12,18 @@ description: "Start a persistent, read-only run over local, UNC or RSN models. o
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `folder` | No | `null` | any |  |
-| `open_timeout_minutes` | No | `null` | any |  |
-| `parameter_rules` | No | `null` | any |  |
-| `paths` | No | `null` | any |  |
-| `recursive` | No | `false` | boolean |  |
-| `years` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `folder` | No | `null` | any |
+| `open_timeout_minutes` | No | `null` | any |
+| `parameter_rules` | No | `null` | any |
+| `paths` | No | `null` | any |
+| `recursive` | No | `false` | boolean |
+| `years` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ## Behavior (registry text) {#behavior}
 

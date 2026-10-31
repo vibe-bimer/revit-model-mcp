@@ -22,13 +22,15 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `confirm_token` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `element_ids` | Yes | — | array |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `confirm_token` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `element_ids` | Yes | — | array |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

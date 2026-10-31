@@ -26,12 +26,12 @@ This contract belongs to the integration branch, not to release 0.9.0; copying t
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `categories` | Yes | — | array | Category names (1 to 20) from the categories catalog; matches any listed category. |
-| `include_types` | No | `true` | boolean |  |
-| `level` | No | `null` | any |  |
+| `include_types` | No | `true` | boolean | (not documented in the branch contract) |
+| `level` | No | `null` | any | (not documented in the branch contract) |
 | `parameters` | Yes | — | array | Exact localized parameter names (1 to 30); names that do not match count as missing. |
 | `sample_limit` | No | `20` | integer | Maximum sampled element IDs per empty and missing list, 1 to 100 (default 20); counts always cover all elements. |
 | `view` | No | `null` | any | Exact non-template view name; limits the search to that view. |
-| `workset` | No | `null` | any |  |
+| `workset` | No | `null` | any | (not documented in the branch contract) |
 
 </div>
 

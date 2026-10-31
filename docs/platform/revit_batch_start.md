@@ -14,16 +14,18 @@ description: "对本地、UNC 或 RSN 模型启动持久化的只读批量运行
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `folder` | 否 | `null` | any |  |
-| `open_timeout_minutes` | 否 | `null` | any |  |
-| `parameter_rules` | 否 | `null` | any |  |
-| `paths` | 否 | `null` | any |  |
-| `recursive` | 否 | `false` | boolean |  |
-| `years` | 否 | `null` | any |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `folder` | 否 | `null` | any |
+| `open_timeout_minutes` | 否 | `null` | any |
+| `parameter_rules` | 否 | `null` | any |
+| `paths` | 否 | `null` | any |
+| `recursive` | 否 | `false` | boolean |
+| `years` | 否 | `null` | any |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ## 功能说明（注册表原文） {#behavior}
 

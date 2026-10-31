@@ -16,7 +16,7 @@ description: "列出最近任务，或等待某个动作任务的结果；结果
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `job_id` | 否 | `null` | any |  |
+| `job_id` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `wait_seconds` | 否 | `40` | integer | Seconds to wait, 0 through 50. |
 
 </div>

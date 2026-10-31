@@ -14,15 +14,17 @@ description: "打开本地、UNC 或 RSN 模型；中心模型默认以分离方
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `activate` | 否 | `false` | boolean |  |
-| `audit` | 否 | `false` | boolean |  |
-| `mode` | 否 | `"detached"` | string |  |
-| `path` | 是 | — | string |  |
-| `worksets` | 否 | `"all"` | any |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `activate` | 否 | `false` | boolean |
+| `audit` | 否 | `false` | boolean |
+| `mode` | 否 | `"detached"` | string |
+| `path` | 是 | — | string |
+| `worksets` | 否 | `"all"` | any |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ### 通用参数 {#common-parameters}
 

@@ -12,20 +12,22 @@ description: "Export PDF, DWG, IFC or schedule CSV files on the Revit workstatio
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `all_sheets` | No | `false` | boolean |  |
-| `confirm_token` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `format` | Yes | — | string |  |
-| `options` | No | `null` | any |  |
-| `output_dir` | No | `null` | any |  |
-| `overwrite` | No | `false` | boolean |  |
-| `sheet_set` | No | `null` | any |  |
-| `sheets` | No | `null` | any |  |
-| `views` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `all_sheets` | No | `false` | boolean |
+| `confirm_token` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `format` | Yes | — | string |
+| `options` | No | `null` | any |
+| `output_dir` | No | `null` | any |
+| `overwrite` | No | `false` | boolean |
+| `sheet_set` | No | `null` | any |
+| `sheets` | No | `null` | any |
+| `views` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -34,7 +36,7 @@ description: "Export PDF, DWG, IFC or schedule CSV files on the Revit workstatio
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | `1800` | integer |  |
+| `timeout_seconds` | No | `1800` | integer | (not documented in the branch contract) |
 
 </div>
 

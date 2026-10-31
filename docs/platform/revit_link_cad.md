@@ -17,12 +17,12 @@ description: "在 Revit 工作站把 DWG 链接或导入平面视图，返回 CA
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `layers` | 否 | `null` | any |  |
-| `level` | 否 | `null` | any |  |
-| `link` | 否 | `true` | boolean |  |
-| `origin` | 否 | `"internal"` | string |  |
-| `path` | 是 | — | string |  |
-| `units` | 否 | `"auto"` | string |  |
+| `layers` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `level` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `link` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `origin` | 否 | `"internal"` | string | （集成分支契约未提供说明） |
+| `path` | 是 | — | string | （集成分支契约未提供说明） |
+| `units` | 否 | `"auto"` | string | （集成分支契约未提供说明） |
 | `view` | 否 | `null` | any | 视图的准确名称或十进制视图 ID。 |
 
 </div>

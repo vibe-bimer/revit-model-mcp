@@ -16,14 +16,14 @@ description: "在视图中按类目名称或构件 ID 标注构件，两者只�
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `categories` | 否 | `null` | any |  |
+| `categories` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 否 | `null` | any | 要处理的构件 Revit ID 列表。 |
-| `leader` | 否 | `false` | boolean |  |
-| `max_elements` | 否 | `5000` | integer |  |
-| `orientation` | 否 | `"horizontal"` | string |  |
-| `skip_tagged` | 否 | `true` | boolean |  |
-| `tag_type` | 否 | `null` | any |  |
+| `leader` | 否 | `false` | boolean | （集成分支契约未提供说明） |
+| `max_elements` | 否 | `5000` | integer | （集成分支契约未提供说明） |
+| `orientation` | 否 | `"horizontal"` | string | （集成分支契约未提供说明） |
+| `skip_tagged` | 否 | `true` | boolean | （集成分支契约未提供说明） |
+| `tag_type` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `view` | 是 | — | any | 视图的准确名称或十进制视图 ID。 |
 
 </div>

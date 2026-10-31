@@ -12,21 +12,23 @@ description: "Create connected duct, pipe, cable tray or conduit segments from m
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `connect_to` | No | `null` | any |  |
-| `diameter_mm` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `height_mm` | No | `null` | any |  |
-| `kind` | Yes | — | string |  |
-| `level` | Yes | — | string |  |
-| `offset_mm` | No | `null` | any |  |
-| `points_mm` | Yes | — | array |  |
-| `system_type` | No | `null` | any |  |
-| `type_name` | No | `null` | any |  |
-| `width_mm` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `connect_to` | No | `null` | any |
+| `diameter_mm` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `height_mm` | No | `null` | any |
+| `kind` | Yes | — | string |
+| `level` | Yes | — | string |
+| `offset_mm` | No | `null` | any |
+| `points_mm` | Yes | — | array |
+| `system_type` | No | `null` | any |
+| `type_name` | No | `null` | any |
+| `width_mm` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

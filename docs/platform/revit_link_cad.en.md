@@ -12,18 +12,20 @@ description: "Link or import a DWG into a plan view on the Revit workstation. Re
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `dry_run` | No | `false` | boolean |  |
-| `layers` | No | `null` | any |  |
-| `level` | No | `null` | any |  |
-| `link` | No | `true` | boolean |  |
-| `origin` | No | `"internal"` | string |  |
-| `path` | Yes | — | string |  |
-| `units` | No | `"auto"` | string |  |
-| `view` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `dry_run` | No | `false` | boolean |
+| `layers` | No | `null` | any |
+| `level` | No | `null` | any |
+| `link` | No | `true` | boolean |
+| `origin` | No | `"internal"` | string |
+| `path` | Yes | — | string |
+| `units` | No | `"auto"` | string |
+| `view` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
@@ -32,7 +34,7 @@ description: "Link or import a DWG into a plan view on the Revit workstation. Re
 | Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `document` | No | `null` | any | Title or file name substring of the target open document; needed when several are open. |
-| `timeout_seconds` | No | `600` | integer |  |
+| `timeout_seconds` | No | `600` | integer | (not documented in the branch contract) |
 
 </div>
 

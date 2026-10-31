@@ -14,12 +14,14 @@ description: "审核已打开的族或指定项目族的参数使用情况，不
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `detail` | 否 | `"summary"` | string |  |
-| `families` | 否 | `null` | any |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `detail` | 否 | `"summary"` | string |
+| `families` | 否 | `null` | any |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ### 通用参数 {#common-parameters}
 

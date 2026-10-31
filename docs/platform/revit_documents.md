@@ -14,11 +14,13 @@ description: "列出一个 Revit 进程中打开的所有文档，包含后台�
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `include_linked` | 否 | `false` | boolean |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `include_linked` | 否 | `false` | boolean |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ### 通用参数 {#common-parameters}
 

@@ -18,8 +18,8 @@ description: "把构件换成同一族内的兼容类型，重名类型按族解
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
-| `family` | 否 | `null` | any |  |
-| `type_name` | 是 | — | string |  |
+| `family` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `type_name` | 是 | — | string | （集成分支契约未提供说明） |
 
 </div>
 

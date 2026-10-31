@@ -12,19 +12,21 @@ description: "Change category, workset and filter visibility in one view; dry_ru
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `category_classes` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `filters` | No | `null` | any |  |
-| `hide_categories` | No | `null` | any |  |
-| `hide_categories_by_type` | No | `null` | any |  |
-| `show_categories` | No | `null` | any |  |
-| `template_mode` | No | `null` | any |  |
-| `view` | Yes | — | string |  |
-| `worksets` | No | `null` | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `category_classes` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `filters` | No | `null` | any |
+| `hide_categories` | No | `null` | any |
+| `hide_categories_by_type` | No | `null` | any |
+| `show_categories` | No | `null` | any |
+| `template_mode` | No | `null` | any |
+| `view` | Yes | — | string |
+| `worksets` | No | `null` | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

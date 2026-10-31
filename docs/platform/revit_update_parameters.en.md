@@ -12,17 +12,19 @@ description: "Update a parameter on elements matching the same filters as revit_
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `dry_run` | No | `false` | boolean |  |
-| `filters` | Yes | — |  |  |
-| `include_type_parameters` | No | `false` | boolean |  |
-| `max_elements` | No | `5000` | integer |  |
-| `parameter` | Yes | — | string |  |
-| `parameter_id` | No | `null` | any |  |
-| `value` | Yes | — | any |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `dry_run` | No | `false` | boolean |
+| `filters` | Yes | — |  |
+| `include_type_parameters` | No | `false` | boolean |
+| `max_elements` | No | `5000` | integer |
+| `parameter` | Yes | — | string |
+| `parameter_id` | No | `null` | any |
+| `value` | Yes | — | any |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

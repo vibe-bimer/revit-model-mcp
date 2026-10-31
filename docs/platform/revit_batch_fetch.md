@@ -14,12 +14,14 @@ description: "把已完成的快照下载为新的本地文件，不覆盖已有
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `output_dir` | 是 | — | string |  |
-| `run_id` | 是 | — | string |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `output_dir` | 是 | — | string |
+| `run_id` | 是 | — | string |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ## 功能说明（注册表原文） {#behavior}
 

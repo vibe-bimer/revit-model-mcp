@@ -16,11 +16,11 @@ description: "载入可选族并在同一事务、同一次撤销内放置多个
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `at_rooms` | 否 | `null` | any |  |
+| `at_rooms` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `load` | 否 | `null` | any |  |
-| `placements` | 否 | `null` | any |  |
-| `stop_on_error` | 否 | `true` | boolean |  |
+| `load` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `placements` | 否 | `null` | any | （集成分支契约未提供说明） |
+| `stop_on_error` | 否 | `true` | boolean | （集成分支契约未提供说明） |
 
 </div>
 

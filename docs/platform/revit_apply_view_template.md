@@ -17,8 +17,8 @@ description: "把匹配的视图样板应用到一个或多个视图。"
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `template` | 是 | — | string |  |
-| `views` | 是 | — | array |  |
+| `template` | 是 | — | string | （集成分支契约未提供说明） |
+| `views` | 是 | — | array | （集成分支契约未提供说明） |
 
 </div>
 

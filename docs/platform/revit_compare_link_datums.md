@@ -14,18 +14,20 @@ description: "把主体的轴网与标高和一个已载入的 Revit 链接比�
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `kinds` | 否 | `null` | any |  |
-| `level_offset_mm` | 否 | `0` | number |  |
-| `link` | 是 | — | string |  |
-| `name_map` | 否 | `null` | any |  |
-| `prefix` | 否 | `""` | string |  |
-| `reuse_matching` | 否 | `true` | boolean |  |
-| `suffix` | 否 | `""` | string |  |
-| `tolerance_mm` | 否 | `0.5` | number |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `kinds` | 否 | `null` | any |
+| `level_offset_mm` | 否 | `0` | number |
+| `link` | 是 | — | string |
+| `name_map` | 否 | `null` | any |
+| `prefix` | 否 | `""` | string |
+| `reuse_matching` | 否 | `true` | boolean |
+| `suffix` | 否 | `""` | string |
+| `tolerance_mm` | 否 | `0.5` | number |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ### 通用参数 {#common-parameters}
 

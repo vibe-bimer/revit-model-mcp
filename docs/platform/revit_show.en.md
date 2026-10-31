@@ -18,12 +18,14 @@ The same-name tool has an identical contract to release 0.9.0.
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `element_ids` | Yes | — | array |  |
-| `select` | No | `true` | boolean |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `element_ids` | Yes | — | array |
+| `select` | No | `true` | boolean |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

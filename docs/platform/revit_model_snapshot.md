@@ -14,11 +14,13 @@ description: "读取 schema 版本 1 的项目快照，供批量审计使用；�
 
 <div class="rmc-tablewrap" markdown="1">
 
-| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `parameter_rules` | 否 | `null` | any |  |
+| 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} |
+| --- | :--: | --- | --- |
+| `parameter_rules` | 否 | `null` | any |
 
 </div>
+
+集成分支契约未提供参数说明。
 
 ### 通用参数 {#common-parameters}
 

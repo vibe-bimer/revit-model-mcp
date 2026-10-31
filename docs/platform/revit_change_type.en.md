@@ -12,14 +12,16 @@ description: "Change each element to one compatible type; family resolves duplic
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `dry_run` | No | `false` | boolean |  |
-| `element_ids` | Yes | — | array |  |
-| `family` | No | `null` | any |  |
-| `type_name` | Yes | — | string |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `dry_run` | No | `false` | boolean |
+| `element_ids` | Yes | — | array |
+| `family` | No | `null` | any |
+| `type_name` | Yes | — | string |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 

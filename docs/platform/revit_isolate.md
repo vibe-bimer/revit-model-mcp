@@ -23,7 +23,7 @@ description: "在活动视图中临时隔离指定构件 ID；空列表即取消
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
-| `reset` | 否 | `false` | boolean |  |
+| `reset` | 否 | `false` | boolean | （集成分支契约未提供说明） |
 
 </div>
 

@@ -16,8 +16,8 @@ description: "绕穿过 `center_mm` 的竖轴旋转，或不给点时按组合�
 
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
-| `angle_deg` | 是 | — | number |  |
-| `center_mm` | 否 | `null` | any |  |
+| `angle_deg` | 是 | — | number | （集成分支契约未提供说明） |
+| `center_mm` | 否 | `null` | any | （集成分支契约未提供说明） |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
 | `element_ids` | 是 | — | array | 要处理的构件 Revit ID 列表。 |
 

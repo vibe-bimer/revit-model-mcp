@@ -12,33 +12,37 @@ description: "Open each model in the interactive session, run steps and C# code,
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `code` | No | `null` | any |  |
-| `confirm_token` | No | `null` | any |  |
-| `dry_run` | No | `false` | boolean |  |
-| `exports` | No | `null` | any |  |
-| `folder` | No | `null` | any |  |
-| `open` | No | `null` | any |  |
-| `paths` | No | `null` | any |  |
-| `pattern` | No | `"*.rvt"` | string |  |
-| `recursive` | No | `false` | boolean |  |
-| `save` | No | `null` | any |  |
-| `steps` | No | `null` | any |  |
-| `stop_on_error` | No | `false` | boolean |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `code` | No | `null` | any |
+| `confirm_token` | No | `null` | any |
+| `dry_run` | No | `false` | boolean |
+| `exports` | No | `null` | any |
+| `folder` | No | `null` | any |
+| `open` | No | `null` | any |
+| `paths` | No | `null` | any |
+| `pattern` | No | `"*.rvt"` | string |
+| `recursive` | No | `false` | boolean |
+| `save` | No | `null` | any |
+| `steps` | No | `null` | any |
+| `stop_on_error` | No | `false` | boolean |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ### Common parameters {#common-parameters}
 
 <div class="rmc-tablewrap" markdown="1">
 
-| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} | Meaning {scope=col} |
-| --- | :--: | --- | --- | --- |
-| `process_id` | No | `null` | any |  |
-| `timeout_seconds` | No | `14400` | integer |  |
+| Parameter {scope=col} | Required {scope=col} | Default {scope=col} | Type {scope=col} |
+| --- | :--: | --- | --- |
+| `process_id` | No | `null` | any |
+| `timeout_seconds` | No | `14400` | integer |
 
 </div>
+
+The branch contract ships no parameter descriptions.
 
 ## Behavior (registry text) {#behavior}
 

@@ -23,12 +23,12 @@ description: "在指定标高上放置已载入的非宿主族；`family` 可以
 | 参数 {scope=col} | 必填 {scope=col} | 默认值 {scope=col} | 类型 {scope=col} | 说明 {scope=col} |
 | --- | :--: | --- | --- | --- |
 | `dry_run` | 否 | `false` | boolean | 只排练：执行后回滚，返回同样的验证块。 |
-| `family` | 是 | — | string |  |
-| `level` | 是 | — | string |  |
-| `rotation_deg` | 否 | `0` | number |  |
-| `type_name` | 是 | — | any |  |
-| `x_mm` | 是 | — | number |  |
-| `y_mm` | 是 | — | number |  |
+| `family` | 是 | — | string | （集成分支契约未提供说明） |
+| `level` | 是 | — | string | （集成分支契约未提供说明） |
+| `rotation_deg` | 否 | `0` | number | （集成分支契约未提供说明） |
+| `type_name` | 是 | — | any | （集成分支契约未提供说明） |
+| `x_mm` | 是 | — | number | （集成分支契约未提供说明） |
+| `y_mm` | 是 | — | number | （集成分支契约未提供说明） |
 
 </div>
 
