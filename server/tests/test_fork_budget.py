@@ -92,6 +92,15 @@ def test_the_layer_fits_its_budget_right_now(budget, config, monkeypatch):
 
 def test_the_report_names_the_base_and_the_gap(config):
     upstream_report = load("upstream_report")
-    text = upstream_report.report(config)
-    assert config["base"] in text
-    assert "not in the base:" in text
+    # Compare against a ref that exists in every clone, so the test never
+    # needs the upstream remote that the operational script expects.
+    body = upstream_report.report(config, branch="HEAD")
+    assert config["base"] in body
+    assert "not in the base:" in body
+
+
+def test_the_report_says_how_to_fetch_upstream_without_the_remote(config, tmp_path):
+    upstream_report = load("upstream_report")
+    with pytest.raises(SystemExit) as error:
+        upstream_report.upstream_branch(tmp_path)
+    assert "git fetch upstream" in str(error.value)

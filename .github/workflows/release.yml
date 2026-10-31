@@ -491,7 +491,7 @@ jobs:
             echo "uvx --from $base/$wheel revit-model-mcp"
             echo '```'
             echo
-            echo 'Download the wheel above and point uvx at that path, or install it with `uv tool install <wheel>`.'
+            echo "Download the wheel above and point uvx at that path, or install it with \`uv tool install <wheel>\`."
           } > install-notes.md
           cat install-notes.md
       - name: Publish GitHub Release

@@ -108,6 +108,22 @@ Link removal refuses central-connected workshared documents. A local copy is all
 
 Alignment uses one host-document transaction, with `dry_run` rolling it back after prospective results are read. Pinned and other-user-owned datums are skipped. Existing datums are never renamed or deleted, and grid extents and scope boxes are never changed. Moving levels also moves elements hosted on them; moved-level results include `dependentCount`. Created datums report their ID and workset. Geometric alignment does not create a monitor relationship or later Coordination Review warnings.
 
+## Fork actions
+
+This fork adds eight actions that upstream does not have. They follow the same
+read-write gate and confirmation rules as the actions above.
+
+| Tool | Parameters | Purpose |
+| --- | --- | --- |
+| `revit_create_floor` | `points_mm`, `level`, `floor_type=null`, `dry_run=false` | Create a floor from a closed boundary on a level. |
+| `revit_create_level` | `name`, `elevation_mm`, `create_view=false`, `dry_run=false` | Create a level at an elevation, optionally with its floor plan. |
+| `revit_export_element_ids` | `fields=null`, `path=null`, `timeout_seconds=120` | Write the element identifier register of the drawn components to a workbook, read-only. |
+| `revit_merge_phases` | `source_phase`, `target_phase`, `dry_run=false` | Merge one phase into another and delete the emptied phase. |
+| `revit_rebuild_model_ids` | `destination_path`, `copies=1`, `duplicate_names="override"`, `overwrite=false`, `remove_template_levels=true`, `seed=0`, `template_path=null`, `view=null`, `dry_run=false` | Rebuild the model into a new document so every element gets a new element ID. |
+| `revit_reset_element_ids` | `element_ids`, `dry_run=false` | Give elements new element IDs by copying each one over its original. |
+| `revit_set_phase` | `element_ids`, `created_phase=null`, `demolished_phase=null`, `dry_run=false` | Set the creation and demolition phase of elements. |
+| `revit_set_view_lighting` | `view`, `shadows=null`, `ground_plane=null`, `background=null`, `lighting_scheme=null`, `sun_altitude_deg=null`, `sun_azimuth_deg=null`, `sun_date=null`, `sun_time=null`, `shadow_intensity=null`, `sunlight_intensity=null`, `dry_run=false` | Set a view's lighting: shadows, sun position, ground plane, background and lighting scheme. |
+
 ### Execute C# code
 
 `revit_execute_code` accepts up to 200,000 C# characters. Submit either the body of `public static object Execute(ScriptContext ctx)` or a full compilation unit declaring `public static class Script` with that method. Method bodies have common `System` and Revit namespaces imported. `ScriptContext` provides `UiApplication`, `Application`, `UiDocument`, `Document`, `Log`, `ToMm` and `FromMm`. The target document follows the normal `document` resolution rules. In `transaction="none"`, `Document` may be null when no document is open.

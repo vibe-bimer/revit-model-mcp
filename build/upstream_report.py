@@ -48,9 +48,15 @@ def upstream_branch(repository_root: Path = REPOSITORY_ROOT) -> str:
     )
 
 
-def report(config: dict, repository_root: Path = REPOSITORY_ROOT) -> str:
+def report(
+    config: dict,
+    repository_root: Path = REPOSITORY_ROOT,
+    branch: str | None = None,
+) -> str:
+    # branch defaults to the remote-tracking upstream branch; callers that only
+    # exercise the report pass a ref that exists in their own clone.
     base = config["base"]
-    branch = upstream_branch(repository_root)
+    branch = branch or upstream_branch(repository_root)
     behind = run("git", "rev-list", "--count", f"{base}..{branch}").strip()
     ahead = run("git", "rev-list", "--count", f"{branch}..{base}").strip()
     log = run("git", "log", "--oneline", "--no-decorate", f"{base}..{branch}")
