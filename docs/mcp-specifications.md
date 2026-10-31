@@ -33,7 +33,7 @@ All requests are HTTPS, carry no model data, and can be turned off. The Autodesk
 | `api.github.com` | Add-in | Latest stable release check, at most every 24 hours | No |
 | `github.com`, `release-assets.githubusercontent.com` | Add-in | Release MSI and checksum download for per-user installs | No |
 | `api.github.com` | Python server | Optional check for a newer server release | No (the bundled executable never checks) |
-| `github.com`, `files.pythonhosted.org` | uv launcher | Server download from this fork's release and its dependencies when the server starts for the first time | No (the store build does not use the uv launcher) |
+| `github.com`, `pypi.org`, `files.pythonhosted.org` | uv launcher | Server download from this fork's release and dependency resolution on PyPI when the server starts for the first time | No (the store build does not use the uv launcher) |
 
 No other domain is contacted. The committed manifest lists the domains of the regular build; the managed manifest (`--managed`) has none, and the release workflow attaches the store export `revit-model-mcp-<version>-store.mcp-manifest.json`, made from the managed manifest with `--export-snake-case`, with `external_endpoints` and `ai_llm_providers` empty. See the [full table](admin/security-whitepaper.md#outbound-network).
 Each tool in the store export includes the server's advertised `inputSchema`.

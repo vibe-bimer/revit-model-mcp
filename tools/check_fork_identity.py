@@ -22,6 +22,7 @@ import json
 import os
 import re
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -57,12 +58,9 @@ SCAN_SUFFIXES = (
     ".json",
     ".toml",
     ".cs",
-    ".cmd",
     ".html",
     ".ps1",
     ".py",
-    ".txt",
-    ".xml",
 )
 PRUNED_DIRECTORIES = {
     ".git",
@@ -95,9 +93,6 @@ FORK_SOURCE_URL = re.compile(
     + re.escape(FORK_REPO)
     + r"/(?:releases/download/v[0-9A-Za-z.\-]+/revit_model_mcp-[0-9A-Za-z.\-]+\.whl"
     r"|archive/refs/(?:tags/v[0-9A-Za-z.\-]+|heads/main)\.tar\.gz#subdirectory=server)"
-)
-PYPI_PACKAGE_SPEC = re.compile(
-    r"\brevit-model-mcp(?:\[[^\]]*\])?\s*(?:==|>=|<=|~=|!=|>|<|\^>=|\^==)\s*\d"
 )
 BARE_PYPI_PACKAGE = re.compile(r"(?:^|[\s\"'])revit-model-mcp(?![\w.\-/])")
 
@@ -224,7 +219,7 @@ def check_bundle_manifest(problems: list[str]) -> None:
 
     for name, args in mcp_config_arg_lists(manifest):
         command = " ".join(args)
-        spec = PYPI_PACKAGE_SPEC.search(command)
+        spec = PYPI_VERSION_SPEC.search(command)
         if spec is not None:
             problems.append(
                 f"bundle/manifest.json: {name} resolve {spec.group(0)!r} on PyPI, "
@@ -279,13 +274,20 @@ def check_release_workflow(problems: list[str]) -> None:
             )
 
 
+# uvx with --from installs the named source, not the package index, so a
+# --from line is drift only when the source itself serves upstream's package:
+# an upstream repository URL (check_stray_references flags those) or PyPI.
+FOREIGN_PYPI_SOURCE = re.compile(
+    r"--from\s+\S*(?:sharafutdinovdi/|pypi\.org/|files\.pythonhosted\.org/)"
+)
+
+
 def launcher_problems(relative: str, text: str) -> list[str]:
     """Name every line of one file that would start the server from PyPI."""
     found: list[str] = []
     for number, line in enumerate(text.splitlines(), start=1):
-        # A line that names upstream is explaining the trap, not falling into it.
-        if "upstream" in line.lower():
-            continue
+        # Naming upstream does not excuse a runnable command: prose that warns
+        # about the trap must reword it, not quote it.
         if PYPI_PROJECT_PAGE.search(line):
             found.append(
                 f"{relative}:{number}: links upstream's PyPI project, which publishes "
@@ -293,6 +295,12 @@ def launcher_problems(relative: str, text: str) -> list[str]:
             )
             continue
         if "--from" in line:
+            if FOREIGN_PYPI_SOURCE.search(line):
+                found.append(
+                    f"{relative}:{number}: installs the server with --from from a "
+                    "source that serves upstream's package; both projects share "
+                    "version numbers, so use this fork's release wheel or tag archive"
+                )
             continue
         match = PYPI_LAUNCHER.search(line) or PYPI_VERSION_SPEC.search(line)
         if match is not None:
@@ -304,21 +312,23 @@ def launcher_problems(relative: str, text: str) -> list[str]:
     return found
 
 
-def check_package_launchers(problems: list[str]) -> None:
-    """Fail when a shipped file starts the server by the bare package name."""
+def scanned_sources(allowlist: dict[str, str]) -> Iterator[tuple[str, str]]:
+    """Yield (relative path, text) for every scanned file outside the allowlist."""
     for path in iter_scanned_files():
         relative = path.relative_to(REPO_ROOT).as_posix()
-        if relative in PACKAGE_NAME_ALLOWED:
+        if relative in allowlist:
             continue
-        problems.extend(launcher_problems(relative, path.read_text(encoding="utf-8")))
+        yield relative, path.read_text(encoding="utf-8")
+
+
+def check_package_launchers(problems: list[str]) -> None:
+    """Fail when a shipped file starts the server by the bare package name."""
+    for relative, text in scanned_sources(PACKAGE_NAME_ALLOWED):
+        problems.extend(launcher_problems(relative, text))
 
 
 def check_stray_references(problems: list[str]) -> None:
-    for path in iter_scanned_files():
-        relative = path.relative_to(REPO_ROOT).as_posix()
-        if relative in UPSTREAM_REFERENCES_ALLOWED:
-            continue
-        text = path.read_text(encoding="utf-8")
+    for relative, text in scanned_sources(UPSTREAM_REFERENCES_ALLOWED):
         for pattern, description in (
             (UPSTREAM_REPO_PATTERN, "upstream repository"),
             (UPSTREAM_SITE_PATTERN, "upstream documentation site"),

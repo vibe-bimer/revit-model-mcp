@@ -11,7 +11,7 @@ A breaking change to anything in the first list needs a major release.
 - The server command line (`--host`, `--redact-paths`, `--token`) and the `REVIT_MCP_*` environment variables listed in the [server documentation](server.md#configuration).
 - The keys, types and meaning of `settings.json`, described in [HTTP configuration](transport.md#http-configuration), and the `read-only` gate file.
 - The `pipe/1` protocol, file channel version 2, the HTTP routes, headers and status codes, and the snapshot `schemaVersion` 1. See [transport](transport.md).
-- The names of the console script, the release wheel, the MCP Registry entry and the bundle.
+- The names of the console script, the release wheel and the bundle.
 - The `ScriptContext` members available to `revit_execute_code`: `UiApplication`, `Application`, `UiDocument`, `Document`, `Log`, `ToMm` and `FromMm`.
 
 ## Allowed in minor releases

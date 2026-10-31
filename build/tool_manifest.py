@@ -120,7 +120,10 @@ _RELEASE_DOWNLOAD_PURPOSE = (
     "Download the release MSI and its SHA256 checksum when an update is available; "
     "the checksum is verified before install."
 )
-_PYPI_LAUNCHER_PURPOSE = "Download the revit-model-mcp package and its dependencies when the launcher starts."
+_PYPI_LAUNCHER_PURPOSE = (
+    "Download this fork's server release from GitHub and resolve its dependencies "
+    "on PyPI when the launcher starts the server for the first time."
+)
 _PYPI_LAUNCHER_DISABLE = (
     "Run the server with a preinstalled package instead of the launcher."
 )
@@ -168,17 +171,24 @@ EXTERNAL_ENDPOINTS = [
         "Set REVIT_MCP_NO_UPDATE_CHECK=1.",
     ),
     _endpoint(
+        "github.com",
+        "Claude Desktop bundle launcher (uvx)",
+        _PYPI_LAUNCHER_PURPOSE,
+        _HTTPS_REQUEST_ONLY,
+        _PYPI_LAUNCHER_DISABLE,
+    ),
+    _endpoint(
         "pypi.org",
         "Claude Desktop bundle launcher (uvx)",
         _PYPI_LAUNCHER_PURPOSE,
-        "None.",
+        _HTTPS_REQUEST_ONLY,
         _PYPI_LAUNCHER_DISABLE,
     ),
     _endpoint(
         "files.pythonhosted.org",
         "Claude Desktop bundle launcher (uvx)",
         _PYPI_LAUNCHER_PURPOSE,
-        "None.",
+        _HTTPS_REQUEST_ONLY,
         _PYPI_LAUNCHER_DISABLE,
     ),
 ]

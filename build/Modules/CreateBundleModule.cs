@@ -58,7 +58,7 @@ public sealed partial class CreateBundleModule(IOptions<BuildOptions> buildOptio
         if (bundleOptions.Value.Managed)
         {
             // This fork publishes the server on GitHub Releases and not to PyPI. Upstream publishes the
-            // same version numbers, so `uvx revit-model-mcp==<version>` would install upstream's server.
+            // same version numbers, so a PyPI pin on the bare package name would install upstream's server.
             var serverSource = $"https://github.com/vibe-bimer/revit-model-mcp/archive/refs/tags/v{versioning.Version}.tar.gz#subdirectory=server";
             var serverLauncher = $"uvx --from {serverSource} revit-model-mcp";
             var readme = $"""
@@ -68,7 +68,7 @@ public sealed partial class CreateBundleModule(IOptions<BuildOptions> buildOptio
                 Update it by deploying a newer package.
 
                 The server is not part of this package. Pin the server launcher to the same release.
-                This fork publishes no PyPI package. A bare `uvx revit-model-mcp` would install upstream's
+                This fork publishes no PyPI package. A bare uvx of the package name would install upstream's
                 server instead, so start it from the source below:
 
                     {serverLauncher}

@@ -485,7 +485,7 @@ jobs:
             echo "- [Code signing policy](https://vibe-bimer.github.io/revit-model-mcp/code-signing/)"
             echo
             echo 'Close Revit before installing, then start Revit and open a model.'
-            echo 'On the MCP client, install the wheel above. This fork publishes wheels on GitHub Releases and not to PyPI, so `uvx revit-model-mcp` would install the upstream server instead:'
+            echo 'On the MCP client, install the wheel above. This fork publishes wheels on GitHub Releases and not to PyPI, so a bare uvx of the package name would install the upstream server instead:'
             echo
             echo '```sh'
             echo "uvx --from $base/$wheel revit-model-mcp"

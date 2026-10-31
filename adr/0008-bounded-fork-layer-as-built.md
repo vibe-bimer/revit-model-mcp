@@ -69,7 +69,9 @@ keeps the promise the pages make without inventing a second gate.
 
 ## Consequences
 
-A rebase of the fork onto a newer upstream touches nine sites and roughly 99 lines. Reading the list above is enough
+A rebase of the fork onto a newer upstream touches nine sites and roughly 99 lines: the six dispatch hooks listed in
+`build/fork.json` plus three hand-edited upstream sites (`ControlJobParser.cs`, `ReadCommandExecutor.cs`,
+`ActionVerificationModels.cs`). Reading the list above is enough
 to find them: `rg 'Fork\.' src/` returns every one, and `python build/check_fork_budget.py` fails when a site the
 budget does not know about appears.
 

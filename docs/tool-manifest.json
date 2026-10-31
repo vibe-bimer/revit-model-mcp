@@ -1764,11 +1764,20 @@
       "disable": "Set REVIT_MCP_NO_UPDATE_CHECK=1."
     },
     {
+      "domain": "github.com",
+      "protocol": "https",
+      "component": "Claude Desktop bundle launcher (uvx)",
+      "purpose": "Download this fork's server release from GitHub and resolve its dependencies on PyPI when the launcher starts the server for the first time.",
+      "dataSent": "None beyond a standard HTTPS request.",
+      "optional": true,
+      "disable": "Run the server with a preinstalled package instead of the launcher."
+    },
+    {
       "domain": "pypi.org",
       "protocol": "https",
       "component": "Claude Desktop bundle launcher (uvx)",
-      "purpose": "Download the revit-model-mcp package and its dependencies when the launcher starts.",
-      "dataSent": "None.",
+      "purpose": "Download this fork's server release from GitHub and resolve its dependencies on PyPI when the launcher starts the server for the first time.",
+      "dataSent": "None beyond a standard HTTPS request.",
       "optional": true,
       "disable": "Run the server with a preinstalled package instead of the launcher."
     },
@@ -1776,8 +1785,8 @@
       "domain": "files.pythonhosted.org",
       "protocol": "https",
       "component": "Claude Desktop bundle launcher (uvx)",
-      "purpose": "Download the revit-model-mcp package and its dependencies when the launcher starts.",
-      "dataSent": "None.",
+      "purpose": "Download this fork's server release from GitHub and resolve its dependencies on PyPI when the launcher starts the server for the first time.",
+      "dataSent": "None beyond a standard HTTPS request.",
       "optional": true,
       "disable": "Run the server with a preinstalled package instead of the launcher."
     }

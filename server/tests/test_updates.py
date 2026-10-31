@@ -44,7 +44,7 @@ def test_update_check_writes_timestamp_before_lookup_and_throttles(tmp_path, mon
     assert not hasattr(updates, "subprocess")
 
 
-def test_update_opt_out_does_not_spawn_or_request(tmp_path, monkeypatch):
+def test_update_opt_out_does_not_look_up_or_record(tmp_path, monkeypatch):
     monkeypatch.setenv("REVIT_MCP_NO_UPDATE_CHECK", "1")
     with patch.object(updates.urllib.request, "urlopen") as request:
         updates.check_for_updates(tmp_path / "update.json")

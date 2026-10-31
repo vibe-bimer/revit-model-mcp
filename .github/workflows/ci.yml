@@ -100,7 +100,7 @@ jobs:
           cache-dependency-glob: server/uv.lock
       - name: Check the fork identity
         working-directory: .
-        run: python tools/check_fork_identity.py
+        run: uv run python tools/check_fork_identity.py
       - name: Test server
         run: uv run --frozen --with pytest==9.1.1 pytest -q
       - name: Check Python

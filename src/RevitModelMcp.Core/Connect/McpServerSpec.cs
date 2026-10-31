@@ -20,7 +20,7 @@ public sealed record McpServerSpec(string Command, IReadOnlyList<string> Args)
 
     /// <summary>
     ///     The source this fork's server is installed from when no bundled executable exists. A bare
-    ///     <c>uvx revit-model-mcp</c> would fetch upstream's package from PyPI, and both projects publish the same
+    ///     uvx of the package name would fetch upstream's package from PyPI, and both projects publish the same
     ///     version numbers, so that form would install upstream's server while appearing to work.
     /// </summary>
     public static string ForkSource => ForkSourceFor(InformationalVersion());

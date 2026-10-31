@@ -1,6 +1,6 @@
 # Actions (read-only by default)
 
-Read-only is the default: the installer writes the machine policy `ReadOnly=1` and ships a default
+Read-only is the default: the multi-user installer writes the machine policy `ReadOnly=1` and ships a default
 `%ProgramData%\RevitModelMcp\policy.json` with `{"ReadOnly": true}`. An administrator allows actions with
 `ReadOnly=false`, or by clearing the value. Action tools stay listed either way; a refused call returns
 `success:false`, `error:"read-only mode"` and `errorCode:"read_only"`, or `errorCode:"policy_blocked"` when the
@@ -296,7 +296,7 @@ For a family name alone, `type_name=null` selects the first loaded type.
 
 ### Read-only mode
 
-Read-only is the default, from the machine policy `ReadOnly=1` that the installer writes. An administrator allows
+Read-only is the default, from the machine policy `ReadOnly=1` that the multi-user installer writes. An administrator allows
 actions with `ReadOnly=false` in `%ProgramData%\RevitModelMcp\policy.json`, or by clearing the value.
 Each gate below also refuses actions on its own, with the tools still listed and returning `success:false`,
 `error:"read-only mode"` and `errorCode:"read_only"` instead of running:
@@ -310,7 +310,7 @@ Each gate below also refuses actions on its own, with the tools still listed and
    New-Item -ItemType File -Force "$env:LOCALAPPDATA\RevitModelMcp\read-only" | Out-Null
    ```
 
-3. The machine policy `ReadOnly=1`, which the installer writes by default, refuses actions for the whole machine.
+3. The machine policy `ReadOnly=1`, which the multi-user installer writes by default, refuses actions for the whole machine.
    Users cannot lift it, and the refusal text is `Blocked by organization policy: the workstation is read-only.`
    See the [policy reference](admin/policy-reference.md).
 

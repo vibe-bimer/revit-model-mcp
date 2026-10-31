@@ -3,7 +3,7 @@
 See the [privacy policy](privacy.md) for data handling, retention and contact information.
 
 The model read API is always available.
-Action tools are refused by default: the installer writes the machine policy `ReadOnly=1` and ships a default
+Action tools are refused by default: the multi-user installer writes the machine policy `ReadOnly=1` and ships a default
 `%ProgramData%\RevitModelMcp\policy.json` with `{"ReadOnly": true}`. An administrator allows actions with `ReadOnly=false`.
 `REVIT_MCP_READ_ONLY=1` in the Python server environment or the workstation `%LOCALAPPDATA%\RevitModelMcp\read-only` file
 also refuses them without hiding them, described in [actions](actions.md).

@@ -13,7 +13,6 @@ from pathlib import Path
 import pytest
 
 TOOLS = Path(__file__).resolve().parent.parent.parent / "tools"
-REPOSITORY_ROOT = TOOLS.parent
 
 
 def load_identity_check():
@@ -51,16 +50,6 @@ def test_this_tree_ships_only_the_fork_identity(problems):
     assert problems == []
 
 
-def test_the_upgrade_code_is_the_fork_own(identity):
-    installer = (REPOSITORY_ROOT / "build/install/Installer.cs").read_text(encoding="utf-8")
-    assigned = [
-        line for line in installer.splitlines() if "new Guid(" in line and "Guid.Empty" not in line
-    ]
-    assert len(assigned) == 1
-    assert "8F2D710A-B967-4180-AB08-1678A02BA350" in assigned[0]
-    assert identity.UPSTREAM_UPGRADE_CODE not in assigned[0]
-
-
 def test_a_bare_launcher_is_recognised(identity):
     assert identity.PYPI_LAUNCHER.search("uvx revit-model-mcp")
     assert identity.PYPI_VERSION_SPEC.search("uvx revit-model-mcp==1.0.0")
@@ -81,7 +70,18 @@ def test_the_launcher_scan_fires_in_every_scanned_file_type(identity):
         assert identity.launcher_problems(relative, "uvx revit-model-mcp --help\n")
     assert identity.launcher_problems("README.md", "uvx revit-model-mcp==1.0.0\n")
     assert identity.launcher_problems("README.md", "https://pypi.org/project/revit-model-mcp/\n")
-    assert identity.launcher_problems("README.md", "upstream ships uvx revit-model-mcp\n") == []
+
+
+def test_naming_upstream_does_not_excuse_a_launcher(identity):
+    """Prose that warns about the trap must still not quote a runnable command."""
+    assert identity.launcher_problems("README.md", "upstream ships uvx revit-model-mcp\n")
+
+
+def test_a_foreign_from_source_is_flagged(identity):
+    assert identity.launcher_problems(
+        "README.md",
+        "uvx --from https://pypi.org/simple/revit-model-mcp/ revit-model-mcp\n",
+    )
 
 
 def test_the_bundle_installs_the_fork_and_never_the_package_name(identity):

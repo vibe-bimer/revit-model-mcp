@@ -99,17 +99,19 @@ Review hook edits and stage them before committing again.
 
 ### Fork layer checks
 
-The fork's code is a bounded layer on upstream (`adr/0001`, `adr/0008`), and two scripts keep the bound honest.
+The fork's code is a bounded layer on upstream (`adr/0001`, `adr/0008`), and three scripts keep the bound honest.
 Run them from the repository root:
 
 ```sh
 uv run python build/check_fork_budget.py
+uv run python tools/check_fork_identity.py
 uv run python build/upstream_report.py
 ```
 
 The first fails when the dispatch hooks change by more than `build/fork.json` allows, or when a changed file is
-neither fork code, a hook, nor a read listed with its reason. The second prints which upstream commits the base
-contains and which it does not, so the read in `adr/0001`'s rhythm is a command rather than a memory. Both read the
+neither fork code, a hook, nor a read listed with its reason. The second fails when upstream's install identity,
+package name or security contact reappears on a surface this fork ships. The third prints which upstream commits the base
+contains and which it does not, so the read in `adr/0001`'s rhythm is a command rather than a memory. All three read the
 base commit from `build/fork.json`, which is the one place it is written down.
 
 ## Build and test
