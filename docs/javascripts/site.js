@@ -257,8 +257,18 @@
    */
 
   var STACK_QUERY = "(max-width: 30em)";
+  /* The same number check_site gates the generated sources on (WIDE_TABLE_COLUMNS): below it a
+     table still reads in its grid, at or above it the rows stack on a phone. Generated and
+     hand-written tables share the rule, because the script wraps them all the same way. */
+  var STACK_MIN_COLUMNS = 5;
   var SCROLL_LABEL = root.lang === "en" ? "Table, scrolls sideways" : "表格，可横向滚动";
   var stackQuery = window.matchMedia(STACK_QUERY);
+
+  /* Pure decision, kept out of syncTable so it reads as one sentence: a table stacks when the
+     viewport is the narrow one and the table carries this many columns or more. */
+  function stacksWhenNarrow(columns, narrow) {
+    return narrow && columns >= STACK_MIN_COLUMNS;
+  }
 
   function tableWrap(table) {
     /* Material's own script may already have wrapped the table in its scroller, so walk up the
@@ -301,7 +311,7 @@
     if (!table) return;
     var head = table.tHead && table.tHead.rows[0];
     var columns = head ? head.cells.length : 0;
-    if (stackQuery.matches && columns >= 5) wrap.setAttribute("data-rmc-stack", "");
+    if (stacksWhenNarrow(columns, stackQuery.matches)) wrap.setAttribute("data-rmc-stack", "");
     else wrap.removeAttribute("data-rmc-stack");
     if (wrap.scrollWidth - wrap.clientWidth > 1) {
       wrap.setAttribute("data-rmc-scrollable", "");

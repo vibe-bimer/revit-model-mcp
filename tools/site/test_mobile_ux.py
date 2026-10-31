@@ -13,9 +13,14 @@ Two layers are pinned here:
   pins, so renaming any of them fails here before it fails a build.
 """
 
+import json
 import re
+import shutil
+import subprocess
 import unittest
 from pathlib import Path
+
+import check_site
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -157,3 +162,87 @@ class Template404Tests(unittest.TestCase):
             "rmc-btn--primary",
         ):
             self.assertIn(name, self.source)
+
+
+class StackDecisionTests(unittest.TestCase):
+    """The pure stack-decision helper in site.js, executed as written."""
+
+    JS_BLOCK = re.compile(
+        r"var STACK_MIN_COLUMNS = (\d+);.*?function stacksWhenNarrow\(columns, narrow\) \{(.*?)\n  \}",
+        re.DOTALL,
+    )
+
+    def _helper(self) -> tuple[int, str]:
+        match = self.JS_BLOCK.search(_site_js_source())
+        self.assertIsNotNone(
+            match, "stacksWhenNarrow and STACK_MIN_COLUMNS must stay in site.js"
+        )
+        return int(match.group(1)), match.group(2)
+
+    @unittest.skipIf(shutil.which("node") is None, "node is not installed")
+    def test_decision_thresholds(self):
+        threshold, body = self._helper()
+        script = (
+            f"var STACK_MIN_COLUMNS = {threshold};\n"
+            + "function stacksWhenNarrow(columns, narrow) {"
+            + body
+            + "\n}\n"
+        )
+        cases = [(4, False), (5, False), (4, True), (5, True), (6, True), (12, True)]
+        calls = ";".join(
+            "console.log(JSON.stringify([{c}, {n}, stacksWhenNarrow({c}, {n})]))".format(
+                c=columns, n=str(narrow).lower()
+            )
+            for columns, narrow in cases
+        )
+        result = subprocess.run(
+            ["node", "-e", script + calls],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        observed = [tuple(json.loads(line)) for line in result.stdout.splitlines()]
+        # Narrow viewport stacks at the threshold and above; wide viewport never stacks.
+        expected = [
+            (4, False, False),
+            (5, False, False),
+            (4, True, False),
+            (5, True, True),
+            (6, True, True),
+            (12, True, True),
+        ]
+        self.assertEqual(observed, expected)
+
+    def test_threshold_matches_source_gate(self):
+        threshold, _ = self._helper()
+        self.assertEqual(
+            threshold,
+            check_site.WIDE_TABLE_COLUMNS,
+            "the script and the source gate must agree on what counts as a wide table",
+        )
+
+    def test_sync_table_uses_the_helper(self):
+        source = _site_js_source()
+        self.assertIn("stacksWhenNarrow(columns, stackQuery.matches)", source)
+        self.assertNotIn("columns >= 5", source)
+
+
+class StackLayoutTests(unittest.TestCase):
+    """The stacked layout shows every field, and nothing else regressed."""
+
+    def test_stack_block_reveals_labels_and_hides_nothing(self):
+        css = CSS.read_text(encoding="utf-8")
+        block = _media_block(css, "@media screen and (max-width: 30em)")
+        self.assertIn(".rmc-tablewrap[data-rmc-stack]", block)
+        # Cells render as blocks and name themselves from the pinned header text.
+        self.assertIn("content: attr(data-rmc-label)", block)
+        # Nothing is dropped from a stacked row: the header is only visually clipped and no
+        # rule in the block hides a cell.
+        self.assertIn("clip-path: inset(50%)", block)
+        self.assertNotIn("display: none", block)
+
+        td_rule = re.search(
+            r"\.rmc-tablewrap\[data-rmc-stack\] td \{(.*?)\}", block, re.DOTALL
+        )
+        self.assertIsNotNone(td_rule)
+        self.assertNotIn("font-size", td_rule.group(1))
