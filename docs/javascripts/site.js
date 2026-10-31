@@ -39,8 +39,12 @@
 
   /* Reveal on scroll ------------------------------------------------------ */
 
+  /* One reveal observer for the life of the page: initContent runs again when the content is
+     replaced, and creating an IntersectionObserver per run would leak one per navigation. */
+  var revealObserver = null;
+
   function initReveal() {
-    var items = document.querySelectorAll(".rmc-reveal");
+    var items = document.querySelectorAll(".rmc-reveal:not(.rmc-reveal--in)");
     if (!items.length) return;
 
     if (reduced || !("IntersectionObserver" in window)) {
@@ -50,19 +54,21 @@
       return;
     }
 
-    var observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("rmc-reveal--in");
-          observer.unobserve(entry.target);
-        });
-      },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.05 }
-    );
+    if (!revealObserver) {
+      revealObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add("rmc-reveal--in");
+            revealObserver.unobserve(entry.target);
+          });
+        },
+        { rootMargin: "0px 0px -8% 0px", threshold: 0.05 }
+      );
+    }
 
     items.forEach(function (el) {
-      observer.observe(el);
+      revealObserver.observe(el);
     });
 
     /* Anything already on screen at load reveals immediately; a safety timer
@@ -202,13 +208,18 @@
     var drawerInput = document.getElementById("__drawer");
     var drawerNav = document.querySelector(".md-sidebar--primary");
     if (drawerInput && drawerNav && "inert" in drawerNav) {
-      var narrow = window.matchMedia(DRAWER_QUERY);
-      var syncDrawer = function () {
-        drawerNav.inert = narrow.matches && !drawerInput.checked;
-      };
-      drawerInput.addEventListener("change", syncDrawer);
-      narrow.addEventListener("change", syncDrawer);
-      syncDrawer();
+      /* The drawer input survives instant navigation, so the change listener is installed once
+         per element: a re-run must not add a second one. */
+      if (!drawerInput.dataset.rmcA11yDrawer) {
+        drawerInput.dataset.rmcA11yDrawer = "1";
+        var narrow = window.matchMedia(DRAWER_QUERY);
+        var syncDrawer = function () {
+          drawerNav.inert = narrow.matches && !drawerInput.checked;
+        };
+        drawerInput.addEventListener("change", syncDrawer);
+        narrow.addEventListener("change", syncDrawer);
+      }
+      drawerNav.inert = window.matchMedia(DRAWER_QUERY).matches && !drawerInput.checked;
     }
 
     var search = document.querySelector(".md-search");
@@ -222,11 +233,17 @@
       var toggle = document.getElementById(label.getAttribute("for"));
       if (!toggle || toggle.type !== "checkbox") return;
       label.setAttribute("role", "button");
-      var sync = function () {
+      /* Same persistence as the drawer: one change listener per expander, ever. */
+      if (!label.dataset.rmcA11yNav) {
+        label.dataset.rmcA11yNav = "1";
+        var sync = function () {
+          label.setAttribute("aria-expanded", toggle.checked ? "true" : "false");
+        };
+        sync();
+        toggle.addEventListener("change", sync);
+      } else {
         label.setAttribute("aria-expanded", toggle.checked ? "true" : "false");
-      };
-      sync();
-      toggle.addEventListener("change", sync);
+      }
       if (!label.textContent.trim()) {
         // An icon-only expander still names the section it opens.
         var item = label.closest(".md-nav__item");
@@ -326,6 +343,15 @@
     }
   }
 
+  /* The live sync closure. initTables runs again when content is replaced, and each run swaps
+     this pointer; the listeners below are installed once and always call whichever closure is
+     current, so a re-run never stacks a second set of resize or media-query listeners. */
+  var tableSync = null;
+
+  function runTableSync() {
+    if (tableSync) tableSync();
+  }
+
   function initTables() {
     var wraps = [];
     document.querySelectorAll(".md-typeset table").forEach(function (table) {
@@ -333,32 +359,112 @@
       labelTable(table);
       wraps.push(wrap);
     });
-    if (!wraps.length) return;
+    if (!wraps.length) {
+      tableSync = null;
+      return;
+    }
 
     var sync = function () {
       wraps.forEach(syncTable);
     };
+    tableSync = sync;
+    if (!runTableSync.registered) {
+      runTableSync.registered = true;
+      /* Cell widths follow the webfonts, so a table can start overflowing after the first
+         measure. */
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(runTableSync);
+      stackQuery.addEventListener("change", runTableSync);
+      addEventListener(
+        "resize",
+        function () {
+          requestAnimationFrame(runTableSync);
+        },
+        { passive: true }
+      );
+    }
     sync();
-    /* Cell widths follow the webfonts, so a table can start overflowing after the first measure. */
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(sync);
-    stackQuery.addEventListener("change", sync);
-    addEventListener(
-      "resize",
-      function () {
-        requestAnimationFrame(sync);
-      },
-      { passive: true }
-    );
+  }
+
+  /* Content replacement ----------------------------------------------------
+   *
+   * Material's instant navigation swaps the page content without a reload. It is off today, so
+   * this is preparation: the setup runs once at boot, and if the content area is ever replaced
+   * the content-scoped initialisers run again, debounced. Every initialiser is idempotent, so a
+   * re-run on unchanged content is a no-op, and the watchers below install exactly once.
+   */
+
+  var CONTENT_DEBOUNCE_MS = 150;
+  var contentTimer = null;
+  var contentWatched = false;
+  /* Set while a MutationObserver watches the content area, so the re-run can pause it around
+     its own writes: the script moving a table into its wrapper must not schedule itself. */
+  var pauseContentWatch = null;
+  var resumeContentWatch = null;
+
+  function initContent() {
+    initReveal();
+    initCopy();
+    initHero();
+    initA11y();
+    initTables();
+  }
+
+  function flushContentInit() {
+    contentTimer = null;
+    if (pauseContentWatch) pauseContentWatch();
+    try {
+      initContent();
+    } finally {
+      if (resumeContentWatch) resumeContentWatch();
+    }
+  }
+
+  function queueContentInit() {
+    if (contentTimer === null) {
+      contentTimer = setTimeout(flushContentInit, CONTENT_DEBOUNCE_MS);
+    }
+  }
+
+  function watchContent() {
+    if (contentWatched) return;
+    contentWatched = true;
+    /* Material publishes document$ and emits on every document it renders, so it sees both the
+       first load and each instant navigation. */
+    if (window.document$ && typeof window.document$.subscribe === "function") {
+      /* The first emission is the boot load itself, which initContent already covered. */
+      var first = true;
+      window.document$.subscribe(function () {
+        if (first) {
+          first = false;
+          return;
+        }
+        queueContentInit();
+      });
+      return;
+    }
+    /* Without it, watch the content area itself for replaced nodes. */
+    if (!("MutationObserver" in window)) return;
+    var host =
+      document.querySelector(".md-content__inner") ||
+      document.querySelector(".md-content") ||
+      document.querySelector("main") ||
+      document.body;
+    if (!host) return;
+    var observer = new MutationObserver(queueContentInit);
+    pauseContentWatch = function () {
+      observer.disconnect();
+    };
+    resumeContentWatch = function () {
+      observer.observe(host, { childList: true, subtree: true });
+    };
+    resumeContentWatch();
   }
 
   function boot() {
     initProgress();
-    initReveal();
-    initCopy();
-    initHero();
     initHeader();
-    initA11y();
-    initTables();
+    initContent();
+    watchContent();
   }
 
   if (document.readyState === "loading") {

@@ -246,3 +246,36 @@ class StackLayoutTests(unittest.TestCase):
         )
         self.assertIsNotNone(td_rule)
         self.assertNotIn("font-size", td_rule.group(1))
+
+
+class ContentReinitTests(unittest.TestCase):
+    """The content-change re-run is wired once, debounced, and idle when nothing navigates."""
+
+    def setUp(self):
+        self.source = _site_js_source()
+
+    def test_boot_runs_content_setup_then_watches(self):
+        boot = re.search(r"function boot\(\) \{(.*?)\n  \}", self.source, re.DOTALL)
+        self.assertIsNotNone(boot)
+        body = boot.group(1)
+        self.assertIn("initContent();", body)
+        self.assertIn("watchContent();", body)
+
+    def test_reinit_uses_document_observable_or_observer(self):
+        self.assertIn("window.document$.subscribe", self.source)
+        self.assertIn("new MutationObserver", self.source)
+        # The first document$ emission is the boot load, already initialised.
+        self.assertIn("if (first) {", self.source)
+
+    def test_reinit_is_debounced(self):
+        self.assertIn("var CONTENT_DEBOUNCE_MS = 150;", self.source)
+        self.assertIn("setTimeout(flushContentInit, CONTENT_DEBOUNCE_MS)", self.source)
+
+    def test_watchers_install_once(self):
+        self.assertIn("if (contentWatched) return;", self.source)
+        self.assertIn("if (!runTableSync.registered) {", self.source)
+
+    def test_own_writes_do_not_retrigger_the_observer(self):
+        # The table wrap is a content write; the re-run pauses the observer around it.
+        self.assertIn("pauseContentWatch", self.source)
+        self.assertIn("resumeContentWatch", self.source)
