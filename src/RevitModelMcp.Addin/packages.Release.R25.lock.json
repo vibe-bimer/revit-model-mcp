@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0-windows7.0": {
+      "ILRepack": {
+        "type": "Direct",
+        "requested": "[2.0.46, )",
+        "resolved": "2.0.46",
+        "contentHash": "A0aJSYJQfbXQXLrKqT4J3FtF9/+y6twMNCGYuzRM8I1C9TutkNkkrlQR/15yUH7Ik3DNiWOJRlsdOkB7H3XK5Q=="
+      },
+      "JetBrains.Annotations": {
+        "type": "Direct",
+        "requested": "[2026.2.0, )",
+        "resolved": "2026.2.0",
+        "contentHash": "drvAEaI7Xf4wU6dx4UTB9MoZWXZlraaQ0qoeThPQ411FxNhId7QdUTukIC9I8aUHP0ycAaGwZNKqSvfOZQvUlg=="
+      },
+      "Microsoft.CodeAnalysis.CSharp": {
+        "type": "Direct",
+        "requested": "[4.11.0, )",
+        "resolved": "4.11.0",
+        "contentHash": "6XYi2EusI8JT4y2l/F3VVVS+ISoIX9nqHsZRaG6W5aFeJ5BEuBosHfT/ABb73FN0RZ1Z3cj2j7cL28SToJPXOw==",
+        "dependencies": {
+          "Microsoft.CodeAnalysis.Analyzers": "3.3.4",
+          "Microsoft.CodeAnalysis.Common": "[4.11.0]",
+          "System.Collections.Immutable": "8.0.0",
+          "System.Reflection.Metadata": "8.0.0"
+        }
+      },
+      "Nice3point.Revit.Api.RevitAPI": {
+        "type": "Direct",
+        "requested": "[2025.0.2, 2025.0.2]",
+        "resolved": "2025.0.2",
+        "contentHash": "cfkgSjcWg0cqTgLO4zCsJRgZgoB6uB8vkcBsAGv2W6TrIkSlJ5D/Ys/xTj9my0PEwNF9vmDtxv1n2zSBq8Ni8Q=="
+      },
+      "Nice3point.Revit.Api.RevitAPIUI": {
+        "type": "Direct",
+        "requested": "[2025.0.2, 2025.0.2]",
+        "resolved": "2025.0.2",
+        "contentHash": "9C+HcZrsS00qf3cisRfIyl58KNrwIYOsJPTIy367mg00Y/XnSa5rvDwXQSIRZ32ZcYyE3ApB6472pyWoXdjMPQ=="
+      },
+      "Nice3point.Revit.Extensions": {
+        "type": "Direct",
+        "requested": "[2025.*, )",
+        "resolved": "2025.2.5",
+        "contentHash": "k/uUsGBaIk27sAZTSTVajxAI3gwYiO/mE/Zz2oBOz0C3PGK2PqHdz0MwsVD2Dg5ywXGuxR+q5ezKsuKok3iBZg=="
+      },
+      "Nice3point.Revit.Toolkit": {
+        "type": "Direct",
+        "requested": "[2025.*, )",
+        "resolved": "2025.2.0",
+        "contentHash": "Te+lciDB7LJ+5fK7zlwHAwLeDkAjyPgS3cz+qjVKCyJ/77hZvn+fjR6AHLWtVOat9eQoB8KsXr0AxHKEgg4ZZw=="
+      },
+      "Polyfill": {
+        "type": "Direct",
+        "requested": "[11.4.5, )",
+        "resolved": "11.4.5",
+        "contentHash": "dIAO1ecvukEGrfbJDEmVtkxM7uZtwHfLJxTwFft92L4DjEKeyNbAQiq8WiFHwefiOQdeaNDhkHM8j7VPKKggkA=="
+      },
+      "Microsoft.CodeAnalysis.Analyzers": {
+        "type": "Transitive",
+        "resolved": "3.3.4",
+        "contentHash": "AxkxcPR+rheX0SmvpLVIGLhOUXAKG56a64kV9VQZ4y9gR9ZmPXnqZvHJnmwLSwzrEP6junUF11vuc+aqo5r68g=="
+      },
+      "Microsoft.CodeAnalysis.Common": {
+        "type": "Transitive",
+        "resolved": "4.11.0",
+        "contentHash": "djf8ujmqYImFgB04UGtcsEhHrzVqzHowS+EEl/Yunc5LdrYrZhGBWUTXoCF0NzYXJxtfuD+UVQarWpvrNc94Qg==",
+        "dependencies": {
+          "Microsoft.CodeAnalysis.Analyzers": "3.3.4",
+          "System.Collections.Immutable": "8.0.0",
+          "System.Reflection.Metadata": "8.0.0"
+        }
+      },
+      "System.Collections.Immutable": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "AurL6Y5BA1WotzlEvVaIDpqzpIPvYnnldxru8oXJU2yFxFUy3+pNXjXd1ymO+RA0rq0+590Q8gaz2l3Sr7fmqg=="
+      },
+      "System.Reflection.Metadata": {
+        "type": "Transitive",
+        "resolved": "8.0.0",
+        "contentHash": "ptvgrFh7PvWI8bcVqG5rsA/weWM09EnthFHR5SCnS6IN+P4mj6rE1lBDC4U8HL9/57htKAqy4KQ3bBj84cfYyQ==",
+        "dependencies": {
+          "System.Collections.Immutable": "8.0.0"
+        }
+      },
+      "revitmodelmcp.core": {
+        "type": "Project"
+      }
+    }
+  }
+}

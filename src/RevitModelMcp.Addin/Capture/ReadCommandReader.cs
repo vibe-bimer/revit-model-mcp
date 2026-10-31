@@ -19,15 +19,23 @@ internal static class ReadCommandReader
             DocumentName = document?.Title ?? string.Empty,
             DocumentPath = document?.PathName ?? string.Empty,
             ProcessId = Process.GetCurrentProcess().Id,
-            RevitVersion = application.Application?.VersionNumber ?? string.Empty,
-            PluginVersion = RevitModelMcp.PluginVersion.Value
+            RevitVersion = application.Application?.VersionNumber ?? string.Empty
         };
     }
 
     public static DocumentInfoData ReadDocumentInfo(UIApplication application)
     {
         var uiDocument = application.ActiveUIDocument ?? throw new InvalidOperationException("No active Revit document.");
-        var document = uiDocument.Document;
+        return ReadDocumentInfo(uiDocument.Document);
+    }
+
+    public static IReadOnlyList<Workset> ReadUserWorksets(Document document) => document.IsWorkshared
+        ? new FilteredWorksetCollector(document).OfKind(WorksetKind.UserWorkset).ToWorksets()
+            .OrderBy(workset => workset.Name, StringComparer.Ordinal).ToList()
+        : [];
+
+    public static DocumentInfoData ReadDocumentInfo(Document document)
+    {
         var roomCounts = new Dictionary<long, int>();
         foreach (var room in new FilteredElementCollector(document)
                      .OfCategory(BuiltInCategory.OST_Rooms)
@@ -68,19 +76,14 @@ internal static class ReadCommandReader
                 AreaCount = areaCounts.GetValueOrDefault(RevitValueReader.GetId(scheme.Id))
             })
             .ToList();
-        var worksets = document.IsWorkshared
-            ? new FilteredWorksetCollector(document)
-                .OfKind(WorksetKind.UserWorkset)
-                .ToWorksets()
-                .OrderBy(workset => workset.Name, StringComparer.Ordinal)
+        var worksets = ReadUserWorksets(document)
                 .Select(workset => new DocumentWorksetInfo
                 {
                     Name = workset.Name,
                     Kind = workset.Kind.ToString(),
                     IsOpen = workset.IsOpen
                 })
-                .ToList()
-            : new List<DocumentWorksetInfo>();
+                .ToList();
         var viewCount = new FilteredElementCollector(document)
             .OfClass(typeof(View))
             .Cast<View>()
@@ -91,9 +94,8 @@ internal static class ReadCommandReader
             FileName = string.IsNullOrWhiteSpace(document.PathName)
                 ? document.Title
                 : Path.GetFileName(document.PathName),
-            RevitVersion = application.Application.VersionNumber,
+            RevitVersion = document.Application.VersionNumber,
             IsWorkshared = document.IsWorkshared,
-            IsModified = document.IsModified,
             Levels = levels,
             AreaSchemes = schemes,
             Worksets = worksets,
@@ -203,10 +205,11 @@ internal static class ReadCommandReader
 
     public static ViewWarningsData ReadViewWarnings(Document document, View view)
     {
-        var viewIds = new HashSet<long>(new FilteredElementCollector(document, view.Id)
+        var viewIds = new FilteredElementCollector(document, view.Id)
             .WhereElementIsNotElementType()
             .ToElementIds()
-            .Select(RevitValueReader.GetId));
+            .Select(RevitValueReader.GetId)
+            .ToHashSet();
         var warnings = document.GetWarnings()
             .Select(warning =>
             {
@@ -244,13 +247,23 @@ internal static class ReadCommandReader
             .OfClass(typeof(View))
             .Cast<View>()
             .Where(view => !view.IsTemplate);
-        return ViewReferenceMatcher.Find(views, name, view => RevitValueReader.GetId(view.Id), view => view.Name);
+        return ViewReferenceMatcher.Find(views, name, view => RevitValueReader.GetId(view.Id), view => view.Name,
+            view => (view as ViewSheet)?.SheetNumber, view => view.ViewType.ToString(), SheetCollectionName);
     }
 
-    public static ViewDumpHeader ReadHeader(Document document, View view, int elementCount)
+    internal static string? SheetCollectionName(View view)
+    {
+#if REVIT2027_OR_GREATER
+        if (view is ViewSheet sheet)
+            return view.Document.GetElement(sheet.SheetCollectionId)?.Name;
+#endif
+        return null;
+    }
+
+    public static ViewHeader ReadHeader(Document document, View view, int elementCount)
     {
         var filterIds = view.GetFilters();
-        return new ViewDumpHeader
+        return new ViewHeader
         {
             Name = view.Name,
             Type = view.ViewType.ToString(),
@@ -267,9 +280,10 @@ internal static class ReadCommandReader
 
     public static HashSet<long> ReadWarningElementIds(Document document)
     {
-        return new HashSet<long>(document.GetWarnings()
+        return document.GetWarnings()
             .SelectMany(warning => warning.GetFailingElements().Concat(warning.GetAdditionalElements()))
-            .Select(RevitValueReader.GetId));
+            .Select(RevitValueReader.GetId)
+            .ToHashSet();
     }
 
     private static void Increment(Dictionary<long, int> counts, ElementId? id)

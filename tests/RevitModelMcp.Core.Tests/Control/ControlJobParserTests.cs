@@ -1,11 +1,152 @@
 using RevitModelMcp.Core.Control;
-using RevitModelMcp.Core.Formatting;
 using RevitModelMcp.Core.Models;
 
 namespace RevitModelMcp.Core.Tests.Control;
 
 public sealed class ControlJobParserTests
 {
+    [Test]
+    public async Task Parse_CaptureElements_DefaultsAndTarget()
+    {
+        var parsed = ControlJobParser.Parse("""
+            {"command":"capture-elements","elementIds":[10,20,10],"targetDocument":" Model ","targetProcessId":123}
+            """);
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.CaptureElements);
+        await Assert.That(parsed.ElementIds.ToArray()).IsEquivalentTo(new long[] { 10, 20 });
+        await Assert.That(parsed.PixelSize).IsEqualTo(1600);
+        await Assert.That(parsed.PaddingMm).IsEqualTo(1500);
+        await Assert.That(parsed.Mode).IsEqualTo("3d");
+        await Assert.That(parsed.TargetDocument).IsEqualTo("Model");
+        await Assert.That(parsed.TargetProcessId).IsEqualTo(123);
+        var plan = ControlJobParser.Parse("""
+            {"command":"capture-elements","elementIds":[10],"pixelSize":4000,"paddingMm":0,"mode":"plan"}
+            """);
+        await Assert.That(plan.Kind).IsEqualTo(ControlJobKind.CaptureElements);
+        await Assert.That(plan.Mode).IsEqualTo("plan");
+        await Assert.That(plan.PaddingMm).IsEqualTo(0);
+    }
+
+    [Test]
+    public async Task Parse_CaptureElements_RejectsInvalidFields()
+    {
+        foreach (var fields in new[]
+        {
+            "", "\"elementIds\":[]", "\"elementIds\":[0]", "\"elementIds\":[-1]",
+            "\"elementIds\":[1],\"pixelSize\":0", "\"elementIds\":[1],\"pixelSize\":31", "\"elementIds\":[1],\"pixelSize\":4001",
+            "\"elementIds\":[1],\"paddingMm\":-1", "\"elementIds\":[1],\"paddingMm\":20001",
+            "\"elementIds\":[1],\"mode\":\"section\"",
+            "\"elementIds\":[1],\"mode\":\"\""
+        })
+        {
+            var content = fields.Length == 0 ? "\"command\":\"capture-elements\"" : "\"command\":\"capture-elements\"," + fields;
+            var parsed = ControlJobParser.Parse("{" + content + "}");
+            await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+            await Assert.That(parsed.Error).IsNotNull();
+        }
+        var excessive = ControlJobParseResult.FromContract(new ControlJobContract
+        {
+            Command = "capture-elements",
+            ElementIds = Enumerable.Range(1, 501).Select(value => (long)value).ToList()
+        });
+        await Assert.That(excessive.Kind).IsEqualTo(ControlJobKind.Invalid);
+        var boundary = ControlJobParseResult.FromContract(new ControlJobContract
+        {
+            Command = "capture-elements",
+            ElementIds = Enumerable.Range(1, 500).Select(value => (long)value).ToList(),
+            PaddingMm = 20000,
+            PixelSize = 32
+        });
+        await Assert.That(boundary.Kind).IsEqualTo(ControlJobKind.CaptureElements);
+    }
+
+    [Test]
+    public async Task Parse_ModelSnapshot_PreservesOrderedRulesAndDocument()
+    {
+        var absent = ControlJobParser.Parse("""{"command":"model-snapshot"}""");
+        var empty = ControlJobParser.Parse("""{"command":"model-snapshot","parameterRules":[]}""");
+        await Assert.That(absent.Kind).IsEqualTo(ControlJobKind.ModelSnapshot);
+        await Assert.That(absent.ParameterRules.Count).IsEqualTo(0);
+        await Assert.That(empty.ParameterRules.Count).IsEqualTo(0);
+        var parsed = ControlJobParser.Parse("""
+            {"command":"model-snapshot","targetDocument":" Background ",
+             "parameterRules":[{"category":" Walls ","parameter":" Mark "},
+                               {"category":" Doors ","parameter":" Comments "}]}
+            """);
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.ModelSnapshot);
+        await Assert.That(parsed.TargetDocument).IsEqualTo("Background");
+        await Assert.That(parsed.ParameterRules.Select(rule => (rule.Category, rule.Parameter)).ToArray())
+            .IsEquivalentTo(new[] { ("Walls", "Mark"), ("Doors", "Comments") });
+    }
+
+    [Test]
+    public async Task Parse_ModelSnapshot_RejectsBlankAndMalformedRules()
+    {
+        foreach (var rules in new[]
+        {
+            """[{"category":" ","parameter":"Mark"}]""",
+            """[{"category":"Walls","parameter":" "}]""",
+            """[{}]""", """[null]""", """["bad"]"""
+        })
+        {
+            var result = ControlJobParser.Parse($$"""{"command":"model-snapshot","parameterRules":{{rules}}}""");
+            await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+            await Assert.That(result.Error).IsNotNull();
+        }
+    }
+
+    [Test]
+    public async Task Parse_BatchSnapshot_UsesSnapshotRulesAndDistinctCommand()
+    {
+        var parsed = ControlJobParser.Parse("""
+            {"command":"batch-snapshot","path":"C:\\models\\source.rvt","savedInYear":2024,
+             "upgradedInMemory":true,"parameterRules":[{"category":" Walls ","parameter":" Mark "}]}
+            """);
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.BatchSnapshot);
+        await Assert.That(parsed.Command).IsEqualTo("batch-snapshot");
+        await Assert.That(parsed.ParameterRules[0].Category).IsEqualTo("Walls");
+        await Assert.That(parsed.ParameterRules[0].Parameter).IsEqualTo("Mark");
+        await Assert.That(parsed.CoordinatorJob.Path).IsEqualTo(@"C:\models\source.rvt");
+        await Assert.That(parsed.CoordinatorJob.SavedInYear).IsEqualTo(2024);
+        await Assert.That(parsed.CoordinatorJob.UpgradedInMemory).IsTrue();
+        await Assert.That(ControlJobParser.Parse("""{"command":"batch-snapshot","parameterRules":[{}]}""").Kind)
+            .IsEqualTo(ControlJobKind.Invalid);
+    }
+    [Test]
+    public async Task Parse_NwcSettingsCheckRejectsUntrustedUncAndDevicePaths()
+    {
+        foreach (var path in new[] { @"\\srv\share\settings.xml", @"\\?\UNC\srv\share\settings.xml", @"C:\x\..\settings.xml" })
+        {
+            var job = new ControlJobContract { Command = "nwc-settings-check", SettingsXml = path };
+            await Assert.That(ControlJobParseResult.FromContract(job).Kind).IsEqualTo(ControlJobKind.Invalid);
+        }
+        var allowed = ControlJobParseResult.FromContract(
+            new ControlJobContract { Command = "nwc-settings-check", SettingsXml = @"\\SRV\Share\settings.xml" },
+            [@"\\srv\share"]);
+        await Assert.That(allowed.Kind).IsEqualTo(ControlJobKind.NwcSettingsCheck);
+    }
+
+    [Test]
+    public async Task PinnedRead_ClaimsJobFileButDocumentMustStillMatchBeforeReading()
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"RevitModelMcp-tests-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var jobPath = Path.Combine(directory, "job_test.json");
+        const string content = """{"command":"document-info","targetProcessId":42,"targetDocument":"Structural","correlationId":"read-50"}""";
+        File.WriteAllText(jobPath, content);
+        try
+        {
+            var job = ControlJobParser.Parse(content);
+            await Assert.That(JobTargetMatcher.TryClaim(jobPath, job, "Architectural", "/Models/Architectural.rvt", 42)).IsTrue();
+            await Assert.That(File.Exists(jobPath)).IsFalse();
+            await Assert.That(JobTargetMatcher.MatchesDocument("Architectural", "/Models/Architectural.rvt", job.TargetDocument!)).IsFalse();
+            await Assert.That(job.CorrelationId).IsEqualTo("read-50");
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
+        }
+    }
+
     [Test]
     [Arguments("ping")]
     [Arguments("view-elements")]
@@ -28,29 +169,6 @@ public sealed class ControlJobParserTests
         await Assert.That(result.CorrelationId).IsEqualTo("job-24");
         var response = CommandResponse<object>.Fail(result.Command, result.Error!, 0, result.CorrelationId);
         await Assert.That(response.CorrelationId).IsEqualTo(result.CorrelationId);
-    }
-
-    [Test]
-    public async Task Parse_ExportElementIds_CarriesFieldsAndSaveTo()
-    {
-        var result = ControlJobParser.Parse(
-            """{"command":"export-element-ids","fields":["category","id"],"saveTo":"C:\\Exports\\ids.xlsx"}""");
-
-        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.ExportElementIds);
-        await Assert.That(result.Fields.Count).IsEqualTo(2);
-        await Assert.That(result.Fields[0]).IsEqualTo("category");
-        await Assert.That(result.Fields[1]).IsEqualTo("id");
-        await Assert.That(result.SaveTo).IsEqualTo(@"C:\Exports\ids.xlsx");
-    }
-
-    [Test]
-    public async Task Parse_ExportElementIds_WithoutOptions_FallsBackToDefaults()
-    {
-        var result = ControlJobParser.Parse("""{"command":"export-element-ids"}""");
-
-        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.ExportElementIds);
-        await Assert.That(result.Fields.Count).IsEqualTo(0);
-        await Assert.That(result.SaveTo).IsNull();
     }
 
     [Test]
@@ -130,32 +248,43 @@ public sealed class ControlJobParserTests
     }
 
     [Test]
-    public async Task Parse_EmptyTrigger_ReturnsLegacySnapshot()
+    [Arguments(null)]
+    [Arguments("")]
+    [Arguments(" \t\r\n")]
+    public async Task Parse_EmptyJob_ReturnsReadableError(string? content)
     {
-        var result = ControlJobParser.Parse(string.Empty);
+        var result = ControlJobParser.Parse(content);
 
-        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.LegacySnapshot);
-        await Assert.That(result.Error).IsNull();
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(result.Error).IsEqualTo("The job JSON is empty.");
     }
 
     [Test]
-    public async Task Parse_ViewsDump_ReturnsTrimmedViewNames()
+    [Arguments("{\"command\":\"views-dump\",\"views\":[\"Level 1 Plan\"]}")]
+    [Arguments("{\"command\":\"views-dump\",\"views\":[]}")]
+    public async Task Parse_ViewsDump_ReturnsUnknownCommand(string content)
     {
-        const string json = """
-                            {
-                              "command": "views-dump",
-                              "views": ["Level 1 Plan", "  Level 2 Plan  "]
-                            }
-                            """;
+        var result = ControlJobParser.Parse(content);
 
-        var result = ControlJobParser.Parse(json);
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(result.Command).IsEqualTo("views-dump");
+        await Assert.That(result.Error).IsEqualTo("Unknown command: views-dump.");
+    }
 
-        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.ViewsDump);
-        await Assert.That(result.Views).IsEquivalentTo(new[]
-        {
-            "Level 1 Plan",
-            "Level 2 Plan"
-        });
+    [Test]
+    public async Task Parse_Jobs_IgnoresLegacyCancellationField()
+    {
+        var result = ControlJobParser.Parse("""
+            {"command":"jobs","cancelJobId":"another-job","jobId":"list-job","clientId":"client"}
+            """);
+
+        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Jobs);
+        await Assert.That(result.Command).IsEqualTo("jobs");
+        await Assert.That(result.JobId).IsEqualTo("list-job");
+        await Assert.That(result.ClientId).IsEqualTo("client");
+        await Assert.That(result.Error).IsNull();
+        await Assert.That(typeof(ControlJobParseResult).GetProperty("CancelJobId")).IsNull();
+        await Assert.That(typeof(ControlJobContract).GetProperty("CancelJobId")).IsNull();
     }
 
     [Test]
@@ -165,24 +294,6 @@ public sealed class ControlJobParserTests
 
         await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
         await Assert.That(result.Error).Contains("Unknown command: explode");
-
-        var response = ViewDumpTextFormatter.Format(new ViewDumpReport
-        {
-            Command = "invalid",
-            Status = "error",
-            Message = result.Error
-        });
-        await Assert.That(response).Contains("status: error");
-        await Assert.That(response).Contains("Unknown command: explode");
-    }
-
-    [Test]
-    public async Task Parse_ViewsDumpWithoutViews_ReturnsReadableError()
-    {
-        var result = ControlJobParser.Parse("{\"command\":\"views-dump\",\"views\":[]}");
-
-        await Assert.That(result.Kind).IsEqualTo(ControlJobKind.Invalid);
-        await Assert.That(result.Error).Contains("non-empty views list");
     }
 
     [Test]
@@ -269,21 +380,21 @@ public sealed class ControlJobParserTests
     }
 
     [Test]
-    public async Task JobTargetMatcher_ForeignDocument_DoesNotClaimTriggerFile()
+    public async Task JobTargetMatcher_ForeignDocument_DoesNotClaimJobFile()
     {
         var directory = Path.Combine(Path.GetTempPath(), $"RevitModelMcp-{Guid.NewGuid():N}");
-        var triggerPath = Path.Combine(directory, "trigger.txt");
+        var jobPath = Path.Combine(directory, "job_test.json");
         Directory.CreateDirectory(directory);
         try
         {
-            File.WriteAllText(triggerPath, "{\"command\":\"document-info\",\"targetDocument\":\"Sample Model\"}");
-            var job = ControlJobParser.Parse(File.ReadAllText(triggerPath));
+            File.WriteAllText(jobPath, "{\"command\":\"document-info\",\"targetDocument\":\"Sample Model\"}");
+            var job = ControlJobParser.Parse(File.ReadAllText(jobPath));
 
             var claimed = JobTargetMatcher.TryClaim(
-                triggerPath, job, "Test Model", @"C:\\Models\\Test Model.rvt", 42);
+                jobPath, job, "Test Model", @"C:\\Models\\Test Model.rvt", 42);
 
             await Assert.That(claimed).IsFalse();
-            await Assert.That(File.Exists(triggerPath)).IsTrue();
+            await Assert.That(File.Exists(jobPath)).IsTrue();
         }
         finally
         {
@@ -350,6 +461,18 @@ public sealed class ControlJobParserTests
     }
 
     [Test]
+    public async Task Parse_ViewElements_ClampsLimitAboveMaximum()
+    {
+        var maximum = ControlJobParser.Parse("""{"command":"view-elements","view":"Plan","limit":5000}""");
+        var excessive = ControlJobParser.Parse("""{"command":"view-elements","view":"Plan","limit":5001}""");
+
+        await Assert.That(maximum.Kind).IsEqualTo(ControlJobKind.ViewElements);
+        await Assert.That(maximum.Limit).IsEqualTo(5000);
+        await Assert.That(excessive.Kind).IsEqualTo(ControlJobKind.ViewElements);
+        await Assert.That(excessive.Limit).IsEqualTo(5000);
+    }
+
+    [Test]
     public async Task Parse_ElementDetails_ReturnsId()
     {
         var result = ControlJobParser.Parse("{\"command\":\"element-details\",\"id\":11327511}");
@@ -400,7 +523,21 @@ public sealed class ControlJobParserTests
         await Assert.That(missingView.Kind).IsEqualTo(ControlJobKind.Invalid);
         await Assert.That(missingView.Error).Contains("requires the view field");
         await Assert.That(oversized.Kind).IsEqualTo(ControlJobKind.Invalid);
-        await Assert.That(oversized.Error).Contains("between 1 and 4000");
+        await Assert.That(oversized.Error).Contains("between 32 and 4000");
+    }
+
+    [Test]
+    [Arguments(1, false)]
+    [Arguments(31, false)]
+    [Arguments(32, true)]
+    [Arguments(4000, true)]
+    public async Task Parse_ExportViewPixelSizeMinimumIs32(int pixelSize, bool valid)
+    {
+        var parsed = ControlJobParser.Parse(
+            "{\"command\":\"export-view\",\"view\":\"Level 1 Plan\",\"pixelSize\":" + pixelSize + "}");
+
+        await Assert.That(parsed.Kind == ControlJobKind.Invalid).IsEqualTo(!valid);
+        if (!valid) await Assert.That(parsed.Error).Contains("between 32 and 4000");
     }
 
     [Test]
@@ -420,6 +557,89 @@ public sealed class ControlJobParserTests
         await Assert.That(missing).IsNull();
         await Assert.That(byId?.Name).IsEqualTo("Level 1 Plan");
         await Assert.That(numericName?.Id).IsEqualTo(100);
+    }
+
+    [Test]
+    public async Task ViewReferenceMatcher_DuplicateName_AsksForNumericId()
+    {
+        var views = new[] { new TestView(1, "Plan"), new TestView(2, "Plan") };
+
+        var error = Assert.Throws<InvalidOperationException>(() => ViewReferenceMatcher.Find(views, "Plan", view => view.Id, view => view.Name));
+
+        await Assert.That(error.Message).Contains("Pass the numeric id instead");
+    }
+
+    [Test]
+    public async Task ViewReferenceMatcher_MatchesSheetNumberCaseInsensitively()
+    {
+        var views = new[]
+        {
+            new TestView(42, "Floor Plan"),
+            new TestView(84, "North Sheet", "NX-201", "DrawingSheet")
+        };
+
+        var sheet = ViewReferenceMatcher.Find(views, "nx-201", view => view.Id, view => view.Name,
+            view => view.SheetNumber, view => view.Type);
+
+        await Assert.That(sheet?.Id).IsEqualTo(84);
+    }
+
+    [Test]
+    public async Task ViewReferenceMatcher_IdPrecedesNumericSheetNumber()
+    {
+        var views = new[]
+        {
+            new TestView(42, "Floor Plan"),
+            new TestView(84, "North Sheet", "42", "DrawingSheet")
+        };
+
+        var view = ViewReferenceMatcher.Find(views, "42", item => item.Id, item => item.Name,
+            item => item.SheetNumber, item => item.Type);
+
+        await Assert.That(view?.Id).IsEqualTo(42);
+    }
+
+    [Test]
+    public async Task ViewReferenceMatcher_NameAndSheetNumberCollisionIsAmbiguous()
+    {
+        var views = new[]
+        {
+            new TestView(42, "NX-201", Type: "FloorPlan"),
+            new TestView(84, "North Sheet", "NX-201", "DrawingSheet")
+        };
+
+        var error = Assert.Throws<InvalidOperationException>(() => ViewReferenceMatcher.Find(views, "NX-201",
+            view => view.Id, view => view.Name, view => view.SheetNumber, view => view.Type));
+
+        await Assert.That(error?.Message).Contains("id=42, name=NX-201, type=FloorPlan");
+        await Assert.That(error?.Message).Contains("id=84, name=North Sheet, type=DrawingSheet");
+    }
+
+    [Test]
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task ViewReferenceMatcher_DuplicateSheetNumbers_ListCandidates(bool includeCollections)
+    {
+        var views = new[]
+        {
+            new TestView(42, "North Sheet", "A-101", "DrawingSheet", "Architecture"),
+            new TestView(84, "South Sheet", "A-101", "DrawingSheet", "Structure")
+        };
+
+        var error = Assert.Throws<InvalidOperationException>(() => ViewReferenceMatcher.Find(views, "a-101",
+            view => view.Id, view => view.Name, view => view.SheetNumber, view => view.Type,
+            includeCollections ? view => view.Collection : null));
+
+        await Assert.That(error!.Message).Contains("id=42, name=North Sheet, type=DrawingSheet, number=A-101");
+        await Assert.That(error.Message).Contains("id=84, name=South Sheet, type=DrawingSheet, number=A-101");
+        if (includeCollections)
+        {
+            await Assert.That(error.Message).Contains("collection=Architecture");
+            await Assert.That(error.Message).Contains("collection=Structure");
+        }
+        var selected = ViewReferenceMatcher.Find(views, "84", view => view.Id, view => view.Name,
+            view => view.SheetNumber, view => view.Type);
+        await Assert.That(selected?.Id).IsEqualTo(84);
     }
 
     [Test]
@@ -452,23 +672,32 @@ public sealed class ControlJobParserTests
     }
 
     [Test]
-    public async Task TriggerWatcher_FileAppears_RequestsExternalEvent()
+    [Arguments(false)]
+    [Arguments(true)]
+    public async Task JobWatcher_FileAppears_RequestsExternalEvent(bool rename)
     {
         var directory = Path.Combine(Path.GetTempPath(), $"RevitModelMcp-{Guid.NewGuid():N}");
-        var triggerPath = Path.Combine(directory, "trigger.txt");
+        var jobPath = Path.Combine(directory, "job_test.json");
         var temporaryPath = Path.Combine(directory, "mcp.tmp");
         using var requested = new ManualResetEventSlim();
         try
         {
-            using (var watcher = new TriggerFileWatcher(
-                       triggerPath,
+            using (var watcher = new JobFileWatcher(
+                       directory,
                        requested.Set,
                        _ => { },
                        TimeSpan.FromSeconds(10)))
             {
                 watcher.Start();
-                File.WriteAllText(temporaryPath, "{\"command\":\"ping\"}");
-                File.Move(temporaryPath, triggerPath);
+                if (rename)
+                {
+                    File.WriteAllText(temporaryPath, "{\"command\":\"ping\"}");
+                    File.Move(temporaryPath, jobPath);
+                }
+                else
+                {
+                    File.WriteAllText(jobPath, "{\"command\":\"ping\"}");
+                }
 
                 await Assert.That(requested.Wait(TimeSpan.FromSeconds(5))).IsTrue();
             }
@@ -479,6 +708,30 @@ public sealed class ControlJobParserTests
             {
                 Directory.Delete(directory, true);
             }
+        }
+    }
+
+    [Test]
+    [Arguments("job_test.json", 1)]
+    [Arguments("job_test.tmp", 0)]
+    [Arguments("notes.json", 0)]
+    public async Task JobWatcher_Start_RequestsOnlyExistingJobFiles(string fileName, int expectedRequests)
+    {
+        var directory = Path.Combine(Path.GetTempPath(), $"RevitModelMcp-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var requests = 0;
+        try
+        {
+            File.WriteAllText(Path.Combine(directory, fileName), "{\"command\":\"ping\"}");
+            using var watcher = new JobFileWatcher(directory, () => requests++, _ => { }, TimeSpan.FromSeconds(10));
+            watcher.Start();
+            watcher.Start();
+
+            await Assert.That(requests).IsEqualTo(expectedRequests);
+        }
+        finally
+        {
+            Directory.Delete(directory, true);
         }
     }
 
@@ -527,5 +780,47 @@ public sealed class ControlJobParserTests
         }
     }
 
-    private sealed record TestView(long Id, string Name);
+    [Test]
+    public async Task ExternalEventQueue_RejectedRaiseRetriesWithoutFallbackTimer()
+    {
+        var attempts = 0;
+        var raisedAgain = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var delayCompletion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var delays = new List<TimeSpan>();
+        var queue = new ExternalEventRequestQueue(
+            () =>
+            {
+                var attempt = Interlocked.Increment(ref attempts);
+                if (attempt == 2) raisedAgain.TrySetResult(true);
+                return attempt > 1;
+            },
+            delay: interval =>
+            {
+                lock (delays) delays.Add(interval);
+                return delayCompletion.Task;
+            });
+        queue.Request();
+        await Assert.That(Volatile.Read(ref attempts)).IsEqualTo(1);
+        TimeSpan[] beforeCompletion;
+        lock (delays) beforeCompletion = delays.ToArray();
+        await Assert.That(beforeCompletion.Length).IsEqualTo(1);
+        await Assert.That(beforeCompletion[0]).IsEqualTo(TimeSpan.FromMilliseconds(100));
+        delayCompletion.SetResult(true);
+        await raisedAgain.Task.WaitAsync(TimeSpan.FromSeconds(30));
+        await Assert.That(Volatile.Read(ref attempts)).IsEqualTo(2);
+        TimeSpan[] requested;
+        lock (delays) requested = delays.ToArray();
+        await Assert.That(requested.Length).IsEqualTo(1);
+        await Assert.That(requested[0]).IsEqualTo(TimeSpan.FromMilliseconds(100));
+    }
+
+    [Test]
+    public async Task CancelRequestReadsClientIdentityWithoutCommand()
+    {
+        var parsed = ControlJobParser.Parse("{\"clientId\":\"client-1\"}");
+        await Assert.That(parsed.ClientId).IsEqualTo("client-1");
+    }
+
+    private sealed record TestView(long Id, string Name, string? SheetNumber = null, string Type = "FloorPlan",
+        string? Collection = null);
 }

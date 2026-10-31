@@ -1,0 +1,376 @@
+using System.Text;
+using RevitModelMcp.Core.Models;
+using RevitModelMcp.Core.Serialization;
+
+namespace RevitModelMcp.Core.Control;
+
+public enum JobState
+{
+    Queued,
+    WaitingRevit,
+    Running,
+    Done,
+    Failed,
+    Cancelled,
+    Abandoned
+}
+
+public sealed record ScheduledJob(
+    string JobId,
+    string ClientId,
+    string ClientName,
+    string Command,
+    string Payload,
+    DateTimeOffset SubmittedUtc,
+    JobState State,
+    string? Result,
+    int Position);
+
+public sealed record JobSubmission(ScheduledJob? Job, string? Error, int RetryAfterMs);
+
+public sealed record JobCancellation(bool Cancelled, JobState? State, string Message);
+
+public sealed class JobScheduler
+{
+    private readonly object _sync = new();
+    private readonly Dictionary<string, Entry> _jobs = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, Queue<Entry>> _clients = new(StringComparer.Ordinal);
+    private readonly Queue<string> _rotation = new();
+    private readonly Func<DateTimeOffset> _clock;
+    private readonly TimeSpan _retention;
+    private readonly string? _resultDirectory;
+    private readonly Action<string> _log;
+    private readonly Action<string, string> _writeResult;
+    private readonly BoundedLruCache<string, bool> _expired = new(4096);
+    private int _maxStoredResponses;
+    private long _maxStoredBytes;
+    private Entry? _running;
+
+    public JobScheduler(Func<DateTimeOffset>? clock = null, TimeSpan? retention = null, string? resultDirectory = null,
+        Action<string>? log = null, Action<string, string>? writeResult = null,
+        int maxStoredResponses = HttpLimits.DefaultMaxStoredResponses, long maxStoredBytes = HttpLimits.DefaultMaxStoredBytes)
+    {
+        _log = log ?? (_ => { });
+        _writeResult = writeResult ?? CommandResponseJsonFile.WriteContent;
+        _clock = clock ?? (() => DateTimeOffset.UtcNow);
+        _retention = retention ?? TimeSpan.FromMinutes(10);
+        _resultDirectory = resultDirectory;
+        _maxStoredResponses = maxStoredResponses;
+        _maxStoredBytes = maxStoredBytes;
+    }
+
+    public static string? SubmissionMessage(string? error) => error switch
+    {
+        "invalid_job_id" => "jobId must be a 32-character hexadecimal GUID without dashes.",
+        "persist_failed" => "The job could not be recorded; retry later.",
+        _ => null
+    };
+
+    public bool HasPending
+    {
+        get { lock (_sync) return _rotation.Count > 0; }
+    }
+
+    public JobSubmission Submit(string jobId, string clientId, string clientName, string command, string payload)
+    {
+        if (string.IsNullOrWhiteSpace(jobId)) throw new ArgumentException("Job id is required.", nameof(jobId));
+        if (string.IsNullOrWhiteSpace(clientId)) throw new ArgumentException("Client id is required.", nameof(clientId));
+        if (string.IsNullOrWhiteSpace(command)) throw new ArgumentException("Command is required.", nameof(command));
+        if (payload is null) throw new ArgumentNullException(nameof(payload));
+        var persisted = ActionJobParser.IsAction(command) && _resultDirectory is not null;
+        if (persisted && !Guid.TryParseExact(jobId, "N", out _)) return new(null, "invalid_job_id", 0);
+        lock (_sync)
+        {
+            EvictExpired();
+            if (_jobs.ContainsKey(jobId)) return new(null, "duplicate_job_id", 0);
+            _clients.TryGetValue(clientId, out var queue);
+            if (queue is not null && queue.Count >= 16) return new(null, "queue_full", 1000);
+            var entry = new Entry(jobId, clientId, string.IsNullOrWhiteSpace(clientName) ? "unknown" : clientName,
+                command, payload, _clock());
+            if (ActionJobParser.IsAction(command))
+            {
+                var accepted = CommandResponse<string>.PartialResult(command, "accepted", "Command accepted and running.", 0);
+                accepted.JobId = jobId;
+                try
+                {
+                    StoreResult(entry, CommandResponseJsonSerializer.Serialize(accepted));
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    _log($"Job {jobId} was not recorded: {ex.GetType().Name}.");
+                    return new(null, "persist_failed", 1000);
+                }
+            }
+            if (queue is null)
+            {
+                queue = new Queue<Entry>();
+                _clients.Add(clientId, queue);
+            }
+            if (queue.Count == 0) _rotation.Enqueue(clientId);
+            queue.Enqueue(entry);
+            _jobs.Add(jobId, entry);
+            return new(Snapshot(entry), null, 0);
+        }
+    }
+
+    public ScheduledJob? TakeNext()
+    {
+        lock (_sync)
+        {
+            EvictExpired();
+            if (_running is not null || _rotation.Count == 0) return null;
+            var clientId = _rotation.Dequeue();
+            var queue = _clients[clientId];
+            var entry = queue.Dequeue();
+            if (queue.Count > 0) _rotation.Enqueue(clientId);
+            else _clients.Remove(clientId);
+            entry.State = JobState.Running;
+            _running = entry;
+            return Snapshot(entry);
+        }
+    }
+
+    public void MarkWaiting()
+    {
+        lock (_sync)
+        {
+            if (_running is not null) return;
+            foreach (var queue in _clients.Values)
+                foreach (var entry in queue) entry.State = JobState.WaitingRevit;
+        }
+    }
+
+    public void MarkCancellable(string jobId)
+    {
+        lock (_sync)
+        {
+            if (_running?.JobId == jobId) _running.CanCancel = true;
+        }
+    }
+
+    public void Complete(string jobId, string result, bool success)
+    {
+        lock (_sync)
+        {
+            if (_running?.JobId != jobId) throw new InvalidOperationException("The job is not running.");
+            if (_running.State != JobState.Abandoned)
+                _running.State = _running.CancelRequested ? JobState.Cancelled : success ? JobState.Done : JobState.Failed;
+            try
+            {
+                StoreResult(_running, result);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _log($"Job {jobId} result was not persisted: {ex.GetType().Name}.");
+            }
+            finally
+            {
+                _running.CompletedUtc ??= _clock();
+                _running = null;
+            }
+        }
+    }
+
+    public JobCancellation Cancel(string jobId, string clientId, bool isAction = false)
+    {
+        lock (_sync)
+        {
+            EvictExpired();
+            if (!_jobs.TryGetValue(jobId, out var entry) || (entry.ClientId != clientId && !(isAction && ActionJobParser.IsAction(entry.Command))))
+                return new(false, null, "Job not found for this client.");
+            if (entry.State is JobState.Queued or JobState.WaitingRevit)
+            {
+                clientId = entry.ClientId;
+                var queue = _clients[clientId];
+                var remaining = queue.Where(item => item != entry).ToArray();
+                _clients.Remove(clientId);
+                if (remaining.Length > 0) _clients.Add(clientId, new Queue<Entry>(remaining));
+                if (remaining.Length == 0)
+                {
+                    var rotation = _rotation.Where(item => item != clientId).ToArray();
+                    _rotation.Clear();
+                    foreach (var item in rotation) _rotation.Enqueue(item);
+                }
+                entry.State = JobState.Cancelled;
+                entry.CompletedUtc = _clock();
+                return new(true, entry.State, "Queued job cancelled.");
+            }
+            if (entry.State == JobState.Running && entry.CanCancel && (!isAction || entry.Command == "process-models"))
+            {
+                entry.CancelRequested = true;
+                return new(true, entry.State, "Cancellation requested; it takes effect between slices or before the next model.");
+            }
+            return new(false, entry.State, entry.State == JobState.Running
+                ? "A running command cannot be interrupted; it will finish."
+                : "Job has already finished.");
+        }
+    }
+
+    public bool IsCancellationRequested(string jobId)
+    {
+        lock (_sync) return _jobs.TryGetValue(jobId, out var entry) && entry.CancelRequested;
+    }
+
+    public void SetCancelledResult(string jobId, string result)
+    {
+        lock (_sync)
+        {
+            if (_jobs.TryGetValue(jobId, out var entry) && entry.State == JobState.Cancelled)
+                TryStoreResult(entry, result);
+        }
+    }
+
+    public ScheduledJob? Status(string jobId)
+    {
+        lock (_sync)
+        {
+            EvictExpired();
+            return _jobs.TryGetValue(jobId, out var entry) ? Snapshot(entry) : null;
+        }
+    }
+
+    public IReadOnlyList<ScheduledJob> ActiveJobs()
+    {
+        lock (_sync)
+        {
+            EvictExpired();
+            return _jobs.Values.Where(entry => entry.State is JobState.Queued or JobState.WaitingRevit or JobState.Running)
+                .OrderBy(entry => entry.SubmittedUtc).Select(Snapshot).ToArray();
+        }
+    }
+
+    private ScheduledJob Snapshot(Entry entry)
+    {
+        var position = 0;
+        if (entry.State is JobState.Queued or JobState.WaitingRevit)
+        {
+            var queues = _rotation.Select(clientId => _clients[clientId].ToArray()).ToArray();
+            for (var index = 0; index < 16; index++)
+                foreach (var queue in queues)
+                {
+                    if (index >= queue.Length) continue;
+                    position++;
+                    if (ReferenceEquals(queue[index], entry)) goto Found;
+                }
+        }
+    Found:
+        return new(entry.JobId, entry.ClientId, entry.ClientName, entry.Command, entry.Payload,
+            entry.SubmittedUtc, entry.State, entry.Result, position);
+    }
+
+    public void SetBudget(int maxStoredResponses, long maxStoredBytes)
+    {
+        lock (_sync)
+        {
+            _maxStoredResponses = maxStoredResponses;
+            _maxStoredBytes = maxStoredBytes;
+            EvictExpired();
+        }
+    }
+
+    public bool WasExpired(string jobId)
+    {
+        lock (_sync) return !_jobs.ContainsKey(jobId) && _expired.TryGet(jobId, out _);
+    }
+
+    public IReadOnlyList<ScheduledJob> AbandonUnfinished(string runningResult, string queuedResult)
+    {
+        lock (_sync)
+        {
+            var changed = new List<ScheduledJob>();
+            foreach (var entry in _jobs.Values)
+            {
+                if (entry.State is not (JobState.Queued or JobState.WaitingRevit or JobState.Running)) continue;
+                var running = entry.State == JobState.Running;
+                entry.State = running ? JobState.Abandoned : JobState.Cancelled;
+                TryStoreResult(entry, running ? runningResult : queuedResult);
+                entry.CompletedUtc = _clock();
+                changed.Add(Snapshot(entry));
+            }
+            _clients.Clear();
+            _rotation.Clear();
+            return changed;
+        }
+    }
+
+    private void EvictExpired()
+    {
+        var cutoff = _clock() - _retention;
+        foreach (var entry in _jobs.Values.Where(entry => entry.CompletedUtc < (ActionJobParser.IsAction(entry.Command) ? _clock() - TimeSpan.FromHours(24) : cutoff)).ToArray())
+            Remove(entry);
+        var completed = _jobs.Values.Where(entry => entry.CompletedUtc is not null)
+            .Select(entry => new StoredResponse(entry.JobId, entry.CompletedUtc!.Value,
+                entry.Result is null ? 0 : Encoding.UTF8.GetByteCount(entry.Result))).ToArray();
+        if (completed.Length == 0) return;
+        var evictions = ResponseBudget.SelectEvictions(completed, _maxStoredResponses, _maxStoredBytes);
+        foreach (var jobId in evictions) Remove(_jobs[jobId]);
+        if (evictions.Count > 0) _log($"Stored response budget evicted {evictions.Count} results.");
+    }
+
+    private void Remove(Entry entry)
+    {
+        _jobs.Remove(entry.JobId);
+        _expired.Set(entry.JobId, true);
+        if (_resultDirectory is null || !ActionJobParser.IsAction(entry.Command)) return;
+        if (!Guid.TryParseExact(entry.JobId, "N", out _)) return;
+        foreach (var extension in new[] { "json", "cancel" })
+        {
+            try
+            {
+                File.Delete(Path.Combine(_resultDirectory, $"{entry.JobId}.{extension}"));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                _log($"Job {entry.JobId} .{extension} file was not deleted: {ex.GetType().Name}.");
+            }
+        }
+    }
+
+    public void PublishProgress(string jobId, string response)
+    {
+        lock (_sync)
+        {
+            if (_running?.JobId == jobId) TryStoreResult(_running, response);
+        }
+    }
+
+    private void TryStoreResult(Entry entry, string result)
+    {
+        try
+        {
+            StoreResult(entry, result);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _log($"Job {entry.JobId} result was not persisted: {ex.GetType().Name}.");
+        }
+    }
+
+    private void StoreResult(Entry entry, string result)
+    {
+        if (Environment.GetEnvironmentVariable("REVIT_MCP_REDACT_PATHS") == "1")
+            result = CommandResponseJsonSerializer.RedactPaths(result);
+        entry.Result = result;
+        if (_resultDirectory is null || !ActionJobParser.IsAction(entry.Command)) return;
+        // Submit validates the id first, so this guard is defense in depth.
+        if (!Guid.TryParseExact(entry.JobId, "N", out _))
+            throw new ArgumentException("A persisted job id must be a GUID.");
+        _writeResult(Path.Combine(_resultDirectory, $"{entry.JobId}.json"), result);
+    }
+
+    private sealed class Entry(string jobId, string clientId, string clientName, string command,
+        string payload, DateTimeOffset submittedUtc)
+    {
+        public string JobId { get; } = jobId;
+        public string ClientId { get; } = clientId;
+        public string ClientName { get; } = clientName;
+        public string Command { get; } = command;
+        public string Payload { get; } = payload;
+        public DateTimeOffset SubmittedUtc { get; } = submittedUtc;
+        public DateTimeOffset? CompletedUtc { get; set; }
+        public JobState State { get; set; } = JobState.Queued;
+        public string? Result { get; set; }
+        public bool CancelRequested { get; set; }
+        public bool CanCancel { get; set; }
+    }
+}

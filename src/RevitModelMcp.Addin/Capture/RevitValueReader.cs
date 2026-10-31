@@ -15,6 +15,24 @@ internal static class RevitValueReader
 #endif
     }
 
+    /// <summary>
+    /// The defined <see cref="BuiltInParameter"/> for a negative element id, or null. Safe on every Revit version:
+    /// the enum is backed by int before 2024 and by long since, and <c>Enum.IsDefined</c> rejects a mismatched integer type.
+    /// </summary>
+    public static BuiltInParameter? ToBuiltInParameter(long id) => ToDefinedEnum<BuiltInParameter>(id);
+
+    /// <summary>The defined <see cref="BuiltInCategory"/> for a negative element id, or null; safe on every Revit version.</summary>
+    public static BuiltInCategory? ToBuiltInCategory(long id) => ToDefinedEnum<BuiltInCategory>(id);
+
+    private static T? ToDefinedEnum<T>(long id) where T : struct, Enum
+    {
+        if (id >= 0) return null;
+        var value = Enum.ToObject(typeof(T), id);
+        // ToObject truncates to the underlying type; a changed value means the id cannot be this enum.
+        if (Convert.ToInt64(value) != id || !Enum.IsDefined(typeof(T), value)) return null;
+        return (T)value;
+    }
+
     public static bool IsValidId(ElementId? id)
     {
         return id is not null && id != ElementId.InvalidElementId;
@@ -33,56 +51,6 @@ internal static class RevitValueReader
             Y = convertToMillimeters ? ToMillimeters(point.Y) : Round(point.Y),
             Z = convertToMillimeters ? ToMillimeters(point.Z) : Round(point.Z)
         };
-    }
-
-    public static CropBoxSnapshot ToCropBox(BoundingBoxXYZ box)
-    {
-        return new CropBoxSnapshot
-        {
-            MinXmm = ToMillimeters(box.Min.X),
-            MinYmm = ToMillimeters(box.Min.Y),
-            MinZmm = ToMillimeters(box.Min.Z),
-            MaxXmm = ToMillimeters(box.Max.X),
-            MaxYmm = ToMillimeters(box.Max.Y),
-            MaxZmm = ToMillimeters(box.Max.Z)
-        };
-    }
-
-    public static SectionCropBoundingBoxSnapshot ToSectionCropBoundingBox(BoundingBoxXYZ box)
-    {
-        return new SectionCropBoundingBoxSnapshot
-        {
-            MinX = ToMillimeters(box.Min.X),
-            MinY = ToMillimeters(box.Min.Y),
-            MinZ = ToMillimeters(box.Min.Z),
-            MaxX = ToMillimeters(box.Max.X),
-            MaxY = ToMillimeters(box.Max.Y),
-            MaxZ = ToMillimeters(box.Max.Z)
-        };
-    }
-
-    public static BoundingBoxOnViewSnapshot? GetBoundingBoxOnView(Element element, View view)
-    {
-        try
-        {
-            var box = element.get_BoundingBox(view);
-            if (box is null)
-            {
-                return null;
-            }
-
-            return new BoundingBoxOnViewSnapshot
-            {
-                YMin = ToMillimeters(box.Min.Y),
-                YMax = ToMillimeters(box.Max.Y),
-                XMin = ToMillimeters(box.Min.X),
-                XMax = ToMillimeters(box.Max.X)
-            };
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     public static string? GetFamilyName(Element element)
@@ -105,38 +73,6 @@ internal static class RevitValueReader
         }
 
         return document.GetElement(element.GetTypeId())?.Name;
-    }
-
-    public static string? GetMark(Element element)
-    {
-        return GetParameterText(element.get_Parameter(BuiltInParameter.ALL_MODEL_MARK));
-    }
-
-    public static string? GetNamedParameter(Element element, string name)
-    {
-        try
-        {
-            return GetParameterText(element.LookupParameter(name));
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    public static double? GetLengthParameterMm(Element element, BuiltInParameter parameterId)
-    {
-        try
-        {
-            var parameter = element.get_Parameter(parameterId);
-            return parameter is null || !parameter.HasValue
-                ? null
-                : ToMillimeters(parameter.AsDouble());
-        }
-        catch
-        {
-            return null;
-        }
     }
 
     public static string? GetParameterText(Parameter? parameter)

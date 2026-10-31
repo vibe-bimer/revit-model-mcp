@@ -5,6 +5,59 @@ from revit_model_mcp import server
 
 
 class CoordinatorToolTests(unittest.IsolatedAsyncioTestCase):
+    async def test_model_snapshot_recording_channel(self):
+        channel = AsyncMock()
+        channel.execute.return_value = {
+            "data": {
+                "source": {"path": r"C:\Models\Background.rvt"},
+                "passport": {"centralPath": r"\\Server\Models\Central.rvt"},
+            }
+        }
+        with (
+            patch.object(server, "channel", channel),
+            patch.dict("os.environ", {"REVIT_MCP_REDACT_PATHS": "1"}),
+        ):
+            result = await server.revit_model_snapshot(
+                parameter_rules=[
+                    server.ParameterRule(category=" Walls ", parameter=" Mark "),
+                    server.ParameterRule(category="Doors", parameter="Comments"),
+                ],
+                document="Background",
+            )
+        payload = channel.execute.call_args.args[0].payload
+        self.assertEqual(
+            payload,
+            {
+                "command": "model-snapshot",
+                "parameterRules": [
+                    {"category": "Walls", "parameter": "Mark"},
+                    {"category": "Doors", "parameter": "Comments"},
+                ],
+                "targetDocument": "Background",
+            },
+        )
+        self.assertEqual(result["data"]["source"]["path"], "Background.rvt")
+        self.assertEqual(result["data"]["passport"]["centralPath"], "Central.rvt")
+
+    async def test_model_snapshot_defaults_and_invalid_rules(self):
+        execute = AsyncMock(return_value={"success": True})
+        with patch.object(server, "_execute", execute):
+            await server.mcp.call_tool("revit_model_snapshot", {})
+            await server.mcp.call_tool("revit_model_snapshot", {"parameter_rules": []})
+        self.assertEqual(
+            [call.args[0].payload for call in execute.call_args_list],
+            [{"command": "model-snapshot", "parameterRules": []}] * 2,
+        )
+        for rule in (
+            {"category": " ", "parameter": "Mark"},
+            {"category": "Walls", "parameter": " "},
+        ):
+            execute.reset_mock()
+            with patch.object(server, "_execute", execute):
+                with self.assertRaises(Exception):
+                    await server.mcp.call_tool("revit_model_snapshot", {"parameter_rules": [rule]})
+            execute.assert_not_awaited()
+
     async def test_simple_jobs(self):
         for command in ("model-health", "links-status", "shared-coordinates"):
             with self.subTest(command=command):
@@ -12,12 +65,12 @@ class CoordinatorToolTests(unittest.IsolatedAsyncioTestCase):
                 with patch.object(server, "_execute", execute):
                     await server.mcp.call_tool(
                         "revit_" + command.replace("-", "_"),
-                        {"timeout_seconds": 41, "pickup_timeout_seconds": 42, "document": "Model"},
+                        {"timeout_seconds": 41, "document": "Model"},
                     )
                 job, *options = execute.call_args.args
                 self.assertEqual(job.command, command)
                 self.assertEqual(job.payload, {"command": command})
-                self.assertEqual(options, [41, 42, "Model"])
+                self.assertEqual(options, [41, "Model"])
 
     async def test_fill_job(self):
         execute = AsyncMock(return_value={"success": True})
@@ -34,7 +87,6 @@ class CoordinatorToolTests(unittest.IsolatedAsyncioTestCase):
                     "include_types": False,
                     "document": "Model",
                     "timeout_seconds": 41,
-                    "pickup_timeout_seconds": 42,
                 },
             )
         job, *options = execute.call_args.args
@@ -51,7 +103,7 @@ class CoordinatorToolTests(unittest.IsolatedAsyncioTestCase):
                 "includeTypes": False,
             },
         )
-        self.assertEqual(options, [41, 42, "Model"])
+        self.assertEqual(options, [41, "Model"])
 
     async def test_fill_defaults(self):
         execute = AsyncMock(return_value={"success": True})

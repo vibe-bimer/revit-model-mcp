@@ -1,91 +1,240 @@
-# 只读工具参考
+# Read tool reference
 
-所有工具都支持本地、SSH 和 HTTP 传输。它们不改变模型；两个导出工具会写入文件。
+## Toolsets
 
-<a id="transports-and-output-files"></a>
-## 传输与输出文件
+`tools/list` costs context in every MCP client that does not load tools on demand. Set `REVIT_MCP_TOOLSETS` (or start the server with `--toolsets`) to a comma-separated list to expose only some tools. `core` is always included, `all` exposes everything, and an unknown name stops the server with the list of valid names. A hidden tool cannot be called; the tools stay registered in [tool-manifest.json](tool-manifest.json), which lists each tool's `toolset`.
 
-HTTP 模式下，`revit_export_view` 通过 `/views/{name}/image` 下载 PNG。
-`revit_export_element_ids` 在 Revit 工作站写入工作簿，因此 `save_to` 是工作站路径；HTTP 客户端读取返回的 `path`，而不是下载文件。
-标识符列保存 Revit 构件 ID，API 不能指定这个 ID：该工具仅列出标识符，从不更改它们。
-HTTP 模式下，`revit_list_instances` 报告所连接的 Revit 进程。
+Toolsets limit visibility only. They are not a permission: read-only mode, confirmation tokens and the add-in's own checks apply to every listed tool.
 
-<a id="common-arguments-and-tool-catalogue"></a>
-## 通用参数与工具目录
+The default is `all`, so existing setups see the same tools. Clients with a small tool budget, or that warn about many tools, should set `REVIT_MCP_TOOLSETS=core,read` (20 tools, about 6.2k tokens) and add `actions`, `views-sheets` or others when needed. The prompts and the coordinator guide name read tools; the batch prompt needs `batch`.
 
-除 `revit_export_view` 和 `revit_list_instances` 外，每个只读工具都接受 `timeout_seconds=120`、`pickup_timeout_seconds=300` 和 `document=null`。
-超时以正整数秒计；拾取超时只适用于本地和 SSH 传输，在 HTTP 模式下忽略。
-`revit_export_view` 使用默认的 120 秒响应等待和 300 秒拾取等待预算，不提供超时参数。
-有多个 Revit 实例运行时，应通过活动文档标题或文件名中唯一的子串指定 `document`；否则任意实例都可能响应。
-`revit_list_instances(document=null)` 列出所有实例；文档筛选返回所有匹配实例，而不是从中选择一个。
-表中未列出默认值的参数是必填参数。
-聚合与查询共用筛选参数 `categories`、`family`、`type_name`、`level`、`view`、`workset`、`phase`、`area_scheme` 和 `parameter_filters`；它们的默认值均为 `null`。
-
-| 工具 | 除通用只读选项外的参数 | 用途 |
-| --- | --- | --- |
-| `revit_ping` | 无 | 检查连接；返回 `data:"pong"`。 |
-| `revit_document_info` | 无 | 读取文档、标高、面积方案和工作集。 |
-| `revit_list_catalog` | `section` | 发现可用的类别、族、视图和参数名称。 |
-| `revit_aggregate_elements` | `group_by`、`sum_field=null`、共用查询筛选参数 | 按一个或两个字段分组；返回数量，以及可选的合计／平均值。 |
-| `revit_query_elements` | 共用查询筛选参数、`fields=null`、`offset=0`、`limit=100`、`sort_field="id"`、`sort_direction="asc"`、`include_geometry=false` | 分页读取匹配构件。 |
-| `revit_list_views` | `view_type=null`、`name_contains=null` | 查找活动文档中的视图。 |
-| `revit_view_summary` | `view` | 读取视图元数据与各类别数量。 |
-| `revit_export_view` | `view`、`pixel_size=1600`、`save_to=null`、`document=null`；无超时参数 | 下载 PNG；`pixel_size` 指图像适配方向的尺寸，范围为 1–4000 像素。 |
-| `revit_export_element_ids` | `fields=null`、`save_to=null`、`timeout_seconds=120`、`pickup_timeout_seconds=300`、`document=null` | 将已绘制构件的标识符清单写入 Revit 工作站上的 xlsx 工作簿，按类别、族、类型排序。 |
-| `revit_view_elements` | `view`、`categories=null`、`offset=0`、`limit=100` | 分页读取视图中的构件。 |
-| `revit_element_details` | `element_id` | 按无单位的 Revit ID 读取实例／类型参数和几何。 |
-| `revit_view_warnings` | `view` | 读取涉及视图中构件的警告。 |
-| `revit_list_warnings` | `warning_text=null`、`include_elements=false` | 对警告分组，或检查特定警告组。 |
-| `revit_list_relations` | `relation`、`source_id=null`、`source_name=null` | 读取成员关系或依赖。 |
-| `revit_list_instances` | `document=null`；无超时参数 | 列出端点或心跳信息。 |
-| `revit_model_health` | 无 | 交付前读取模型质量统计和高频警告。 |
-| `revit_links_status` | 无 | 读取 RVT、CAD 和图像的状态、路径及实例数量。 |
-| `revit_shared_coordinates` | 无 | 读取项目基点／测量点、场地和链接变换，单位为 mm 和度。 |
-| `revit_parameter_fill_check` | `categories`、`parameters`、`level=null`、`workset=null`、`view=null`、`sample_limit=20`、`include_types=true` | 统计已填、空值和缺失参数；抽样返回无单位的构件 ID。 |
-
-<a id="coordinator-checks"></a>
-## 协调检查
-
-导出或交付前依次调用 `revit_model_health` → `revit_links_status` → `revit_shared_coordinates` → `revit_parameter_fill_check(categories=["Walls","Doors"], parameters=["Mark","Comments"])`。
-类别和参数名称使用模型语言；填充检查接受 1–20 个类别、1–30 个参数，抽样上限范围为 1–100。
-协调检查的位置和链接列表最多返回 100 项，不分页；位置按名称排序，链接按 ID 排序。
-只要报告类型的任一实例符合条件，`pinned` 和 `viewSpecific` 就分别为 true。
-参数名通过 `LookupParameter(name)` 解析，使用第一个同名匹配；不支持按 GUID 或 BuiltInParameter 选择。
-
-<a id="filters-units-and-pagination"></a>
-## 筛选、单位与分页
-
-进行通用模型查询前先调用 `revit_list_catalog`；数量与分类汇总优先使用 `revit_aggregate_elements`，需要逐个构件记录时才使用 `revit_query_elements`。
-偏移量是从零开始的行数；每页上限是正整数行数。只要 `hasMore=true`，就继续推进 offset。
-提供公制字段时，长度使用 mm，面积使用 m2，体积使用 m3。
-其他数值筛选值遵循文档显示单位；返回的查询值在可用时带有 `unit` 字段。
-筛选输入与数值输出的区别见[通道格式](feed-format.md#jobs)。
-参数名来自模型语言；筛选前使用 `revit_list_catalog(section="parameters")`。
-查询参数筛选以 AND 组合，使用准确的本地化名称。支持 `equals`、`contains`、`greater`、`less`、`empty`、`not-empty` 和 `exists`；`contains` 要求文本，`empty`／`not-empty`／`exists` 不需要 value。
-汇总面积时，应按标高分组并指定面积方案。
-
-<a id="export-destinations"></a>
-## 导出路径
-
-对于 `revit_export_view`，`save_to` 是 MCP 客户端上的新 PNG 文件路径；默认下载到本地临时目录，返回 `localPath`、图像宽高、`sizeBytes` 和视图元数据，不返回 base64。
-对于 `revit_export_element_ids`，`save_to` 是 Revit 工作站上的绝对 `.xlsx` 路径。默认路径为 `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`；响应返回 `path`、`fileName`、`sheetName`、`columns`、`rowCount`、`totalCandidates`、`truncated`、`sizeBytes` 和 `categoryCounts`。
-两种导出都不覆盖已有目标文件。工作簿最多 50,000 行；候选构件更多时，`truncated=true`。
-默认列为 `类别`、`族`、`类型`、`标高`、`构件ID`、`名称`、`工作集`；`fields` 可用内置字段名或参数名替换这些列。
-没有标高的构件，其标高列为空，包括大多数 MEP 管道和风管段。
-导出视图不会切换活动视图，也不写入模型。
-
-<a id="geometry"></a>
-## 几何
-
-`revit_element_details` 在 `data` 中随参数返回几何。
-`revit_query_elements(include_geometry=True)` 在返回页面的每个构件中添加相同字段。
-该查询开关默认为 `False`；默认查询省略几何。
-所有坐标使用模型轴，以毫米计，保留一位小数。
-
-| 字段 | 内容 |
+| Toolset | Tools |
 | --- | --- |
-| `location` | 点：`type:"point"`、`xMm`、`yMm`、`zMm`。曲线：`type:"curve"`、`startMm`、`endMm`、`lengthMm`。 |
-| `boundingBox` | 来自构件模型包围盒的 `minMm`、`maxMm`、`centerMm`，均为 `[x,y,z]` 数组。房间使用自己的包围盒。 |
-| `roomCenterMm` | 已放置房间的位置 `[x,y,z]`。在房间内放置物体时使用 `roomCenterMm`。包围盒中心可能位于非矩形房间之外。 |
+| `core` | `revit_ping`, `revit_list_instances`, `revit_documents`, `revit_document_info`, `revit_ui_state`, `revit_jobs`, `revit_cancel_job`, `revit_undo_last` |
+| `read` | `revit_list_catalog`, `revit_aggregate_elements`, `revit_query_elements`, `revit_element_details`, `revit_list_relations`, `revit_model_health`, `revit_list_warnings`, `revit_links_status`, `revit_shared_coordinates`, `revit_parameter_fill_check`, `revit_model_snapshot`, `revit_schedule_data` |
+| `actions` | `revit_set_parameter`, `revit_update_parameters`, `revit_move`, `revit_rotate`, `revit_copy`, `revit_mirror`, `revit_change_type`, `revit_delete`, `revit_run_actions`, `revit_create_level`, `revit_create_floor`, `revit_set_phase`, `revit_merge_phases`, `revit_reset_element_ids`, `revit_rebuild_model_ids` |
+| `documents` | `revit_open_document`, `revit_activate_document`, `revit_new_document`, `revit_close_document`, `revit_save_document`, `revit_sync_document` |
+| `views-sheets` | `revit_list_views`, `revit_view_info`, `revit_view_summary`, `revit_view_elements`, `revit_view_warnings`, `revit_capture_elements`, `revit_export_view`, `revit_activate_view`, `revit_close_views`, `revit_create_view`, `revit_duplicate_view`, `revit_apply_view_template`, `revit_set_view_visibility`, `revit_override_graphics`, `revit_tag_elements`, `revit_create_schedule`, `revit_select`, `revit_show`, `revit_isolate`, `revit_create_sheet`, `revit_place_views_on_sheet`, `revit_set_view_lighting` |
+| `family` | `revit_family_audit`, `revit_edit_families`, `revit_load_family`, `revit_place_family`, `revit_place_families` |
+| `links` | `revit_compare_link_datums`, `revit_align_link_datums`, `revit_remove_links` |
+| `cad-mep` | `revit_link_cad`, `revit_walls_from_cad`, `revit_create_wall`, `revit_create_mep_run` |
+| `export` | `revit_export`, `revit_export_nwc`, `revit_nwc_settings_check`, `revit_issue_register`, `revit_export_element_ids` |
+| `batch` | `revit_batch_start`, `revit_batch_status`, `revit_batch_cancel`, `revit_batch_fetch`, `revit_build_report`, `revit_process_models` |
+| `code` | `revit_execute_code` |
 
-不可用的几何字段省略。
+### Tool list size
+
+`cd server && uv run python ../build/tool_size.py` measures the `tools/list` payload (compact JSON of every tool, bytes; tokens are bytes divided by 4, an estimate).
+Tool and parameter descriptions state plain behavior. The confirmation procedure, addressing rules and long-job handling live in the server instructions and the `revit://guides/coordinator` resource, not in each description.
+
+| Toolset | Tools | Bytes | About tokens |
+| --- | --- | --- | --- |
+| `core` | 8 | 6,836 | 1,709 |
+| `read` | 12 | 17,972 | 4,493 |
+| `actions` | 15 | 16,796 | 4,199 |
+| `documents` | 6 | 4,952 | 1,238 |
+| `views-sheets` | 22 | 26,922 | 6,730 |
+| `family` | 5 | 8,967 | 2,241 |
+| `links` | 3 | 4,104 | 1,026 |
+| `cad-mep` | 4 | 5,663 | 1,415 |
+| `export` | 5 | 8,362 | 2,090 |
+| `batch` | 6 | 7,674 | 1,918 |
+| `code` | 1 | 1,358 | 339 |
+| `all` (default) | 87 | 109,606 | 27,401 |
+| `core,read` | 20 | 24,808 | 6,202 |
+
+MEP routing, graphic overrides, view and sheet creation, element tagging, schedule creation, CAD linking and wall construction actions are listed in [Action tools](actions.md).
+
+Revit-backed tools support local, SSH and HTTP transports. `revit_build_report` runs on the MCP client machine from snapshot files and needs no Revit transport or running instance.
+`revit_capture_elements` downloads a highlighted element PNG over local or SSH transport; HTTP is unavailable.
+`revit_export_view` downloads PNG through `/views/{name}/image` in HTTP mode.
+`revit_list_instances` reports the connected Revit process in HTTP mode.
+
+Every addressed Revit-backed read tool accepts optional `process_id` (alias `processId`), a strict positive integer. It selects an exact Revit process and must agree with `document` when both are given. See [batch collection](batch.md#explicit-process-addressing).
+
+Every Revit-backed read tool except `revit_ui_state`, `revit_export_view`, `revit_capture_elements`, `revit_issue_register`, `revit_list_instances` and `revit_family_audit` accepts `timeout_seconds=120` and `document=null`.
+The server environment variable `REVIT_MCP_PICKUP_TIMEOUT_SECONDS` configures the file-channel pickup timeout (default 300 seconds). `revit_ui_state` accepts only `process_id`. Family audit accepts `timeout_seconds=600` and `document=null`.
+Timeouts are seconds; pickup timeout applies only to local and SSH transports.
+Every timeout argument is named `timeout_seconds`; defaults and limits differ per tool and are listed in the tool schema. `revit_jobs(wait_seconds)` is a wait, not a timeout.
+Arguments named `output_path` (a file) and `output_dir` (a directory) write on the machine that runs the MCP client, unless the description says the path is on the workstation. `revit_export`, `revit_process_models` exports and `save.output_dir` write on the workstation. `save_as` is a Revit Save As path on the workstation.
+Arguments without defaults in these tables are required.
+The query filters shared by aggregation and queries are `categories`, `family`, `type_name`, `level`, `view`, `workset`, `phase`, `area_scheme` and `parameter_filters`; each defaults to `null`.
+
+Every successful Revit-backed read result returns top-level `skipped` and `skippedCount`. Each skipped entry has `what` and `reason`. An empty list means no fields were omitted. A non-empty list means the answer is incomplete. The list keeps the first 100 entries; `skippedCount` reports the uncapped total. `revit_list_instances` returns `instances` with empty diagnostics. Model health uses this common shape instead of a nested metric/error list. Links status also keeps each link's `error` and mirrors it in `skipped`.
+
+| Tool | Arguments beyond the common read options | Purpose |
+| --- | --- | --- |
+| `revit_ping` | None | Check connectivity; returns `data:"pong"`. |
+| `revit_jobs` | `job_id=null`, `wait_seconds=40` | List jobs, or wait up to 50 seconds for an action job (0 through 50, default 40; poll again for longer jobs). Returns progress or the original final action response. |
+| `revit_nwc_settings_check` | `settings_xml` | Parse exporter XML on the Revit workstation without exporting; return values, mapping, notApplied and ignored. |
+| `revit_document_info` | None | Read document, levels, area schemes and worksets. |
+| `revit_documents` | `include_linked=false` | List every open document in one Revit process, including background documents; linked documents are excluded by default. |
+| `revit_ui_state` | None | Read the active document and view, open UI views, up to 500 selected elements, and all open documents. |
+| `revit_list_catalog` | `section`, `name_contains=null`, `limit=200` (1 to 2000) | Discover names with a case-insensitive filter. Returns `total` before the limit and `hasMore`. |
+| `revit_aggregate_elements` | `group_by`, `sum_field=null`, shared query filters | Group by one or two fields (`group_by` takes 1-2 items); return counts and optional sum/average. |
+| `revit_query_elements` | Shared query filters, `fields=null`, `offset=0`, `limit=100`, `sort_field="id"`, `sort_direction="asc"`, `include_geometry=false` | Read a page of matching elements. |
+| `revit_list_views` | `view_type=null`, `name_contains=null` | Find views in the active document. |
+| `revit_view_summary` | `view` | Read view metadata and category counts. |
+| `revit_view_info` | `view` (name or decimal ID) | Inspect view template controls, display settings, hidden categories, worksets, filters, links and temporary modes. |
+| `revit_capture_elements` | `element_ids`, `pixel_size=1600`, `padding_mm=1500`, `mode="3d"`, `output_path=null`, `document=null`; no timeout arguments | Capture 1-500 model elements highlighted red in a temporary 3D or plan view. Returns PNG image content and local path; the view is rolled back. Local/SSH only. |
+| `revit_export_view` | `view`, `pixel_size=1600`, `output_path=null`, `document=null`; no timeout arguments | Download a PNG; `pixel_size` is 32-4000 pixels (Revit rejects smaller images) on the fitted image dimension. |
+| `revit_schedule_data` | `schedule`, `max_rows=500`, `offset=0` | Read visible schedule columns and data rows with `totalRows` and `truncated`. Paging excludes heading rows. Rejects non-schedules. |
+| `revit_view_elements` | `view`, `categories=null`, `offset=0`, `limit=100` | Read a page of elements in a view. |
+| `revit_element_details` | `element_id` | Read instance/type parameters and geometry by unitless Revit ID; `element_id` must be at least 1. |
+| `revit_view_warnings` | `view` | Read warnings involving elements in a view. |
+| `revit_list_warnings` | `warning_text=null`, `include_elements=false` | Group warnings or inspect a specific warning group. |
+| `revit_list_relations` | `relation`, `source_id=null`, `source_name=null` | Read membership or dependencies. |
+| `revit_list_instances` | `document=null`; no timeout arguments | Return endpoint or heartbeat information in `instances`. |
+| `revit_model_health` | `output_path` (optional) | Read model quality counts and top warnings; save an Excel health report on the MCP server machine. |
+| `revit_links_status` | None | Read RVT, CAD and image status, paths and instance counts. |
+| `revit_shared_coordinates` | None | Read base/survey points, sites and link transforms in mm and degrees. Refused for family documents. |
+| `revit_family_audit` | `families=null`, `detail="summary"`, `timeout_seconds=600` | Summary returns parameter counts and up to 20 unused parameter names, shared status, and purge candidates. `detail="full"` returns all parameter metadata with group IDs and `groupName` labels. `["*"]` audits the first 200 editable families sorted by name; `data.skipped` lists each remaining name and reason, with `skippedCount`. |
+| `revit_parameter_fill_check` | `categories`, `parameters`, `level=null`, `workset=null`, `view=null`, `sample_limit=20`, `include_types=true` | Count filled, empty and missing values; sample unitless element IDs. |
+| `revit_model_snapshot` | `parameter_rules=null`, `document=null`, `process_id=null` | Read a schema version 1 project snapshot for batch audits. |
+| `revit_batch_start` | `paths=null`, `folder=null`, `recursive=false`, `parameter_rules=null`, `years=null`, `open_timeout_minutes=null` | Start persistent read-only collection; see [batch collection](batch.md). |
+| `revit_batch_status` | `run_id` | Read persisted run and model status. |
+| `revit_batch_cancel` | `run_id` | Persist cancellation and stop unstarted models. |
+| `revit_batch_fetch` | `run_id`, `output_dir` | Copy completed JSON snapshots to new local files. |
+| `revit_compare_link_datums` | `link`, `kinds=null` (grids and levels), `name_map=null` (no renames), `prefix=""`, `suffix=""`, `level_offset_mm=0`, `reuse_matching=true`, `tolerance_mm=0.5` | Compare link grids and levels with host datums without modifying the model. |
+| `revit_issue_register` | `output_path`, `project`, `issues`, `pixel_size=900`, `document=null`; no timeout arguments | Write a new local `.xlsx` review register with documents, severity totals, category chart, element rows and snapshots. |
+| `revit_build_report` | `snapshots_dir`, `output_path`, `previous_dir=null`, `findings=null`; no Revit document or timeout arguments | Build a local `.xlsx` report from schema-v1 snapshots. |
+### Snapshot report
+
+`snapshots_dir` contains regular `*.json` files directly in that directory. Files are read in filename order. `output_path` is a client-machine `.xlsx` path; missing parent directories are created and an existing file is never overwritten. `previous_dir`, when supplied, follows the same input rules and matches models by `passport.title`. Duplicate titles are rejected. `findings` is an optional list with `model`, `severity`, `rule`, `element_ids` (or `elementIds`) and `recommendation`; IDs are integers.
+
+The sheets appear in this order: `Summary`, `Warnings`, `Families`, `Parameters`, `Skipped`, optional `Changes`, `Findings`. Summary has one row per current snapshot and uses `passport.fileLastWriteUtc` for **File system time**: this is the OS-observed file timestamp, not a save or sync timestamp. Revit Server change and user cells are blank when that data is absent. Warning and parameter sample IDs are comma-separated; truncated warning IDs have a marker. Parameters and Changes percentages are numeric values. Changes subtracts previous values from current values, with weighted model fill percent computed as total filled divided by total elements across parameter rows. Models without a previous match have blank deltas. Findings is header-only when omitted. Every sheet freezes the header and has an auto-filter.
+
+| Sheet | Columns |
+| --- | --- |
+| Summary | Model, Saved-in year, Runtime year, Upgraded, Workshared, Number of saves, File system time, Revit Server last change, Revit Server last user, Elements, Views, Sheets, Families, Family types, Links, Warnings total, Families total, In-place families, Family signals, Skipped |
+| Warnings | Model, Warning, Count, Element IDs |
+| Families | Model, Family, Category, In-place, Editable, Type count, Instance count, Warning count, Signals |
+| Parameters | Model, Category, Parameter, Total, Filled, Empty, Missing, Fill percent, Sample IDs |
+| Skipped | Model, What, Reason |
+| Changes | Model, Warnings delta, Families delta, Fill percent delta, Number of saves delta |
+| Findings | Model, Severity, Rule, Element IDs, Recommendation |
+
+`revit_model_snapshot` accepts an ordered list of `{"category": "Walls", "parameter": "Mark"}` rules. Each rule pairs one category and one parameter. No rules return empty `parameterFill.rows`. Warning groups contain at most 200 distinct affected element IDs, with `elementIdsTruncated` showing whether more exist. Closed user worksets add a skipped entry because element, family instance, warning attribution, and parameter fill results can be incomplete. For an ordinary open document, `source.path`, saved-in year, and file metadata come from the document's source file. A detached interactive document has no usable source file; its snapshot contains one `source file` skipped entry with reason `detached document has no source file`, and file-derived fields remain empty. `fileLastWriteUtc` is an operating system file observation, not a Revit save or sync time. `passport.revitServer` is always null and reserved for the later batch runner.
+
+The `settings_xml` path rejects device paths, `..` segments and UNC shares absent from `trustedNetworkRoots`; files over 1 MiB are refused before reading.
+
+`link` accepts one linked instance ID or a case-insensitive substring of its instance or type name; ambiguous and unloaded links fail. Comparison transforms link geometry into host coordinates and reports `aligned`, `differs`, `missing_in_host`, `host_only` or `unsupported`. A same-name host datum matches first; a coincident differently named datum may match by geometry. Distances are millimetres and angles are degrees.
+Geometric alignment does not create a monitor relationship or later Coordination Review warnings.
+
+`revit_view_info` returns `id`, `name`, `type`, `isTemplate`, `template` with controlled parameter names, detail level, display style, discipline, phase and phase filter, scale, crop and 3D section box in millimetres. It also returns the background type and colours where supported, category class toggles, individually hidden categories, filter visibility and enabled flags, Revit link visibility, and active temporary mode flags. `worksets` is null outside workshared documents. Link graphic overrides are inspected on Revit 2024 and later; earlier versions report instance and category hiding.
+
+### Family audit
+
+On an open `.rfa`, omit `families`; the audit reads that family without saving it. In a project, pass 1-200 exact family names (case-insensitive) or `["*"]` for every editable loadable family. The add-in opens each family with `EditFamily` and closes it without loading it back. In-place, non-editable and missing families have a `skipped` result with a reason. A project transaction must be closed before the call.
+
+Each parameter reports scope, shared GUID, group type ID, formula, reporting status and use. Associations, formula substrings and dimension or array labels count as use. Formula matching is deliberately over-inclusive. An unused shared parameter has `dataCarrierRisk:true` because project schedules and tags can still depend on its values.
+
+`purgeable` groups Revit's unused-element candidates by category. Coverage is `full` in Revit 2024 and later. In Revit 2022-2023, coverage is `families-and-types`; materials, patterns and styles are not included.
+
+**Coordinator checks.** Call `revit_model_health` → `revit_links_status` → `revit_shared_coordinates` → `revit_parameter_fill_check(categories=["Walls","Doors"], parameters=["Mark","Comments"])` before an export or hand-over.
+Category and parameter names use the model language; the fill check accepts 1-20 categories, 1-30 parameters and a sample limit of 1-100.
+Coordinator location and link lists are capped at 100 without pagination; locations are sorted by name and links by ID.
+`pinned` and `viewSpecific` are true when any instance of the reported type qualifies.
+Parameter names resolve through `LookupParameter(name)`, which returns the first match by name; GUID and BuiltInParameter selection are unavailable.
+Paged reads that exceed their 60-second add-in budget return `partial:true` regardless of the client timeout. Family audit uses its own response budget and reports each attempted family.
+Image exports (`revit_export_view`, `revit_capture_elements`) are not cut at the 60-second budget: a written PNG produces a complete result (`success:true`) and `output_path` is honored; the client/response timeout still applies.
+
+Offsets are zero-based row counts (at least 0); limits are positive row counts (at least 1). `revit_query_elements` and `revit_view_elements` clamp limits above 5000 to 5000.
+Lengths use mm, areas m2 and volumes m3 where metric fields are provided.
+Other numeric filter values follow document display units; returned query values carry a `unit` field when available.
+See the [feed format](feed-format.md#jobs) for the distinction between filter inputs and numeric outputs.
+Parameter names come from the model's language; use `revit_list_catalog(section="parameters")` before filtering.
+`output_path` is a new file path on the MCP client's machine and never overwrites an existing file.
+The path is resolved on the machine that runs the MCP server, which is the client's machine for local and SSH setups; a path from another machine is not translated.
+
+`revit_element_details` returns geometry alongside parameters in `data`.
+`revit_query_elements(include_geometry=True)` adds the same fields to each element in the returned page.
+The query flag defaults to `False`; default queries omit geometry.
+All coordinates use model axes in millimetres rounded to one decimal place.
+
+| Field | Contents |
+| --- | --- |
+| `location` | Point: `type:"point"`, `xMm`, `yMm`, `zMm`. Curve: `type:"curve"`, `startMm`, `endMm`, `lengthMm`. |
+| `boundingBox` | `minMm`, `maxMm`, `centerMm` as `[x,y,z]` arrays from the element's model bounding box. Rooms use their own bounding box. |
+| `roomCenterMm` | `[x,y,z]` from a placed room's location. Use `roomCenterMm` when placing something inside a room. A bounding box centre may lie outside a nonrectangular room. |
+
+Unavailable geometry is omitted.
+
+### Action job polling
+
+Long actions may return `status:"running"`, `jobId`, progress, and partial per-model results.
+Call `revit_jobs(job_id=jobId, wait_seconds=40)` until the original final action response is returned.
+The action may already have changed the model; do not resubmit it while it runs.
+Action results remain available for 24 hours across MCP server restarts; see [result retention](transport.md#result-retention).
+See [long action jobs](actions.md#long-action-jobs) for cancellation and retention.
+
+### Issue register
+
+`output_path` requires a new `.xlsx` path on the MCP server machine.
+Parent directories are created; existing files are refused before contacting Revit.
+`project` accepts optional string fields `name`, `model`, `reviewer`, `client`, `stage`, `date` and a `documents` list of `{title, reference, revision}` objects.
+`issues` requires 1-60 objects with `title`, `category`, `finding` and `severity` (`critical`, `major`, `minor`, `info`).
+Optional fields are `id` (default `ISS-001` onwards), `requirement_source`, `requirement`, `recommendation`, `status` (default `Open`), `responsible`, `due`, `element_ids` (up to 500 positive integers) and `snapshot` (`3d`, `plan`, `none`).
+Categories are free text; typical values are Information standard, Naming, Level of information need, Model health, Coordinates and levels, Classification, Spatial and Geometry.
+Snapshots default to `3d` with element IDs and `none` otherwise.
+The workbook contains `Cover`, `Summary`, `Register` and `Elements`.
+The finding cell contains the issue title and finding; snapshots occupy the final column.
+Captures run sequentially for the first 25 eligible issues in severity order, with stable input order for ties.
+The remaining issues receive `Snapshot skipped: limit of 25 per register`.
+A 210-second capture budget reserves time within the 240-second client limit for writing the workbook.
+A capture failure receives `Snapshot unavailable: <reason>` and does not fail the register.
+Result fields are `path`, `issueCount`, `snapshotCount`, `bySeverity` and `warnings`.
+
+## Saved health report
+
+`revit_model_health(output_path="C:\\Reports\\health.xlsx")` writes a new workbook on the machine running the MCP server.
+`outputPath` is an alias for `output_path`.
+The path must end in `.xlsx`, its parent directory must exist, and an existing file is refused.
+Without `output_path`, the response is unchanged.
+With `output_path`, the response adds `workbook` with `path`, `snapshotCount` and `warnings`.
+The workbook contains Health, Warnings and Counts sheets.
+All warning groups include affected element IDs; snapshots cover up to five groups with the highest counts, with at most 50 elements per capture.
+The total capture budget is 60 seconds; failed or skipped captures become warnings.
+
+The Health sheet uses the following default review thresholds.
+These are review defaults, not project requirements.
+Unavailable metrics receive Review status.
+
+| Check | Pass threshold |
+| --- | --- |
+| Warnings | 0 |
+| Views not on sheets | At most 20% of all views; 0% when there are no views |
+| Unused family types | At most 300 |
+| In-place families | 0 |
+| CAD imports | 0 |
+| Unplaced rooms | 0 |
+| Rooms not enclosed | 0 |
+| Design options | 0 at the stage under review |
+| Images | At most 20 |
+| Model groups | At most 50 |
+
+## Errors and refusals
+
+Every tool follows one rule.
+
+| Case | What the client gets |
+| --- | --- |
+| Invalid, missing or unknown argument, unknown batch run, unknown document, command execution timeout, failed read | An MCP tool error (`isError`) with a message. |
+| Unavailable SSH, named pipe, or HTTP transport | A normal result with `success:false`, `command`, `error`, `errorCode:"transport_unavailable"`, and `retryable:true`. |
+| A refused or failed action, including read-only mode | A normal result with `success:false`, `command`, `error` and `errorCode`. |
+| An action that needs confirmation | `success:true` with `data.needsConfirmation:true`, `confirmationText` and `confirmToken`. This is not an error. |
+
+A tool rejects an argument it does not declare and names it. If the argument is a former name, the message names the new one. Documented aliases such as `timeoutSeconds` are accepted.
+
+Read `errorCode`, not the text of `error`. The wording of messages is not part of the contract. The `error` value `read-only mode` is.
+
+| `errorCode` | Meaning |
+| --- | --- |
+| `read_only` | Refused because the server runs with `REVIT_MCP_READ_ONLY=1`, the workstation `read-only` file exists, or the transport reported a read-only refusal. `error` is `read-only mode`. |
+| `policy_blocked` | Refused by the machine policy an administrator set, for example a denied tool or disabled code execution. `error` starts with `Blocked by organization policy:`. See the [policy reference](admin/policy-reference.md). |
+| `transport_unavailable` | Revit cannot be reached over SSH, a named pipe, or HTTP. `retryable` is `true`. Retry when the workstation or tunnel is back. |
+| `action_failed` | The add-in tried the action and reported a failure. `error` holds the add-in's message. |
+
+New codes can appear in a minor release; treat an unknown code as a failed action.
+A timed-out action is a tool error, not a result: the action may have changed the model, so inspect it before retrying.
+The same rule covers `revit_undo_last`, `revit_cancel_job`, `revit_batch_start` and `revit_batch_cancel`. The last two start and stop Revit processes, so they are refused in read-only mode like any action; `revit_batch_status` and `revit_batch_fetch` stay available.

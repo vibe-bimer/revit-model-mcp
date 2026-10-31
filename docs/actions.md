@@ -1,121 +1,240 @@
-# 动作工具（显式启用）
+# Actions (read-only by default)
 
-默认只读。动作工具是必须主动启用的一组独立工具。
-事务警告会被忽略，并记录在 `warningsDismissed` 中（为空时省略）；无法安全解决的错误会使动作回滚。
+Read-only is the default: the multi-user installer writes the machine policy `ReadOnly=1` and ships a default
+`%ProgramData%\RevitModelMcp\policy.json` with `{"ReadOnly": true}`. An administrator allows actions with
+`ReadOnly=false`, or by clearing the value. Action tools stay listed either way; a refused call returns
+`success:false`, `error:"read-only mode"` and `errorCode:"read_only"`, or `errorCode:"policy_blocked"` when the
+machine policy refuses it. See [Read-only mode](#read-only-mode) and [Errors and refusals](tools.md#errors-and-refusals).
+Transaction warnings are dismissed and reported in `warningsDismissed` (omitted when empty); errors that cannot be safely resolved roll back the action.
 
-<a id="instance-and-document-targeting"></a>
-## 实例与文档寻址
+Every action result carries a `summary`: one human sentence describing what changed, how many elements, and in
+which document, alongside `verification`. A committed mutation assimilates its transaction into a single named
+Revit undo entry, `MCP (<clientName>): <short summary>` (at most 60 characters), visible in Revit's Undo list and
+in the add-in's "MCP activity" dockable pane ("Activity" button in the MCP panel on Revit's Add-Ins tab).
+`select` and `show` make no document change and get no undo entry, but still appear in the activity pane.
+See [Undo the last action](#undo-the-last-action) for `revit_undo_last`.
 
-所有动作工具都接受 `document=null`；没有任何动作工具提供自定义超时参数。
-它们使用默认的 120 秒响应等待和 300 秒拾取等待预算；拾取等待仅适用于本地和 SSH 传输。
-发送任何动作前，MCP 传输必须发现且只发现一个正在运行的 Revit 实例，即使提供了 `document` 也不例外。
-否则，调用会报错：`Actions require exactly one running Revit instance.`
-HTTP 指向一个端点；文件传输会发现工作站上的实例。
-`document` 用于选择这个进程内已打开的文档，不能从多个进程中选择一个实例。
-所有 ID 都是无单位的正整数 Revit 构件 ID，上限为 9,223,372,036,854,775,807。
-Revit 2020–2023 只接受不超过 2,147,483,647 的 ID；更大的 ID 在这些年份版本中会失败。
+Action tools that target an open document accept `document`. `revit_process_models` uses `paths` or `folder` instead. `revit_export_nwc`, `revit_export`, `revit_link_cad`, `revit_walls_from_cad`, `revit_edit_families`, `revit_align_link_datums` and `revit_execute_code` also accept `timeout_seconds` from 30 to 3600 seconds. `revit_process_models` accepts 30 to 14400 seconds.
+Revit remains busy for the whole action duration.
+Other listed tools use the default response timeout of 120 seconds. All actions use a pickup timeout of 300 seconds and require exactly one instance returned by the transport.
+HTTP addresses one endpoint; the file transports discover workstation instances.
+All IDs are unitless Revit element IDs.
+Revit 2022-2023 accept IDs up to 2,147,483,647 only; larger IDs fail on those years.
 
-MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
-目标进程打开多个文档时应提供该参数；只有打开单个文档时才应省略。
-带有 `targetDocument` 的动作任务在插件执行时解析该引用。
-引用通过标题或文件名的不区分大小写子串匹配，必须且只能匹配一个已打开文档。
-解析后的文档以标题和完整路径绑定，所有修改与验证都使用该文档，即使另一个文档处于活动状态。
-未知或已关闭的目标返回 `The addressed document '<TargetDocument>' is not open.`
-不明确的目标返回 `The document reference '<TargetDocument>' is ambiguous (N open documents match); use a more specific substring.`
-解析失败会在任何步骤运行前终止整个批次；显式寻址的任务绝不会退回活动文档。
-目标只在批次循环开始前解析一次；之后发生的文档或事务失败会作为步骤错误报告。
-`select`、`show` 和 `isolate`（包括 `reset=true`）要求解析后的目标文档处于活动状态。
-否则返回 `Cannot run '<command>' on '<title>' because it is not the active document; activate it in Revit first.`
-不带 `targetDocument` 的任务保留使用活动文档的行为。
-即使修改指向另一个文档，`activeView` 也始终报告实际的活动视图。
+Action jobs with `targetDocument` resolve that reference when the add-in executes the job.
+The reference must match exactly one open document by a case-insensitive substring of its title or file name.
+The resolved document is bound by its title and full path for all mutations and verification, even if another document is active.
+An unknown or closed target returns `The addressed document '<TargetDocument>' is not open.`
+An ambiguous target returns `The document reference '<TargetDocument>' is ambiguous (N open documents match); use a more specific substring.`
+Resolution failure aborts the whole batch before any step runs; an addressed job never falls back to the active document.
+The target is resolved once before the batch loop, and a later document or transaction failure is reported as a step error.
+`select`, `show` and `isolate` (including `reset=true`) require the resolved document to be active.
+Otherwise, they return `Cannot run '<command>' on '<title>' because it is not the active document; activate it in Revit first.`
+Jobs without `targetDocument` retain the active-document behavior.
+`activeView` always reports the actual active view, even when a mutation targets another document.
 
-<a id="tool-catalogue"></a>
-## 工具目录
+## Long action jobs
 
-每一行工具都还接受通用参数 `document=null`。未列出默认值的参数是必填参数，即使它们接受 `null`。
-各工具的完整参数表、提示词和 Revit 年份验证状态见[功能总览](features/index.md)。
+`revit_process_models`, `revit_export`, `revit_export_nwc`, `revit_edit_families`, audited `revit_open_document`, and `revit_execute_code` can outlive the tool wait.
+`REVIT_MCP_TOOL_BUDGET_S` defaults to 40 seconds, so that the first response arrives within a 60-second client limit even over SSH, and accepts 10 through 200.
+`revit_execute_code` with a `timeout_seconds` below the budget waits for that timeout, then returns the same running response instead of an error.
+Short actions return their existing response shape.
+An unfinished long action returns `status:"running"`, `jobId`, `progress`, `partial`, and a warning that the action may already have changed the model.
+Call `revit_jobs(job_id=jobId, wait_seconds=40)` until the original action response is returned.
+`wait_seconds` accepts 0 through 50 seconds.
+A running poll returns progress and completed per-model results in `partial`.
+A final poll preserves the original response, summary, timeout warnings, and verification warnings.
+Do not resubmit a running action.
 
-| 工具 | 除 `document=null` 外的参数 | 动作与单位 |
+The add-in retains action results for 24 hours in the selected instance's `jobs/<jobId>.json` directory; other results are kept for ten minutes (see [result retention](transport.md#result-retention)).
+Local pipe, SSH file, and authenticated HTTP clients can fetch the result after an MCP server restart.
+Path redaction applies to stored responses when `REVIT_MCP_REDACT_PATHS=1` on the workstation, and to returned responses when enabled on the server.
+`revit_cancel_job(job_id)` requests cancellation.
+`revit_process_models` stops before the next model, lists every unstarted model in `data.models` with status `cancelled`, and returns `data.cancelled:true` with completed results.
+Cancellation does not undo completed models or interrupt an export, document open, family edit, or script already running in Revit.
+Cancellation is refused in server or workstation read-only mode.
+
+| Tool | Arguments | Action and units |
 | --- | --- | --- |
-| `revit_select` | `element_ids` | 选择指定 ID；`[]` 清除选择。返回 `count`，表示调用后当前选中构件的数量。 |
-| `revit_show` | `element_ids`、`select=true` | 定位非空 ID 列表中的构件；返回 `activeView`、`viewOpened` 和 `count`，后者为调用后当前选择数量。`select=false` 时，`count` 表示原有选择数量。 |
-| `revit_isolate` | `element_ids`、`reset=false` | 临时隔离指定 ID；`element_ids=[]` 配合 `reset=true` 清除临时隐藏／隔离。 |
-| `revit_move` | `element_ids`、`dx_mm`、`dy_mm`、`dz_mm=0` | 按模型轴偏移量移动，单位为 mm。 |
-| `revit_place_family` | `family`、`type_name`、`x_mm`、`y_mm`、`level`、`rotation_deg=0` | 在指定标高放置已载入的族，模型 XY 坐标单位为 mm；绕 Z 轴旋转，单位为度。 |
-| `revit_create_wall` | `start_mm`、`end_mm`、`level`、`wall_type`、`height_mm=3000` | 创建直墙；端点为模型坐标中的 `[x,y]`，单位为 mm。 |
-| `revit_create_floor` | `points_mm`、`level`、`floor_type` | 从闭合边界创建楼板；`points_mm` 是模型坐标中的 `[x,y]` 多边形顶点，单位为 mm，至少 3 个，自动闭合；`floor_type` 为 null 时选择第一个楼板类型。 |
-| `revit_create_level` | `name`、`elevation_mm`、`create_view=false` | 在指定高程新建标高，单位为 mm；已存在同名标高时被拒绝，避免后续工具解析到有歧义的标高；`create_view=true` 时同时创建对应的楼层平面视图，视图类型按视图族选择，不按名称。 |
-| `revit_set_phase` | `element_ids`、`created_phase`、`demolished_phase` | 按阶段的准确名称赋值；每个阶段参数可为名称、清除赋值的 `""`，或保持不变的 null；至少一个参数非 null。这些工具不创建或重命名阶段，应先在 Revit 界面中添加新阶段。 |
-| `revit_merge_phases` | `source_phase`、`target_phase` | 将所有创建与拆除引用从源阶段移到目标阶段，再删除空源阶段；删除被拒绝时以 `sourceDeleted:false` 和 `phaseDeleteError` 报告。不支持放入批次。 |
-| `revit_set_parameter` | `element_id`、`parameter`、`value` | 按参数名传入字符串形式的值；长度使用 mm，面积使用 m2，其余 Double 使用内部单位。 |
-| `revit_set_view_lighting` | `view`、`shadows=null`、`shadow_intensity=null`、`sunlight_intensity=null`、`sun_date=null`、`sun_time=null`、`sun_azimuth_deg=null`、`sun_altitude_deg=null`、`ground_plane=null`、`ground_plane_level=null`、`background=null`、`background_colors=null`、`lighting_scheme=null`、`dry_run=false` | 按视图名称或视图 ID 设置一个非样板视图的光照：阴影开关、阳光与阴影强度、太阳日期与时间或固定光照方位角／高度角、地面平面、背景与渲染光源方案。响应在 `verification.before.lighting`／`verification.after.lighting` 给出改动前后的读数，并用 `changedSettings` 列出真正变化的项。 |
-| `revit_delete` | `element_ids` | 删除非空 ID 列表中的构件及其依赖。 |
-| `revit_reset_element_ids` | `element_ids`、`dry_run=false` | 用副本替换构件，让 Revit 分配新 ID；报告 `idMapping`。若删除会移除依赖、构件有宿主或属于组、构件是 MEP 曲线或 MEP 系统成员（副本不会重新接入网络，Revit 会在删除的原构件周围自动修复管线），或 Revit 无法复制该构件，则拒绝替换。 |
-| `revit_batch` | `steps`、`dry_run=false` | 执行 1–50 个动作，合并为名为 `revit_batch` 的一次撤销记录。 |
-| `revit_rebuild_model_ids` | `destination_path`、`view=null`、`template_path=null`、`overwrite=false`、`remove_template_levels=true`、`seed=0`、`duplicate_names="override"`、`copies=1`、`dry_run=false` | 将三维视图中可选择的构件复制到新模型，让 Revit 为每个构件分配新 ID；不改变已打开模型。先复制标高、轴网和参照平面，以解析宿主；相机、太阳路径、剖面框、视图及无类别构件不复制，并在 `excluded` 中报告。视图、图纸、明细表、注释、阶段、工作集、MEP 系统和未选中的宿主均不带入，因此结果保留几何、类型和参数。数据报告 `count`、`newIdMin`／`newIdMax`、`sourceCategoryCounts`、`copiedCategoryCounts`，以及按类别和类型校验的 `idMapping`。 |
+| `revit_cancel_job` | `job_id`, `document=null`, `process_id=null` | Request cancellation. Process-models stops before the next model. Poll `revit_jobs` for the final result. Completed changes remain committed. |
+| `revit_select` | `element_ids` | Select IDs; `[]` clears selection. Return `count`, the current selection size after the call. |
+| `revit_show` | `element_ids`, `select=true` | Show nonempty IDs and zoom to fit when opening a new view; return `activeView`, `viewOpened` and `count`, the current selection size after the call. With `select=false`, `count` reports the previous selection. |
+| `revit_override_graphics` | `element_ids`, `color="#FF0000"`, `views="active"`, `halftone_others=false`, `line_weight=null`, `fill=true`, `transparency=0`, `reset=false` | Highlight visible elements in the active view, all eligible model views or named views. Reset restores graphics saved in the current Revit session. Returns `viewsTouched` and `elementsPerView`. |
+| `revit_isolate` | `element_ids`, `reset=false` | Temporarily isolate IDs; `element_ids=[]` with `reset=true` clears hide/isolate. |
+| `revit_move` | `element_ids`, `dx_mm`, `dy_mm`, `dz_mm=0` | Move by model-axis offsets in mm. Group members that Revit refuses to change are skipped; see [Group members](#group-members-in-dry-runs-and-real-runs). Pinned, hosted and constrained elements that do not move are skipped too; see [Elements that cannot move](#elements-that-move-rotate-or-mirror-cannot-change). |
+| `revit_rotate` | `element_ids`, `angle_deg`, `center_mm=null` | Rotate around a vertical axis through the given model XY point in mm or the combined bounding box center. Pinned elements are skipped and reported, as are hosted and constrained elements that do not rotate. Group members that Revit refuses to change are skipped. |
+| `revit_copy` | `element_ids`, `dx_mm`, `dy_mm`, `dz_mm=0`, `count=1` | Create 1-100 copies at successive multiples of the offset. Return IDs per copy. Group members that Revit refuses to change are skipped. |
+| `revit_mirror` | `element_ids`, `axis`, `point_mm`, `copy=true` | Mirror across an X or Y parallel line through the model XY point in mm. Copy keeps originals. Without copy, pinned, hosted and constrained elements that do not mirror are skipped and reported. Group members that Revit refuses to change are skipped. |
+| `revit_change_type` | `element_ids`, `type_name`, `family=null` | Resolve each target among compatible types. Refuse ambiguous or incompatible targets with candidates. Group members that Revit refuses to change are skipped. |
+| `revit_update_parameters` | `filters`, `parameter`, `value`, `parameter_id=null`, `max_elements=5000`, `include_type_parameters=false` | Use query filters to update matching instance parameters. Refuse counts above the limit, at most 20000. Report missing, read-only and type-only parameters and preview up to 50 values. Members of groups that Revit refuses to change appear in `skipped.inGroup`, next to `skipped.missing`, `skipped.readOnly` and `skipped.typeParameter`; dry runs predict these skips. With `include_type_parameters=true`, update each distinct type once and report `affectedTypeIds` and `outsideFilterCount` for instances sharing those types outside the filter. |
+| `revit_place_family` | `family`, `type_name`, `x_mm`, `y_mm`, `level`, `rotation_deg=0` | Place a loaded family at model XY in mm on a named level; rotate about Z in degrees. |
+| `revit_load_family` | `paths` (1-100), `overwrite=false`, `overwrite_parameter_values=false`, `dry_run=false`, `timeout_seconds=600` | Load workstation `.rfa` files in one undo entry. Existing families are `skipped` unless overwrite is true. With overwrite, changed families are `reloaded`; an already loaded family that Revit leaves unchanged is `unchanged`. |
+| `revit_place_families` | Exactly one of `placements` or `at_rooms`; `load=null`, `dry_run=false`, `stop_on_error=true`, `timeout_seconds=600` | Load optional families and place up to 2000 instances in one undo entry. |
+| `revit_create_wall` | `start_mm`, `end_mm`, `level`, `wall_type`, `height_mm=3000` | Create a straight wall; endpoints are `[x,y]` in model mm. |
+| `revit_create_mep_run` | `kind`, `points_mm`, `level`, `type_name=null`, `system_type=null`, `width_mm=null`, `height_mm=null`, `diameter_mm=null`, `offset_mm=null`, `connect_to=null` | Create 1-199 straight duct, pipe, cable tray or conduit segments from 2-200 model points in mm. Missing Z uses the level elevation plus 2700 mm for ducts and trays or 2500 mm for pipes and conduits. The first available type and system type are defaults. Set rectangular width and height or round diameter as applicable. Pipe diameter must match a nominal size in the routed pipe segment; invalid sizes report the available sizes in mm. Return `segmentIds`, `fittingIds`, `unjoinedPairs` and total `lengthMm`. An elbow that Revit cannot place leaves the pair unjoined. Connect the first start to a free connector within 50 mm when `connect_to` is supplied. |
+| `revit_link_cad` | `path`, `view=null`, `level=null`, `link=true`, `origin="internal"`, `units="auto"`, `layers=null`, `dry_run=false`, `timeout_seconds=600` | Link or import a DWG into a plan view. Returns the instance ID, CAD layer line counts and XY extents in mm. |
+| `revit_walls_from_cad` | `cad_id`, `layers`, `level`, `wall_type=null`, `height_mm=3000`, `min_thickness_mm=80`, `max_thickness_mm=700`, `min_length_mm=300`, `max_gap_mm=3000`, `join=true`, `dry_run=false`, `timeout_seconds=600` | Bridge openings and pair parallel CAD lines. Returns walls, unpairedLines, mergedSegments and width mismatches. Rejected joins are left out and reported as `unjoinedEnds` with `unjoinedReasons`; dry runs report the same join numbers. |
+| `revit_create_view` | `kind`, `name=null`, `level=null`, `view_family_type=null`, `template=null`, `scale=null`, `box=null`, `element_ids=null`, `display_style=null`, `detail_level=null` | Create a floor, ceiling or structural plan, section, 3D or drafting view. Plans need a level. Sections need a box or element IDs; element bounds expand by 1000 mm. A 3D view without bounds shows the whole model without a section box. 3D defaults are shaded and fine; other kinds keep view type defaults. Sections look along +Y. Styles: hidden_line, shaded, consistent_colors, realistic. Detail: coarse, medium, fine. |
+| `revit_duplicate_view` | `view`, `mode="duplicate"`, `name=null` | Duplicate a view, include detailing or create a dependent view. |
+| `revit_apply_view_template` | `views`, `template` | Apply a matching template to one or more views. Type mismatches are reported in `typeMismatches`. When no view matches the template type the call is refused and nothing is committed. |
+| `revit_create_sheet` | `number`, `name`, `title_block=null` | Create a sheet with a loaded title block. Sheet numbers must be unique. |
+| `revit_place_views_on_sheet` | `sheet`, `views` | Place views and schedules. Each item has `view` and optional paired `x_mm`, `y_mm` sheet coordinates. Missing positions lay out left to right with 20 mm gaps and row wrapping. Cannot run in a batch. |
+| `revit_tag_elements` | `view`, `categories=null`, `element_ids=null`, `leader=false`, `orientation="horizontal"`, `tag_type=null`, `skip_tagged=true`, `max_elements=5000` | Tag elements in a view, chosen by category names or by element IDs (exactly one). Returns the created tag IDs in `createdElementIds`. Elements that already have a tag in the view are left alone unless `skip_tagged=false`. Inputs Revit cannot tag are listed in `skipped` with a reason, and the call fails when no tag is created. `tag_type` matches a tag type name, a family name or `Family: Type`; without it Revit uses the default tag type of each category. Room tags need a plan view and ignore `orientation`. Spaces and areas are not supported. Cannot run in a batch. |
+| `revit_create_schedule` | `category`, `fields`, `name=null`, `filters=null`, `sort=null`, `itemized=true` | Create a schedule for one category. `fields` are Revit UI field names in column order. `filters` are `{field, operator, value}` records; `operator` is `equal`, `not_equal`, `greater_than`, `greater_than_or_equal`, `less_than`, `less_than_or_equal`, `contains`, `not_contains`, `begins_with`, `not_begins_with`, `ends_with`, `not_ends_with`, `has_value` or `has_no_value` (the last two take no value). Numeric values use mm for lengths, m2 for areas and m3 for volumes. For fields that reference an element (Level, Phase), `value` is the element name; it is resolved to the element and filtered by its ID, and an unknown or ambiguous name is reported in `skipped`. `sort` records are `{field, descending=false, header=false, footer=false, blank_line=false}`; a header or footer groups rows. A field used only by a filter or sort is added hidden. Returns the schedule view ID in `viewId`, the resolved `fields`, `filtersApplied` and `sortApplied`. Names Revit does not know are listed in `skipped`, and the call fails when no field resolves. Cannot run in a batch. |
+| `revit_set_parameter` | `element_id`, `parameter`, `value`, optional `parameter_id` | Set exactly one instance or type parameter. Group members that Revit refuses to change fail with a clear message, including in dry runs. `parameter_id` is a `BuiltInParameter` enum name, shared parameter GUID or positive decimal `ParameterElement` ID. `parameter` remains required. Without an ID, names accept the localized Revit UI name, a `BuiltInParameter` enum name or a supported English alias. Multiple matches are refused with each candidate's ID, name, storage type, owner and kind. No name guessing occurs. Use a JSON string for String, integer for Integer or number for Double. Lengths use mm, areas m2, other doubles internal units. |
+| `revit_delete` | `element_ids`, `dry_run=false`, `confirm_token=null` | Delete nonempty IDs and their dependents. A real deletion of more than 500 elements, dependents included, needs a confirmation token. |
+| `revit_run_actions` | `steps`, `dry_run=false` | Execute 1-50 actions in one `MCP (<clientName>): ...` undo entry. |
+| `revit_process_models` | `paths=null`, `folder=null`, `recursive=false`, `pattern="*.rvt"`, `open=null`, `steps=null`, `code=null`, `exports=null`, `save=null`, `stop_on_error=false`, `dry_run=false`, `confirm_token=null`, `timeout_seconds=14400`, `process_id=null` | Open and process 1-500 models in the interactive Revit session, then close each model. |
+| `revit_export_nwc` | `path`, exporter options, `overwrite=false`, `dry_run=false`, `confirm_token=null`, `timeout_seconds=1800` | Export NWC to an absolute workstation path. Requires the matching Navisworks NWC Export Utility. Replacing an existing file needs a confirmation token. |
+| `revit_export` | `format`, `views=null`, `sheets=null`, `sheet_set=null`, `all_sheets=false`, `output_dir=null`, `options=null`, `overwrite=false`, `dry_run=false`, `confirm_token=null`, `timeout_seconds=1800` | Export PDF, DWG, IFC or schedule CSV files to a workstation folder. Replacing existing files needs a confirmation token. Cannot be used in a batch. |
+| `revit_edit_families` | `operations`, `families=null`, `overwrite_parameter_values=false`, `stop_on_error=true`, `dry_run=false`, `timeout_seconds=1800` | Edit open family or named project families; one load cycle per family. |
+| `revit_align_link_datums` | All `revit_compare_link_datums` arguments, `create_missing=true`, `level_type=null`, `grid_type=null`, `include_pinned=false`, `create_plan_views=false`, `plan_view_type=null`, `dry_run=false`, `timeout_seconds=600` | Move same-name grids and levels to a linked model; optionally create missing datums and floor plans. Cannot be used in a batch. |
+| `revit_set_view_visibility` | `view`, `hide_categories=null`, `show_categories=null`, `category_classes=null`, `hide_categories_by_type=null`, `worksets=null`, `filters=null`, `template_mode=null`, `dry_run=false` | Change view category, class, workset and filter visibility. Cannot be used in a batch. |
+| `revit_remove_links` | `links` (names, IDs or `"*"`), `kinds=null` (`revit`, `cad` and `point_cloud`; `image` only when listed), `include_imported_cad=false`, `dry_run=false`, `confirm_token=null` | Remove selected link types and their instances. A real removal needs a confirmation token. Cannot be used in a batch. |
+| `revit_execute_code` | `code`, `transaction="auto"`, `dry_run=false`, `confirm_token=null`, `timeout_seconds=600` | Compile and run C# on the Revit API thread. Every call except `dry_run` needs a confirmation token. Cannot be used in a batch. |
+| `revit_undo_last` | `document` | Undo the last MCP action through Revit's own undo command; refused unless it is still Revit's last undo entry. |
 
-`type_name`、`wall_type` 和 `floor_type` 是接受 `null` 的必填参数。
+`revit_link_cad` accepts a workstation `.dwg` path subject to the same absolute-path and trusted network share rules as other file actions. The view must be a plan. Without `view`, it uses a floor plan on `level`, or the active plan. `origin` accepts `internal`, `shared` and `center`; `units` accepts `auto`, `mm`, `cm`, `m`, `in` and `ft`. The `layers` list selects imported layers. The result reports line and polyline segment counts by layer, plus XY extents.
 
-<a id="dry-runs-and-id-replacement"></a>
-## 试运行与 ID 替换
+`revit_walls_from_cad` uses the imported instance geometry and selected CAD layers. It merges collinear segments on each layer within 0.5 degree and 5 mm across gaps up to `max_gap_mm`. Short pieces participate in merging before the length filter. It pairs overlapping intervals within the thickness range. Unused intervals can pair with another partner. Bridged openings remain continuous. Each wall uses the requested basic type or the closest basic type by width. With `join=true`, centerlines extend or trim to L, T and X intersections within `max_thickness_mm`, and Revit joins are enabled there. `dry_run=true` returns the same planned walls and join numbers without model changes. Joins Revit would reject are left out and reported as `unjoinedEnds` with `unjoinedReasons`. `unpairedLines` counts merged lines with no paired interval; `mergedSegments` counts source segments absorbed by merging.
 
-`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_create_level`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter`、`revit_set_view_lighting` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
-试运行会执行修改、读取预期结果，然后回滚事务。
-成功的试运行包含 `data.dryRun:true`、`data.rolledBack:true`，以及与真实写入相同结构的 `verification`。
-动作抛出异常时返回错误，不带验证块；单动作工具遇到缺失族时还返回 `closestFamilies`。
-`revit_select`、`revit_show` 和 `revit_isolate` 没有 `dry_run` 参数；隔离仅为临时隔离。
-`revit_reset_element_ids` 也支持 `dry_run`；应先试运行，因为真实替换不可撤销。
-只要有一个构件不符合条件，它就拒绝整个选择集；它从不原地修改 ID，也不把旧 ID 写入参数。
-试运行中创建的 ID 是临时值，不能用来标识已持久化构件。
+An unknown layer name is refused with the list of available layers, for a dry run and a real run. A real run that pairs no walls fails with the count of unpaired lines and creates nothing, so no empty undo entry is recorded.
 
-<a id="view-lighting"></a>
-## 视图光照
+Category names in `hide_categories` and `show_categories` accept the Revit UI name, the `BuiltInCategory` name (`OST_StructuralColumns`, with or without the prefix), the English name (`Structural Columns`) or the category ID, independent of the Revit UI language. An unknown name is rejected with close matches drawn from all three forms. `revit_view_elements` and the universal query filters resolve category names the same way.
 
-`revit_set_view_lighting` 用视图名称或十进制视图 ID 定位一个非样板视图，并且只改动传入的参数。
-`shadows` 开关该视图的太阳与阴影显示，对应 `SunAndShadowSettings.Visible`：关闭后 Revit 既不画太阳路径也不画投影，强度设置因此没有可见效果；共享太阳与阴影设置的视图无法单独开关，会被直接拒绝。
-Revit 没有为「图形显示选项」里的「阴影」复选框提供 API——`GRAPHIC_DISPLAY_OPTIONS_SHADOWS` 只是枚举成员，在视图上取不到该参数（已在 Revit 2020 实测确认），因此 `shadows` 是 API 真正提供的那个开关。
-`shadow_intensity`（0–100，0 表示没有投影）和 `sunlight_intensity`（0–100）分别控制投影浓度与模拟阳光强度。
-没有太阳与阴影设置的视图（例如明细表）会被直接拒绝，不会静默忽略。
+`category_classes` maps `model`, `annotation`, `analytical`, `import` and `point_clouds` to booleans (`true` means hidden). `hide_categories_by_type` accepts those class names and hides each matching category. `worksets` has `hide_mask` and `show_mask` lists; masks are case-insensitive globs (`*`, `?`) or regular expressions prefixed with `regex:`. The response lists matched worksets, before/after values and categories Revit could not hide. `filters` contains `{name, visible}` records. When a template is applied, choose `template_mode`: `detach` clears it on this view, `edit_template` changes it for all views using the template and lists them, or `duplicate_view` creates a copy without it. A missing mode is rejected.
 
-`sun_date`（`yyyy-MM-dd`）和 `sun_time`（24 小时 `HH:mm`）确定「静止图像」的太阳位置，作为本地时间交给 Revit；读数以 `sunDateAndTimeUtc` 和 `sunTimeZoneHours` 回读，因此始终可以核对 Revit 实际保存的时刻。只传其中一个时，另一半沿用视图当前值；两者都会把单日或多日日照研究切回静止图像。
-需要固定的太阳位置时改用 `sun_azimuth_deg`（自北顺时针）与 `sun_altitude_deg`（地平线以上），两者必须同时提供，会把太阳设置切到「光照」模式。
+Link removal refuses central-connected workshared documents. A local copy is allowed with a warning that sync propagates deletion. Non-linked CAD imports remain unless `include_imported_cad=true`. A real removal first returns `needsConfirmation` with `confirmationText` listing the selected link types, and removes nothing until you retry with `confirm_token`. The token is bound to the document, the exact set of selected link types and the document state. The confirmed removal returns `warning: "Removing links cannot be undone in Revit; Undo will not restore them."` The warning is set before deletion. `revit_undo_last` refuses after link removal for this reason. `dry_run` applies the proposed changes within a transaction and rolls it back without committing.
 
-`ground_plane` 开关地面平面，`ground_plane_level` 指定地面所在的标高。
-Revit 只接受它认定为地面平面的标高，因此传入其他标高时，工具会先把该标高标记为地面平面（`LEVEL_IS_GROUND_PLANE`）再重试，并在 `notes` 中说明这一步；选定地面平面标高时若地面平面仍是关闭状态，也会一并打开。
-`background` 取 `sky` 或 `gradient`，只对三维、剖切和立面视图有效；`background_colors` 依次给出渐变的天顶、地平线、地面三色（`#RRGGBB`），省略时沿用当前渐变，当前背景不是渐变时使用 `#C8DEF0`／`#F5F5F5`／`#BFBFBF`。
-Revit 的 API 只能把背景换成天空、渐变或图片，无法恢复成「无背景」，也无法清除已选定的地面平面标高；两项都是本项目记录的 API 限制，改动前应先确认视图当前状态。
-`lighting_scheme` 设置渲染光源方案：`exterior-sun`、`exterior-sun-and-artificial`、`exterior-artificial`、`interior-sun`、`interior-sun-and-artificial`、`interior-artificial`；只影响渲染，不改变着色显示。
+Alignment uses one host-document transaction, with `dry_run` rolling it back after prospective results are read. Pinned and other-user-owned datums are skipped. Existing datums are never renamed or deleted, and grid extents and scope boxes are never changed. Moving levels also moves elements hosted on them; moved-level results include `dependentCount`. Created datums report their ID and workset. Geometric alignment does not create a monitor relationship or later Coordination Review warnings.
 
-太阳与阴影设置属于视图。若该视图与其他视图共享设置，读数的 `sunSettingsShared` 为 true，改动会一并作用到共享这些设置的所有视图，响应会在 `notes` 中提示。
-`verification.before.lighting` 与 `verification.after.lighting` 给出改动前后的完整读数：视图 ID、名称、类型、阴影、两种强度、太阳类型与时间（UTC）、项目时区与夏令时、光照模式的方位角与高度角、地面平面与标高、背景类型与颜色、渲染光源方案。
-视图没有可报告的构件 ID，因此真正变化的项列在 `changedSettings`（例如 `["shadows","sun_date_time"]`）中，而不是 `verification.changed`。
+### Execute C# code
 
-<a id="rebuilding-into-new-model-files"></a>
-## 重建为新模型文件
+`revit_execute_code` accepts up to 200,000 C# characters. Submit either the body of `public static object Execute(ScriptContext ctx)` or a full compilation unit declaring `public static class Script` with that method. Method bodies have common `System` and Revit namespaces imported. `ScriptContext` provides `UiApplication`, `Application`, `UiDocument`, `Document`, `Log`, `ToMm` and `FromMm`. The target document follows the normal `document` resolution rules. In `transaction="none"`, `Document` may be null when no document is open.
 
-`revit_rebuild_model_ids` 不是一个可回滚的模型事务：`dry_run=true` 执行复制并报告映射，但不保存文件；真实运行写入新模型，源模型从不被修改或保存。
-`destination_path` 是 Revit 工作站上的路径，不是 MCP 客户端路径。
-不指定 `view` 时使用第一个非透视三维视图；只复制该视图中可选择的构件。
-`template_path` 用于选择模板，代替默认公制模板；`remove_template_levels=true` 移除模板自带的标高。
-`overwrite=true` 明确允许替换已有目标文件；默认值为 false。
-响应还包括 `destinationPath`、`saved`、`sourceView`、`sourceElementCount`、`datumCount`，以及每个排除构件的原因。
-新模型使用的模板没有实际视图，因此缺少三维视图时重建工具会添加一个；否则 Revit 会拒绝打开文件。
-源模型使用的名称已存在于新项目时，Revit 会在粘贴过程中询问如何处理重名，这会阻塞无人值守运行；默认重建工具以 OK 自动回答（`duplicate_names=override`），保留源模型自己的类型，并通过 `autoAnsweredDialogs` 报告自动回答次数。`duplicate_names=rename` 先重命名模板构件，再尝试删除它们：每份副本约多花 30 秒，且 Revit 会拒绝许多删除操作，因此它仅作为后备方式。
-`duplicate_names=reuse` 不询问重名处理方式，保留新模型已有的版本；一次写入多份副本时默认使用该方式，因为弹出询问会导致 Revit 拒绝粘贴。即使如此，若 Revit 仍拒绝复制，工具会以同一设置重试；记录中的重试恢复了一份少了 11 个构件的副本，但调用者仍必须校验返回的映射。
-`copies=2` 或更大值会从一个新模型依次写入多份文件，每次复制后删除当前副本的构件再进行下一次：Revit 在同一文档中不断分配更大的 ID，因此各副本拥有相同构件和各自的 ID，无须提前消耗 ID。`destination_path` 可用 `{n}` 表示副本编号；不含该占位符时，编号追加在扩展名之前。每份副本的路径、大小和 ID 映射在 `copyResults` 中报告。Revit 有时会拒绝后续副本的批量粘贴：工具随后退回逐构件复制，结果可能更小，其 `copyResults` 项中 `idMappingVerified=false`，因此调用者必须检查每一项。记录中的测试以每次运行一份副本的方式较可靠；测量见[重建性能与成本](rebuild-performance.md)。若要在多个 Revit 实例中并行运行，应使用独立 HTTP 端点或各自只发现一个实例的传输；`document` 不能绕过单实例门禁。实例分别通过 `REVIT_MCP_HTTP_PORT`、`REVIT_MCP_TOKEN` 和 `REVIT_MCP_CHANNEL_DIR` 获取端口、令牌和通道目录。副本农场在无人值守下会被“文件已打开”这类模态提示卡住：给每个实例在启动前设置 `REVIT_MCP_ANSWER_DIALOGS=1` 可自动应答，风险与范围见[自动应答对话框](#answer-dialogs)。
-Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从同一源模型重建两次会得到相同 ID；`seed` 在复制前添加指定数量的临时标高，再将它们删除，让副本的 ID 移入独立号段。
-重建试运行报告的创建 ID 同样不能标识已保存的输出模型。
+The default `auto` mode owns one Revit transaction inside a group. Scripts in this mode must not open transactions. A successful call that changes the model creates one undo entry named `MCP (<client>): Execute code`. A script that changes nothing is rolled back: the result has `committed: false` and `rolledBack: true`, and no undo entry or `undoName`. `dry_run=true` runs the code and rolls back the group. Runtime errors also roll it back. The `none` mode, which lets a script own transactions and open or close documents without a guaranteed undo, is refused by default. A call with `transaction="none"` fails with a message that says so. I plan a separate workstation policy that can allow it; there is no setting for it today. Every call except `dry_run` first returns `needsConfirmation`, a `confirmationText` with the SHA-256 prefix, length, transaction mode and target document, and a `confirmToken`, and does not run the code. Retry with identical arguments plus `confirm_token` after the user agrees. The token is bound to the code hash, the transaction mode and the target document. The response includes `returnValue`, up to 2,000 `log` lines, elapsed time, summary and any undo name or warning. Return values have a depth limit of 6 and at most 5,000 collection items. Revit elements, IDs and XYZ points get compact JSON forms. Plain classes and anonymous types return public readable properties as JSON objects. Other Revit API objects use `ToString()`. Numbers use invariant culture. Compile and runtime failures have summaries starting with `Code failed to compile` and `Code failed`, respectively.
 
-<a id="verification-and-committed-changes"></a>
-## 验证与已提交修改
+Compiler errors include diagnostic IDs, messages, and positions in the submitted code. Runtime errors include their type, message and script frames. The compiler caches up to 32 compiled scripts. On Revit 2022-2024 (.NET Framework), compiled scripts cannot be unloaded, so identical code (same source and transaction mode) reuses one loaded assembly, and each distinct script stays loaded until Revit restarts. Revit 2025 and later unload each script after the call. The add-in cannot stop a running script; `timeout_seconds` only limits the server wait. Inspect Revit state before retrying after a timeout.
 
-成功的真实写入返回 `data.dryRun:false`，并在提交后重新读取受影响构件。
-`verification.before` 在修改前捕获；`verification.after` 在提交后重新读取，试运行则在回滚前读取。
-`verification.error` 表示提交后的重读失败；修改已经提交。
-单动作响应包含 `failedStep:null`。
-`verification` 块包含模型事实：移动时的包围盒、参数编辑时的参数值及所属实例／类型、创建时的构件元数据，以及删除时的已删除／依赖 ID 和存续检查。
-包围盒使用模型 XYZ 坐标，单位为 mm，保留一位小数；不可用的包围盒省略。
-例如，为构件 123 设置 Comments 返回：
+The activity pane shows the first non-empty source line and a SHA-256 prefix. Source is stored in `%LOCALAPPDATA%\RevitModelMcp\code`; the newest 500 files are retained. The audit header records client, document title and transaction mode. When path redaction is on, Windows paths in the activity line and stored source are replaced with redaction markers.
+
+### Model file export
+
+`revit_export` writes to `output_dir`, or to `%LOCALAPPDATA%\RevitModelMcp\exports\<document title>\<UTC timestamp>` when omitted. The directory must be an absolute drive path or a UNC path under `trustedNetworkRoots`. Device paths and `..` segments are refused. Existing output files require `overwrite=true`. When `overwrite=true` and at least one target file already exists, the first call returns `needsConfirmation` with the files that would be replaced; retry with `confirm_token`. The token is bound to the document, the target paths and their size and modification time. With no existing target, or with `dry_run`, no token is needed. Exports inside `revit_process_models` are not gated. `dry_run=true` returns resolved targets and planned names without writing. The result includes `folder`, `files` with sizes, `targets`, `skipped`, `elapsedMs` and `summary`. File export changes no model elements and creates no undo entry.
+
+PDF and DWG accept any combination of view names or IDs, sheet numbers, names or IDs, a saved `sheet_set`, and `all_sheets=true`. At least one printable target is required; templates and unprintable views are rejected. PDF `options` are `combine=true`, `file_name`, `naming="sheet_number_name"` or `"view_name"`, `color="color"`, `"grayscale"` or `"black_line"`, `zoom_percent=100`, `paper="auto"`, `hide_crop_boundaries=true` and `hide_scope_boxes=true`. DWG options are `setup` (saved export setup), `merged_views=false` and `file_version` (Revit ACADVersion name).
+
+IFC exports the whole model or one view selected through `views`. Its options are `version="IFC2x3CV2"`, `"IFC4RV"` or `"IFC4x3"`, `file_name`, `export_base_quantities=true`, `space_boundaries=0` and `split_walls_by_level=false`. The required IFC transaction is rolled back after export. CSV accepts schedule names or IDs in `views`; omitting `views` exports all non-template schedules except revision and keynote legends. CSV options are `delimiter=","`, `headers=true`, `title=false`, `group_headers=false` and `encoding="utf-8"`. Revit exports the visible schedule fields. The file is then encoded as UTF-8 with a BOM for Excel. With path redaction enabled, the response `folder` contains only the final folder name.
+
+### Process many models
+
+`revit_process_models` accepts either 1-500 absolute `.rvt` paths or a local or UNC `folder` with `recursive` and a `.rvt` file pattern. RSN model paths are accepted in `paths`; cloud paths are refused. `trustedNetworkRoots` applies to UNC paths. Already open models are skipped. Each model opens in the background with the `revit_open_document` `mode`, `worksets`, and `audit` options. The active document is left in place. The action uses the interactive Revit session, not the read-only batch collector worker.
+
+`steps` uses the same 1-50 step allowlist as `revit_run_actions`, and `code` uses `{"code":"...","transaction":"auto"}`; `"none"` is refused unless `dry_run=true` forces `"auto"`, as for `revit_execute_code`. A call that has `code` and is not a `dry_run` needs a confirmation token, like `in_place` saves; the token is bound to the whole request, including the code, and to the size and modification time of the source files. The script runs after the steps with `ScriptContext.Document` set to the processed model. `exports` is a list of `revit_export` requests without `document`; an export `output_dir` can contain `{model}`. Without an export `output_dir`, files go to `<save.output_dir>\<model>` when an output directory is set, or `%LOCALAPPDATA%\RevitModelMcp\exports\<model>` otherwise. The result reports each model's open settings, step summary, script return value and log, export files, saved path, `dialogsDismissed`, elapsed time, status, and error. `dialogsDismissed` is `{ "messages": [{ "message": "...", "count": 1 }], "truncated": false }`; it combines dismissed dialogs and warnings, retains up to 50 distinct messages, and counts repeats. `truncated=true` means further distinct messages were omitted. Sources with the same model name (file name without extension) are refused when `save.mode="output_dir"` is used or exports use the default or a `{model}` output directory, because their outputs would overwrite each other. The error lists the colliding sources; process them in separate calls. Failures to close the model or unsubscribe handlers mark the model failed with the reason in `error`; failures of other cleanup steps (activity record, change capture, transaction group) keep the status and are listed in the model's `warnings`. A failed model does not stop later models unless `stop_on_error=true`. `revit_jobs(job_id=jobId)` reports `currentIndex` (one-based), `total`, redacted `currentPath`, and completed per-model results while the action runs.
+
+The final response has `partial=true` when at least one model fails and includes the results for all processed models.
+
+`save.mode` is `none` by default. `output_dir` saves copies with the original file names and refuses a target equal to any source. Detached workshared models are saved as new centrals. `in_place` is allowed only for non-workshared local or UNC models opened directly, without `local_copy` or `read_only_local`. Its first call returns `needsConfirmation`, `confirmationText` listing writable source files, and `confirmToken`. Read-only source files appear in `models` with status `refused` and error `read-only file`; they are excluded from the token and processing. If every source is read-only, the call fails without a token. Retry with `confirm_token` only after reviewing the list. A failed confirmation, for any reason, uses up the token; repeat the call without `confirm_token` to get a new preview and token. `dry_run=true` opens each model, runs steps and code inside a rolled-back transaction group, resolves exports without writing, and never saves. `dry_run=true` forces `code.transaction="auto"` and adds "dry_run forced transaction=auto" to response `warnings`.
+
+### NWC export options
+
+The API export uses explicit arguments, then values from `settings_xml`, then the existing API defaults. The XML file must be on the Revit workstation. The target must be a project document. The NWC file stays on the Revit workstation; no artifact is transferred to the client. This action cannot run inside `revit_run_actions`.
+
+| Argument | Default | Revit API property |
+| --- | --- | --- |
+| `path` | required | `Document.Export` folder and name without `.nwc` |
+| `settings_xml` | `null` | Absolute path to an XML exported from Navisworks Settings on the Revit workstation |
+| `scope` | `model` | `ExportScope`: `model`, `view`, `selection` |
+| `view` | `null` | `ViewId`; non-template 3D view name or ID, required for `view` scope |
+| `element_ids` | `null` | `SetSelectedElementIds`; nonempty for `selection` scope |
+| `coordinates` | `shared` | `Coordinates`: `shared`, `internal` |
+| `parameters` | `all` | `Parameters`: `all`, `elements`, `none` |
+| `export_element_ids` | `true` | `ExportElementIds` |
+| `convert_element_properties` | `false` | `ConvertElementProperties` |
+| `export_parts` | `false` | `ExportParts` |
+| `export_room_as_attribute` | `true` | `ExportRoomAsAttribute` |
+| `export_room_geometry` | `true` | `ExportRoomGeometry` |
+| `convert_lights` | `false` | `ConvertLights` |
+| `convert_linked_cad_formats` | `true` | `ConvertLinkedCADFormats` |
+| `export_links` | `false` | `ExportLinks` |
+| `export_urls` | `true` | `ExportUrls` |
+| `divide_file_into_levels` | `true` | `DivideFileIntoLevels` |
+| `find_missing_materials` | `true` | `FindMissingMaterials` |
+| `faceting_factor` | `1.0` | `FacetingFactor`, greater than 0 and at most 100 |
+| `overwrite` | `false` | Replace an existing NWC only after successful export. An existing target needs a confirmation token |
+| `confirm_token` | `null` | Token from the preview call; see below |
+| `dry_run` | `false` | Validate without exporting |
+| `timeout_seconds` | `1800` | Channel response timeout, 30-3600 seconds |
+
+`path` must be an absolute drive path or a UNC path whose share is in `trustedNetworkRoots`, ending in `.nwc` with an existing parent directory. Relative paths, `..` segments, device paths, invalid file names and existing files without `overwrite=true` are rejected. With `overwrite=true` and an existing file, the first call returns `needsConfirmation` and replaces nothing; retry with identical arguments plus `confirm_token`. The token is bound to the path and the file's size and modification time. A missing target needs no token. A dry run checks the path, exporter and resolved view or selection, then returns effective options without writing. `scope="view"` exports the specified 3D view with its section box. The response `options` contains effective values with camelCase keys (`exportElementIds`, `facetingFactor`) and a `sources` object, keyed the same way, with `argument`, `xml` or `default` for each option. `revit_nwc_settings_check(settings_xml=...)` parses the same file without exporting and returns `values`, exporter-ID-to-API `mapping`, `notApplied` and `ignored`. The XML options `nwexportrevit_embed_textures`, `nwexportrevit_with_type_props`, `nwexportrevit_separate_custom_props` and `nwexportrevit_strict_sectioning` have no Revit API property and appear in `notApplied`. Unknown IDs appear in `ignored`. The mappings for parameter, scope and coordinate enum order await verification against an owner-exported XML file.
+`settings_xml` for export uses the same share rule and rejects device paths and `..` segments.
+
+### Family edits
+
+In an open `.rfa`, omit `families`. The add-in edits it in place and leaves saving to the user. In a project, pass 1-200 exact family names or `["*"]`; in-place, non-editable, missing and other-user-owned families are skipped with reasons. The add-in opens each family, applies operations in order inside one family transaction, then loads it into the project with one project undo entry. A dry run re-reads the prospective family and rolls back without loading. The command is excluded from `revit_run_actions`.
+
+Operations use snake_case `op` values:
+
+```json
+{"operations":[
+  {"op":"add_shared_parameters","parameters":[{"name":"AssetId","guid":null,"group":"Data","instance":true}],"replace_family_parameter":false,"shared_parameter_file":null},
+  {"op":"remove_parameters","names":["Old"],"include_shared":false},
+  {"op":"purge"},
+  {"op":"set_shared","shared":true}
+]}
+```
+
+`add_shared_parameters` reads definitions from the named absolute workstation file or Revit's current shared parameter file. A GUID identifies a definition; name lookup must be unique across groups. `group` is a `GroupTypeId` property name. Existing GUIDs are unchanged; same-name conflicts need `replace_family_parameter=true`. `remove_parameters` removes only unused parameters. Formula references, associations and labels keep a parameter; shared parameters also need `include_shared=true`. Built-in parameters remain. `purge` repeats up to five passes and reports deletion counts. Revit 2022-2023 covers only unused families and types; Revit 2024 and later uses full purge candidates. `set_shared` reports unsupported families and verifies the loaded project state. Shared nested families keep the project version during load. `overwrite_parameter_values=true` replaces existing project type parameter values; instance values remain.
+Client supplied `shared_parameter_file` must be a drive path or a UNC path whose share is in `trustedNetworkRoots`.
+
+With `stop_on_error=true`, the first failed family rolls back the whole project group and reports `failedFamily`. With `false`, that family's load is rolled back and later families continue. A shared-to-non-shared overwrite may fail verification; delete and reload that family manually if Revit keeps its previous shared state.
+
+`type_name` and `wall_type` are required arguments that accept `null`.
+
+`revit_override_graphics`, `revit_move`, `revit_rotate`, `revit_copy`, `revit_mirror`, `revit_change_type`, `revit_update_parameters`, `revit_place_family`, `revit_create_wall`, `revit_create_mep_run`, `revit_create_view`, `revit_duplicate_view`, `revit_apply_view_template`, `revit_create_sheet`, `revit_place_views_on_sheet`, `revit_tag_elements`, `revit_create_schedule`, `revit_set_parameter` and `revit_delete` accept `dry_run=false`.
+A dry run executes the mutation, reads its prospective result, and rolls back its transaction. The action transaction does not commit. The activity pane lists elements reported by the action result.
+
+**Dry run preflight.**
+
+Parameter, move, rotate, copy, mirror, change-type and CAD wall preflight commits inside a rolled-back transaction group predict group and join failures.
+Default and DetachElements resolutions are never used.
+
+#### Group members in dry runs and real runs
+
+Revit raises group errors only at commit. `revit_move`, `revit_rotate`, `revit_copy`, `revit_mirror` and `revit_change_type` probe the action first and skip the group members Revit refuses to change.
+The result lists them in `data.skipped.inGroup` (the same field `revit_update_parameters` uses) and adds a `warning`.
+The remaining elements are processed, and `count`, `verification` and the summary cover only those.
+`revit_rotate` without `center_mm` uses the bounding box center of the elements it rotates.
+If every requested element is a rejected group member, the action refuses with a clear message and changes nothing.
+A dry run and a real run take the same path, so they report the same skipped elements.
+Actions that only create elements or change views are not probed; their commit failures are reported by the real run.
+
+#### Elements that move, rotate or mirror cannot change
+
+`revit_move`, `revit_rotate` and `revit_mirror` with `copy=false` check what actually changed.
+Before the action they skip pinned elements and group members.
+After the action they compare each element's bounds, location and orientation with the state before it.
+An element that did not change is skipped as `hosted` when it sits on a host, such as a door in a wall, and as `constrained` otherwise, such as a curtain wall panel.
+The result lists the ids in `data.skipped.pinned`, `data.skipped.inGroup`, `data.skipped.hosted` and `data.skipped.constrained`, and adds a `warning`.
+Only the elements that changed count in `count`, `verification.changed` and the summary.
+If no requested element changed, the action fails and rolls back with a message that gives the count per reason.
+The tools never unpin elements or ungroup them.
+A dry run goes the same way, so it reports the same skipped ids as the real run.
+Mirror with `copy=true` and copy create new elements and report the created ids.
+
+A successful dry run includes `data.dryRun:true`, `data.rolledBack:true` and the same `verification` shape as a real write.
+An action that throws returns an error without a verification block; a missing family also returns `closestFamilies` on the single-action tool.
+`revit_isolate` has no `dry_run` argument; it uses temporary isolation only. Isolation, and graphic overrides or resets that change no element, return no `undoName`. After an isolate, `revit_undo_last` refuses because the isolate is Revit's newest change; use Undo in Revit to revert earlier actions.
+Created IDs in a dry run are provisional and do not identify persisted elements.
+
+Successful real writes return `data.dryRun:false` and re-read the affected elements after commit.
+`verification.before` is captured before the change; `verification.after` is re-read after commit or before rollback on a dry run.
+`verification.error` reports a failed post-commit re-read; the change is committed.
+Single-action responses include `failedStep:null`.
+The `verification` block contains model facts: bounding boxes for moves, parameter values and ownership for parameter edits, element metadata for creation, and deleted/dependent IDs with a survival check for deletion.
+A real deletion compares the model before and after the commit: elements Revit removed on its own (empty groups, dimensions) join `verification.changed` and `before.dependents`, `count` covers them and a `warning` gives their number. The confirmation preview states "at least" because it cannot see them. After a real `revit_copy` or `revit_mirror` with `copy=true`, copies that Revit removed at commit (for example a door whose host was not mirrored) are dropped from `copies`, `verification.changed` and `count`, and a `warning` states how many. A dry run cannot know this and reports the provisional IDs.
+Bounding boxes use model XYZ in mm rounded to one decimal; unavailable bounding boxes are omitted.
+For example, setting Comments on element 123 returns:
 
 ```json
 {
@@ -128,109 +247,239 @@ Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从�
 }
 ```
 
-<a id="batch-execution"></a>
-## 批次执行
+`revit_place_families` accepts placement records with `family`, `type_name`, `x_mm`, `y_mm`, `level`, optional `z_mm`, `rotation_deg`, `host_id` and `parameters`. `z_mm` is an offset above the level. `host_id` addresses a wall, floor or ceiling, including its nearest usable face for a face-based family. Parameter names follow `revit_set_parameter` resolution rules. A failure rolls back every placement by default. With `stop_on_error=false`, failed indices and reasons are returned while successful items commit. `at_rooms` selects placed, enclosed rooms by optional level and room names or numbers; unplaced and unenclosed rooms are reported as `skipped`. The result includes `placed`, `failed`, `createdElementIds`, `perTypeCounts`, `instanceOffsetsMm`, `summary` and `verification`.
+`instanceOffsetsMm` maps created IDs to the actual elevation offset read from `INSTANCE_ELEVATION_PARAM` or `INSTANCE_FREE_HOST_OFFSET_PARAM`, in mm.
+A missing offset is reported as null.
+Level-based placements set and verify the offset against `z_mm`; face-based placements use the host face.
+A dry run rolls back all changes. The `load` list uses the same workstation path checks as `revit_load_family`.
 
-`revit_batch` 接受动作名及其通常的 snake_case 参数。应在批次上统一设置 `document`，不要放入各步骤的 `args`：
+`revit_run_actions` runs up to 50 actions in one undo entry. It is unrelated to the `revit_batch_*` tools, which collect snapshots over many models; see [batch collection](batch.md). Its channel command is still named `batch`.
+
+`revit_run_actions` takes action names and their normal snake_case arguments:
 
 ```json
 {
   "steps": [
     {"action": "move", "args": {"element_ids": [123], "dx_mm": 100, "dy_mm": 0}},
-    {"action": "set_parameter", "args": {"element_id": 123, "parameter": "Comments", "value": "Reviewed"}}
+    {"action": "set_parameter", "args": {"element_id": 123, "parameter": "Comments", "parameter_id": "ALL_MODEL_INSTANCE_COMMENTS", "value": "Reviewed"}}
   ],
   "dry_run": false
 }
 ```
 
-成功批次将各事务合并为名为 `revit_batch` 的一次撤销记录。
-第一个失败步骤使整个批次回滚；所有尝试过的步骤，包括失败步骤，均带有 `rolledBack:true`。
-`Assimilate` 失败记录在最后一个步骤上，`failedStep` 指向该步骤。
-执行前验证所有步骤；后面的步骤无效也会拒绝整个批次，不执行任何动作，且不带 `failedStep`。
-结果为每个尝试过的步骤包含从零开始的 `index`、`command`、`success`，以及 `data` 或 `error`，并包含批次的 `undoName`、`committed` 和 `failedStep`（成功时为 null）。
-批次试运行逐步执行，每一步都可看到前面步骤的修改，最后回滚整个事务组并恢复原选择集。
-真实批次中的单步 `dry_run:true` 可以使用，只预览该步骤。
-验证描述各步骤的即时结果；后续步骤可能再次改变这些构件。
-批次接受 1–50 步，步骤动作取自 `revit_batch` 的 `action` 枚举，其中包括 `select` 和 `isolate` 这两个 UI 工具；`show`、嵌套批次以及未知参数键会被拒绝。
+A successful batch assimilates its transactions into one undo entry named `MCP (<clientName>): <short summary>`; a dry run assimilates nothing and `undoName` is absent.
+The first failed step rolls back the entire batch; every attempted step, including the failing one, carries `rolledBack:true`.
+An `Assimilate` failure is reported on the last step with `failedStep` pointing at it.
+All steps are validated before execution; an invalid later step rejects the whole batch without executing anything and without `failedStep`.
+Results include zero-based `index`, `command`, `success` and `data` or `error` per attempted step, plus `undoName`, `committed` and `failedStep` (null on success).
+A batch dry run previews each step against the unchanged model, rolls back each step's transaction and the batch group, and restores the original selection. A later step cannot use an element created by an earlier preview step.
+A per-step `dry_run:true` inside a real batch is accepted and previews only that step.
+Verification describes each step's immediate result; subsequent steps may change those elements again.
+Batches accept 1-50 steps; `select` and `isolate` are allowed, while `show`, nested batches and unknown argument keys are rejected.
 
-<a id="navigation-dialogs-and-family-names"></a>
-## 导航、对话框与族名称
+`revit_show` checks the open UI views before calling `ShowElements`.
+If none contains a requested element, it opens a non-template plan for an element's level.
+Floor plans take priority, followed by names starting with the level name.
+Without a matching plan it uses the first non-template 3D view.
+The handler sets `UIDocument.ActiveView` synchronously inside its ExternalEvent without a transaction; `ShowElements` needs the view active immediately.
+`RequestViewChange` defers the change until control returns to Revit.
+After `ShowElements`, a newly opened view uses `UIView.ZoomToFit()`.
+The response includes `activeView` and `viewOpened`, which reports whether the handler opened a previously closed view.
 
-`revit_show` 在调用 `ShowElements` 前检查已打开的界面视图。
-若没有视图包含请求中的任何构件，就为某个构件的标高打开一个非样板平面视图。
-优先楼层平面，其次优先名称以标高名称开头的视图。
-没有匹配平面时，使用第一个非样板三维视图。
-处理器在 ExternalEvent 内同步设置 `UIDocument.ActiveView`，不使用事务；`ShowElements` 需要视图立即处于活动状态。
-`RequestViewChange` 则会推迟到控制权返回 Revit 后才切换视图。
-响应包含 `activeView` 和 `viewOpened`，后者表示处理器是否打开了此前关闭的视图。
+During action execution, the handler attempts to dismiss TaskDialog prompts with OK and then Yes.
+Messages from successful overrides appear in `dialogsSuppressed`.
+The dialog handler is removed in `finally`, including on errors.
+For the single-action `revit_place_family` tool, missing families return up to five similar names with their family categories in `closestFamilies`; unrelated names are omitted.
+Inside `revit_run_actions`, a missing family surfaces only as `steps[].error` text; `closestFamilies` is unavailable.
+For `Family: Type`, `type_name=null` uses the embedded type; a conflicting `type_name` is rejected.
+For a family name alone, `type_name=null` selects the first loaded type.
 
-动作执行期间，处理器尝试先用 OK、再用 Yes 关闭 TaskDialog 提示。
-成功覆盖的提示文本记录在 `dialogsSuppressed` 中。
-对话框处理器在 `finally` 中移除，错误路径也不例外。
-单动作 `revit_place_family` 遇到缺失族时，在 `closestFamilies` 中返回最多五个相近名称及其族类别；不返回无关名称。
-在 `revit_batch` 内，缺失族只作为 `steps[].error` 文本报告，不提供 `closestFamilies`。
-使用 `Family: Type` 时，`type_name=null` 使用其中指定的类型；另行提供冲突的 `type_name` 会被拒绝。
-只提供族名称时，`type_name=null` 选择第一个已载入类型。
+### Read-only mode
 
-## 自动应答对话框 {#answer-dialogs}
+Read-only is the default, from the machine policy `ReadOnly=1` that the multi-user installer writes. An administrator allows
+actions with `ReadOnly=false` in `%ProgramData%\RevitModelMcp\policy.json`, or by clearing the value.
+Each gate below also refuses actions on its own, with the tools still listed and returning `success:false`,
+`error:"read-only mode"` and `errorCode:"read_only"` instead of running:
 
-`REVIT_MCP_ANSWER_DIALOGS=1` 让该 Revit 实例自动应答它显示的所有对话框；默认关闭，不设置时行为不变。
-未设置或设为其它值时，插件只应答动作执行期间自己触发的 TaskDialog（见上一节的 `dialogsSuppressed`），其余提示仍等待人工点击。
-
-**必须在目标 Revit 进程启动前设置。** 插件在 `Attach` 时读取一次该变量并保存在内存中，进程启动后再改环境变量对这个实例无效。
-退出方式是改回 `0` 或删除该变量，然后重启该实例。
-
-作用范围是该实例的全部对话框：变量为 `1` 时，对话框处理器对每个对话框都以 OK 应答（`DialogOverride.cs:16`、`:28`、`:38`、`:42`）。
-副本农场里常见的“文件已打开”“是否另存”“覆盖同名文件”“删除确认”因此不再阻塞无人值守运行。
-
-!!! warning "开启前确认风险"
-    自动应答会替用户确认覆盖、另存和删除类提示。只在专用的一次性实例或副本农场上开启，并确认目标模型可以承受这些回答。
-
-以上行为来自源码核对（`src/RevitModelMcp.Addin/Control/DialogOverride.cs`），未在真机上验证具体会被自动应答的对话框清单。
-
-## 动作门禁 {#gates}
-
-两个门禁都必须启用：
-
-1. 在 Python 服务进程的环境中设置 `REVIT_MCP_ALLOW_WRITE=1`，然后重启服务。
-   布尔解析器会去除首尾空白且不区分大小写：`1`、`true`、`yes`、`on` 启用动作；`0`、`false`、`no`、`off` 禁用动作。
-   未设置时默认禁用，MCP `list_tools` 不列出动作工具。无法识别的值会抛出配置错误，而不是静默禁用。
-2. 在 Revit 工作站创建 `%LOCALAPPDATA%\RevitModelMcp\allow-write`：
+1. Set `REVIT_MCP_READ_ONLY=1` in the Python server process environment and restart the server.
+   Every action call short-circuits before it reaches Revit, including `revit_undo_last`.
+2. Create `%LOCALAPPDATA%\RevitModelMcp\read-only` on the Revit workstation:
 
    ```powershell
    New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\RevitModelMcp" | Out-Null
-   New-Item -ItemType File -Force "$env:LOCALAPPDATA\RevitModelMcp\allow-write" | Out-Null
+   New-Item -ItemType File -Force "$env:LOCALAPPDATA\RevitModelMcp\read-only" | Out-Null
    ```
 
-插件对每个动作都检查门禁文件，包括选择与导航。
-文件不存在时，响应包含 `success:false` 和 `error:"actions disabled on the workstation"`。
-删除该文件即可立即禁用动作，无须重启 Revit。
-即使传输使用 `REVIT_MCP_CHANNEL_DIR`，门禁文件也仍位于默认的本地应用数据目录。
+3. The machine policy `ReadOnly=1`, which the multi-user installer writes by default, refuses actions for the whole machine.
+   Users cannot lift it, and the refusal text is `Blocked by organization policy: the workstation is read-only.`
+   See the [policy reference](admin/policy-reference.md).
 
-直接 HTTP 动作请求要求认证及工作站门禁；Python 环境门禁控制是否暴露 MCP 动作工具。
+The add-in checks the gate file for every action, including selection and navigation, and shows a "Read-only"
+bar at the top of the MCP activity pane while it is present.
+Removing the file re-enables actions immediately; restarting Revit is unnecessary.
+The gate stays in the default local application data directory even if the transport uses `REVIT_MCP_CHANNEL_DIR`.
+Direct HTTP action jobs are refused the same way, with HTTP status 403.
 
-<a id="units-and-parameter-scope"></a>
-## 单位与参数作用范围
+Actions address the process ID reported by the transport.
+Coordinates use model axes and the named level's project elevation.
+Pass `null` for `type_name` to choose the family's first type, or for `wall_type` to choose the first basic wall type.
+Family placement uses the level-based, nonstructural overload; hosted, face-based and adaptive families may require another placement API and return an error.
+The single-action family placement tool returns up to five closest loaded names for an unloaded family.
+Parameter values use invariant numeric notation; other Double parameters use Revit internal units.
+Type parameter edits affect all instances of that type and return `parameterScope:"type"`.
+ElementId and read-only parameters cannot be set.
 
-动作寻址传输报告的进程 ID。
-坐标使用模型轴和所选标高的项目高程。
-`type_name` 或 `wall_type` 传入 `null`，分别选择族的第一个类型或第一个基本墙类型。
-族放置使用基于标高的非结构重载；有宿主、基于面的族和自适应族可能需要其他放置 API，并返回错误。
-单动作族放置工具遇到未载入族时返回最多五个最相近的已载入名称。
-参数值使用与区域设置无关的数值记法；其余 Double 参数使用 Revit 内部单位。
-编辑类型参数会影响该类型的所有实例，并返回 `parameterScope:"type"`。
-不能设置 ElementId 参数或只读参数。
+Responses from the action executor include `activeView`, including action errors.
+Transport rejection and target-mismatch responses may omit action metadata.
+A committed single action or batch runs inside a `TransactionGroup` assimilated into one undo entry named
+`MCP (<clientName>): <short summary>`, truncated to 60 characters; `clientName` comes from the calling MCP
+client's `initialize` handshake, or `unknown`. `select`, `show`, `export-nwc` and `revit_compare_link_datums`
+make no document change and open no such group.
+A real action that commits without changing any element is rolled back: the result has `committed: false` and `rolledBack: true`, and no `undoName`. `revit_undo_last` then still targets the previous MCP action.
+Warnings at commit are dismissed and reported on successful actions.
+Errors permit one `FixElements` or `SetValue` resolution when Revit allows it; unresolved or repeated errors roll back the transaction.
+Selection and navigation use UI calls without model transactions.
+The element editing tools do not save the model. Document lifecycle tools below can save it after confirmation.
+After a timeout, inspect the model before retrying an action; the previous call may have executed.
 
-<a id="transactions-and-timeout-safety"></a>
-## 事务与超时安全
+## Document lifecycle
 
-动作执行器的响应包含 `activeView`，动作错误也不例外。
-传输拒绝和目标不匹配响应可能省略动作元数据。
-模型修改和临时隔离使用以工具命名的独立事务。
-`revit_batch` 以名为 `revit_batch` 的 `TransactionGroup` 包裹各步骤事务，并将它们合并为一次撤销记录。
-提交时的警告会被忽略，并在成功动作中报告。
-Revit 允许时，错误可尝试一次 `FixElements` 或 `SetValue` 解决；未解决或重复错误使事务回滚。
-选择与导航使用界面调用，不使用模型事务。
-动作不保存被寻址的源模型；`revit_rebuild_model_ids` 只在工作站保存新输出模型文件。
-超时不能证明动作已回滚或从未运行；即使拾取超时，也可能留下之后才执行的待处理任务。
-超时或提交后验证失败时，应先检查模型和输出文件再重试；上一调用可能已执行。
+`revit_documents` is a read tool that lists all documents in one Revit process, including background documents. Each row reports `title`, `path`, `isActive`, `isFamilyDocument`, `isWorkshared`, `isDetached`, `isModified`, `openedByMcp` and `centralPath` when available. It works even when no document is active.
+
+`revit_ui_state` is a read tool with only optional `process_id`. It returns `activeDocument`, `activeView`, `openViews`, `selection` and `documents`. The selection count covers all selected elements; `elements` contains the first 500 with ID, category and name. Paths follow the existing redaction rules.
+
+| Tool | Arguments | Action |
+| --- | --- | --- |
+| `revit_open_document` | `path`, `mode="detached"`, `worksets="all"`, `activate=false`, `audit=false` | Open a local, UNC or RSN model. |
+| `revit_activate_document` | `document` | Switch to an already open document. |
+| `revit_activate_view` | `view`, `document=null`, `activate_document=false`, `view_type=null`, `zoom="fit"` | Switch to a non-template view and zoom to fit. Use `"none"` to preserve zoom or element IDs to frame their bounds. |
+| `revit_close_views` | `views=null`, `keep_active=true` | Close UI views in the active document. |
+| `revit_new_document` | `template=null`, `kind="project"`, `activate=true`, `save_as=null`, `name=null` | Create a project or family document. |
+| `revit_close_document` | `document`, `save=false`, `confirm_token=null` | Close a background document. |
+| `revit_save_document` | `document`, `save_as=null`, `overwrite=false`, `compact=false`, `confirm_token=null` | Save an open document. |
+| `revit_sync_document` | `document`, `comment`, `relinquish="all"`, `compact=false`, `save_local_before=true`, `save_local_after=true`, `confirm_token=null` | Synchronize a workshared document. |
+
+`revit_open_document` opens a local or UNC `.rvt`/`.rfa`/`.rte` file, or `RSN://server/folder/model.rvt`. It defaults to `mode="detached"` and opens in the background. `activate=true` opens it in the Revit UI. The other modes are `detached_discard_worksets`, `local_copy` and `read_only_local`. A local copy is created under `%LOCALAPPDATA%\RevitModelMcp\locals`; an existing destination is refused. `read_only_local` accepts only a non-central file with the read-only file attribute. Cloud paths are outside this contract. `worksets` accepts `"all"`, `"none"`, `{"open":["Arch*", "Shared Levels and Grids"]}` or `{"close":["*Link*"]}`. Wildcards `*` and `?` are case insensitive. Unknown exact names fail; unmatched patterns appear in `worksetPatternsUnmatched`. `audit=true` reports `audited:true`; audit may take minutes, uses a 30 minute response timeout, and its dialogs use the existing dismissal handler.
+If the file is already loaded as a Revit link in an open model, the action refuses it and names the host model. Unload the link or open the file in another Revit session.
+On a non-workshared model, `none` and workset patterns are ignored with `warning: "Worksets ignored: the model is not workshared."`. A list containing only exact workset names still fails.
+Its `path` accepts local UNC central files when their share is in `trustedNetworkRoots`; device paths and `..` segments are rejected.
+
+`revit_activate_document` resolves exactly one open document by the existing title or path rules. A document without a saved path cannot be activated. Revit must keep the same document and document count, using Revit document identity across managed wrappers. If Revit opens an extra copy, the action restores the previously active saved document before closing the copy. If that is impossible, the error names the copy left open. `revit_activate_view` resolves a name or ID in the target document and rejects templates. IDs take priority. Ambiguous names are refused with candidate IDs, names and types. Use `view_type`, with the same case-insensitive Revit type names as `revit_list_views`, to select one type. Set `activate_document=true` to switch documents first. It reports the active view and whether it was already open.
+`zoom="fit"` calls `ZoomToFit()` on the now-active UI view.
+`zoom="none"` preserves its zoom.
+A nonempty list of positive element IDs uses their combined bounding box in that view, projected onto its right and up axes, with 15 percent padding on each side.
+Missing elements or bounding boxes fail the action.
+Degenerate bounds receive a minimum margin of 0.01 feet.
+The view may already be active if zoom fails.
+`revit_close_views` defaults to closing all views except the active one. It reports a refused last or active view without failing the call.
+
+`revit_new_document` uses the default project template unless `template` is supplied. Family creation requires a `.rft` template; project templates use `.rte`. Template and `save_as` paths follow the existing path and trusted network root rules. An existing `save_as` target is refused. With `activate=true` and no `save_as`, the document is saved under `%LOCALAPPDATA%\RevitModelMcp\new` so Revit can activate it. Activation keeps the created document when Revit returns another wrapper for it. If Revit opens a separate copy, the action closes only the background original. The action checks that documents open before creation remain open. `name` sets the temporary file name without an extension and must be a safe file name. The default is `Project yyyyMMdd-HHmmss` or `Family yyyyMMdd-HHmmss`; an existing file adds a numeric suffix. `revit_ui_state.activeView.isActive` is true, and `openViews` marks the active view. Session actions have activity entries and summaries but no model transaction or undo entry. They are not batch steps and are refused in read-only mode.
+
+`revit_close_document` closes a background document. The active document cannot be closed through this tool. `save=false` is the default. Closing a modified document without saving needs confirmation, except an MCP-opened detached document that has not been saved to central. Closing with `save=true` always needs confirmation.
+
+`revit_save_document` always needs confirmation. It accepts `save_as`, `overwrite=false` and `compact=false`. Saving an open central model is refused. A detached workshared document saved under a new path becomes a central model; a destination matching a known central path is refused.
+`save_as` accepts drive paths and UNC paths on trusted shares, and `overwrite=true` refuses an existing central or workshared file or a file that cannot be inspected.
+
+`revit_sync_document` always needs confirmation and a non-empty `comment`. It rejects detached and family documents. `relinquish` is `"all"`, `"none"` or a map of `borrowed`, `user_worksets`, `family_worksets`, `view_worksets` and `standard_worksets` booleans. `compact=false`; `save_local_before` and `save_local_after` default to true. The central lock callback does not wait for a lock.
+
+For confirmation, call the tool once without `confirm_token`. The first response has `data.needsConfirmation=true`, `data.confirmationText` and `data.confirmToken` and makes no change. Show the exact confirmation text to the user. Retry with the same arguments plus `confirm_token` only after explicit agreement in chat. Tokens expire after five minutes, are single use and are bound to the command, document, arguments and document state; a change after the preview requires a new token. A failed confirmation, for any reason, uses up the token; repeat the call without `confirm_token` to get a new preview and token. A token guards against accidents, not against an agent replaying it; use read-only mode for unattended runs. A timeout after the second call may follow a committed save or sync; inspect the model before retrying.
+
+### Confirmation tokens for irreversible actions
+
+Five more calls use the same two-step flow, with the same response fields (`needsConfirmation`, `confirmationText`, `confirmToken`), the same five-minute lifetime and single use:
+
+- `revit_delete`, only when more than 500 elements would be removed, dependents included. The threshold is fixed at 500 for now. The token is bound to the document, the requested IDs, the dependent count and the document state. One undo entry restores the deletion. `dry_run` returns the count with no token. In `revit_run_actions` and `revit_process_models` steps such a deletion is refused; use `revit_delete` on its own.
+- `revit_remove_links` without `dry_run`. The token is bound to the document, the exact set of selected link types and the document state.
+- `revit_export` and `revit_export_nwc` with `overwrite=true`, only when at least one target file already exists. The token is bound to the target paths and their size and modification time. Without an existing target there is no token.
+- `revit_execute_code` without `dry_run`. The token is bound to the SHA-256 of the code, the transaction mode and the target document.
+- `revit_process_models` with `code` and without `dry_run`. The token is bound to the whole request and the source files.
+
+`dry_run` never needs a token. `revit_execute_code` with `dry_run=true` forces `transaction="auto"`. Otherwise, `transaction="none"` is refused whatever the token. A separate workstation policy that may allow it is a later change and has no setting yet.
+
+The token guards against mistakes and against instructions injected into model data or tool output. It does not stop an MCP client that confirms by itself: a client that gets the token can send it back. For unattended use, switch on read-only mode.
+
+These operations require no open transaction and cannot be included in `revit_run_actions`. Read-only mode applies. A committed open, close, save or sync carries a `summary` and appears in the MCP activity pane, but opens no undo entry: use Revit's own history for these document-level changes.
+
+### Undo the last action
+
+`revit_undo_last` undoes the most recent MCP action through Revit's own Undo command
+(`PostableCommand.Undo`), never by reversing the mutation programmatically. It is allowed only when all of
+the following hold, tracked from Revit's `DocumentChanged` event:
+
+- the addressed document is the active document;
+- no command is currently pending in Revit;
+- the name Revit reports for its last undo entry still equals the name recorded for the most recent
+  activity entry. Link removal is excluded because Revit cannot restore removed links through Undo.
+
+Otherwise it refuses with a clear reason, for example `the last change in Revit is not ours: Move Elements`
+when the user made an unrelated edit since the last MCP action, or `there is no recorded MCP action to
+undo` when nothing has run yet. When Revit reports no matching undo entry, for example after the newest action was already undone, the refusal says so. Only the single most recent action is covered; there is no redo and no
+undo of an older entry. After `revit_isolate`, including its reset, the newest change in Revit is a temporary view change, so `revit_undo_last` refuses with "The newest change in Revit is a temporary view change (revit_isolate)." and earlier MCP actions can no longer be undone with it; use Undo in Revit to revert them. The same button appears on the newest row of the activity pane, disabled once it no
+longer applies.
+
+### MCP activity pane
+
+![MCP activity pane in the dark Revit theme](screenshots/activity-pane-dark.png)
+![An expanded activity row with changed, created and deleted elements](screenshots/activity-pane-expanded.png)
+
+The add-in keeps an in-memory ring buffer of the last 500 finished action jobs, also appended as JSON lines
+to `%LOCALAPPDATA%\RevitModelMcp\activity.log`: time, client, command, document, state (`done`, `failed` or
+`dry_run`), `summary`, the changed, created and deleted elements with category, name and ID, their true
+totals, the undo entry name, and whether it was later undone.
+Once `activity.log` exceeds 5 MiB, the next entry rotates it to `activity.1.log`, replacing the previous rotated file.
+
+For committed jobs, the element lists are exact. While a job runs a model transaction, the add-in subscribes to Revit's
+`DocumentChanged` event for the target document only and collects the added, modified and deleted element
+IDs of every transaction the job commits, including transactions Revit itself opens, such as a family load.
+An element added and later deleted within the same job cancels out and is not listed, whether or not it has
+a category; this also drops it from Changed if it was reported as changed before being deleted. Internal
+elements without a category are otherwise skipped, except views, sheets, levels and grids, so a view
+visibility change lists the view. Each list stores the first 5000 elements; the chip counts and the expanded
+lists use the true totals, including dependents such as dimensions that move with an element. The row title
+instead uses the action's own target count (for example "Moved 1 element" for a single moved link, even
+though its dependent dimensions also changed), falling back to the true totals when a command has no
+well-defined target count. Dry runs roll back model changes, so their element lists come from the action result: requested
+element IDs, aligned host datums, removed link types and instances, or the affected view. These lists do not
+include incidental dependents unless the action result reports them explicitly, as deletion does. IDs created
+during a dry run are provisional.
+
+Toggle the dockable pane with the "Activity" button in the MCP panel on Revit's Add-Ins tab. The pane is English in
+every Revit UI language. Rows are grouped by day, newest first: "Today", "Yesterday", a weekday name within
+the last six days, then a date such as "Sep 21" (or "Sep 21, 2025" in an earlier year). Labels use the local
+calendar date of the entry and of now, so they follow midnight and daylight saving changes; the pane refreshes
+them when the date changes.
+
+Each row sits on a status rail: a title with the element count, time, client name in a stable client colour,
+document, and change chips `~N` (changed), `+N` (created) and `−N` (deleted), plus "dry run", "undone" and
+"failed" tags; failed rows show the error message. Hovering a row reveals "Select in Revit" (select and zoom
+to every element that still exists) and, on the newest eligible row, "Undo". A chevron appears on every row
+that has elements. Expanding it lists the elements under "Changed", "Created" and "Deleted" headers with
+counts, each as `Category · Name` with its ID. Long lists show the first 100 elements, then "Show all N".
+
+Click, Ctrl+click and Shift+click select elements in the list; double-click selects that element in Revit and
+zooms to it. "Select in Revit", "Zoom to" and "Isolate" (temporary isolation in the active view) act on the
+selected elements, or on every element that still exists when nothing is selected. "Copy IDs" copies the
+selected IDs, or all listed IDs, comma-separated; Ctrl+C does the same. Deleted elements and elements a dry run
+created are listed but cannot be selected. Selection works only while the entry's document is the active
+document; otherwise the row shows "Open this document to select elements".
+
+A live strip above the log names the running job and opens the queue of jobs still waiting on this Revit
+instance, each with a "Cancel" link. The API `summary` stays in English.
+`Document` is always `Document.Title`, a file name, never a directory, so nothing in the log needs path
+redaction.
+
+## Unattended execution policy
+
+Unattended runs are read-only.
+The batch collector worker never writes: it opens models detached, never saves or synchronizes, and refuses every action command through its read-only allowlist.
+Writes happen only through explicit calls from an interactive client, for example `revit_process_models` in the user's Revit session.
+There is no opt-in for unattended writes.
+
+`revit_batch_start` and `revit_batch_cancel` start and stop Revit processes, so read-only mode refuses them like any action.
+The server returns `success:false`, `error:"read-only mode"` and `errorCode:"read_only"` when `REVIT_MCP_READ_ONLY=1`.
+The add-in refuses `batch-supervisor-start` and the server host refuses cancellation while the workstation `read-only` file exists.
+`revit_batch_status` and `revit_batch_fetch` stay available.
+
+## Supervised batch mode
+
+The [batch collector](batch.md) uses a separate worker with an add-in read-only allowlist. Every action command is refused in that worker. Document lifecycle tools accept `process_id` (alias `processId`) to select one running instance; an explicit PID and supplied document must agree.

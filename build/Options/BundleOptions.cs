@@ -23,4 +23,19 @@ public sealed record BundleOptions
     ///     The vendor email address.
     /// </summary>
     public string? VendorEmail { get; init; }
+
+    /// <summary>
+    ///     The constant upgrade code GUID, in braces, shared by every version of the package.
+    /// </summary>
+    [Required] public string? UpgradeCode { get; init; }
+
+    /// <summary>
+    ///     Build the managed install variant: no update check and a README that pins the server.
+    /// </summary>
+    public bool Managed { get; init; }
+
+    /// <summary>
+    ///     Build the Autodesk App Store variant: no updater, the bundled server executable under Contents/server.
+    /// </summary>
+    public bool Store { get; init; }
 }

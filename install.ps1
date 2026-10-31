@@ -1,5 +1,5 @@
 <#
-Installs or removes Revit Model MCP for selected or detected Revit 2020-2027 years.
+Installs or removes Model MCP for selected or detected Revit 2022-2027 years.
 Release installs check available assets and report missing Revit year packages.
 Keep this script ASCII-only for BOM-less Windows PowerShell 5.1 compatibility.
 Examples (run on Windows from a repository checkout):
@@ -7,8 +7,8 @@ Examples (run on Windows from a repository checkout):
   .\install.ps1 -Year 2024,2026 -Source Build -RegisterClaude
   .\install.ps1 -Year 2027 -Version 0.2.0 -SignThumbprint ABC123
   .\install.ps1 -Year 2026 -Uninstall
-Payload writes use TEMP and APPDATA Addins. Elevated installs also register the
-default HTTP URL ACL for the current user. Explicit Build and
+Payload writes use TEMP and APPDATA Addins. -EnableHttp explicitly requests a
+URL ACL for -HttpBind and -HttpPort; the Revit listener is enabled separately. Explicit Build and
 RegisterClaude commands also write their normal build/cache and Claude settings.
 #>
 [CmdletBinding()]
@@ -18,6 +18,9 @@ param(
     [string] $Version = 'latest',
     [string] $SignThumbprint,
     [switch] $RegisterClaude,
+    [switch] $EnableHttp,
+    [ValidatePattern('^(?:\d{1,3}\.){3}\d{1,3}$')] [string] $HttpBind = '127.0.0.1',
+    [ValidateRange(1, 65535)] [int] $HttpPort = 53110,
     [switch] $Uninstall,
     [switch] $Force
 )
@@ -26,11 +29,12 @@ $ErrorActionPreference = 'Stop'
 $repo = $PSScriptRoot
 $tempRoot = $null
 $script:releaseAssets = @()
+$script:checksums = $null
 $headers = @{ 'User-Agent' = 'revit-model-mcp-install' }
 if ($env:GITHUB_TOKEN) { $headers.Authorization = "Bearer $env:GITHUB_TOKEN" }
 
 function Get-InstalledRevitYears {
-    foreach ($candidate in 2020..2027) {
+    foreach ($candidate in 2022..2027) {
         if (Test-Path "C:\Program Files\Autodesk\Revit $candidate\Revit.exe" -PathType Leaf) {
             [string]$candidate
         }
@@ -50,22 +54,54 @@ function Get-Payload([string] $SelectedYear) {
         finally { Pop-Location }
         $folder = Join-Path $stage 'RevitModelMcp'
         New-Item -ItemType Directory -Path $folder | Out-Null
-        Copy-Item (Join-Path $repo "src\RevitModelMcp.Addin\bin\Release.R$yy\*") $folder -Recurse -Force
-        Copy-Item (Join-Path $repo 'src\RevitModelMcp.Addin\RevitModelMcp.addin') $stage
+        Get-ChildItem (Join-Path $repo "src\RevitModelMcp.Addin\bin\Release.R$yy") |
+            Where-Object Name -ne 'publish' | Copy-Item -Destination $folder -Recurse -Force
+        Copy-Item (Join-Path $repo "src\RevitModelMcp.Addin\bin\Release.R$yy\publish\RevitModelMcp.addin") $stage
     }
     else {
         $asset = "revit-model-mcp-addin-$releaseVersion-R$yy.zip"
         if ($asset -notin $script:releaseAssets) {
             throw "Release $releaseTag has no add-in package for Revit $SelectedYear (expected $asset). Install from a local build with -Source Build, or choose a release that includes R$yy."
         }
-        $url = "https://github.com/sharafutdinovdi/revit-model-mcp/releases/download/$releaseTag/$asset"
+        $url = "https://github.com/vibe-bimer/revit-model-mcp/releases/download/$releaseTag/$asset"
         $zip = Join-Path $tempRoot $asset
         Invoke-WebRequest -Uri $url -Headers $headers -OutFile $zip -UseBasicParsing
+        if (!$script:checksums) {
+            $legacyRelease = [version]($releaseVersion -replace '-.*$', '') -lt [version]'0.3.0'
+            if ('SHA256SUMS.txt' -notin $script:releaseAssets) {
+                if (!$legacyRelease) { throw "Release $releaseTag has no SHA256SUMS.txt. Choose version 0.3.0 or later." }
+                Write-Warning "Release $releaseTag predates checksums. The downloaded asset cannot be verified."
+                $script:checksums = 'missing'
+            }
+            else {
+                $checksumFile = Join-Path $tempRoot 'SHA256SUMS.txt'
+                $checksumUrl = "https://github.com/vibe-bimer/revit-model-mcp/releases/download/$releaseTag/SHA256SUMS.txt"
+                try {
+                    Invoke-WebRequest -Uri $checksumUrl -Headers $headers -OutFile $checksumFile -UseBasicParsing
+                    $script:checksums = $checksumFile
+                }
+                catch {
+                    if (!$legacyRelease -or ([int]$_.Exception.Response.StatusCode -ne 404 -and [int]$_.Exception.StatusCode -ne 404)) { throw }
+                    Write-Warning "Release $releaseTag predates checksums. The downloaded asset cannot be verified."
+                    $script:checksums = 'missing'
+                }
+            }
+        }
+        if ($script:checksums -ne 'missing') {
+            $entries = @(Get-Content -LiteralPath $script:checksums | Where-Object { $_ -match ('^([0-9a-fA-F]{64})  ' + [regex]::Escape($asset) + '$') })
+            if ($entries.Count -ne 1) { throw "Expected one SHA256 checksum for $asset in release $releaseTag." }
+            $expectedHash = $entries[0].Substring(0, 64)
+            $actualHash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash
+            if ($actualHash -ne $expectedHash) { throw "SHA256 mismatch for $asset in release $releaseTag." }
+            Write-Host "Verified SHA256 of $asset."
+        }
         Expand-Archive -LiteralPath $zip -DestinationPath $stage
     }
-    if (Get-ChildItem $stage -Recurse -Filter 'RevitAPI*.dll' -File) {
-        throw "Revit API binaries must not be installed: $SelectedYear payload."
-    }
+    $blocked = @(Get-ChildItem $stage -Recurse -Filter '*.dll' -File | Where-Object {
+        $_.Name -match '^(AdWindows|UIFramework|RevitAPI|RevitNET).*\.dll$' -or
+        $_.VersionInfo.CompanyName -match 'Autodesk'
+    })
+    if ($blocked.Count) { throw "Autodesk binaries must not be installed: $SelectedYear payload ($($blocked.Name -join ', '))." }
     if (!(Test-Path (Join-Path $stage 'RevitModelMcp\RevitModelMcp.dll') -PathType Leaf)) {
         throw "Missing RevitModelMcp.dll in $SelectedYear payload."
     }
@@ -89,6 +125,10 @@ function Install-Year([string] $SelectedYear, [string] $Payload) {
     $addins = Join-Path $env:APPDATA "Autodesk\Revit\Addins\$SelectedYear"
     $install = Join-Path $addins 'RevitModelMcp'
     [xml]$manifest = Get-Content -LiteralPath (Join-Path $Payload 'RevitModelMcp.addin')
+    if ([int]$SelectedYear -lt 2026) {
+        $settings = $manifest.SelectSingleNode('/RevitAddIns/ManifestSettings')
+        if ($settings) { [void]$settings.ParentNode.RemoveChild($settings) }
+    }
     $dll = [IO.Path]::GetFullPath((Join-Path $install 'RevitModelMcp.dll'))
     $manifest.SelectSingleNode('/RevitAddIns/AddIn/Assembly').InnerText = $dll
     # Replace the owned folder to remove stale dependencies from earlier versions.
@@ -111,15 +151,7 @@ function Uninstall-Year([string] $SelectedYear) {
     Write-Host "uninstalled $SelectedYear -> $addins"
 }
 
-function Update-HttpUrlAcl {
-    $prefix = 'http://127.0.0.1:53110/'
-    if ($Uninstall) {
-        foreach ($candidate in 2020..2027) {
-            if (Test-Path (Join-Path $env:APPDATA "Autodesk\Revit\Addins\$candidate\RevitModelMcp.addin")) {
-                return
-            }
-        }
-    }
+function Get-HttpIdentity {
     $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
     try {
         $principal = New-Object Security.Principal.WindowsPrincipal($identity)
@@ -127,6 +159,34 @@ function Update-HttpUrlAcl {
         $account = $identity.Name
     }
     finally { $identity.Dispose() }
+    return @{ Elevated = $elevated; Account = $account }
+}
+
+function Update-HttpUrlAcl {
+    $ownershipFile = Join-Path $env:APPDATA 'Autodesk\Revit\Addins\RevitModelMcp-http-urlacl.txt'
+    if (!$Uninstall -and !$EnableHttp) { return }
+    if ($Uninstall -and !(Test-Path -LiteralPath $ownershipFile)) { return }
+    $address = [Net.IPAddress]::Parse($HttpBind)
+    $bind = $address.ToString()
+    if ($bind -eq '0.0.0.0') { $bind = '+' }
+    $prefix = "http://${bind}:${HttpPort}/"
+    if ($Uninstall) { $prefix = (Get-Content -LiteralPath $ownershipFile -Raw).Trim() }
+    elseif (Test-Path -LiteralPath $ownershipFile) {
+        $ownedPrefix = (Get-Content -LiteralPath $ownershipFile -Raw).Trim()
+        if ($ownedPrefix -ne $prefix) {
+            throw "This script already owns $ownedPrefix. Remove that reservation and $ownershipFile before changing the install prefix."
+        }
+    }
+    if ($Uninstall) {
+        foreach ($candidate in 2022..2027) {
+            if (Test-Path (Join-Path $env:APPDATA "Autodesk\Revit\Addins\$candidate\RevitModelMcp.addin")) {
+                return
+            }
+        }
+    }
+    $identity = Get-HttpIdentity
+    $elevated = $identity.Elevated
+    $account = $identity.Account
     $arguments = @('http', 'add', 'urlacl', "url=$prefix", "user=$account")
     $command = 'netsh http add urlacl url={0} user="{1}"' -f $prefix, $account
     if ($Uninstall) {
@@ -140,11 +200,18 @@ function Update-HttpUrlAcl {
     $netsh = Join-Path $env:SystemRoot 'System32\netsh.exe'
     & $netsh http show urlacl "url=$prefix" *> $null
     $exists = $LASTEXITCODE -eq 0
-    if ((!$Uninstall -and $exists) -or ($Uninstall -and !$exists)) { return }
+    if (!$Uninstall -and $exists) { return }
+    if ($Uninstall -and !$exists) {
+        Remove-Item -LiteralPath $ownershipFile
+        return
+    }
     & $netsh @arguments | Out-Host
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "HTTP URL ACL update failed (exit $LASTEXITCODE). Run once from an elevated command prompt: $command"
+        return
     }
+    if ($Uninstall) { Remove-Item -LiteralPath $ownershipFile }
+    else { Set-Content -LiteralPath $ownershipFile -Value $prefix -Encoding ASCII }
 }
 
 function Register-Claude {
@@ -167,9 +234,9 @@ try {
     if (!$env:APPDATA -or !$env:TEMP) { throw 'APPDATA and TEMP must be set.' }
     if (!$Year) { $Year = @(Get-InstalledRevitYears) }
     $Year = @($Year | Select-Object -Unique)
-    if (!$Year.Count) { throw 'No Revit 2020-2027 installation detected. Specify -Year explicitly.' }
+    if (!$Year.Count) { throw 'No Revit 2022-2027 installation detected. Specify -Year explicitly.' }
     foreach ($selected in $Year) {
-        if ($selected -notmatch '^202[0-7]$') { throw "Unsupported Revit year: $selected. Use 2020-2027." }
+        if ($selected -notmatch '^202[2-7]$') { throw "Unsupported Revit year: $selected. Use 2022-2027." }
     }
     $running = @(Get-Process -Name Revit -ErrorAction SilentlyContinue)
     if ($running.Count -and !$Force) {
@@ -190,14 +257,14 @@ try {
             [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
             $releaseTag = "v$Version"
             if ($Version -eq 'latest') {
-                $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/sharafutdinovdi/revit-model-mcp/releases/latest' -Headers $headers
+                $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/vibe-bimer/revit-model-mcp/releases/latest' -Headers $headers
                 $releaseTag = [string]$release.tag_name
             }
             if ($releaseTag -notmatch '^v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') {
                 throw 'Expected a release version without v, such as 0.1.0, or latest.'
             }
             if ($Version -ne 'latest') {
-                $release = Invoke-RestMethod -Uri "https://api.github.com/repos/sharafutdinovdi/revit-model-mcp/releases/tags/$releaseTag" -Headers $headers
+                $release = Invoke-RestMethod -Uri "https://api.github.com/repos/vibe-bimer/revit-model-mcp/releases/tags/$releaseTag" -Headers $headers
             }
             $script:releaseAssets = @($release.assets | ForEach-Object { $_.name })
             $releaseVersion = $releaseTag.Substring(1)
@@ -212,7 +279,7 @@ try {
             Install-Year $selected $payload
         }
     }
-    Update-HttpUrlAcl
+    if ($EnableHttp -or $Uninstall) { Update-HttpUrlAcl }
     if ($RegisterClaude -and !$Uninstall) { Register-Claude }
     $action = 'Installed'
     if ($Uninstall) { $action = 'Uninstalled' }

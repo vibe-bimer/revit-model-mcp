@@ -1,75 +1,107 @@
-<a id="privacy-policy"></a>
+# Privacy policy
 
-# 隐私政策
+Effective date: October 12, 2026.
+Changes to this policy are recorded in the repository history.
 
-生效日期：2026 年 9 月 14 日。
-本政策的变更记录在仓库历史中。
+## Summary
 
-<a id="data-collection"></a>
+- Your model data stays on your machines. The project has no server that receives it.
+- There is no analytics, telemetry, crash reporting or advertising code in the add-in or the Python server.
+- Revit model data leaves the workstation only as responses to the MCP client you chose. That client may send it to an AI model service under its own policy.
+- The Autodesk App Store build and its bundled server make no automatic requests. Other builds make only update checks to `api.github.com` (add-in and server). They carry no model data and you can switch them off.
 
-## 数据收集
+## Data collection
 
-Revit Model MCP 读取配置的工作站上在 Revit 中打开的模型，并返回 MCP 客户端请求的信息。
-请求的数据可能包括模型名称、路径、构件参数、几何、警告和导出的视图图像。
-两道写入门禁都启用时，可选动作可以修改模型。
-项目不包含分析统计、遥测或崩溃报告功能。
-运行时网络连接用于访问配置的 Revit 工作站，采用 HTTP 或 SSH，并可能经过用户配置的代理或隧道。
-扩展包启动器在安装或更新时，使用 uvx 从 PyPI 及其包托管服务下载程序包和依赖。
-预发布扩展包从 GitHub Releases 下载程序包的 wheel。
-这些包下载不会发送 Revit 模型数据。
+Model MCP reads the model open in Revit on the configured workstation and returns the information requested by the MCP client.
+Requested data can include model names, paths, element parameters, geometry, warnings and exported view images.
+Actions change Revit data only after an administrator allows them: the installer writes the machine policy `ReadOnly=1`. Set `REVIT_MCP_READ_ONLY=1` or create the workstation `read-only` file to refuse them as well.
+The maintainer collects no personal data, accounts or usage statistics.
+Runtime network connections serve the configured Revit workstation through HTTP or SSH and any user-configured proxy or tunnel.
 
-<a id="usage-and-storage"></a>
+## Update checks
 
-## 使用与存储
+The add-in contacts `api.github.com` at most once every 24 hours after Revit starts to check the latest stable release.
+The request is a plain HTTPS `GET` for the latest release of this repository, sent through the system proxy with the user agent `RevitModelMcp updater`.
+It contains no model data, document names, user names or license information.
+GitHub sees the network address of the request, as it does for any web request, and handles it under [its own privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement).
+The `REVIT_MCP_UPDATE_FEED` environment variable redirects the check to another HTTPS (or loopback HTTP) release feed, for example an internal mirror.
+Per-user installs download the SingleUser MSI and its SHA256 checksum from the release assets when an update is available. Per-machine installs only show a notice.
 
-响应针对所请求的操作返回给 MCP 客户端。
-local 和 SSH 文件通道在 Windows 工作站的 `%LOCALAPPDATA%\RevitModelMcp` 下写入请求、响应和导出的 PNG 文件。
-`REVIT_MCP_CHANNEL_DIR` 可以覆盖通道目录。
-设置和工作站写入门禁仍保留在默认目录。
-HTTP 将已完成任务的响应保存在内存中，直到过期；导出图像也使用工作站通道目录。
-下载的 PNG 文件写入 `save_to` 指定的客户端路径，或客户端临时目录下新建的 `revit-view-*` 目录。
+The Autodesk App Store build (the `store` channel) never checks GitHub and ships without the updater. Its bundled server never contacts PyPI. Updates arrive through the Autodesk App Store. Managed builds (the `managed` channel) likewise make no update requests.
+The **Connect AI app** button writes a local MCP client configuration entry on the workstation. It makes no network request.
 
-`REVIT_MCP_REDACT_PATHS=1` 会从响应的 `documentPath` 和嵌套 `path` 字段中移除目录部分。
-扩展包默认启用此设置。
-模型名称、参数值、错误和导出图像的 `localPath` 值仍然可见。
-脱敏作用于 Python 向外返回的响应，而非工作站文件或插件日志。
-布尔设置还接受 `true/false`、`yes/no` 和 `on/off`，不区分大小写，并忽略首尾空白；`1/0` 仍是规范写法。
+The Python server checks for a newer release once every 24 hours.
+It reads the latest release of this fork on `api.github.com` and records the version; it downloads and installs nothing, and it never resolves the package name on PyPI, where the same name belongs to upstream.
+These requests contain no model data.
+The bundle launcher uses uvx to download the server from this fork's GitHub release and its dependencies from PyPI and its package hosting service during installation or updates.
 
-<a id="third-party-sharing"></a>
+To turn the checks off:
 
-## 与第三方共享
+| Check | How to disable |
+| --- | --- |
+| Add-in, one machine | Install the MSI with `UPDATEMODE=off` (or `UPDATECHECK=0`), or set `{"updateMode":"off"}` in `%ProgramData%\RevitModelMcp\settings.json` (all users) or `%LOCALAPPDATA%\RevitModelMcp\settings.json` (current user). |
+| Add-in, environment | Set `REVIT_MCP_NO_UPDATE_CHECK=1` in the environment of the Revit process. |
+| Add-in, managed install | A build made with the MSBuild property `ManagedInstall=true` never checks for updates. Use it when another system delivers add-in updates. |
+| Server | Set `REVIT_MCP_NO_UPDATE_CHECK=1` in the MCP client's server settings. |
 
-本项目不向维护者或分析统计服务发送模型数据。
-所选 MCP 客户端会接收请求的响应，并可能按其自身政策处理或保留这些响应。
-Claude Desktop 受 [Anthropic 隐私政策](https://www.anthropic.com/legal/privacy)约束。
-其他 MCP 客户端有各自的隐私政策。
-用户配置的远程主机、代理和隧道都是所选传输路由的一部分。
+Any one of these is enough. Without them the default behavior stays on.
+See [automatic updates](updates.md) for details.
 
-<a id="data-retention"></a>
+## AI client data flow
 
-## 数据保留
+The add-in and the server do not send model data to the maintainer, to GitHub or to any AI provider.
+The MCP client you choose (for example Claude Desktop or Claude Code) starts the server and receives its responses.
+What that client does next is outside this project: it may pass the responses to a language model service in the cloud or to a local model, depending on its configuration.
+Review the client's privacy policy and your project's confidentiality rules before you connect a client to a confidential model.
+Use read-only mode and `REVIT_MCP_REDACT_PATHS=1` to reduce what a client can change or see.
+No AI service is contacted by this project itself, and it ships no API key for one.
 
-[传输契约](transport.md)规定，已完成的 HTTP 结果在十分钟后过期。
-插件每分钟检查一次过期情况，并尝试删除相关 HTTP 图像产物。
-Revit 进程退出时，内存中的结果也会消失。
-文件通道在处理过程中消耗触发文件，并在取回结果时尝试移除响应文件和原始 PNG 导出文件。
-待处理文件，以及操作中断或清理失败后残留的文件，可能继续保留在磁盘上；这些文件没有按时间自动过期的机制。
-下载到客户端的 PNG 文件没有由本项目管理的过期机制。
+## Usage and storage
 
-插件日志存储在 Windows“文档”文件夹的 `RevitModelMcp\Logs` 下；无法使用该位置时，回退到 `%TEMP%\RevitModelMcp\Logs`。
-日志达到 10 MiB 时轮转，启动时的清理保留最近修改的 14 个日志文件。
-这是文件数量限制，不是以天数计算的保留期。
-即使已启用 Python 响应脱敏，日志仍可能包含模型名称、路径和异常详情。
-Python 诊断信息发送到 MCP 客户端的日志流；保留规则由该客户端控制。
+Responses are returned to the MCP client for the requested operation.
+The local and SSH file channels write requests, responses and exported PNG files under `%LOCALAPPDATA%\RevitModelMcp` on the Windows workstation.
+`REVIT_MCP_CHANNEL_DIR` overrides the channel directory.
+Settings and the workstation `read-only` file remain in the default directory.
+HTTP keeps completed job responses in memory until expiry; exported images also use the workstation channel directory.
+Downloaded PNG files are written to the client path specified by `output_path`, or a new `revit-view-*` directory in the client's temporary directory.
 
-若要移除项目数据，先关闭 Revit 和 MCP 服务器，卸载插件和桌面扩展，再移除 `%LOCALAPPDATA%\RevitModelMcp`。
-还应移除任何自定义通道目录、上述日志目录和客户端上下载的 PNG 文件。
-仅卸载软件会保留本地设置。
-客户端对话、客户端日志和包缓存需要通过客户端或包管理器另行删除。
+`REVIT_MCP_REDACT_PATHS=1` removes directories from response `documentPath`, `path` and `centralPath` fields.
+It also reduces Windows drive and UNC paths in `confirmationText`, `summary`, `error`, `message`, `warning` and `warnings` strings at any depth to file names.
+The bundle enables this setting by default.
+Document names, parameter values, remaining message text and exported image `localPath` values remain visible.
+Redaction applies to outgoing Python responses, not workstation files or add-in logs.
+Boolean settings also accept `true/false`, `yes/no` and `on/off`, without regard to case or surrounding whitespace; `1/0` remains the canonical form.
 
-<a id="contact"></a>
+## Third-party sharing
 
-## 联系方式
+The project does not send model data to its maintainer or an analytics service.
+The selected MCP client receives the requested responses and may process or retain them under its own policy.
+Claude Desktop is governed by [Anthropic's privacy policy](https://www.anthropic.com/legal/privacy).
+Other MCP clients have their own privacy policies.
+User-configured remote hosts, proxies and tunnels are part of the selected transport route.
 
-隐私问题可以发送至 [sharafutdinov.di.dev@outlook.com](mailto:sharafutdinov.di.dev@outlook.com)。
-涉及安全的敏感报告可以使用 [GitHub 私密安全公告表单](https://github.com/vibe-bimer/revit-model-mcp/security/advisories/new)。
+## Data retention
+
+The [transport contract](transport.md#result-retention) specifies that completed read results expire after ten minutes and action results after 24 hours. Action results are also stored as files in the instance `jobs` directory for the same 24 hours.
+The add-in checks expiry once per minute and attempts to delete associated HTTP image artifacts.
+In-memory results also disappear when the Revit process exits.
+The file channel consumes the trigger during processing and attempts to remove response files and source PNG exports during retrieval.
+Pending files and files left after interrupted operations or failed cleanup can remain on disk; there is no age-based expiry for these files.
+Downloaded client PNG files have no project-managed expiry.
+
+Add-in logs are stored in the Windows Documents folder under `RevitModelMcp\Logs`, with `%TEMP%\RevitModelMcp\Logs` as a fallback.
+Logs rotate at 10 MiB, and startup cleanup keeps the 14 most recently modified log files.
+This is a file-count limit, not a retention period in days.
+Logs can contain model names, paths and exception details even when Python response redaction is enabled.
+Logs stay on the workstation. The project never uploads them; they leave the machine only if you attach them to a support request, so review and sanitize them first.
+Python diagnostics go to the MCP client's logging stream; client retention is controlled by that client.
+
+To remove project data, close Revit and the MCP server, uninstall the add-in and desktop extension, and remove `%LOCALAPPDATA%\RevitModelMcp`.
+Also remove any overridden channel directory, the log directories above and downloaded PNG files on the client.
+Uninstalling alone leaves local settings intact.
+Client conversations, client logs and package caches require separate deletion through the client or package manager.
+
+## Contact
+
+Privacy questions can be sent to [sharafutdinov.di.dev@outlook.com](mailto:sharafutdinov.di.dev@outlook.com).
+Security-sensitive reports can use the [private GitHub security advisory form](https://github.com/vibe-bimer/revit-model-mcp/security/advisories/new).

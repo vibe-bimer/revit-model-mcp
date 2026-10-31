@@ -1,1 +1,1 @@
---8<-- "SECURITY.zh.md"
+--8<-- "SECURITY.md"

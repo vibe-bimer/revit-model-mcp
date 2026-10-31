@@ -1,5 +1,4 @@
 using Autodesk.Revit.DB;
-using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Query;
 
 namespace RevitModelMcp.Capture;
@@ -18,18 +17,20 @@ internal sealed class QueryParameterDescriptor
     public string Name { get; set; } = string.Empty;
     public ElementId Id { get; set; } = ElementId.InvalidElementId;
     public QueryParameterKind Kind { get; set; }
-    public ParameterDataType DataType { get; set; }
+    public ForgeTypeId? DataType { get; set; }
 }
 
 internal static class QueryParameterResolver
 {
+    private static readonly Lazy<(Dictionary<string, BuiltInParameter> Names,
+        Dictionary<BuiltInParameter, (string Name, int Order)> Details)> BuiltIns = new(CreateBuiltInCache);
+
     public static Dictionary<string, QueryParameterDescriptor> Resolve(
         Document document,
         IEnumerable<string> requestedNames,
         Func<FilteredElementCollector> candidateCollector)
     {
-        var requested = requestedNames.Where(name => !ElementFieldReader.IsBuiltInField(name))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
+        var requested = requestedNames.Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
         var result = new Dictionary<string, QueryParameterDescriptor>(StringComparer.OrdinalIgnoreCase);
         if (requested.Count == 0)
@@ -58,17 +59,18 @@ internal static class QueryParameterResolver
         IReadOnlyList<string> requested,
         IDictionary<string, QueryParameterDescriptor> result)
     {
+        var requestedSet = new HashSet<string>(requested, StringComparer.OrdinalIgnoreCase);
         foreach (var parameterElement in new FilteredElementCollector(document)
                      .OfClass(typeof(ParameterElement))
                      .Cast<ParameterElement>())
         {
             var definition = parameterElement.GetDefinition();
-            if (definition is null || !requested.Contains(definition.Name, StringComparer.OrdinalIgnoreCase))
+            if (definition is null || !requestedSet.Contains(definition.Name))
             {
                 continue;
             }
 
-            result[definition.Name] = Create(definition.Name, parameterElement.Id, ParameterDataType.From(definition));
+            result[definition.Name] = Create(definition.Name, parameterElement.Id, definition.GetDataType());
         }
     }
 
@@ -76,6 +78,35 @@ internal static class QueryParameterResolver
         IReadOnlyList<string> requested,
         IDictionary<string, QueryParameterDescriptor> result)
     {
+        if (requested.All(result.ContainsKey))
+        {
+            return;
+        }
+
+        var cache = BuiltIns.Value;
+        var matches = requested.Where(cache.Names.ContainsKey)
+            .GroupBy(name => cache.Names[name])
+            .OrderBy(group => cache.Details[group.Key].Order);
+        foreach (var match in matches)
+        {
+            var requestedName = match.First();
+            if (result.ContainsKey(requestedName))
+            {
+                continue;
+            }
+
+            result[requestedName] = new QueryParameterDescriptor
+            {
+                Name = cache.Details[match.Key].Name,
+                Id = CreateBuiltInId(match.Key)
+            };
+        }
+    }
+
+    private static (Dictionary<string, BuiltInParameter>, Dictionary<BuiltInParameter, (string, int)>) CreateBuiltInCache()
+    {
+        var names = new Dictionary<string, BuiltInParameter>(StringComparer.OrdinalIgnoreCase);
+        var details = new Dictionary<BuiltInParameter, (string, int)>();
         foreach (BuiltInParameter builtIn in Enum.GetValues(typeof(BuiltInParameter)))
         {
             var enumName = builtIn.ToString();
@@ -84,25 +115,18 @@ internal static class QueryParameterResolver
             {
                 label = LabelUtils.GetLabelFor(builtIn);
             }
-            catch
+            catch (Exception exception)
             {
-                // Some internal built-in parameters have no display label.
+                PluginLog.Skipped($"parameter {enumName} display label", exception);
             }
 
-            var requestedName = requested.FirstOrDefault(name =>
-                string.Equals(name, enumName, StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(name, label, StringComparison.OrdinalIgnoreCase));
-            if (requestedName is null || result.ContainsKey(requestedName))
-            {
-                continue;
-            }
-
-            result[requestedName] = new QueryParameterDescriptor
-            {
-                Name = string.IsNullOrWhiteSpace(label) ? enumName : label!,
-                Id = CreateBuiltInId(builtIn)
-            };
+            if (!names.ContainsKey(enumName)) names.Add(enumName, builtIn);
+            if (label is not null && !names.ContainsKey(label)) names.Add(label, builtIn);
+            if (!details.ContainsKey(builtIn))
+                details.Add(builtIn, (string.IsNullOrWhiteSpace(label) ? enumName : label!, details.Count));
         }
+
+        return (names, details);
     }
 
     private static void ResolveFromTypes(
@@ -145,10 +169,11 @@ internal static class QueryParameterResolver
         IReadOnlyList<string> requested,
         IDictionary<string, QueryParameterDescriptor> result)
     {
+        var requestedSet = new HashSet<string>(requested, StringComparer.OrdinalIgnoreCase);
         foreach (Parameter parameter in element.Parameters)
         {
             var name = parameter.Definition?.Name;
-            if (name is null || !requested.Contains(name, StringComparer.OrdinalIgnoreCase))
+            if (name is null || !requestedSet.Contains(name))
             {
                 continue;
             }
@@ -170,18 +195,20 @@ internal static class QueryParameterResolver
                     StorageType.ElementId => QueryParameterKind.ElementId,
                     _ => QueryParameterKind.Unknown
                 },
-                DataType = ParameterDataType.From(parameter.Definition)
+                DataType = parameter.Definition?.GetDataType()
             };
         }
     }
 
-    private static QueryParameterDescriptor Create(string name, ElementId id, ParameterDataType dataType)
+    private static QueryParameterDescriptor Create(string name, ElementId id, ForgeTypeId dataType)
     {
-        var kind = dataType.IsMeasurable
+        var typeId = dataType.TypeId ?? string.Empty;
+        var kind = UnitUtils.IsMeasurableSpec(dataType)
             ? QueryParameterKind.Double
-            : dataType.IsText
+            : typeId.Contains("spec:string", StringComparison.OrdinalIgnoreCase)
                 ? QueryParameterKind.String
-                : dataType.IsInteger
+                : typeId.Contains("yesno", StringComparison.OrdinalIgnoreCase) ||
+                  typeId.Contains("int", StringComparison.OrdinalIgnoreCase)
                     ? QueryParameterKind.Integer
                     : QueryParameterKind.ElementId;
         return new QueryParameterDescriptor { Name = name, Id = id, Kind = kind, DataType = dataType };

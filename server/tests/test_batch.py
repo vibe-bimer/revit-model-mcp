@@ -1,0 +1,737 @@
+from __future__ import annotations
+
+import base64
+import errno
+import json
+import os
+import shutil
+import subprocess
+from pathlib import Path
+from unittest.mock import AsyncMock
+
+import pytest
+from mcp.server.mcpserver.exceptions import ToolError
+
+from revit_model_mcp import batch
+from revit_model_mcp.artifact_download import save_batch_artifact
+from revit_model_mcp.batch import register_batch
+from revit_model_mcp.ssh_host import SshPowerShellHost, _fail_dead_supervisor
+
+
+class Registry:
+    def __init__(self):
+        self.tools = {}
+
+    def tool(self, **_options):
+        def register(function):
+            self.tools[function.__name__] = function
+            return function
+
+        return register
+
+
+class Host(SshPowerShellHost):
+    def __init__(self):
+        super().__init__("test-host")
+        self.instances = [{"processId": 41}]
+        self.runs = {}
+        self.artifacts = {}
+        self.activations = 0
+        self.instance_delay = 0
+        self.discovery = []
+
+    async def list_revit_instances(self):
+        if self.instance_delay:
+            self.instance_delay -= 1
+            if not self.instance_delay:
+                self.instances = [{"processId": 91}]
+        return self.instances
+
+    async def batch_discover(self, folder, recursive):
+        self.discovery.append((folder, recursive))
+        return [r"C:\models\One.rvt", r"C:\models\Nested\Two.rfa"]
+
+    async def batch_create(self, run_id, content):
+        self.runs[run_id] = json.loads(content)
+
+    async def batch_status(self, run_id):
+        return self.runs[run_id]
+
+    async def batch_cancel(self, run_id):
+        self.runs[run_id]["cancelRequested"] = True
+
+    async def batch_fetch_artifact(self, run_id, name):
+        return {
+            "artifactName": name,
+            "artifact": base64.b64encode(self.artifacts[(run_id, name)]).decode(),
+        }
+
+    async def batch_assert_writable(self):
+        self.gate_checks = getattr(self, "gate_checks", 0) + 1
+
+    async def batch_activate_interactive(self):
+        self.activations += 1
+        if not self.instance_delay:
+            self.instances = [{"processId": 91}]
+
+
+class Channel:
+    def __init__(self):
+        self.jobs = []
+
+    async def execute(self, job):
+        self.jobs.append(job)
+        return {"success": True}
+
+
+@pytest.fixture
+def anyio_backend():
+    return "asyncio"
+
+
+@pytest.fixture
+def boundary():
+    registry, host, channel = Registry(), Host(), Channel()
+    register_batch(registry, lambda: host, lambda: channel)
+    return registry.tools, host, channel
+
+
+@pytest.mark.anyio
+async def test_start_persists_inputs_and_chooses_process(boundary):
+    tools, host, channel = boundary
+    result = await tools["revit_batch_start"](
+        folder=r"C:\models",
+        recursive=True,
+        years=[2026, 2027],
+        parameter_rules=[{"category": "Walls", "parameter": "Mark"}],
+    )
+    state = host.runs[result["runId"]]
+    assert result["acceptedModels"] == 2
+    assert host.discovery == [(r"C:\models", True)]
+    assert [model["path"] for model in state["models"]] == [
+        r"C:\models\One.rvt",
+        r"C:\models\Nested\Two.rfa",
+    ]
+    assert state["years"] == [2026, 2027]
+    assert state["parameterRules"] == [{"category": "Walls", "parameter": "Mark"}]
+    assert "openTimeoutMinutes" not in state
+    assert all(model["phaseTimingsMs"] == {} for model in state["models"])
+    assert channel.jobs[0].payload["targetProcessId"] == 41
+    assert channel.jobs[0].payload["runId"] == result["runId"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("minutes", [5, 30, 180])
+async def test_start_persists_open_timeout(boundary, minutes):
+    tools, host, _channel = boundary
+    result = await tools["revit_batch_start"](
+        paths=[r"C:\models\A.rvt"], open_timeout_minutes=minutes
+    )
+    assert host.runs[result["runId"]]["openTimeoutMinutes"] == minutes
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("minutes", [4, 181, True, "30", 30.5])
+async def test_invalid_open_timeout_creates_no_run(boundary, minutes):
+    tools, host, channel = boundary
+    with pytest.raises(
+        ToolError, match=r"open_timeout_minutes must be an integer from 5 through 180\."
+    ):
+        await tools["revit_batch_start"](paths=[r"C:\models\A.rvt"], open_timeout_minutes=minutes)
+    assert not host.runs and not channel.jobs
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {},
+        {"paths": [], "folder": r"C:\models"},
+        {"paths": []},
+        {"paths": [" "]},
+        {"paths": [r"C:\a.txt"]},
+        {"paths": [r"C:\A.rvt", r"c:\a.RVT"]},
+        {"paths": [r"C:\a.rvt"], "years": [2027, 2027]},
+        {"paths": [r"C:\a.rvt"], "years": [2021]},
+        {"paths": [r"C:\a.rvt"], "parameter_rules": [{"category": "", "parameter": "Mark"}]},
+    ],
+)
+async def test_invalid_start_has_no_side_effects(boundary, kwargs):
+    tools, host, channel = boundary
+    with pytest.raises(ToolError):
+        await tools["revit_batch_start"](**kwargs)
+    assert not host.runs and not channel.jobs
+
+
+@pytest.mark.anyio
+async def test_scheduled_task_fallback_then_persisted_status_and_cancel(boundary, monkeypatch):
+    tools, host, channel = boundary
+    host.instances = []
+    host.instance_delay = 3
+    monkeypatch.setattr(batch.asyncio, "sleep", AsyncMock())
+    result = await tools["revit_batch_start"](paths=[r"\\server\share\A.rvt"])
+    run_id = result["runId"]
+    assert host.activations == 1
+    assert channel.jobs[0].payload["targetProcessId"] == 91
+    assert host.runs[run_id]["models"][0]["path"] == r"\\server\share\A.rvt"
+    monkeypatch.setenv("REVIT_MCP_REDACT_PATHS", "1")
+    assert (await tools["revit_batch_status"](run_id))["models"][0]["path"] == "A.rvt"
+    assert host.runs[run_id]["models"][0]["path"] == r"\\server\share\A.rvt"
+    assert (await tools["revit_batch_cancel"](run_id))["cancelRequested"] is True
+    assert host.runs[run_id]["cancelRequested"] is True
+
+
+@pytest.mark.anyio
+async def test_read_only_start_is_refused_without_side_effects(monkeypatch):
+    monkeypatch.setenv("REVIT_MCP_READ_ONLY", "1")
+    registry, host, channel = Registry(), Host(), Channel()
+    register_batch(registry, lambda: host, lambda: channel)
+    result = await registry.tools["revit_batch_start"](folder=r"C:\models")
+    assert result == {
+        "success": False,
+        "command": "batch-start",
+        "error": "read-only mode",
+        "errorCode": "read_only",
+    }
+    assert not host.runs and not host.discovery and not channel.jobs
+
+
+@pytest.mark.anyio
+async def test_read_only_http_workstation_refuses_start(monkeypatch):
+    from revit_model_mcp.http_host import HttpHost
+
+    class ReadOnlyHttp(HttpHost):
+        def __init__(self):
+            pass
+
+        async def health(self):
+            return {"ok": True, "readOnly": True}
+
+    registry, channel = Registry(), Channel()
+    http = ReadOnlyHttp()
+    register_batch(registry, lambda: http, lambda: channel)
+    assert await registry.tools["revit_batch_start"](folder=r"C:\models") == {
+        "success": False,
+        "command": "batch-start",
+        "error": "read-only mode",
+        "errorCode": "read_only",
+    }
+    assert not channel.jobs
+
+
+@pytest.mark.anyio
+async def test_read_only_cancel_is_refused_and_status_still_works(monkeypatch, tmp_path):
+    registry, host, channel = Registry(), Host(), Channel()
+    register_batch(registry, lambda: host, lambda: channel)
+    run_id = (await registry.tools["revit_batch_start"](paths=[r"C:\models\A.rvt"]))["runId"]
+    monkeypatch.setenv("REVIT_MCP_READ_ONLY", "1")
+    read_only_registry = Registry()
+    register_batch(read_only_registry, lambda: host, lambda: channel)
+    result = await read_only_registry.tools["revit_batch_cancel"](run_id)
+    assert result == {
+        "success": False,
+        "command": "batch-cancel",
+        "error": "read-only mode",
+        "errorCode": "read_only",
+    }
+    assert host.runs[run_id].get("cancelRequested") is not True
+    status = await read_only_registry.tools["revit_batch_status"](run_id)
+    assert status["runId"] == run_id
+    host.runs[run_id]["status"] = 3
+    host.runs[run_id]["models"][0]["status"] = 4
+    fetched = await read_only_registry.tools["revit_batch_fetch"](run_id, str(tmp_path))
+    assert fetched["runId"] == run_id
+
+
+@pytest.mark.anyio
+async def test_host_batch_cancel_script_checks_workstation_gate():
+    scripts = []
+
+    class CaptureHost(SshPowerShellHost):
+        def __init__(self):
+            super().__init__("test-host")
+
+        async def _run(self, script, **_kwargs):
+            scripts.append(script)
+            return ""
+
+    await CaptureHost().batch_cancel("a" * 32)
+    assert "'read-only'" in scripts[0]
+    assert "LOCALAPPDATA" in scripts[0]
+    assert scripts[0].index("read-only") < scripts[0].index("run.json")
+
+
+@pytest.mark.anyio
+async def test_status_and_fetch_expose_redacted_dialogs_without_mutating_state(
+    boundary, tmp_path, monkeypatch
+):
+    tools, host, _channel = boundary
+    run_id = (await tools["revit_batch_start"](paths=[r"C:\models\A.rvt", r"C:\models\B.rvt"]))[
+        "runId"
+    ]
+    dialog = {
+        "dialogId": "TaskDialog_Example",
+        "type": "TaskDialogShowingEventArgs",
+        "message": r"Review C:\models\linked\A.rvt before opening",
+        "buttons": [{"caption": r"Open C:\models\linked\B.rvt", "result": 1}],
+        "decision": "unknown",
+        "result": None,
+        "modelPath": r"C:\models\A.rvt",
+        "phase": "open",
+        "timeUtc": "2026-09-30T00:00:00Z",
+    }
+    host.runs[run_id]["status"] = 4
+    host.runs[run_id]["models"][0].update(status=3, error="Dialog failed.", dialogs=[dialog])
+    host.runs[run_id]["models"][1].update(
+        status=2,
+        snapshotFile="snapshot_0002.json",
+        dialogs=[{**dialog, "decision": "allowed:1", "result": 1}],
+    )
+    host.artifacts[(run_id, "snapshot_0002.json")] = b'{"schemaVersion":1}'
+    (tmp_path / "plain").mkdir()
+    (tmp_path / "redacted").mkdir()
+    unredacted_status = await tools["revit_batch_status"](run_id)
+    unredacted_fetch = await tools["revit_batch_fetch"](run_id, str(tmp_path / "plain"))
+    for unredacted in (unredacted_status, unredacted_fetch):
+        assert unredacted["models"][0]["dialogs"][0]["buttons"] == dialog["buttons"]
+        assert unredacted["models"][0]["dialogs"][0]["message"] == dialog["message"]
+    monkeypatch.setenv("REVIT_MCP_REDACT_PATHS", "1")
+
+    status = await tools["revit_batch_status"](run_id)
+    fetched = await tools["revit_batch_fetch"](run_id, str(tmp_path / "redacted"))
+    for result in (status, fetched):
+        assert result["models"][0]["dialogs"][0]["modelPath"] == "A.rvt"
+        assert result["models"][0]["dialogs"][0]["message"] == "Review A.rvt before opening"
+        assert result["models"][0]["dialogs"][0]["buttons"] == [
+            {"caption": "Open B.rvt", "result": 1}
+        ]
+        assert result["models"][1]["dialogs"][0]["decision"] == "allowed:1"
+    assert fetched["models"][0]["error"] == "Dialog failed."
+    assert fetched["models"][1]["status"] == "completed"
+    assert host.runs[run_id]["models"][0]["dialogs"][0] == dialog
+    assert json.loads(Path(fetched["localPaths"][0]).read_text()) == {"schemaVersion": 1}
+
+
+@pytest.mark.anyio
+async def test_fetch_copies_json_and_rejects_incomplete_or_collision(boundary, tmp_path):
+    tools, host, _channel = boundary
+    result = await tools["revit_batch_start"](paths=[r"C:\models\A.rvt"])
+    run_id = result["runId"]
+    with pytest.raises(ToolError, match="incomplete"):
+        await tools["revit_batch_fetch"](run_id, str(tmp_path))
+    host.runs[run_id]["models"][0].update(status=2, snapshotFile="snapshot_0001.json")
+    host.runs[run_id]["status"] = 2
+    host.artifacts[(run_id, "snapshot_0001.json")] = b'{"schemaVersion":1}'
+    copied = await tools["revit_batch_fetch"](run_id, str(tmp_path))
+    assert copied["localPaths"] == [str(tmp_path / "snapshot_0001.json")]
+    assert json.loads(Path(copied["localPaths"][0]).read_text()) == {"schemaVersion": 1}
+    with pytest.raises(ToolError, match="already exists"):
+        await tools["revit_batch_fetch"](run_id, str(tmp_path))
+
+
+@pytest.mark.anyio
+async def test_fetch_redacts_snapshot_file_without_changing_host_artifact(
+    boundary, tmp_path, monkeypatch
+):
+    tools, host, _channel = boundary
+    result = await tools["revit_batch_start"](paths=[r"C:\models\A.rvt"])
+    run_id = result["runId"]
+    host.runs[run_id]["models"][0].update(status=2, snapshotFile="snapshot_0001.json")
+    host.runs[run_id]["status"] = 2
+    snapshot = {
+        "schemaVersion": 1,
+        "source": {"path": r"C:\models\A.rvt"},
+        "passport": {"centralPath": r"\\server\share\Central.rvt"},
+    }
+    raw = json.dumps(snapshot).encode()
+    host.artifacts[(run_id, "snapshot_0001.json")] = raw
+    monkeypatch.setenv("REVIT_MCP_REDACT_PATHS", "1")
+    fetched = await tools["revit_batch_fetch"](run_id, str(tmp_path / "redacted"))
+    assert fetched["models"] == [
+        {"path": "A.rvt", "status": "completed", "localPath": fetched["localPaths"][0]}
+    ]
+    local = Path(fetched["localPaths"][0])
+    assert json.loads(local.read_text()) == {
+        "schemaVersion": 1,
+        "source": {"path": "A.rvt"},
+        "passport": {"centralPath": "Central.rvt"},
+    }
+    assert b"models" not in local.read_bytes()
+    assert host.artifacts[(run_id, "snapshot_0001.json")] == raw
+    host.runs[run_id]["status"] = 4
+    failed_run_fetch = await tools["revit_batch_fetch"](run_id, str(tmp_path / "failed_run"))
+    assert failed_run_fetch["models"][0]["status"] == "completed"
+    assert (
+        json.loads(Path(failed_run_fetch["localPaths"][0]).read_text())["source"]["path"] == "A.rvt"
+    )
+    monkeypatch.setenv("REVIT_MCP_REDACT_PATHS", "0")
+    unredacted = await tools["revit_batch_fetch"](run_id, str(tmp_path / "unredacted"))
+    assert json.loads(Path(unredacted["localPaths"][0]).read_text()) == snapshot
+    assert unredacted["models"][0]["path"] == r"C:\models\A.rvt"
+
+
+@pytest.mark.anyio
+async def test_fetch_cancelled_run_reports_all_models(boundary, tmp_path):
+    tools, host, _channel = boundary
+    run_id = (await tools["revit_batch_start"](paths=[r"C:\A.rvt", r"C:\B.rvt"]))["runId"]
+    host.runs[run_id]["status"] = 3
+    host.runs[run_id]["models"][0].update(status=2, snapshotFile="snapshot_0001.json")
+    host.runs[run_id]["models"][1].update(status=4, error="Cancelled by user.")
+    host.artifacts[(run_id, "snapshot_0001.json")] = b'{"schemaVersion":1}'
+    result = await tools["revit_batch_fetch"](run_id, str(tmp_path))
+    assert result["localPaths"] == [str(tmp_path / "snapshot_0001.json")]
+    assert result["models"] == [
+        {"path": r"C:\A.rvt", "status": "completed", "localPath": result["localPaths"][0]},
+        {
+            "path": r"C:\B.rvt",
+            "status": "cancelled",
+            "localPath": None,
+            "error": "Cancelled by user.",
+        },
+    ]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("status", [1, "running"])
+async def test_fetch_running_reports_progress(boundary, tmp_path, status):
+    tools, host, _channel = boundary
+    run_id = (await tools["revit_batch_start"](paths=[r"C:\A.rvt", r"C:\B.rvt"]))["runId"]
+    host.runs[run_id]["status"] = status
+    host.runs[run_id]["models"][0].update(status=2, snapshotFile="snapshot_0001.json")
+    with pytest.raises(ToolError, match=r"1 of 2"):
+        await tools["revit_batch_fetch"](run_id, str(tmp_path))
+
+
+@pytest.mark.anyio
+async def test_fetch_completed_model_requires_valid_snapshot_name(boundary, tmp_path):
+    tools, host, _channel = boundary
+    run_id = (await tools["revit_batch_start"](paths=[r"C:\A.rvt"]))["runId"]
+    host.runs[run_id]["status"] = 4
+    host.runs[run_id]["models"][0].update(status=2, snapshotFile="wrong.json")
+    with pytest.raises(ToolError, match="snapshot"):
+        await tools["revit_batch_fetch"](run_id, str(tmp_path))
+
+
+@pytest.mark.anyio
+async def test_fetch_failed_run_without_snapshots_reports_model_reason(boundary, tmp_path):
+    tools, host, _channel = boundary
+    run_id = (await tools["revit_batch_start"](paths=[r"C:\A.rvt"]))["runId"]
+    host.runs[run_id]["status"] = 4
+    host.runs[run_id]["models"][0].update(status=3, reason="Open failed.")
+    result = await tools["revit_batch_fetch"](run_id, str(tmp_path))
+    assert result["localPaths"] == []
+    assert result["models"] == [
+        {"path": r"C:\A.rvt", "status": "failed", "localPath": None, "reason": "Open failed."}
+    ]
+
+
+def test_batch_artifact_falls_back_when_hard_links_unsupported(tmp_path, monkeypatch):
+    def unsupported_link(_source, _target):
+        raise OSError(errno.EOPNOTSUPP, "Hard links unsupported")
+
+    monkeypatch.setattr(os, "link", unsupported_link)
+    artifact = {
+        "artifactName": "snapshot_0001.json",
+        "artifact": base64.b64encode(b'{"schemaVersion":1}').decode(),
+    }
+    target = tmp_path / "snapshot_0001.json"
+    assert save_batch_artifact(artifact, str(tmp_path)) == str(target)
+    assert json.loads(target.read_text()) == {"schemaVersion": 1}
+    with pytest.raises(ValueError, match="already exists"):
+        save_batch_artifact(artifact, str(tmp_path))
+    assert target.read_bytes() == b'{"schemaVersion": 1}'
+    assert list(tmp_path.iterdir()) == [target]
+
+
+def test_batch_artifact_does_not_fall_back_for_other_link_errors(tmp_path, monkeypatch):
+    def denied_link(_source, _target):
+        raise OSError(errno.EACCES, "Permission denied")
+
+    monkeypatch.setattr(os, "link", denied_link)
+    artifact = {
+        "artifactName": "snapshot_0001.json",
+        "artifact": base64.b64encode(b'{"schemaVersion":1}').decode(),
+    }
+    with pytest.raises(ValueError, match="Cannot save batch artifact"):
+        save_batch_artifact(artifact, str(tmp_path))
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_batch_artifact_fallback_preserves_racing_destination(tmp_path, monkeypatch):
+    target = tmp_path / "snapshot_0001.json"
+
+    def unsupported_link(_source, _target):
+        target.write_bytes(b"original")
+        raise OSError(errno.EOPNOTSUPP, "Hard links unsupported")
+
+    monkeypatch.setattr(os, "link", unsupported_link)
+    artifact = {
+        "artifactName": "snapshot_0001.json",
+        "artifact": base64.b64encode(b'{"schemaVersion":1}').decode(),
+    }
+    with pytest.raises(ValueError, match="already exists"):
+        save_batch_artifact(artifact, str(tmp_path))
+    assert target.read_bytes() == b"original"
+    assert list(tmp_path.iterdir()) == [target]
+
+
+def test_dead_supervisor_terminalizes_only_unfinished_models():
+    state = {
+        "status": 1,
+        "models": [
+            {"status": 2, "path": "A.rvt"},
+            {"status": 1, "path": "B.rvt"},
+            {"status": 0, "path": "C.rvt"},
+        ],
+    }
+    failed = _fail_dead_supervisor(state)
+    assert failed["status"] == 4
+    assert [model["status"] for model in failed["models"]] == [2, 3, 3]
+    assert all(model["error"] for model in failed["models"][1:])
+    assert state["status"] == 1
+    assert state["models"][1]["status"] == 1
+
+
+@pytest.mark.anyio
+async def test_host_status_persists_failed_when_owned_supervisor_is_dead():
+    class DeadSupervisorHost(SshPowerShellHost):
+        def __init__(self):
+            super().__init__("test-host")
+            self.state = {
+                "runId": "a" * 32,
+                "status": 1,
+                "supervisorProcessId": 123,
+                "supervisorProcessStartedUtc": "2026-01-01T00:00:00.0000000Z",
+                "models": [{"status": 1, "path": "A.rvt"}],
+            }
+            self.writes = []
+
+        async def _run(self, script, **_kwargs):
+            if "supervisorAlive" in script:
+                return json.dumps(
+                    {
+                        "state": base64.b64encode(json.dumps(self.state).encode()).decode(),
+                        "cancel": False,
+                        "supervisorAlive": False,
+                    }
+                )
+            self.writes.append(script)
+            self.state = _fail_dead_supervisor(self.state)
+            return ""
+
+    host = DeadSupervisorHost()
+    state = await host.batch_status("a" * 32)
+    assert state["status"] == 4
+    assert state["models"][0]["status"] == 3
+    assert len(host.writes) == 1
+    assert "[IO.File]::Replace" in host.writes[0]
+    assert "Stop-Process" not in host.writes[0]
+
+
+def _powershell_runs() -> bool:
+    executable = shutil.which("pwsh")
+    if executable is None:
+        return False
+    result = subprocess.run(
+        [executable, "-NoProfile", "-NonInteractive", "-Command", "'ready'"],
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+@pytest.mark.anyio
+@pytest.mark.skipif(not _powershell_runs(), reason="Working PowerShell is required")
+async def test_host_status_reads_bom_prefixed_run_file(tmp_path):
+    run_id = "a" * 32
+    run_directory = tmp_path / "runs" / run_id
+    run_directory.mkdir(parents=True)
+    state = {"runId": run_id, "status": 2, "models": []}
+    run_file = run_directory / "run.json"
+    run_file.write_bytes(b"\xef\xbb\xbf" + json.dumps(state).encode("utf-8"))
+
+    async def run_script(script, **_kwargs):
+        result = subprocess.run(
+            [shutil.which("pwsh"), "-NoProfile", "-NonInteractive", "-Command", script],
+            capture_output=True,
+            check=False,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
+        return result.stdout.strip()
+
+    host = SshPowerShellHost("test-host")
+    host._root_directory = "'" + str(tmp_path).replace("'", "''") + "'"
+    host._run = run_script
+    actual = await host.batch_status(run_id)
+    assert actual["status"] == 2
+    assert run_file.read_bytes().startswith(b"\xef\xbb\xbf")
+
+
+@pytest.mark.anyio
+async def test_supervisor_failure_returns_structured_action_result(boundary):
+    from unittest.mock import AsyncMock
+
+    tools, _, channel = boundary
+    channel.execute = AsyncMock(
+        return_value={
+            "success": False,
+            "command": "batch-supervisor-start",
+            "error": "read-only mode",
+        }
+    )
+    assert await tools["revit_batch_start"](paths=[r"C:\models\A.rvt"]) == {
+        "success": False,
+        "command": "batch-start",
+        "error": "read-only mode",
+        "errorCode": "read_only",
+    }
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "message,code", [("read-only mode", "read_only"), ("Supervisor failed.", "action_failed")]
+)
+async def test_supervisor_channel_failure_is_normal_result(boundary, message, code):
+    from unittest.mock import AsyncMock
+
+    from revit_model_mcp import package_version
+    from revit_model_mcp.revit_channel import JobPickupStatus, RevitChannel
+
+    tools, _, channel = boundary
+    remote = AsyncMock()
+    remote.requires_identity = False
+    remote.instance_info = {
+        "addinVersion": package_version(),
+        "commands": ["batch-supervisor-start"],
+    }
+    remote.select_job.side_effect = lambda job: (remote, job)
+    remote.prepare_job.return_value = set()
+    remote.wait_until_trigger_is_gone.return_value = JobPickupStatus(True, 0, False, 0)
+    remote.wait_for_new_response.return_value = "response.json"
+    remote.finish_job.return_value = (
+        json.dumps({"success": False, "command": "batch-supervisor-start", "error": message}),
+        None,
+    )
+    channel.execute = RevitChannel(remote).execute
+    assert await tools["revit_batch_start"](paths=[r"C:\models\A.rvt"]) == {
+        "success": False,
+        "command": "batch-start",
+        "error": message,
+        "errorCode": code,
+    }
+
+
+@pytest.mark.anyio
+async def test_file_gate_cancel_refusal_is_normal_result(boundary):
+    from unittest.mock import AsyncMock
+
+    from revit_model_mcp.ssh_host import RemoteCommandError
+
+    tools, host, _ = boundary
+    host.batch_cancel = AsyncMock(
+        side_effect=RemoteCommandError(1, "Transport command exited: read-only mode")
+    )
+    assert await tools["revit_batch_cancel"]("a" * 32) == {
+        "success": False,
+        "command": "batch-cancel",
+        "error": "read-only mode",
+        "errorCode": "read_only",
+    }
+    host.batch_cancel.side_effect = RemoteCommandError(1, "Transport disconnected.")
+    with pytest.raises(ToolError, match="Transport disconnected"):
+        await tools["revit_batch_cancel"]("a" * 32)
+
+
+@pytest.mark.anyio
+async def test_host_batch_status_reports_missing_run_without_transport_error():
+    from revit_model_mcp.ssh_host import BatchRunNotFoundError
+
+    class MissingRunHost(SshPowerShellHost):
+        def __init__(self):
+            super().__init__("test-host")
+
+        async def _run(self, script, **_kwargs):
+            assert "throw 'Batch run was not found.'" not in script
+            return '{"notFound":true}'
+
+    with pytest.raises(BatchRunNotFoundError, match="Batch run was not found"):
+        await MissingRunHost().batch_status("a" * 32)
+
+
+@pytest.mark.anyio
+async def test_host_batch_cancel_reports_missing_run():
+    from revit_model_mcp.ssh_host import BatchRunNotFoundError
+
+    class MissingRunHost(SshPowerShellHost):
+        def __init__(self):
+            super().__init__("test-host")
+
+        async def _run(self, script, **_kwargs):
+            return "RMM_RUN_NOT_FOUND"
+
+    with pytest.raises(BatchRunNotFoundError):
+        await MissingRunHost().batch_cancel("a" * 32)
+
+
+@pytest.mark.anyio
+async def test_file_gate_refuses_start_before_activation(boundary):
+    from revit_model_mcp.ssh_host import RemoteCommandError
+
+    tools, host, channel = boundary
+    host.instances = []
+    host.batch_assert_writable = AsyncMock(
+        side_effect=RemoteCommandError(1, "Transport command exited: read-only mode")
+    )
+    host.batch_activate_interactive = AsyncMock()
+    host.batch_create = AsyncMock()
+    assert await tools["revit_batch_start"](folder=r"C:\models") == {
+        "success": False,
+        "command": "batch-start",
+        "error": "read-only mode",
+        "errorCode": "read_only",
+    }
+    host.batch_activate_interactive.assert_not_awaited()
+    host.batch_create.assert_not_awaited()
+    assert not host.discovery and not channel.jobs
+
+
+@pytest.mark.anyio
+async def test_gate_script_checks_the_per_user_file():
+    host = SshPowerShellHost("test-host")
+    host._run = AsyncMock(return_value="")
+    await host.batch_assert_writable()
+    script = host._run.await_args.args[0]
+    assert "'read-only'" in script and "throw 'read-only mode'" in script
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "tool,method,arguments,command",
+    [
+        (
+            "revit_batch_start",
+            "batch_assert_writable",
+            {"paths": [r"C:\models\One.rvt"]},
+            "batch-start",
+        ),
+        ("revit_batch_status", "batch_status", {"run_id": "a" * 32}, "batch-status"),
+    ],
+)
+async def test_batch_returns_retryable_transport_failure(
+    boundary, monkeypatch, tool, method, arguments, command
+):
+    from revit_model_mcp.revit_channel import SshUnavailableError
+
+    tools, host, channel = boundary
+    monkeypatch.setenv("REVIT_MCP_REDACT_PATHS", "1")
+    monkeypatch.setattr(
+        host, method, AsyncMock(side_effect=SshUnavailableError(r"Lost C:\Private\Tower.rvt"))
+    )
+    result = await tools[tool](**arguments)
+    assert result["success"] is False
+    assert result["command"] == command
+    assert result["errorCode"] == "transport_unavailable"
+    assert result["retryable"] is True
+    assert "Private" not in result["error"]
+    assert not channel.jobs

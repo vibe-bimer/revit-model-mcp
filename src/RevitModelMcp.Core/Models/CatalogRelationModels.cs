@@ -16,14 +16,17 @@ public sealed class ResponderInfo
 
     [DataMember(Name = "revitVersion")]
     public string RevitVersion { get; set; } = string.Empty;
-
-    [DataMember(Name = "pluginVersion")]
-    public string PluginVersion { get; set; } = string.Empty;
 }
 
 [DataContract]
 public sealed class CatalogData
 {
+    [DataMember(Name = "total")]
+    public int Total { get; set; }
+
+    [DataMember(Name = "hasMore")]
+    public bool HasMore { get; set; }
+
     [DataMember(Name = "section")]
     public string Section { get; set; } = string.Empty;
 

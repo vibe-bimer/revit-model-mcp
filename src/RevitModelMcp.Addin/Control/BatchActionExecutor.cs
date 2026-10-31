@@ -1,5 +1,6 @@
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
+using RevitModelMcp.Core.Activity;
 using RevitModelMcp.Core.Control;
 
 namespace RevitModelMcp.Control;
@@ -7,17 +8,16 @@ namespace RevitModelMcp.Control;
 internal static class BatchActionExecutor
 {
     internal static ActionResultData Execute(Document document, UIDocument? uiDocument, ActionJobContract action,
-        ActionCommandExecutor.ActionFailures failures)
+        ActionCommandExecutor.ActionFailures failures, string clientName)
     {
         var selection = uiDocument?.Selection.GetElementIds();
         var result = new ActionResultData
         {
             DryRun = action.DryRun,
             Steps = [],
-            UndoName = "revit_batch",
             Committed = false
         };
-        using var group = new TransactionGroup(document, "revit_batch");
+        using var group = new TransactionGroup(document, "MCP batch");
         if (group.Start() != TransactionStatus.Started)
             throw new InvalidOperationException("Could not start the batch transaction group.");
         try
@@ -28,14 +28,14 @@ internal static class BatchActionExecutor
                 result.Steps.Add(entry);
                 try
                 {
-                    // Batch previews retain earlier changes until the entire group rolls back.
                     var stepAction = step.Action!;
                     var originalDryRun = stepAction.DryRun;
                     try
                     {
                         stepAction.DryRun |= action.DryRun;
+                        // Dry runs must never commit: some deletions are irreversible.
                         entry.Data = ActionCommandExecutor.ExecuteStep(document, uiDocument, step.Command, stepAction,
-                            failures, out _, deferDryRun: action.DryRun);
+                            failures, clientName, out _, wrapGroup: false);
                     }
                     finally
                     {
@@ -51,12 +51,27 @@ internal static class BatchActionExecutor
                     return result;
                 }
             }
-            if (action.DryRun) RollBack();
+            var summary = ActionSummaryBuilder.BuildSummary(new ActionSummaryContext
+            {
+                Command = "batch",
+                DocumentTitle = document.Title,
+                DryRun = action.DryRun,
+                BatchStepCount = result.Steps.Count
+            });
+            result.Summary = summary;
+            if (action.DryRun)
+            {
+                // Dry runs must never commit: some deletions are irreversible.
+                RollBack();
+            }
             else
             {
+                var groupName = ActionSummaryBuilder.BuildGroupName(clientName, summary);
+                group.SetName(groupName);
                 if (group.Assimilate() != TransactionStatus.Committed)
                     throw new InvalidOperationException("Could not assimilate the batch transaction group.");
                 result.Committed = true;
+                result.UndoName = groupName;
             }
             return result;
         }

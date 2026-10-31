@@ -14,16 +14,6 @@
           "type": "toml",
           "path": "server/pyproject.toml",
           "jsonpath": "$.project.version"
-        },
-        {
-          "type": "json",
-          "path": "server/server.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "server/server.json",
-          "jsonpath": "$.packages[0].version"
         }
       ],
       "changelog-sections": [

@@ -54,11 +54,13 @@ internal static class UniversalJobParser
     public static ControlJobParseResult ParseCatalog(ControlJobContract job)
     {
         var section = Normalize(job.Section);
+        if (job.Limit is < 1 or > 2000)
+            return ControlJobParseResult.Invalid("list-catalog", "limit must be between 1 and 2000.");
         return section is null || !CatalogSections.Contains(section)
             ? ControlJobParseResult.Invalid(
                 "list-catalog",
                 $"Unknown catalog section: {section ?? "<empty>"}. Available sections: {string.Join(", ", CatalogSections)}.")
-            : WithCatalog(section);
+            : WithCatalog(section, job);
     }
 
     public static ControlJobParseResult ParseWarnings(ControlJobContract job)
@@ -124,7 +126,7 @@ internal static class UniversalJobParser
         return new CommonParseResult
         {
             Offset = offset,
-            Limit = limit,
+            Limit = Math.Min(limit, ControlJobParser.MaximumQueryLimit),
             Filters = new ElementFilterSpec
             {
                 Categories = NormalizeMany(job.Categories),
@@ -193,10 +195,12 @@ internal static class UniversalJobParser
         result.Limit = common.Limit;
     }
 
-    private static ControlJobParseResult WithCatalog(string section)
+    private static ControlJobParseResult WithCatalog(string section, ControlJobContract job)
     {
         var result = ControlJobParseResult.Create(ControlJobKind.ListCatalog, "list-catalog");
         result.CatalogSection = section;
+        result.NameContains = Normalize(job.NameContains);
+        result.Limit = job.Limit ?? 200;
         return result;
     }
 
@@ -226,12 +230,21 @@ internal static class UniversalJobParser
 public sealed class ExternalEventRequestQueue
 {
     private readonly object _sync = new();
-    private readonly Action _raise;
+    private readonly Func<bool> _raise;
+    private readonly Action? _markWaiting;
+    private readonly Func<TimeSpan, Task> _delay;
     private bool _executing;
     private bool _requested; // A single flag preserves requests received during Execute.
+    private bool _retryScheduled;
     public ExternalEventRequestQueue(Action raise)
+        : this(() => { raise(); return true; }, null)
+    {
+    }
+    public ExternalEventRequestQueue(Func<bool> raise, Action? markWaiting = null, Func<TimeSpan, Task>? delay = null)
     {
         _raise = raise ?? throw new ArgumentNullException(nameof(raise));
+        _markWaiting = markWaiting;
+        _delay = delay ?? (static interval => Task.Delay(interval));
     }
     public void Request()
     {
@@ -249,6 +262,7 @@ public sealed class ExternalEventRequestQueue
         if (shouldRaise)
         {
             RaisePendingRequest();
+            MarkWaitingIfDelayed();
         }
     }
 
@@ -283,6 +297,7 @@ public sealed class ExternalEventRequestQueue
             if (shouldRaise)
             {
                 RaisePendingRequest();
+                MarkWaitingIfDelayed();
             }
         }
     }
@@ -291,7 +306,23 @@ public sealed class ExternalEventRequestQueue
     {
         try
         {
-            _raise();
+            if (!_raise())
+            {
+                lock (_sync)
+                {
+                    if (_retryScheduled) return;
+                    _retryScheduled = true;
+                }
+                _ = _delay(TimeSpan.FromMilliseconds(100)).ContinueWith(_ =>
+                {
+                    lock (_sync) _retryScheduled = false;
+                    lock (_sync)
+                    {
+                        if (!_requested || _executing) return;
+                    }
+                    RaisePendingRequest();
+                }, TaskScheduler.Default);
+            }
         }
         catch
         {
@@ -302,19 +333,32 @@ public sealed class ExternalEventRequestQueue
             throw;
         }
     }
+
+    private void MarkWaitingIfDelayed()
+    {
+        if (_markWaiting is null) return;
+        _ = _delay(TimeSpan.FromMilliseconds(500)).ContinueWith(_ =>
+        {
+            lock (_sync)
+            {
+                if (!_requested || _executing) return;
+            }
+            _markWaiting();
+        }, TaskScheduler.Default);
+    }
 }
 
-public sealed class TriggerFileWatcher : IDisposable
+public sealed class JobFileWatcher : IDisposable
 {
     private static readonly TimeSpan MinimumFallbackInterval = TimeSpan.FromSeconds(10);
-    private readonly string _triggerFilePath;
+    private readonly string _directory;
     private readonly Action _request;
     private readonly Action<Exception> _reportError;
     private readonly TimeSpan _fallbackInterval;
     private FileSystemWatcher? _watcher;
     private System.Threading.Timer? _timer;
-    public TriggerFileWatcher(
-        string triggerFilePath,
+    public JobFileWatcher(
+        string directory,
         Action request,
         Action<Exception> reportError,
         TimeSpan fallbackInterval)
@@ -323,9 +367,9 @@ public sealed class TriggerFileWatcher : IDisposable
         {
             throw new ArgumentOutOfRangeException(
                 nameof(fallbackInterval),
-                "The fallback check for trigger.txt must not run more than once every 10 seconds.");
+                "The fallback check for job files must not run more than once every 10 seconds.");
         }
-        _triggerFilePath = Path.GetFullPath(triggerFilePath);
+        _directory = Path.GetFullPath(directory);
         _request = request ?? throw new ArgumentNullException(nameof(request));
         _reportError = reportError ?? throw new ArgumentNullException(nameof(reportError));
         _fallbackInterval = fallbackInterval;
@@ -336,22 +380,21 @@ public sealed class TriggerFileWatcher : IDisposable
         {
             return;
         }
-        var directory = Path.GetDirectoryName(_triggerFilePath)
-                        ?? throw new InvalidOperationException("The trigger.txt file has no parent directory.");
+        var directory = _directory;
         Directory.CreateDirectory(directory);
-        _watcher = new FileSystemWatcher(directory, Path.GetFileName(_triggerFilePath))
+        _watcher = new FileSystemWatcher(directory, "*")
         {
             NotifyFilter = NotifyFilters.FileName
         };
-        _watcher.Created += OnTriggerAppeared;
-        _watcher.Renamed += OnTriggerRenamed;
+        _watcher.Created += OnJobAppeared;
+        _watcher.Renamed += OnJobRenamed;
         _watcher.EnableRaisingEvents = true;
         _timer = new System.Threading.Timer(
-            _ => RequestIfTriggerExists(),
+            _ => RequestIfJobsExist(),
             null,
             _fallbackInterval,
             _fallbackInterval);
-        RequestIfTriggerExists();
+        RequestIfJobsExist();
     }
 
     public void Dispose()
@@ -361,19 +404,26 @@ public sealed class TriggerFileWatcher : IDisposable
         if (_watcher is not null)
         {
             _watcher.EnableRaisingEvents = false;
-            _watcher.Created -= OnTriggerAppeared;
-            _watcher.Renamed -= OnTriggerRenamed;
+            _watcher.Created -= OnJobAppeared;
+            _watcher.Renamed -= OnJobRenamed;
             _watcher.Dispose();
             _watcher = null;
         }
     }
-    private void OnTriggerAppeared(object sender, FileSystemEventArgs args) => RequestSafely();
-    private void OnTriggerRenamed(object sender, RenamedEventArgs args) => RequestSafely();
-    private void RequestIfTriggerExists()
+    private void OnJobAppeared(object sender, FileSystemEventArgs args)
+    {
+        if (IsJobFile(args.Name)) RequestSafely();
+    }
+    private void OnJobRenamed(object sender, RenamedEventArgs args)
+    {
+        if (IsJobFile(args.Name)) RequestSafely();
+    }
+    private static bool IsJobFile(string? name) => name is not null && name.StartsWith("job_", StringComparison.Ordinal) && name.EndsWith(".json", StringComparison.Ordinal);
+    private void RequestIfJobsExist()
     {
         try
         {
-            if (File.Exists(_triggerFilePath))
+            if (Directory.GetFiles(_directory, "job_*.json").Length > 0)
             {
                 _request();
             }

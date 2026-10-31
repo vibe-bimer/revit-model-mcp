@@ -28,13 +28,27 @@ updates:
     commit-message:
       prefix: chore(deps)
   - package-ecosystem: pip
-    directory: /server
+    directories:
+      - /server
+      - /docs
+      - /.github/requirements
     schedule:
       interval: monthly
     open-pull-requests-limit: 3
     groups:
       all:
         patterns: ["*"]
+    ignore:
+      # pydantic pins its exact pydantic-core build; bump it together with pydantic.
+      - dependency-name: pydantic-core
     labels: [dependencies, server]
+    commit-message:
+      prefix: chore(deps)
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    labels: [dependencies, build]
     commit-message:
       prefix: chore(deps)

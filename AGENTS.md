@@ -2,7 +2,7 @@
 
 ## Purpose and runtime
 
-Revit Model MCP exposes live Revit model data to MCP clients, read-only by default.
+Model MCP exposes live Revit models to MCP clients. The installer ships read-only, and the workstation policy is the only gate on writes.
 The C# add-in runs inside Revit on Windows and owns Revit API access through ExternalEvent.
 The Python server runs on the MCP client's machine and exposes stdio tools over local, SSH or HTTP transport to the add-in.
 
@@ -13,7 +13,7 @@ The Python server runs on the MCP client's machine and exposes stdio tools over 
 | `src/` | C# add-in and Revit-independent Core library |
 | `tests/` | C# Core tests |
 | `server/` | Python MCP server, tests, package metadata and registry manifest |
-| `build/` | Build orchestration, WixSharp packaging and WinGet manifests |
+| `build/` | Build orchestration, WixSharp packaging and the fork budget check |
 | `docs/` | Tool contracts, transports, architecture and validation evidence |
 | `.github/` | CI, release workflows, issue forms and PR template |
 
@@ -27,8 +27,8 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-The C# hook requires Windows; on macOS or Linux, report its result and use Windows PR CI as the oracle.
-See [Local checks](CONTRIBUTING.md#local-checks) for prerequisites and the platform-specific skip command.
+The C# hook prints a notice and exits successfully on macOS and Linux; Windows PR CI verifies C# formatting.
+See [Local checks](CONTRIBUTING.md#local-checks) for prerequisites and hook behavior on each platform.
 Use the SDK in `global.json`.
 Run from the repository root on Windows:
 
@@ -53,13 +53,13 @@ For Python 3.11+ with uv, from the repository root:
 ```sh
 cd server
 uv run --with pytest pytest -q
-uvx ruff==0.16.7 check .
-uvx ruff==0.16.7 format --check .
+uvx ruff==0.16.10 check .
+uvx ruff==0.16.10 format --check .
 uv build
 uvx twine check dist/*
 ```
 
-Apply formatting with `uvx ruff==0.16.7 format .` in `server/`.
+Apply formatting with `uvx ruff==0.16.10 format .` in `server/`.
 Run `actionlint` 1.7.12 from the repository root after workflow changes and before pushing them.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for packaging commands and test coverage.
 
@@ -68,26 +68,26 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for packaging commands and test coverage.
 - Use Conventional Commits for commits and PR titles.
 - Write code, comments and documentation in English with sentence-case headings and short sentences.
 - Add or update tests for every behavior change; never delete or weaken existing tests.
+- Tests assert behavior through the public surface. A Python test never reads C# source files to check their text; add-in behavior without a Core seam is verified on a Revit workstation and noted in the PR.
 - Describe release changes in Conventional Commit messages; release-please updates [CHANGELOG.md](CHANGELOG.md).
 - Follow `.editorconfig` and the pinned Ruff configuration.
 - Keep internal documentation links valid when moving sections.
 
 ## Hard rules
 
-- Keep MCP actions behind both `REVIT_MCP_ALLOW_WRITE=1` and the workstation `allow-write` gate.
-- Never widen defaults toward writing; direct HTTP actions still require authentication and the workstation gate.
+- A fresh install is read-only: `READONLY=1` is the installer default, and a workstation that accepts writes says `READONLY=0` (adr/0003). Every change is one named undo entry, listed in the activity pane and reported in `summary`.
+- Direct HTTP actions still require authentication and are refused while the workstation read-only gate is present.
 - Never log model paths when redaction is on, or expose secrets and confidential model data in commits or logs.
 - Never include Revit API assemblies in artifacts.
 - Keep transports loopback-first; remote exposure requires explicit configuration.
 - Preserve timeout and verification warnings: a timed-out or failed verification response may follow a committed change.
 - Never run `git reset --hard`, `git clean -fd` or force push.
-- Keep this fork's release identity separate from upstream: its own installer UpgradeCode, package name, registry name and release feed. Never reuse `sharafutdinovdi/revit-model-mcp` in a shipped surface, and never resolve the Python server by a bare PyPI version spec. Both projects share version numbers, so either mistake installs upstream's code while appearing to work. `python tools/check_fork_identity.py` enforces this.
 
 ## Release ritual
 
 Follow the [release ritual](CONTRIBUTING.md#release-ritual).
 The version in `server/pyproject.toml` must equal the tag without its `v` prefix.
-Agents never edit `CHANGELOG.md`, the `server/pyproject.toml` version or either `server/server.json` version by hand.
+Agents never edit `CHANGELOG.md` or the `server/pyproject.toml` version by hand.
 release-please owns these files and version fields through its release PR.
 The maintainer merges the release PR to create the tag and publish the release.
 Verify assets and publishing jobs after the release workflow finishes.

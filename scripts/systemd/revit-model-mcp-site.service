@@ -1,9 +1,0 @@
-[Unit]
-Description=Refresh and serve the Revit Model MCP documentation
-After=network-online.target
-
-[Service]
-Type=oneshot
-WorkingDirectory=@ROOT@
-Environment=SITE_PORT=@PORT@
-ExecStart=@ROOT@/scripts/site-cron.sh

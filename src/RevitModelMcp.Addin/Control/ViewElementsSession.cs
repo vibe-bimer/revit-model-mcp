@@ -4,6 +4,7 @@ using Autodesk.Revit.UI;
 using RevitModelMcp.Capture;
 using RevitModelMcp.Core.Control;
 using RevitModelMcp.Core.Models;
+using RevitModelMcp.Core.Naming;
 using RevitModelMcp.Output;
 
 namespace RevitModelMcp.Control;
@@ -20,6 +21,7 @@ internal sealed class ViewElementsSession : IControlSession
     private readonly ViewElementsData _data;
     private readonly CommandResponseFileWriter _output;
     private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
+    private readonly SkippedReadDiagnostics _diagnostics = new();
     private readonly List<string> _unknownCategories;
 
     private int _nextElementIndex;
@@ -30,8 +32,7 @@ internal sealed class ViewElementsSession : IControlSession
         ControlJobParseResult job,
         DateTimeOffset startedAt)
     {
-        _document = application.ActiveUIDocument?.Document
-                    ?? throw new InvalidOperationException("No active Revit document.");
+        _document = ActionCommandExecutor.ResolveDocument(application, job.TargetDocument);
         _output = CommandResponseFileWriter.Create(
             startedAt.LocalDateTime,
             job.Command,
@@ -93,6 +94,7 @@ internal sealed class ViewElementsSession : IControlSession
             return;
         }
 
+        SkippedReadDiagnostics.Current = _diagnostics;
         try
         {
             _executions++;
@@ -120,6 +122,11 @@ internal sealed class ViewElementsSession : IControlSession
                 {
                     _data.Elements.Add(_reader.Read(element));
                 }
+                else
+                {
+                    PluginLog.Skipped($"view {_data.View} element {RevitValueReader.GetId(_pageIds[_nextElementIndex - 1])}",
+                        new InvalidOperationException("Element is unavailable."));
+                }
             }
 
             if (_nextElementIndex >= _pageIds.Count)
@@ -133,21 +140,45 @@ internal sealed class ViewElementsSession : IControlSession
         }
         catch (Exception exception)
         {
+            if (_nextElementIndex > 0 && _nextElementIndex <= _pageIds.Count)
+            {
+                PluginLog.Skipped($"view {_data.View} element {RevitValueReader.GetId(_pageIds[_nextElementIndex - 1])}", exception);
+            }
             PluginLog.Error("View-elements processing failed.", exception);
             StopWithPartial($"Element reading stopped: {exception}");
+        }
+        finally
+        {
+            SkippedReadDiagnostics.Current = null;
         }
     }
 
     public void RejectJobWhileBusy()
     {
         _data.RejectedJobsWhileBusy++;
-        WritePartial("New job rejected: RevitModelMcp is busy reading elements.");
+        SkippedReadDiagnostics.Current = _diagnostics;
+        try
+        {
+            WritePartial("New job rejected: RevitModelMcp is busy reading elements.");
+        }
+        finally
+        {
+            SkippedReadDiagnostics.Current = null;
+        }
     }
 
     public void Abort(Exception exception)
     {
         PluginLog.Error("View-elements session aborted.", exception);
-        StopWithPartial($"Element reading aborted: {exception}");
+        SkippedReadDiagnostics.Current = _diagnostics;
+        try
+        {
+            StopWithPartial($"Element reading aborted: {exception}");
+        }
+        finally
+        {
+            SkippedReadDiagnostics.Current = null;
+        }
     }
 
     private void Complete()
@@ -246,21 +277,17 @@ internal sealed class ViewElementsSession : IControlSession
         IReadOnlyList<string> requestedNames,
         out List<string> unknownNames)
     {
-        var requested = new HashSet<string>(requestedNames, StringComparer.OrdinalIgnoreCase);
-        var matchedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var categories = document.Settings.Categories.Cast<Category>().ToList();
         var ids = new List<ElementId>();
-        foreach (Category category in document.Settings.Categories)
+        unknownNames = [];
+        foreach (var name in requestedNames)
         {
-            if (!requested.Contains(category.Name))
-            {
-                continue;
-            }
-
-            ids.Add(category.Id);
-            matchedNames.Add(category.Name);
+            var category = categories.FirstOrDefault(candidate => string.Equals(candidate.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? categories.FirstOrDefault(candidate => CategoryNames.Matches(name,
+                    QueryFilterBuilder.GetRevitCategoryNames(candidate), QueryFilterBuilder.GetBuiltInCategoryName(candidate)));
+            if (category is null) unknownNames.Add(name);
+            else if (!ids.Contains(category.Id)) ids.Add(category.Id);
         }
-
-        unknownNames = requestedNames.Where(name => !matchedNames.Contains(name)).ToList();
         return ids;
     }
 }

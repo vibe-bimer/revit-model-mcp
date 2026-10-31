@@ -16,7 +16,7 @@ internal static class ViewImageExporter
         DateTime localTime)
     {
         EnsureSupported(view);
-        var directory = SnapshotFileWriter.OutputDirectory;
+        var directory = ChannelDirectory.OutputDirectory;
         Directory.CreateDirectory(directory);
         var id = RevitValueReader.GetId(view.Id);
         var stamp = localTime.ToString("yyyyMMdd_HHmmss_fff", CultureInfo.InvariantCulture);
@@ -28,8 +28,8 @@ internal static class ViewImageExporter
         }
 
         var prefix = Path.GetFileNameWithoutExtension(targetPath);
-        var existingFiles = new HashSet<string>(Directory.GetFiles(directory, $"{prefix}*.png"),
-            StringComparer.OrdinalIgnoreCase);
+        var existingFiles = Directory.GetFiles(directory, $"{prefix}*.png")
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         using var options = CreateOptions(view, targetPath, pixelSize, zoomToFit);
         document.ExportImage(options);
 

@@ -48,6 +48,43 @@ public sealed class CommandResponse<T>
     [DataMember(Name = "correlationId", Order = 13, EmitDefaultValue = false)]
     public string? CorrelationId { get; set; }
 
+    [DataMember(Name = "client", Order = 14, EmitDefaultValue = false)]
+    public ClientIdentity? Client { get; set; }
+
+    [DataMember(Name = "jobId", Order = 15, EmitDefaultValue = false)]
+    public string? JobId { get; set; }
+
+    [DataMember(Name = "queuedMs", Order = 16, EmitDefaultValue = false)]
+    public long? QueuedMs { get; set; }
+
+    [DataMember(Name = "retryAfterMs", Order = 17, EmitDefaultValue = false)]
+    public int? RetryAfterMs { get; set; }
+
+    [DataMember(Name = "skipped", Order = 18, EmitDefaultValue = false)]
+    public List<SkippedRead>? Skipped { get; set; }
+
+    [DataMember(Name = "skippedCount", Order = 19, EmitDefaultValue = false)]
+    public int? SkippedCount { get; set; }
+
+    /// <summary>Effective machine policy, set on ping only. Values hold no paths or secrets.</summary>
+    [DataMember(Name = "policy", Order = 20, EmitDefaultValue = false)]
+    public Dictionary<string, string>? Policy { get; set; }
+
+    [OnSerializing]
+    private void AddJobMetadata(StreamingContext context)
+    {
+        if (SkippedReadDiagnostics.Current is { } diagnostics)
+        {
+            Skipped = diagnostics.Items;
+            SkippedCount = diagnostics.Count;
+        }
+        var metadata = JobResponseMetadata.Current;
+        if (metadata is null || JobId is not null) return;
+        Client = metadata.Client;
+        JobId = metadata.JobId;
+        QueuedMs = metadata.QueuedMs;
+    }
+
     private List<string>? warningsDismissed;
 
     public static CommandResponse<T> Ok(string command, T data, long elapsedMs, string? message = null)
@@ -102,64 +139,66 @@ public sealed class CommandResponse<T>
     }
 }
 
+[DataContract]
+public sealed record ClientIdentity
+{
+    [DataMember(Name = "name")] public string Name { get; init; } = "unknown";
+    [DataMember(Name = "id")] public string Id { get; init; } = "unknown";
+}
+
+public sealed record JobResponseMetadata(ClientIdentity Client, string JobId, long QueuedMs)
+{
+    [ThreadStatic] public static JobResponseMetadata? Current;
+}
+
+[DataContract]
+public sealed record JobListData
+{
+    [DataMember(Name = "jobs")] public List<JobSummary> Jobs { get; init; } = [];
+}
+
+[DataContract]
+public sealed record JobSummary
+{
+    [DataMember(Name = "jobId")] public string JobId { get; init; } = string.Empty;
+    [DataMember(Name = "clientName")] public string ClientName { get; init; } = string.Empty;
+    [DataMember(Name = "command")] public string Command { get; init; } = string.Empty;
+    [DataMember(Name = "state")] public string State { get; init; } = string.Empty;
+    [DataMember(Name = "position")] public int Position { get; init; }
+    [DataMember(Name = "ageMs")] public long AgeMs { get; init; }
+}
+
+[DataContract]
+public sealed record ScheduleDataResult
+{
+    [DataMember(Name = "columns")] public List<string> Columns { get; init; } = [];
+    [DataMember(Name = "rows")] public List<List<string>> Rows { get; init; } = [];
+    [DataMember(Name = "totalRows")] public int TotalRows { get; init; }
+    [DataMember(Name = "truncated")] public bool Truncated { get; init; }
+
+    public static List<string> JoinHeadings(IReadOnlyList<List<string>> rows, int columnCount)
+    {
+        return Enumerable.Range(0, columnCount)
+            .Select(column => string.Join(" / ", rows.Select(row => row[column])
+                .Where(text => !string.IsNullOrWhiteSpace(text))))
+            .ToList();
+    }
+
+    /// <summary>First body row to read; one past <paramref name="lastRow"/> when the offset is beyond the last data row.</summary>
+    public static int FirstRow(int dataStart, int offset, int lastRow) =>
+        (long)offset > (long)lastRow - dataStart ? lastRow + 1 : dataStart + offset;
+
+    public static bool IsTruncated(int offset, int rowCount, int totalRows) => (long)offset + rowCount < totalRows;
+}
+
 public static class ReadCommandResponseFactory
 {
-    public static CommandResponse<string> Ping(long elapsedMs)
+    public static CommandResponse<string> Ping(long elapsedMs, Dictionary<string, string>? policy = null)
     {
-        return CommandResponse<string>.Ok("ping", "pong", elapsedMs);
+        var response = CommandResponse<string>.Ok("ping", "pong", elapsedMs);
+        if (policy is { Count: > 0 }) response.Policy = policy;
+        return response;
     }
-}
-
-/// <summary>
-/// Result of writing the element identifier list to a workbook on the Revit workstation.
-/// </summary>
-[DataContract]
-public sealed class ElementIdExportData
-{
-    [DataMember(Name = "path")]
-    public string Path { get; set; } = string.Empty;
-
-    [DataMember(Name = "fileName")]
-    public string FileName { get; set; } = string.Empty;
-
-    [DataMember(Name = "sheetName")]
-    public string SheetName { get; set; } = string.Empty;
-
-    [DataMember(Name = "columns")]
-    public List<string> Columns { get; set; } = new();
-
-    [DataMember(Name = "rowCount")]
-    public int RowCount { get; set; }
-
-    [DataMember(Name = "totalCandidates")]
-    public int TotalCandidates { get; set; }
-
-    [DataMember(Name = "truncated")]
-    public bool Truncated { get; set; }
-
-    [DataMember(Name = "sizeBytes")]
-    public long SizeBytes { get; set; }
-
-    [DataMember(Name = "categoryCounts")]
-    public List<ElementCategoryCount> CategoryCounts { get; set; } = new();
-
-    /// <summary>Categorized elements the scope rule left out, so the rule stays auditable.</summary>
-    [DataMember(Name = "skippedCategories")]
-    public List<ElementCategoryCount> SkippedCategories { get; set; } = new();
-}
-
-[DataContract]
-public sealed class ElementCategoryCount
-{
-    [DataMember(Name = "category")]
-    public string Category { get; set; } = string.Empty;
-
-    /// <summary>BuiltInCategory name, which stays readable regardless of the Revit UI language.</summary>
-    [DataMember(Name = "builtInCategory", EmitDefaultValue = false)]
-    public string? BuiltInCategory { get; set; }
-
-    [DataMember(Name = "count")]
-    public int Count { get; set; }
 }
 
 [DataContract]
@@ -173,9 +212,6 @@ public sealed class DocumentInfoData
 
     [DataMember(Name = "isWorkshared")]
     public bool IsWorkshared { get; set; }
-
-    [DataMember(Name = "isModified")]
-    public bool IsModified { get; set; }
 
     [DataMember(Name = "levels")]
     public List<DocumentLevelInfo> Levels { get; set; } = new();
@@ -293,7 +329,7 @@ public sealed class ViewExportData
 public sealed class ViewSummaryData
 {
     [DataMember(Name = "header")]
-    public ViewDumpHeader Header { get; set; } = new();
+    public ViewHeader Header { get; set; } = new();
 
     [DataMember(Name = "categories")]
     public List<ViewCategorySummary> Categories { get; set; } = new();
@@ -529,4 +565,119 @@ public static class ActionFailurePolicy
         if (isError && hasSafeResolution && !resolutionAttempted) return ActionFailureDisposition.ResolveError;
         return ActionFailureDisposition.RollBack;
     }
+}
+
+[DataContract]
+public sealed class ElementCaptureData
+{
+    [DataMember(Name = "fileName")]
+    public string FileName { get; set; } = string.Empty;
+
+    [DataMember(Name = "width")]
+    public int Width { get; set; }
+
+    [DataMember(Name = "height")]
+    public int Height { get; set; }
+
+    [DataMember(Name = "sizeBytes")]
+    public long SizeBytes { get; set; }
+
+    [DataMember(Name = "elementCount")]
+    public int ElementCount { get; set; }
+
+    [DataMember(Name = "missingIds")]
+    public List<long> MissingIds { get; set; } = [];
+
+    [DataMember(Name = "mode")]
+    public string Mode { get; set; } = "3d";
+}
+
+[DataContract]
+public sealed class ViewHeader
+{
+    [DataMember(Name = "name")]
+    public string? Name { get; set; }
+
+    [DataMember(Name = "type")]
+    public string? Type { get; set; }
+
+    [DataMember(Name = "level", EmitDefaultValue = false)]
+    public string? Level { get; set; }
+
+    [DataMember(Name = "scale")]
+    public int Scale { get; set; }
+
+    [DataMember(Name = "template", EmitDefaultValue = false)]
+    public string? Template { get; set; }
+
+    [DataMember(Name = "discipline", EmitDefaultValue = false)]
+    public string? Discipline { get; set; }
+
+    [DataMember(Name = "filterCount")]
+    public int FilterCount { get; set; }
+
+    [DataMember(Name = "graphicOverrideCount")]
+    public int GraphicOverrideCount { get; set; }
+
+    [DataMember(Name = "elementCount")]
+    public int ElementCount { get; set; }
+}
+
+[DataContract]
+public sealed class ViewCategorySummary
+{
+    [DataMember(Name = "category")]
+    public string Category { get; set; } = string.Empty;
+
+    [DataMember(Name = "count")]
+    public int Count { get; set; }
+
+    [DataMember(Name = "differentTypes")]
+    public int DifferentTypes { get; set; }
+}
+
+[DataContract]
+public sealed class ViewElementDump
+{
+    [DataMember(Name = "id", Order = 1)]
+    public long Id { get; set; }
+
+    [DataMember(Name = "category", Order = 2, EmitDefaultValue = false)]
+    public string? Category { get; set; }
+
+    [DataMember(Name = "family", Order = 3, EmitDefaultValue = false)]
+    public string? Family { get; set; }
+
+    [DataMember(Name = "type", Order = 4, EmitDefaultValue = false)]
+    public string? Type { get; set; }
+
+    [DataMember(Name = "name", Order = 5, EmitDefaultValue = false)]
+    public string? Name { get; set; }
+
+    [DataMember(Name = "level", Order = 6, EmitDefaultValue = false)]
+    public string? Level { get; set; }
+
+    [DataMember(Name = "workset", Order = 7, EmitDefaultValue = false)]
+    public string? Workset { get; set; }
+
+    [DataMember(Name = "phase", Order = 8, EmitDefaultValue = false)]
+    public string? Phase { get; set; }
+
+    [DataMember(Name = "lengthMm", Order = 9, EmitDefaultValue = false)]
+    public double? LengthMm { get; set; }
+
+    [DataMember(Name = "thicknessMm", Order = 10, EmitDefaultValue = false)]
+    public double? ThicknessMm { get; set; }
+
+    [DataMember(Name = "areaM2", Order = 11, EmitDefaultValue = false)]
+    public double? AreaM2 { get; set; }
+
+    [DataMember(Name = "volumeM3", Order = 12, EmitDefaultValue = false)]
+    public double? VolumeM3 { get; set; }
+
+    [DataMember(Name = "profileParameters", Order = 13)]
+    public Dictionary<string, string> ProfileParameters { get; set; } = new();
+
+    [DataMember(Name = "hasWarnings", Order = 14)]
+    public bool HasWarnings { get; set; }
 }

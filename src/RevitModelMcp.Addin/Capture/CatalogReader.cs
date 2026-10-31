@@ -1,12 +1,11 @@
 using Autodesk.Revit.DB;
-using RevitModelMcp.Compatibility;
 using RevitModelMcp.Core.Models;
 
 namespace RevitModelMcp.Capture;
 
 internal static class CatalogReader
 {
-    public static CatalogData Read(Document document, string section)
+    public static CatalogData Read(Document document, string section, string? nameContains, int limit)
     {
         var items = section.ToLowerInvariant() switch
         {
@@ -20,7 +19,15 @@ internal static class CatalogReader
             "parameters" => ReadParameters(document),
             _ => throw new ArgumentOutOfRangeException(nameof(section), section, "Unknown catalog section.")
         };
-        return new CatalogData { Section = section, Items = items };
+        var filtered = items.Where(item => nameContains is null ||
+            item.Name.IndexOf(nameContains, StringComparison.OrdinalIgnoreCase) >= 0).ToList();
+        return new CatalogData
+        {
+            Section = section,
+            Items = filtered.Take(limit).ToList(),
+            Total = filtered.Count,
+            HasMore = filtered.Count > limit
+        };
     }
 
     private static List<CatalogItem> ReadCategories(Document document)
@@ -176,7 +183,7 @@ internal static class CatalogReader
         {
             var definition = iterator.Key;
             var accumulator = Get(parameters, definition.Name);
-            accumulator.ValueTypes.Add(ParameterDataType.From(definition).Id ?? string.Empty);
+            accumulator.ValueTypes.Add(definition.GetDataType().TypeId);
             if (iterator.Current is ElementBinding binding)
             {
                 foreach (Category category in binding.Categories)

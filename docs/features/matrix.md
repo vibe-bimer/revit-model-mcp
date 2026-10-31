@@ -1,52 +1,104 @@
----
-description: "读取工具与动作工具在 Revit 2020、2026 及 2022–2027 上的验证状态矩阵。"
----
+# Version support matrix
 
-# 版本支持矩阵
+Every tool against every Revit year. `Built` means the release workflow compiles that configuration; `No` means there is no build target yet.
 
-已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
+## Read tools
 
-## 读取工具 (19) {#read-tools}
+| Tool | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 | 2027 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [Export element ID register](revit_export_element_ids.md) | No | Built | Built | Built | Built | Built | Built |
+| [List Revit Jobs](revit_jobs.md) | No | Built | Built | Built | Built | Built | Built |
+| [Check Revit Connection](revit_ping.md) | No | Built | Built | Built | Built | Built | Built |
+| [Document Info](revit_document_info.md) | No | Built | Built | Built | Built | Built | Built |
+| [Open Documents](revit_documents.md) | No | Built | Built | Built | Built | Built | Built |
+| [Revit UI State](revit_ui_state.md) | No | Built | Built | Built | Built | Built | Built |
+| [List Instances](revit_list_instances.md) | No | Built | Built | Built | Built | Built | Built |
+| [Model Snapshot](revit_model_snapshot.md) | No | Built | Built | Built | Built | Built | Built |
+| [Model Health Check](revit_model_health.md) | No | Built | Built | Built | Built | Built | Built |
+| [Links Status](revit_links_status.md) | No | Built | Built | Built | Built | Built | Built |
+| [Shared Coordinates](revit_shared_coordinates.md) | No | Built | Built | Built | Built | Built | Built |
+| [Parameter Fill Check](revit_parameter_fill_check.md) | No | Built | Built | Built | Built | Built | Built |
+| [List Catalog](revit_list_catalog.md) | No | Built | Built | Built | Built | Built | Built |
+| [Aggregate Elements](revit_aggregate_elements.md) | No | Built | Built | Built | Built | Built | Built |
+| [Query Elements](revit_query_elements.md) | No | Built | Built | Built | Built | Built | Built |
+| [Read Schedule Data](revit_schedule_data.md) | No | Built | Built | Built | Built | Built | Built |
+| [Element Details](revit_element_details.md) | No | Built | Built | Built | Built | Built | Built |
+| [List Warnings](revit_list_warnings.md) | No | Built | Built | Built | Built | Built | Built |
+| [List Relations](revit_list_relations.md) | No | Built | Built | Built | Built | Built | Built |
+| [List Views](revit_list_views.md) | No | Built | Built | Built | Built | Built | Built |
+| [View Info](revit_view_info.md) | No | Built | Built | Built | Built | Built | Built |
+| [View Summary](revit_view_summary.md) | No | Built | Built | Built | Built | Built | Built |
+| [Capture Elements](revit_capture_elements.md) | No | Built | Built | Built | Built | Built | Built |
+| [Export View to PNG](revit_export_view.md) | No | Built | Built | Built | Built | Built | Built |
+| [View Elements](revit_view_elements.md) | No | Built | Built | Built | Built | Built | Built |
+| [View Warnings](revit_view_warnings.md) | No | Built | Built | Built | Built | Built | Built |
+| [Audit Families](revit_family_audit.md) | No | Built | Built | Built | Built | Built | Built |
+| [Compare Link Datums](revit_compare_link_datums.md) | No | Built | Built | Built | Built | Built | Built |
+| [Check NWC Settings](revit_nwc_settings_check.md) | No | Built | Built | Built | Built | Built | Built |
+| [Issue Register](revit_issue_register.md) | No | Built | Built | Built | Built | Built | Built |
+| [Start batch collection](revit_batch_start.md) | No | Built | Built | Built | Built | Built | Built |
+| [Batch collection status](revit_batch_status.md) | No | Built | Built | Built | Built | Built | Built |
+| [Cancel batch collection](revit_batch_cancel.md) | No | Built | Built | Built | Built | Built | Built |
+| [Fetch batch snapshots](revit_batch_fetch.md) | No | Built | Built | Built | Built | Built | Built |
+| [Build Snapshot Report](revit_build_report.md) | No | Built | Built | Built | Built | Built | Built |
 
-| 工具 | 2020 | 2026 | 2022–2025 / 2027 |
-| --- | :--: | :--: | :--: |
-| [检查连接](revit_ping.md)<br>`revit_ping` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [文档概要](revit_document_info.md)<br>`revit_document_info` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [模型检查](revit_model_health.md)<br>`revit_model_health` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [链接状态](revit_links_status.md)<br>`revit_links_status` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [共享坐标](revit_shared_coordinates.md)<br>`revit_shared_coordinates` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [参数填充检查](revit_parameter_fill_check.md)<br>`revit_parameter_fill_check` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [名称目录](revit_list_catalog.md)<br>`revit_list_catalog` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [分组统计](revit_aggregate_elements.md)<br>`revit_aggregate_elements` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [构件查询](revit_query_elements.md)<br>`revit_query_elements` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [视图目录](revit_list_views.md)<br>`revit_list_views` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [视图统计](revit_view_summary.md)<br>`revit_view_summary` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [导出视图图片](revit_export_view.md)<br>`revit_export_view` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [导出构件 ID 清单](revit_export_element_ids.md)<br>`revit_export_element_ids` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| [视图构件明细](revit_view_elements.md)<br>`revit_view_elements` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [构件参数与几何](revit_element_details.md)<br>`revit_element_details` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [视图相关警告](revit_view_warnings.md)<br>`revit_view_warnings` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [模型警告](revit_list_warnings.md)<br>`revit_list_warnings` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [构件关系](revit_list_relations.md)<br>`revit_list_relations` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [Revit 实例列表](revit_list_instances.md)<br>`revit_list_instances` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
+## Action tools
 
-## 动作工具 (16) {#action-tools}
+| Tool | 2020 | 2022 | 2023 | 2024 | 2025 | 2026 | 2027 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| [Create level](revit_create_level.md) | No | Built | Built | Built | Built | Built | Built |
+| [Create floor](revit_create_floor.md) | No | Built | Built | Built | Built | Built | Built |
+| [Set element phases](revit_set_phase.md) | No | Built | Built | Built | Built | Built | Built |
+| [Merge project phases](revit_merge_phases.md) | No | Built | Built | Built | Built | Built | Built |
+| [Replace IDs in place](revit_reset_element_ids.md) | No | Built | Built | Built | Built | Built | Built |
+| [Rebuild IDs in new models](revit_rebuild_model_ids.md) | No | Built | Built | Built | Built | Built | Built |
+| [Set view lighting](revit_set_view_lighting.md) | No | Built | Built | Built | Built | Built | Built |
+| [Undo Last Action](revit_undo_last.md) | No | Built | Built | Built | Built | Built | Built |
+| [Cancel Action Job](revit_cancel_job.md) | No | Built | Built | Built | Built | Built | Built |
+| [Move Elements](revit_move.md) | No | Built | Built | Built | Built | Built | Built |
+| [Rotate Elements](revit_rotate.md) | No | Built | Built | Built | Built | Built | Built |
+| [Copy Elements](revit_copy.md) | No | Built | Built | Built | Built | Built | Built |
+| [Mirror Elements](revit_mirror.md) | No | Built | Built | Built | Built | Built | Built |
+| [Change Element Type](revit_change_type.md) | No | Built | Built | Built | Built | Built | Built |
+| [Update Parameters](revit_update_parameters.md) | No | Built | Built | Built | Built | Built | Built |
+| [Set Parameter](revit_set_parameter.md) | No | Built | Built | Built | Built | Built | Built |
+| [Delete Elements](revit_delete.md) | No | Built | Built | Built | Built | Built | Built |
+| [Run Actions](revit_run_actions.md) | No | Built | Built | Built | Built | Built | Built |
+| [Open Document](revit_open_document.md) | No | Built | Built | Built | Built | Built | Built |
+| [Activate Document](revit_activate_document.md) | No | Built | Built | Built | Built | Built | Built |
+| [New Document](revit_new_document.md) | No | Built | Built | Built | Built | Built | Built |
+| [Close Document](revit_close_document.md) | No | Built | Built | Built | Built | Built | Built |
+| [Save Document](revit_save_document.md) | No | Built | Built | Built | Built | Built | Built |
+| [Synchronize Document](revit_sync_document.md) | No | Built | Built | Built | Built | Built | Built |
+| [Activate View](revit_activate_view.md) | No | Built | Built | Built | Built | Built | Built |
+| [Close Views](revit_close_views.md) | No | Built | Built | Built | Built | Built | Built |
+| [Set View Visibility](revit_set_view_visibility.md) | No | Built | Built | Built | Built | Built | Built |
+| [Select Elements](revit_select.md) | No | Built | Built | Built | Built | Built | Built |
+| [Show Elements](revit_show.md) | No | Built | Built | Built | Built | Built | Built |
+| [Isolate Elements](revit_isolate.md) | No | Built | Built | Built | Built | Built | Built |
+| [Highlight Elements](revit_override_graphics.md) | No | Built | Built | Built | Built | Built | Built |
+| [Create View](revit_create_view.md) | No | Built | Built | Built | Built | Built | Built |
+| [Duplicate View](revit_duplicate_view.md) | No | Built | Built | Built | Built | Built | Built |
+| [Apply View Template](revit_apply_view_template.md) | No | Built | Built | Built | Built | Built | Built |
+| [Create Sheet](revit_create_sheet.md) | No | Built | Built | Built | Built | Built | Built |
+| [Place Views on Sheet](revit_place_views_on_sheet.md) | No | Built | Built | Built | Built | Built | Built |
+| [Tag Elements](revit_tag_elements.md) | No | Built | Built | Built | Built | Built | Built |
+| [Create Schedule](revit_create_schedule.md) | No | Built | Built | Built | Built | Built | Built |
+| [Place Family](revit_place_family.md) | No | Built | Built | Built | Built | Built | Built |
+| [Load Families](revit_load_family.md) | No | Built | Built | Built | Built | Built | Built |
+| [Place Families](revit_place_families.md) | No | Built | Built | Built | Built | Built | Built |
+| [Edit Families](revit_edit_families.md) | No | Built | Built | Built | Built | Built | Built |
+| [Remove Links](revit_remove_links.md) | No | Built | Built | Built | Built | Built | Built |
+| [Align Link Datums](revit_align_link_datums.md) | No | Built | Built | Built | Built | Built | Built |
+| [Create Wall](revit_create_wall.md) | No | Built | Built | Built | Built | Built | Built |
+| [Create MEP Run](revit_create_mep_run.md) | No | Built | Built | Built | Built | Built | Built |
+| [Link CAD Drawing](revit_link_cad.md) | No | Built | Built | Built | Built | Built | Built |
+| [Build Walls from CAD](revit_walls_from_cad.md) | No | Built | Built | Built | Built | Built | Built |
+| [Export Model Files](revit_export.md) | No | Built | Built | Built | Built | Built | Built |
+| [Export Navisworks NWC](revit_export_nwc.md) | No | Built | Built | Built | Built | Built | Built |
+| [Process Many Models](revit_process_models.md) | No | Built | Built | Built | Built | Built | Built |
+| [Execute C# Code](revit_execute_code.md) | No | Built | Built | Built | Built | Built | Built |
 
-| 工具 | 2020 | 2026 | 2022–2025 / 2027 |
-| --- | :--: | :--: | :--: |
-| [选择构件](revit_select.md)<br>`revit_select` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [定位显示构件](revit_show.md)<br>`revit_show` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [临时隔离显示](revit_isolate.md)<br>`revit_isolate` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [移动构件](revit_move.md)<br>`revit_move` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| [放置非宿主族](revit_place_family.md)<br>`revit_place_family` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| [创建直墙](revit_create_wall.md)<br>`revit_create_wall` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [创建楼板](revit_create_floor.md)<br>`revit_create_floor` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [创建标高](revit_create_level.md)<br>`revit_create_level` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [设置构件阶段](revit_set_phase.md)<br>`revit_set_phase` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [合并项目阶段](revit_merge_phases.md)<br>`revit_merge_phases` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| [修改参数](revit_set_parameter.md)<br>`revit_set_parameter` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| [删除构件](revit_delete.md)<br>`revit_delete` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [同文档替换 ID](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [新模型重建 ID](revit_rebuild_model_ids.md)<br>`revit_rebuild_model_ids` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| [批量动作](revit_batch.md)<br>`revit_batch` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
+**Built** means the release workflow compiles that Revit configuration. **Not supported yet** means no build target exists on this branch: adr/0006 records Revit 2020 as a required follow-up and names no calendar date; the maintainer chooses the date when the follow-up is scheduled. Nothing on this branch has been verified against a running Revit instance, so no page claims a live result.
+
+[Feature overview](index.md) · [Version support matrix](matrix.md) · [Prompt library](prompts.md)
