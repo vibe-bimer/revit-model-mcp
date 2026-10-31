@@ -2,11 +2,19 @@
 """Build and publish the documentation site with provenance and recovery.
 
 The publisher never builds from the development checkout. It resolves a
-target commit, exports it with ``git archive`` (so a dirty development tree
-can neither block nor leak into a release), runs the repository's own gates
-on the exported tree, builds into an immutable release directory and flips a
-``current`` symlink atomically. Every attempt is recorded in a status file
-under the state root, and failures leave the served site untouched.
+target commit — a pinned ``SITE_COMMIT`` end to end when set, otherwise the
+upstream branch tip, otherwise the local ``HEAD`` — exports it with
+``git archive`` (so a dirty development tree can neither block nor leak into a
+release), runs the repository's own gates on the exported tree, builds into an
+immutable release directory and flips a ``current`` symlink atomically. Every
+attempt is recorded in a status file under the state root, and failures leave
+the served site untouched.
+
+The export gets its own server environment when it can: ``uv sync`` inside the
+exported ``server/`` installs the exported source itself, so the registry gate
+runs the code being published. When uv is unavailable or the sync fails, the
+checkout's ``server/.venv`` is symlinked in as a visible fallback, and the
+manifest records which path was taken.
 
 Layout under the state root (``SITE_STATE_DIR``, default
 ``${XDG_STATE_HOME:-$HOME/.local/state}/revit-model-mcp``):
@@ -15,6 +23,10 @@ Layout under the state root (``SITE_STATE_DIR``, default
     current -> releases/<id>          atomically replaced symlink
     manifest.json                     latest status: attempt/success/failure
     publish.lock                      flock for concurrent publishers
+
+Retention keeps ``SITE_KEEP_RELEASES`` releases (default 3, never fewer than
+current plus previous); at roughly 36 MB per release the default costs about
+110 MB.
 
 The publish root (``SITE_PUBLISH_ROOT``, default ``<repo>/site``) is served
 by ``serve-site.py``, which resolves it on every request, so swapping
@@ -61,6 +73,8 @@ EXIT_HEALTH = 4
 
 MANIFEST_SCHEMA = "revit-model-mcp.site-manifest/v1"
 STATUS_SCHEMA = "revit-model-mcp.site-status/v1"
+
+DEFAULT_KEEP_RELEASES = 3
 
 
 def log(message: str) -> None:
@@ -235,16 +249,22 @@ def export_source(repo: Path, commit: str, destination: Path) -> None:
         )
 
 
-def link_build_environment(source: Path, repo: Path) -> list[str]:
-    """Reuse the checkout's virtualenvs inside the export.
+def link_build_environment(
+    source: Path,
+    repo: Path,
+    relatives: tuple[str, ...] = ("server/.venv", ".venv-docs"),
+) -> list[str]:
+    """Symlink the checkout's virtualenvs into the export.
 
-    ``git archive`` never carries an untracked virtualenv, and the registry gate
-    launches ``server/.venv/bin/revit-model-mcp``. Linking the checkout's venv
-    into the export keeps the gate running against the same server code the
-    developer tested, without copying it or writing into the checkout.
+    ``git archive`` never carries an untracked virtualenv, and the registry
+    gate launches ``server/.venv/bin/revit-model-mcp``. Linking the checkout's
+    venv into the export keeps the gate running against the same server code
+    the developer tested, without copying it or writing into the checkout.
+    Entries that already exist in the export are skipped, so callers that
+    prepared an environment first only get the leftovers.
     """
     linked: list[str] = []
-    for relative in ("server/.venv", ".venv-docs"):
+    for relative in relatives:
         origin = repo / relative
         destination = source / relative
         if not origin.exists() or destination.exists() or destination.is_symlink():
@@ -253,6 +273,74 @@ def link_build_environment(source: Path, repo: Path) -> list[str]:
         os.symlink(origin, destination)
         linked.append(relative)
     return linked
+
+
+def prepare_server_environment(
+    source: Path, repo: Path, env: dict, uv: str | None = None
+) -> dict:
+    """Give the export its own server environment when that is possible.
+
+    Preferred: ``uv sync`` inside the exported ``server/`` builds an
+    environment from the exported source, so the registry gate runs the code
+    being published rather than the developer's checkout. Fallback: symlink
+    the checkout's ``server/.venv`` and say so in the log, so an operator can
+    see the export is running the developer's environment. Absent: neither is
+    possible and the gates fall back to the module form on their own.
+
+    Returns the manifest record: ``{"mode", "command", "fallback"}``.
+    """
+    if uv is None:
+        uv = shutil.which("uv")
+    project = source / "server" / "pyproject.toml"
+    venv = source / "server" / ".venv"
+    reason = None
+    if uv and project.is_file():
+        command = [uv, "sync"]
+        result = run(command, cwd=source / "server", env=env)
+        if result.returncode != 0:
+            reason = f"uv sync failed with exit {result.returncode}"
+        elif not (venv / "bin" / "python").is_file():
+            reason = "uv sync left no python in server/.venv"
+        else:
+            log("== built the export's own server environment with uv sync")
+            return {"mode": "uv-sync", "command": "uv sync", "fallback": None}
+        # A failed sync can leave a partial environment behind. It is ours,
+        # inside the throwaway export, so removing it is safe.
+        if venv.exists() and not venv.is_symlink():
+            shutil.rmtree(venv, ignore_errors=True)
+    elif uv is None:
+        reason = "uv is not installed"
+    elif not project.is_file():
+        reason = "the export carries no server project"
+    if link_build_environment(source, repo, ("server/.venv",)):
+        log(f"== {reason}; falling back to the checkout's server virtualenv")
+        return {"mode": "linked", "command": None, "fallback": reason}
+    log(f"== {reason}; no environment to fall back to")
+    return {"mode": "absent", "command": None, "fallback": reason}
+
+
+def keep_releases() -> int:
+    """Parse and validate ``SITE_KEEP_RELEASES``; a bad value fails loudly.
+
+    Two is the floor because the release that was just switched away from must
+    survive for in-flight requests and rollback.
+    """
+    raw = os.environ.get("SITE_KEEP_RELEASES", str(DEFAULT_KEEP_RELEASES)).strip()
+    try:
+        keep = int(raw)
+    except ValueError:
+        raise SystemExitMessage(
+            EXIT_FAILED,
+            f"SITE_KEEP_RELEASES must be an integer, got {raw!r}",
+            "config",
+        ) from None
+    if keep < 2:
+        raise SystemExitMessage(
+            EXIT_FAILED,
+            f"SITE_KEEP_RELEASES must be at least 2 so current and previous survive, got {keep}",
+            "config",
+        )
+    return keep
 
 
 def tool_version(command: list[str]) -> str:
@@ -518,6 +606,15 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
         ensure_publish_root(publish_root, state)
         return EXIT_OK
 
+    try:
+        keep = keep_releases()
+    except SystemExitMessage as failure:
+        status.attempt(utc_now(), commit, None, "failure", failure.stage)
+        status.failed(utc_now(), failure.stage, failure.reason)
+        status.save()
+        log(f"config failed: {failure.reason}")
+        return failure.code
+
     release_id = f"{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{commit[:7]}"
     staging = state / "releases" / f".staging-{release_id}-{os.getpid()}"
     if staging.exists():
@@ -531,12 +628,13 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
             log(f"== exporting {resolution} commit {commit[:10]}")
             export_source(repo, commit, source)
 
+            gate_env = dict(os.environ, SITE_PUBLISH_RUNNING="1")
+            server_environment = prepare_server_environment(source, repo, gate_env)
             linked = link_build_environment(source, repo)
             if linked:
                 log(
                     f"== linked the checkout virtualenvs into the export: {', '.join(linked)}"
                 )
-            gate_env = dict(os.environ, SITE_PUBLISH_RUNNING="1")
             python = os.environ.get("PYTHON") or sys.executable
             verification["generate_check"] = gate(
                 "generate --verify-registry --check",
@@ -613,6 +711,7 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
                     "python": sys.version.split()[0],
                     "builder": tool_version(builder),
                 },
+                "server_environment": server_environment,
                 "built_utc": utc_now(),
                 "verification": verification,
             }
@@ -659,7 +758,6 @@ def publish(repo: Path, state: Path, publish_root: Path) -> int:
             status.attempt(utc, commit, release_id_back, "success", "publish")
             status.succeeded(utc, release_id_back, commit, False, manifest)
             status.save()
-            keep = int(os.environ.get("SITE_KEEP_RELEASES", "3"))
             protected = {release_id_back} | ({previous} if previous else set())
             prune_releases(state, keep, protected)
             log(f"published {release_id_back}")

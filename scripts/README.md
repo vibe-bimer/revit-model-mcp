@@ -21,9 +21,9 @@ ${SITE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/revit-model-mcp}/
 <repo>/site -> state/current        served root (SITE_PUBLISH_ROOT)
 ```
 
-`current` and the previous release are always kept; older releases are pruned to `SITE_KEEP_RELEASES` entries. Pruning never removes the release a request may still be reading from the previous switch.
+`current` and the previous release are always kept; older releases are pruned to `SITE_KEEP_RELEASES` entries (default 3). One release is about **36 MB** on disk, so the default costs roughly **110 MB** steady state; raise or lower it with the variable, but never below 2, and a bad value fails the run before anything is built.
 
-`current` 与上一版始终保留，更旧的版本按 `SITE_KEEP_RELEASES` 清理；清理不会删掉刚被切换掉的上一版，避免打断在途请求。
+`current` 与上一版始终保留，更旧的版本按 `SITE_KEEP_RELEASES` 清理（默认 3）。一个版本约占 **36 MB** 磁盘，默认配置稳态约 **110 MB**；可用该变量增减，但不能低于 2，非法取值会在构建开始前直接让本次发布失败。
 
 ## Scripts / 脚本
 
@@ -44,7 +44,7 @@ The documentation server runs as `revit-model-mcp-serve.service`, never as a chi
 | Code | Meaning / 含义 | Timer / 定时器 |
 | --- | --- | --- |
 | 0 | Published, or the target commit is already current (no-op, recorded). / 已发布，或目标 commit 已是当前版本（no-op，有记录）。 | success / 成功 |
-| 1 | Build, gate, export or publish-root failure; the served release is unchanged. / 构建、校验、导出或发布根失败，线上版本不变。 | failure / 失败 |
+| 1 | Configuration, build, gate, export or publish-root failure; the served release is unchanged. / 配置、构建、校验、导出或发布根失败，线上版本不变。 | failure / 失败 |
 | 2 | Sync failure: the fetch or the pinned commit could not be resolved. / 同步失败：拉取失败或固定 commit 无法解析。 | failure / 失败 |
 | 3 | Another publish holds `publish.lock`. / 另一个发布进程持有 `publish.lock`。 | logged skip, exit 0 / 记为跳过，退出 0 |
 | 4 | The post-switch health probe failed and `current` was rolled back. / 切换后健康探测失败，`current` 已回滚。 | failure / 失败 |
@@ -68,9 +68,9 @@ A skip and a failure are never the same event: the log says `publish skipped: an
 | `last_success` | `utc`, `release_id`, `source_commit`, `noop`. |
 | `last_failure` | `utc`, `stage`, `reason`. Kept after a later success as the last known failure. / 之后成功也保留，表示最近一次失败。 |
 
-Each release carries its own `manifest.json` (`revit-model-mcp.site-manifest/v1`): `release_id`, `source_commit`, `source_resolution` (`pin`/`head`/`upstream`/`adopt`), `tree_sha256` (paths and bytes of the built tree), `config` (config file name and hash), `tools` (python and builder versions), `built_utc`, and `verification` (per-gate `pass`/`absent`, plus `health_probe` in the status copy). No credentials, no absolute home paths.
+Each release carries its own `manifest.json` (`revit-model-mcp.site-manifest/v1`): `release_id`, `source_commit`, `source_resolution` (`pin`/`head`/`upstream`/`adopt`), `tree_sha256` (paths and bytes of the built tree), `config` (config file name and hash), `tools` (python and builder versions), `server_environment` (`mode` of `uv-sync`/`linked`/`absent`, the `command` when one ran, and the `fallback` reason otherwise), `built_utc`, and `verification` (per-gate `pass`/`absent`, plus `health_probe` in the status copy). `verification.linked_environments` lists only what was still symlinked from the checkout, typically `.venv-docs`. No credentials, no absolute home paths.
 
-每版自带 `manifest.json`（`revit-model-mcp.site-manifest/v1`）：发布 id、源码 commit、解析方式、构建树内容哈希、配置文件名与哈希、工具版本、UTC 时间、各校验项结论；不含凭据，也不含家目录绝对路径。
+每版自带 `manifest.json`（`revit-model-mcp.site-manifest/v1`）：发布 id、源码 commit、解析方式、构建树内容哈希、配置文件名与哈希、工具版本、`server_environment`（`mode` 为 `uv-sync`/`linked`/`absent`，执行过的 `command`，或回退原因 `fallback`）、UTC 时间、各校验项结论。`verification.linked_environments` 只记录仍从开发目录符号链接进来的环境，通常是 `.venv-docs`。不含凭据，也不含家目录绝对路径。
 
 ## Environment variables / 环境变量
 
@@ -79,9 +79,9 @@ Each release carries its own `manifest.json` (`revit-model-mcp.site-manifest/v1`
 | `SITE_STATE_DIR` | `${XDG_STATE_HOME:-$HOME/.local/state}/revit-model-mcp` | State root: releases, current, status, lock, log. / 状态根。 |
 | `SITE_PUBLISH_ROOT` | `<repo>/site` | Served root; a symlink to `<state>/current` after migration. / 线上根目录。 |
 | `SITE_REPO` | script parent | Checkout to publish; drills point it at a throwaway repository. / 要发布的仓库，演练时指向临时仓库。 |
-| `SITE_COMMIT` | unset | Pin the published commit instead of the branch tip. / 固定发布某个 commit。 |
+| `SITE_COMMIT` | unset | Pin the published commit end to end: any revision `git rev-parse` accepts and that already exists in the repository (full sha, short sha, tag, branch); nothing is fetched, and export, gates, build and manifest all use it, recorded as resolution `pin`. Unset publishes the branch tip when the repository has one, otherwise local `HEAD`. / 端到端固定发布 commit：接受本仓库内 `git rev-parse` 能解析的任意 revision（完整 sha、短 sha、tag、分支名），不执行 fetch，导出、校验、构建与清单全部使用该 commit（解析方式记为 `pin`）。未设置时优先发布分支远端顶端，无远端则发布本地 `HEAD`。 |
 | `SITE_SKIP_PULL` | `0` | `1` publishes the local `HEAD` without fetching. / `1` 表示不拉取，直接发布本地 `HEAD`。 |
-| `SITE_KEEP_RELEASES` | `3` | Releases to keep, never fewer than current plus previous. / 保留的版本数。 |
+| `SITE_KEEP_RELEASES` | `3` | Releases to keep, about 36 MB each (~110 MB at the default). An integer below 2, or not an integer, fails with exit 1 at stage `config` before anything is built, because current and previous must survive. / 保留的版本数，每版约 36 MB（默认约 110 MB）。低于 2 或不是整数都会在构建开始前以退出码 1、阶段 `config` 失败：当前版与上一版必须保留。 |
 | `SITE_HEALTH_MARKER` | `Revit Model MCP` | Text the health probe requires in the home page. / 健康探测要求的首页文本。 |
 | `MKDOCS` | auto-discovered | Builder command; a command line is split, not evaluated. / 构建命令，按词拆分，不做 eval。 |
 | `MKDOCS_CONFIG` | `<export>/mkdocs-lan.yml` | Config file, relative to the exported tree. / 配置文件。 |
@@ -91,6 +91,12 @@ Each release carries its own `manifest.json` (`revit-model-mcp.site-manifest/v1`
 A dirty development tree is not a reason to skip: the export comes from `git archive`, so uncommitted edits neither block publishing nor leak into the release.
 
 开发树是否干净不再影响发布：产物来自 `git archive`，未提交的改动既不会阻塞发布，也不会混进发布内容。
+
+## Export server environment / 导出树的服务器环境
+
+The exported tree is a clean snapshot, so its `server/.venv` is built there when possible: with uv on `PATH`, the publisher runs `uv sync` inside the export's `server/`, installing the package from the exported source, and the registry gate then runs the code being published. When uv is missing, the sync fails, or the export carries no server project, the publisher falls back to symlinking the checkout's `server/.venv` and says so in the log (`falling back to the checkout's server virtualenv`). The chosen path is recorded in the release manifest as `server_environment`: `mode` is `uv-sync` when the export built its own environment, `linked` when the fallback symlink was used (with the reason in `fallback`), and `absent` when neither was possible — the gates then use their module-form fallback and fail loudly if the server is needed. The documentation venv (`.venv-docs`) is always symlinked from the checkout as before.
+
+导出树是干净快照，因此其 `server/.venv` 尽量在导出树内现建：`PATH` 上有 uv 时，发布器在导出树的 `server/` 里跑 `uv sync`，从导出源码安装本包，注册表门禁跑的就是被发布的代码；uv 缺失、sync 失败或导出树没有服务器工程时，回退为把开发目录的 `server/.venv` 符号链接进来，并在日志里写明（`falling back to the checkout's server virtualenv`）。所选路径记录在发布清单的 `server_environment` 字段：`mode` 为 `uv-sync` 表示导出树自建环境，`linked` 表示用了回退链接（原因写在 `fallback`），`absent` 表示两者皆不可得——此时门禁退回模块形式，需要服务器时会响亮失败。文档构建环境 `.venv-docs` 仍照旧从开发目录符号链接。
 
 ## Migration / 迁移
 
@@ -127,7 +133,7 @@ STATE=${SITE_STATE_DIR:-$HOME/.local/state/revit-model-mcp}
 ls "$STATE/releases"                                  # what is available / 可用版本
 ln -sfn "releases/<older-id>" "$STATE/.current-manual"
 mv -T "$STATE/.current-manual" "$STATE/current"       # atomic pointer flip / 原子翻转
-scripts/update-site.sh SITE_COMMIT=<commit>           # or republish a known commit / 或重发已知 commit
+SITE_COMMIT=<commit> scripts/update-site.sh           # or republish a known commit / 或重发已知 commit
 ```
 
 Rollback is the same operation as publishing: flip `current` and probe. A failed probe restores the previous pointer automatically, so the served site never ends up on a broken release.
