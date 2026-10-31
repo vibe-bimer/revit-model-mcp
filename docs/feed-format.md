@@ -51,7 +51,7 @@ HTTP 端点还会拒绝发往其他进程的任务。
 | `dx_mm`、`dy_mm`、`dz_mm`、`x_mm`、`y_mm` | `dxMm`、`dyMm`、`dzMm`、`xMm`、`yMm` |
 | `start_mm`、`end_mm`、`wall_type`、`height_mm`、`rotation_deg` | `startMm`、`endMm`、`wallType`、`heightMm`、`rotationDeg` |
 
-视图导出的 `save_to` 和超时是客户端选项，不是任务字段。Excel ID 清单的 `save_to` 会转换为任务中的 `saveTo`，因为工作簿写在 Revit 工作站上。文件传输会添加唯一的 `correlationId`；上述示例仅展示命令相关字段。
+视图导出的 `output_path` 和超时是客户端选项，不是任务字段。Excel ID 清单的 `path` 会转换为任务中的 `saveTo`，因为工作簿写在 Revit 工作站上。文件传输会添加唯一的 `correlationId`；上述示例仅展示命令相关字段。
 `parameterFilters` 的条目包含 `parameter`、`operator` 和可选的 `value`。
 数值筛选值中，长度使用 mm、面积使用 m2、体积使用 m3。
 其他可测量筛选值使用文档的显示单位；不可测量的双精度数值使用内部值。

@@ -52,7 +52,7 @@ description: "把模型中已绘制构件的 ID 清单写成 Excel（类别/族/
 数据行先按类别、再按族、最后按类型排序；默认列为“类别、族、类型、标高、构件ID、名称、工作集”，`fields` 可将这些列替换为内置字段或参数名称。
 “构件ID”列记录 Revit 构件 ID，API 无法为构件指定这个 ID；本工具只列出标识，绝不会修改它们。
 没有所属标高的构件，其标高列保持为空；大多数 MEP 管道和风管管段属于这种情况。
-默认 `null` 会在工作站上写入 `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`；如果 `save_to` 指定的文件已存在则报错；超过 50,000 行时设置 `truncated=true`。
+默认 `null` 会在工作站上写入 `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`；如果 `path` 指定的文件已存在则报错；超过 50,000 行时设置 `truncated=true`。
 导出仅在模型外写入一个文件，绝不会写入模型；文档不存在、读取失败或超时都会报错。
 
 如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。

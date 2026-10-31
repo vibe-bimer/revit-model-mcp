@@ -45,7 +45,7 @@ An HTTP endpoint also rejects jobs addressed to another process.
 | `dx_mm`, `dy_mm`, `dz_mm`, `x_mm`, `y_mm` | `dxMm`, `dyMm`, `dzMm`, `xMm`, `yMm` |
 | `start_mm`, `end_mm`, `wall_type`, `height_mm`, `rotation_deg` | `startMm`, `endMm`, `wallType`, `heightMm`, `rotationDeg` |
 
-View-export `save_to` and timeouts are client options, not job fields. For the Excel ID register, `save_to` becomes `saveTo` in the job because the workbook is written on the Revit workstation. The file transport adds a unique `correlationId`; jobs above show only the command-specific fields.
+View-export `output_path` and timeouts are client options, not job fields. For the Excel ID register, `path` becomes `saveTo` in the job because the workbook is written on the Revit workstation. The file transport adds a unique `correlationId`; jobs above show only the command-specific fields.
 `parameterFilters` entries contain `parameter`, `operator` and an optional `value`.
 Numeric filter values use mm for lengths, m2 for areas and m3 for volumes.
 Other measurable filter values use the document's display units; unmeasurable doubles use internal values.

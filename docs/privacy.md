@@ -27,7 +27,7 @@ local 和 SSH 文件通道在 Windows 工作站的 `%LOCALAPPDATA%\RevitModelMcp
 `REVIT_MCP_CHANNEL_DIR` 可以覆盖通道目录。
 设置和工作站写入门禁仍保留在默认目录。
 HTTP 将已完成任务的响应保存在内存中，直到过期；导出图像也使用工作站通道目录。
-下载的 PNG 文件写入 `save_to` 指定的客户端路径，或客户端临时目录下新建的 `revit-view-*` 目录。
+下载的 PNG 文件写入 `output_path` 指定的路径，或客户端临时目录下新建的 `revit-view-*` 目录。
 
 `REVIT_MCP_REDACT_PATHS=1` 会从响应的 `documentPath` 和嵌套 `path` 字段中移除目录部分。
 扩展包默认启用此设置。

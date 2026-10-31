@@ -47,9 +47,11 @@ jobs:
 
           const { getMcpConfigForManifest } = await import(pathToFileURL(`${process.env.RUNNER_TEMP}/mcpb/node_modules/@anthropic-ai/mcpb/dist/shared/config.js`));
           const manifest = JSON.parse(readFileSync('bundle/manifest.json', 'utf8'));
-          const documentedTools = [...new Set(['docs/tools.md', 'docs/actions.md'].flatMap(path =>
-            [...readFileSync(path, 'utf8').matchAll(/^\| `(revit_\w+)`/gm)].map(match => match[1])
-          ))].sort();
+          // The features index is generated from the server registry and verified
+          // against it by the documentation gate, so it is the single source of
+          // truth for which tools are documented.
+          const documentedTools = [...new Set([...readFileSync('docs/features/index.md', 'utf8')
+            .matchAll(/\((revit_\w+)\.md\)/g)].map(match => match[1]))].sort();
           assert.deepEqual(manifest.tools.map(tool => tool.name).sort(), documentedTools);
           assert.equal(manifest.version, '0.0.0');
           assert.equal(manifest.user_config.REVIT_MCP_REDACT_PATHS.default, true);

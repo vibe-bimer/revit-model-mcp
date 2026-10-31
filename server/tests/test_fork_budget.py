@@ -48,13 +48,13 @@ def test_the_hook_budget_counts_both_sides_of_a_change(budget, config):
     numstat = "\n".join(
         [
             "3\t1\tsrc/RevitModelMcp.Addin/Application.cs",
-            "10\t0\tdocs/tools.md",
+            "10\t0\tREADME.md",
             "2\t0\tsrc/RevitModelMcp.Addin/Control/ActionMutations.cs",
         ]
     )
     hooks, other, unowned, _ = budget.changed_lines(numstat, config)
     assert hooks == {"src/RevitModelMcp.Addin/Application.cs": 4}
-    assert other == {"docs/tools.md": 10}
+    assert other == {"README.md": 10}
     assert unowned == ["src/RevitModelMcp.Addin/Control/ActionMutations.cs"]
 
 

@@ -251,7 +251,7 @@ Host aliases are validated and PowerShell path literals escape single quotes.
 SSH credentials and routing belong to the user's SSH configuration.
 
 Responses and exported PNG files are transferred as base64 in the PowerShell result.
-The server decodes the image into `save_to` or a new temporary directory.
+The server decodes the image into `output_path` or a new temporary directory.
 An existing destination file produces an error.
 The MCP result contains the image path and metadata without base64.
 

@@ -275,7 +275,7 @@ macOS 和 Linux 客户端通过 HTTP 或 SSH 访问 Windows。
 SSH 凭据和路由由用户的 SSH 配置管理。
 
 响应和导出的 PNG 文件在 PowerShell 结果中以 base64 传输。
-服务器将图像解码到 `save_to` 或新建的临时目录中。
+服务器将图像解码到 `output_path` 或新建的临时目录中。
 目标文件已存在时会产生错误。
 MCP 结果包含图像路径和元数据，不包含 base64。
 

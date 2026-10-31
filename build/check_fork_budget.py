@@ -67,7 +67,8 @@ def changed_lines(
 
 def numstat(base: str, repository_root: Path = REPOSITORY_ROOT) -> str:
     result = subprocess.run(
-        ["git", "diff", "--numstat", f"{base}...HEAD"],
+        # --no-renames keeps the split free of `a/{old => new}/b` path artifacts.
+        ["git", "diff", "--numstat", "--no-renames", f"{base}...HEAD"],
         cwd=repository_root,
         capture_output=True,
         text=True,

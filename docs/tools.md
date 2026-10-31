@@ -6,7 +6,7 @@
 ## 传输与输出文件
 
 HTTP 模式下，`revit_export_view` 通过 `/views/{name}/image` 下载 PNG。
-`revit_export_element_ids` 在 Revit 工作站写入工作簿，因此 `save_to` 是工作站路径；HTTP 客户端读取返回的 `path`，而不是下载文件。
+`revit_export_element_ids` 在 Revit 工作站写入工作簿，因此 `path` 是工作站路径；HTTP 客户端读取返回的 `path`，而不是下载文件。
 标识符列保存 Revit 构件 ID，API 不能指定这个 ID：该工具仅列出标识符，从不更改它们。
 HTTP 模式下，`revit_list_instances` 报告所连接的 Revit 进程。
 
@@ -30,8 +30,8 @@ HTTP 模式下，`revit_list_instances` 报告所连接的 Revit 进程。
 | `revit_query_elements` | 共用查询筛选参数、`fields=null`、`offset=0`、`limit=100`、`sort_field="id"`、`sort_direction="asc"`、`include_geometry=false` | 分页读取匹配构件。 |
 | `revit_list_views` | `view_type=null`、`name_contains=null` | 查找活动文档中的视图。 |
 | `revit_view_summary` | `view` | 读取视图元数据与各类别数量。 |
-| `revit_export_view` | `view`、`pixel_size=1600`、`save_to=null`、`document=null`；无超时参数 | 下载 PNG；`pixel_size` 指图像适配方向的尺寸，范围为 1–4000 像素。 |
-| `revit_export_element_ids` | `fields=null`、`save_to=null`、`timeout_seconds=120`、`pickup_timeout_seconds=300`、`document=null` | 将已绘制构件的标识符清单写入 Revit 工作站上的 xlsx 工作簿，按类别、族、类型排序。 |
+| `revit_export_view` | `view`、`pixel_size=1600`、`output_path=null`、`document=null`；无超时参数 | 下载 PNG；`pixel_size` 指图像适配方向的尺寸，范围为 1–4000 像素。 |
+| `revit_export_element_ids` | `fields=null`、`path=null`、`timeout_seconds=120`、`document=null` | 将已绘制构件的标识符清单写入 Revit 工作站上的 xlsx 工作簿，按类别、族、类型排序。 |
 | `revit_view_elements` | `view`、`categories=null`、`offset=0`、`limit=100` | 分页读取视图中的构件。 |
 | `revit_element_details` | `element_id` | 按无单位的 Revit ID 读取实例／类型参数和几何。 |
 | `revit_view_warnings` | `view` | 读取涉及视图中构件的警告。 |
@@ -67,8 +67,8 @@ HTTP 模式下，`revit_list_instances` 报告所连接的 Revit 进程。
 <a id="export-destinations"></a>
 ## 导出路径
 
-对于 `revit_export_view`，`save_to` 是 MCP 客户端上的新 PNG 文件路径；默认下载到本地临时目录，返回 `localPath`、图像宽高、`sizeBytes` 和视图元数据，不返回 base64。
-对于 `revit_export_element_ids`，`save_to` 是 Revit 工作站上的绝对 `.xlsx` 路径。默认路径为 `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`；响应返回 `path`、`fileName`、`sheetName`、`columns`、`rowCount`、`totalCandidates`、`truncated`、`sizeBytes` 和 `categoryCounts`。
+对于 `revit_export_view`，`output_path` 是运行本服务器的机器上的新 PNG 文件路径；默认下载到本地临时目录，返回 `localPath`、图像宽高、`sizeBytes` 和视图元数据，不返回 base64。
+对于 `revit_export_element_ids`，`path` 是 Revit 工作站上的 xlsx 文件路径。默认路径为 `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`；响应返回 `path`、`fileName`、`sheetName`、`columns`、`rowCount`、`totalCandidates`、`truncated`、`sizeBytes` 和 `categoryCounts`。
 两种导出都不覆盖已有目标文件。工作簿最多 50,000 行；候选构件更多时，`truncated=true`。
 默认列为 `类别`、`族`、`类型`、`标高`、`构件ID`、`名称`、`工作集`；`fields` 可用内置字段名或参数名替换这些列。
 没有标高的构件，其标高列为空，包括大多数 MEP 管道和风管段。

@@ -218,7 +218,7 @@ tools:
 
       没有所属标高的构件，其标高列保持为空；大多数 MEP 管道和风管管段属于这种情况。
 
-      默认 `null` 会在工作站上写入 `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`；如果 `save_to` 指定的文件已存在则报错；超过 50,000 行时设置 `truncated=true`。
+      默认 `null` 会在工作站上写入 `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`；如果 `path` 指定的文件已存在则报错；超过 50,000 行时设置 `truncated=true`。
 
       导出仅在模型外写入一个文件，绝不会写入模型；文档不存在、读取失败或超时都会报错。
 

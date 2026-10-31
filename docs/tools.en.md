@@ -5,7 +5,7 @@ All tools support local, SSH and HTTP transports. They do not change the model; 
 ## Transports and output files
 
 `revit_export_view` downloads PNG through `/views/{name}/image` in HTTP mode.
-`revit_export_element_ids` writes its workbook on the Revit workstation, so `save_to` is a workstation path and HTTP clients read the returned `path` instead of downloading the file.
+`revit_export_element_ids` writes its workbook on the Revit workstation, so `path` is a workstation path and HTTP clients read the returned `path` instead of downloading the file.
 The identifier column holds the Revit element ID, which the API cannot assign: the tool lists identifiers and never changes them.
 `revit_list_instances` reports the connected Revit process in HTTP mode.
 
@@ -28,8 +28,8 @@ The query filters shared by aggregation and queries are `categories`, `family`, 
 | `revit_query_elements` | Shared query filters, `fields=null`, `offset=0`, `limit=100`, `sort_field="id"`, `sort_direction="asc"`, `include_geometry=false` | Read a page of matching elements. |
 | `revit_list_views` | `view_type=null`, `name_contains=null` | Find views in the active document. |
 | `revit_view_summary` | `view` | Read view metadata and category counts. |
-| `revit_export_view` | `view`, `pixel_size=1600`, `save_to=null`, `document=null`; no timeout arguments | Download a PNG; `pixel_size` is 1-4000 pixels on the fitted image dimension. |
-| `revit_export_element_ids` | `fields=null`, `save_to=null`, `timeout_seconds=120`, `pickup_timeout_seconds=300`, `document=null` | Write the identifier register of the drawn components to an xlsx workbook on the Revit workstation, ordered by category, family and type. |
+| `revit_export_view` | `view`, `pixel_size=1600`, `output_path=null`, `document=null`; no timeout arguments | Download a PNG; `pixel_size` is 1-4000 pixels on the fitted image dimension. |
+| `revit_export_element_ids` | `fields=null`, `path=null`, `timeout_seconds=120`, `document=null` | Write the identifier register of the drawn components to an xlsx workbook on the Revit workstation, ordered by category, family and type. |
 | `revit_view_elements` | `view`, `categories=null`, `offset=0`, `limit=100` | Read a page of elements in a view. |
 | `revit_element_details` | `element_id` | Read instance/type parameters and geometry by unitless Revit ID. |
 | `revit_view_warnings` | `view` | Read warnings involving elements in a view. |
@@ -62,8 +62,8 @@ For area totals, group by level and select the area scheme.
 
 ## Export destinations
 
-For `revit_export_view`, `save_to` is a new PNG file path on the MCP client's machine; the default downloads to a local temporary directory and returns `localPath`, image width/height, `sizeBytes` and view metadata without base64.
-For `revit_export_element_ids`, `save_to` is an absolute `.xlsx` path on the Revit workstation. The default is `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`; the response returns `path`, `fileName`, `sheetName`, `columns`, `rowCount`, `totalCandidates`, `truncated`, `sizeBytes` and `categoryCounts`.
+For `revit_export_view`, `output_path` is a new PNG file path on the machine running this server; the default downloads to a local temporary directory and returns `localPath`, image width/height, `sizeBytes` and view metadata without base64.
+For `revit_export_element_ids`, `path` is an xlsx file path on the Revit workstation. The default is `Documents\RevitModelMcp\Exports\构件ID清单_<model>_<timestamp>.xlsx`; the response returns `path`, `fileName`, `sheetName`, `columns`, `rowCount`, `totalCandidates`, `truncated`, `sizeBytes` and `categoryCounts`.
 Neither export overwrites an existing destination. The workbook has at most 50,000 rows; more candidates set `truncated=true`.
 Its default columns are `类别`, `族`, `类型`, `标高`, `构件ID`, `名称` and `工作集` (the Chinese headers of the workbook: category, family, type, level, element id, name and workset); `fields` replaces them with built-in field names or parameter names.
 The level column is empty for components without a level, including most MEP pipe and duct runs.

@@ -21,7 +21,7 @@ The local and SSH file channels write requests, responses and exported PNG files
 `REVIT_MCP_CHANNEL_DIR` overrides the channel directory.
 Settings and the workstation write gate remain in the default directory.
 HTTP keeps completed job responses in memory until expiry; exported images also use the workstation channel directory.
-Downloaded PNG files are written to the client path specified by `save_to`, or a new `revit-view-*` directory in the client's temporary directory.
+Downloaded PNG files are written to the path specified by `output_path`, or a new `revit-view-*` directory in the client's temporary directory.
 
 `REVIT_MCP_REDACT_PATHS=1` removes directories from response `documentPath` and nested `path` fields.
 The bundle enables this setting by default.

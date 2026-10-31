@@ -2,16 +2,25 @@
   "base": "760bb7c21337abb2a2aec21434e1d208e01e6cc0",
   "baseTag": "v1.0.0 plus eleven post-release fixes",
   "forkPaths": [
-    "src/RevitModelMcp.Core/Fork/",
-    "src/RevitModelMcp.Addin/Fork/",
-    "server/revit_model_mcp/fork_actions.py",
-    "tools/site/",
-    "docs/features/",
+    ".github/workflows/docs.yml",
+    "CHANGELOG.zh.md",
+    "CONTEXT.md",
+    "CONTRIBUTING.zh.md",
+    "SECURITY.zh.md",
     "adr/",
     "analysis/",
-    "docs/agents/",
+    "assets/",
     "bench/",
-    "CONTEXT.md"
+    "docs/",
+    "docs/agents/",
+    "docs/features/",
+    "mkdocs-lan.yml",
+    "scripts/",
+    "server/README.zh.md",
+    "server/revit_model_mcp/fork_actions.py",
+    "src/RevitModelMcp.Addin/Fork/",
+    "src/RevitModelMcp.Core/Fork/",
+    "tools/site/"
   ],
   "hooks": [
     "src/RevitModelMcp.Addin/Application.cs",
@@ -106,7 +115,13 @@
     "build/tool_manifest.py": "the network table names this fork's release feed",
     "server/revit_model_mcp/updates.py": "the update check reads this fork's release tag",
     "server/tests/test_updates.py": "asserts the update check never resolves the package name",
-    "src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj": "the net48 System.IO.Compression reference the fork xlsx writer needs"
+    "src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj": "the net48 System.IO.Compression reference the fork xlsx writer needs",
+    "build/RevitApiReferencePin/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
+    "build/install/Installer.csproj": "pre-commit end-of-file normalization of build metadata",
+    "build/install/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
+    "build/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
+    "global.json": "pre-commit end-of-file normalization of build metadata",
+    "tests/RevitModelMcp.Core.Tests/packages.lock.json": "pre-commit end-of-file normalization of build metadata"
   },
   "removed": {
     ".github/workflows/winget.yml": "removed: it published to upstream's WinGet package",
