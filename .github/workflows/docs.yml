@@ -47,8 +47,11 @@ jobs:
       # server goes in a second command.
       - name: Install the server package
         run: pip install -e ./server
-      # Gates run cheapest-first: registry drift, then the dual-config build, then the unit suite.
-      # The registry check fails fast when a generated page or a translation fingerprint is stale.
+      # Gates run cheapest-first: the line has to exist, then registry drift, then
+      # the dual-config build, then the unit suite. The registry check fails fast
+      # when a generated page or a translation fingerprint is stale.
+      - name: Check the documentation line
+        run: python tools/site/check_docs_line.py
       - name: Check the generated registry
         run: python tools/site/generate_features.py --verify-registry --check
       - name: Build both configurations and compare them

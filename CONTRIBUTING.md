@@ -166,6 +166,9 @@ python3 -m venv .venv
 On Windows, use `.venv\Scripts\python.exe` and `.venv\Scripts\mkdocs.exe`.
 Open `http://127.0.0.1:8000/revit-model-mcp/`.
 Run `mkdocs build --strict` in the activated environment before submitting a PR.
+CI also runs `python tools/site/check_docs_line.py`, which fails when the site configuration, the generator, the
+auditor, the server, the publisher or the tool sections are missing from the checkout, so a dropped documentation
+line cannot reach `main` unnoticed.
 
 ## Test coverage
 
