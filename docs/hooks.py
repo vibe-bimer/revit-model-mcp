@@ -23,9 +23,10 @@ TOOL_PAGE = re.compile(
 # The search plugin indexes the whole page body, and a few prose pages run to 10k characters. That
 # text is what a visitor downloads before the first keystroke, so each entry keeps only a prefix.
 # The limit is set just above the latest a tool parameter name can sit: every one of the 217
-# parameter names is fully visible within the first 943 characters of at least one entry, so a
-# parameter at the bottom of a long table still has an entry that indexes it.
-SEARCH_TEXT_LIMIT = 1000
+# parameter names is fully visible within the first 1003 characters of at least one entry, so a
+# parameter at the bottom of a long table still has an entry that indexes it. The name-survival
+# test in tools/site/test_search_index.py fails the build when content drifts past the limit.
+SEARCH_TEXT_LIMIT = 1200
 
 # Each entry maps the repository files that back a documentation page to its Chinese and English page, so a
 # link to any of those files resolves to the page the current language build actually has.
@@ -528,6 +529,9 @@ def enrich_search_index(site: Path) -> int:
         if len(text) > SEARCH_TEXT_LIMIT:
             doc["text"] = text[:SEARCH_TEXT_LIMIT]
         doc.update(search_record(doc.get("location", ""), surfaces))
+    # Stamps the cap this file applied, so a checker can tell a fresh index from one an older
+    # build truncated with a different limit (whose lost text no re-run can recover).
+    data["rmc_text_limit"] = SEARCH_TEXT_LIMIT
     index.write_text(
         json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
     )

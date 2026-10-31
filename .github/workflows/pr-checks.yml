@@ -55,8 +55,8 @@ jobs:
       - name: Build documentation
         run: |
           python tools/site/generate_features.py --verify-registry --check
-          python -m unittest discover -s tools/site -p 'test_*.py'
           python tools/site/verify_dual_build.py
+          python -m unittest discover -s tools/site -p 'test_*.py'
       - name: Install Ruff
         run: pip install ruff==0.16.7
       - name: Check Python
