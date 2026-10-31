@@ -8,9 +8,11 @@ from; these tests pin the three states that matter: matching, stale and absent.
 
 import hashlib
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 import generate_features
 import yaml
@@ -184,3 +186,49 @@ class CommittedBaselineTests(unittest.TestCase):
                     capabilities["tools"][tool["name"]].get("source"),
                     source_of(tool["description"]),
                 )
+
+
+class ServerCommandTests(unittest.TestCase):
+    """The registry dump must find the server in a checkout, in CI and in a branch worktree."""
+
+    def test_module_form_is_the_last_resort(self):
+        with mock.patch.object(generate_features.shutil, "which", return_value=None):
+            candidates = generate_features.server_command_candidates()
+        self.assertEqual(candidates[-1], [sys.executable, "-m", "revit_model_mcp"])
+
+    def test_checkout_environment_is_preferred(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            executable = root / "server/.venv/bin/revit-model-mcp"
+            executable.parent.mkdir(parents=True)
+            executable.write_text("#!/bin/sh\n", encoding="utf-8")
+            with (
+                mock.patch.object(generate_features, "ROOT", root),
+                mock.patch.object(generate_features.shutil, "which", return_value=None),
+            ):
+                candidates = generate_features.server_command_candidates()
+        self.assertEqual(candidates[0], [str(executable)])
+
+    def test_installed_console_script_ranks_before_the_module_form(self):
+        with mock.patch.object(
+            generate_features.shutil, "which", return_value="/usr/bin/revit-model-mcp"
+        ):
+            candidates = generate_features.server_command_candidates()
+        self.assertIn(["/usr/bin/revit-model-mcp"], candidates)
+        self.assertLess(
+            candidates.index(["/usr/bin/revit-model-mcp"]),
+            len(candidates) - 1,
+        )
+
+    def test_worktree_prefers_its_own_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            server = Path(directory) / "server"
+            executable = server / ".venv/bin/revit-model-mcp"
+            executable.parent.mkdir(parents=True)
+            executable.write_text("#!/bin/sh\n", encoding="utf-8")
+            with mock.patch.object(
+                generate_features.shutil, "which", return_value=None
+            ):
+                candidates = generate_features.worktree_command_candidates(server)
+        self.assertEqual(candidates[0], [str(executable)])
+        self.assertEqual(candidates[-1], [sys.executable, "-m", "revit_model_mcp"])

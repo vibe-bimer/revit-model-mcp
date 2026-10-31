@@ -12,8 +12,10 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import threading
 from pathlib import Path
 
 import catalogs
@@ -835,19 +837,57 @@ def generate(tools: list[dict], capabilities: dict, contracts: dict) -> dict[Pat
     return files
 
 
-def dump_registry() -> list[dict]:
-    executable = ROOT / "server/.venv/bin/revit-model-mcp"
-    command = (
-        [str(executable)]
-        if executable.exists()
-        else [sys.executable, "-m", "revit_model_mcp"]
-    )
-    env = dict(
-        os.environ,
-        REVIT_MCP_HOST="http://127.0.0.1:53110",
-        REVIT_MCP_TOKEN="dump",
-        REVIT_MCP_ALLOW_WRITE="1",
-    )
+class ServerStartError(RuntimeError):
+    """The MCP server did not answer a tools/list request."""
+
+    def __init__(self, command: list[str], stderr: list[str]) -> None:
+        self.command = command
+        self.stderr = stderr
+        detail = "\n".join(stderr[-5:]).strip()
+        super().__init__(
+            f"{' '.join(command)} did not answer tools/list"
+            + (f":\n{detail}" if detail else "")
+        )
+
+
+def server_command_candidates() -> list[list[str]]:
+    """Return the commands that can start the MCP server, most specific first.
+
+    A checkout keeps its own environment under ``server/.venv``; a CI job installs the package
+    and gets the console script on PATH; every other environment falls back to the module
+    form. The caller tries each candidate until one answers.
+    """
+    candidates: list[list[str]] = []
+    local = ROOT / "server/.venv/bin/revit-model-mcp"
+    if local.exists():
+        candidates.append([str(local)])
+    installed = shutil.which("revit-model-mcp")
+    if installed:
+        candidates.append([installed])
+    candidates.append([sys.executable, "-m", "revit_model_mcp"])
+    return candidates
+
+
+def worktree_command_candidates(server: Path) -> list[list[str]]:
+    """Return the commands that start the server of a branch worktree.
+
+    The worktree's own environment comes first, so a snapshot describes the branch code and not
+    the code of the checkout that asked for it.
+    """
+    candidates: list[list[str]] = []
+    if shutil.which("uv"):
+        candidates.append(["uv", "run", "revit-model-mcp"])
+    local = server / ".venv/bin/revit-model-mcp"
+    if local.exists():
+        candidates.append([str(local)])
+    candidates.append([sys.executable, "-m", "revit_model_mcp"])
+    return candidates
+
+
+def _list_tools(
+    command: list[str], env: dict[str, str], cwd: Path | None = None
+) -> list[dict]:
+    """Start the server, initialise the session and return its tool list."""
     with subprocess.Popen(
         command,
         stdin=subprocess.PIPE,
@@ -856,7 +896,10 @@ def dump_registry() -> list[dict]:
         env=env,
         text=True,
         bufsize=1,
+        cwd=cwd,
     ) as proc:
+        stderr: list[str] = []
+        threading.Thread(target=lambda: stderr.extend(proc.stderr), daemon=True).start()
 
         def call(method: str, rid: int, params: dict | None = None):
             proc.stdin.write(
@@ -878,7 +921,7 @@ def dump_registry() -> list[dict]:
                     continue
                 if message.get("id") == rid:
                     return message
-            raise SystemExit("The MCP server closed the connection while listing tools")
+            raise ServerStartError(command, stderr)
 
         try:
             call(
@@ -900,6 +943,25 @@ def dump_registry() -> list[dict]:
             proc.terminate()
 
 
+def dump_registry() -> list[dict]:
+    env = dict(
+        os.environ,
+        REVIT_MCP_HOST="http://127.0.0.1:53110",
+        REVIT_MCP_TOKEN="dump",
+        REVIT_MCP_ALLOW_WRITE="1",
+    )
+    failures: list[str] = []
+    for command in server_command_candidates():
+        try:
+            return _list_tools(command, env)
+        except ServerStartError as error:
+            failures.append(str(error))
+    raise SystemExit(
+        "The MCP server closed the connection while listing tools:\n"
+        + "\n".join(failures)
+    )
+
+
 def dump_platform(worktree: Path, branch: str) -> dict:
     """Snapshot the integration branch's registry without checking the branch out.
 
@@ -910,64 +972,24 @@ def dump_platform(worktree: Path, branch: str) -> dict:
     server = worktree / "server"
     if not (server / "pyproject.toml").is_file():
         raise SystemExit(f"Not a server worktree: {server}")
-    command = ["uv", "run", "revit-model-mcp"]
     env = dict(
         os.environ,
         REVIT_MCP_HOST="http://127.0.0.1:53110",
         REVIT_MCP_TOKEN="dump",
         REVIT_MCP_READ_ONLY="0",
     )
-    with subprocess.Popen(
-        command,
-        cwd=server,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-        text=True,
-        bufsize=1,
-    ) as proc:
-
-        def call(method: str, rid: int, params: dict | None = None) -> dict:
-            proc.stdin.write(
-                json.dumps(
-                    {
-                        "jsonrpc": "2.0",
-                        "id": rid,
-                        "method": method,
-                        "params": params or {},
-                    }
-                )
-                + "\n"
-            )
-            proc.stdin.flush()
-            while line := proc.stdout.readline():
-                try:
-                    message = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if message.get("id") == rid:
-                    return message
-            raise SystemExit("The MCP server closed the connection while listing tools")
-
+    failures: list[str] = []
+    for command in worktree_command_candidates(server):
         try:
-            call(
-                "initialize",
-                1,
-                {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {},
-                    "clientInfo": {"name": "docs", "version": "1"},
-                },
-            )
-            proc.stdin.write(
-                json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"})
-                + "\n"
-            )
-            proc.stdin.flush()
-            tools = call("tools/list", 2)["result"]["tools"]
-        finally:
-            proc.terminate()
+            tools = _list_tools(command, env, cwd=server)
+            break
+        except ServerStartError as error:
+            failures.append(str(error))
+    else:
+        raise SystemExit(
+            "The MCP server closed the connection while listing tools:\n"
+            + "\n".join(failures)
+        )
 
     manifest = subprocess.run(
         ["git", "-C", str(worktree), "show", f"{branch}:docs/tool-manifest.json"],
