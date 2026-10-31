@@ -21,9 +21,10 @@ from __future__ import annotations
 import json
 import os
 import re
+import subprocess
 import sys
 from collections.abc import Iterator
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -138,8 +139,71 @@ def read_json(relative: str) -> dict:
         raise IdentityError(f"{relative} is not valid JSON: {error}") from error
 
 
+def git_paths(arguments: list[str]) -> set[str] | None:
+    """Return git's answer for this checkout, or None when git cannot answer."""
+    result = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), *arguments],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    return {path for path in result.stdout.split("\0") if path}
+
+
+def tracked_directories() -> set[str] | None:
+    """Directories that hold a tracked file, or None when git cannot answer."""
+    tracked = git_paths(["ls-files", "-z"])
+    if tracked is None:
+        return None
+    directories = {"."}
+    for path in tracked:
+        parts = PurePosixPath(path).parent.parts
+        for index in range(1, len(parts) + 1):
+            directories.add("/".join(parts[:index]))
+    return directories
+
+
+def ignored_paths() -> set[str]:
+    """Paths git ignores, so local build output never reaches the scan."""
+    ignored = git_paths(
+        [
+            "ls-files",
+            "--others",
+            "--ignored",
+            "--exclude-standard",
+            "--directory",
+            "-z",
+        ]
+    )
+    if ignored is None:
+        return set()
+    return {path.rstrip("/") for path in ignored}
+
+
+def scans_directory(
+    relative: str, tracked_dirs: set[str] | None, ignored: set[str]
+) -> bool:
+    """Say whether the scan descends into a directory."""
+    if relative in PRUNED_DIRECTORIES:
+        return False
+    if relative in ignored:
+        return False
+    return tracked_dirs is None or relative in tracked_dirs
+
+
 def iter_scanned_files() -> list[Path]:
+    """Return every file the fork ships, and nothing a developer ignores.
+
+    The walk covers the working tree, so a new untracked file inside a tracked
+    directory is still checked. A directory that git ignores, or that holds no
+    tracked file, is local scratch: a built site, a tool workspace, a vendored
+    corpus. Those are pruned before the walk descends into them.
+    """
     files = []
+    tracked_dirs = tracked_directories()
+    ignored = ignored_paths()
     for directory, subdirectories, names in os.walk(REPO_ROOT):
         root = Path(directory)
         relative_root = root.relative_to(REPO_ROOT).as_posix()
@@ -147,10 +211,12 @@ def iter_scanned_files() -> list[Path]:
         subdirectories[:] = sorted(
             name
             for name in subdirectories
-            if f"{prefix}{name}" not in PRUNED_DIRECTORIES
+            if scans_directory(f"{prefix}{name}", tracked_dirs, ignored)
         )
         for name in names:
             if Path(name).suffix in SCAN_SUFFIXES:
+                if f"{prefix}{name}" in ignored:
+                    continue
                 files.append(root / name)
     return sorted(files)
 

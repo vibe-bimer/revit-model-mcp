@@ -8,6 +8,7 @@ it, plus a few unit cases that prove each rule can actually fire.
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -98,3 +99,51 @@ def test_no_registry_manifest_claims_upstream(identity):
     problems: list[str] = []
     identity.check_registry_manifest(problems)
     assert problems == []
+
+
+def git(repository: Path, *arguments: str) -> None:
+    subprocess.run(
+        ["git", "-C", str(repository), *arguments],
+        check=True,
+        capture_output=True,
+    )
+
+
+def shipped_repository(tmp_path: Path) -> Path:
+    """A repository with one shipped file, one ignored build and one scratch dir."""
+    repository = tmp_path / "repository"
+    (repository / "docs").mkdir(parents=True)
+    (repository / "docs" / "guide.md").write_text("shipped\n", encoding="utf-8")
+    (repository / "site").mkdir()
+    (repository / "site" / "index.html").write_text("uvx revit-model-mcp\n", encoding="utf-8")
+    (repository / "scratch").mkdir()
+    (repository / "scratch" / "note.md").write_text("uvx revit-model-mcp\n", encoding="utf-8")
+    git(repository, "init")
+    git(repository, "config", "user.email", "identity@example.com")
+    git(repository, "config", "user.name", "identity check")
+    git(repository, "add", "docs/guide.md")
+    git(repository, "commit", "-m", "shipped")
+    (repository / ".gitignore").write_text("site/\n", encoding="utf-8")
+    return repository
+
+
+def test_the_scan_reads_the_shipped_tree_and_not_local_scratch(identity, tmp_path, monkeypatch):
+    """A built site or a tool workspace is not shipped drift."""
+    repository = shipped_repository(tmp_path)
+    monkeypatch.setattr(identity, "REPO_ROOT", repository)
+    scanned = {path.relative_to(repository).as_posix() for path in identity.iter_scanned_files()}
+    assert scanned == {"docs/guide.md"}
+
+
+def test_an_untracked_file_in_a_shipped_directory_is_still_scanned(identity, tmp_path, monkeypatch):
+    """A new file is checked before it is committed."""
+    repository = shipped_repository(tmp_path)
+    (repository / "docs" / "draft.md").write_text("draft\n", encoding="utf-8")
+    monkeypatch.setattr(identity, "REPO_ROOT", repository)
+    scanned = {path.relative_to(repository).as_posix() for path in identity.iter_scanned_files()}
+    assert scanned == {"docs/guide.md", "docs/draft.md"}
+
+
+def test_the_tool_workspace_is_pruned(identity):
+    """A local agent workspace never belongs to the fork's shipped tree."""
+    assert ".agent-teams" in identity.PRUNED_DIRECTORIES
