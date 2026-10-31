@@ -1,3 +1,5 @@
+# Pinned documentation toolchain for the site gates; hashed by uv pip compile.
 mkdocs-material==9.7.7
-mkdocs-llmstxt==0.5.0
-pymdown-extensions==12.1
+mkdocs-static-i18n==1.3.1
+pymdown-extensions==11.0.2
+PyYAML==6.0.3
