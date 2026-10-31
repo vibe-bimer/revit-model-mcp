@@ -20,6 +20,13 @@ TOOL_PAGE = re.compile(
     r"(?P<directory>features|platform)/(?P<tool>revit_[a-z0-9_]+)/?$"
 )
 
+# The search plugin indexes the whole page body, and a few prose pages run to 10k characters. That
+# text is what a visitor downloads before the first keystroke, so each entry keeps only a prefix.
+# The limit is set just above the latest a tool parameter name can sit: every one of the 217
+# parameter names is fully visible within the first 943 characters of at least one entry, so a
+# parameter at the bottom of a long table still has an entry that indexes it.
+SEARCH_TEXT_LIMIT = 1000
+
 # Each entry maps the repository files that back a documentation page to its Chinese and English page, so a
 # link to any of those files resolves to the page the current language build actually has.
 SOURCES = [
@@ -465,17 +472,18 @@ def _catalog_surfaces() -> dict[str, dict]:
     """Map each catalog directory to the status fields a search result shows."""
     module = _catalog_module()
     release, integration = module.release(), module.integration()
+    # The release catalog sits on the default branch, which no result ever shows, so its branch is
+    # left out rather than repeated on every released entry. The integration branch names the
+    # catalog, so a branch entry keeps it.
     return {
         release.directory: {
             "catalog": "release",
             "status": release.status,
             "version": release.version,
-            "branch": release.branch,
         },
         integration.directory: {
             "catalog": "branch",
             "status": integration.status,
-            "version": "",
             "branch": integration.branch,
         },
     }
@@ -500,6 +508,9 @@ def search_record(location: str, surfaces: dict[str, dict] | None = None) -> dic
             break
     if found:
         record["tool"] = found.group("tool")
+    # An empty version says nothing a reader can use, so it is not stored.
+    if not record.get("version"):
+        record.pop("version", None)
     return record
 
 
@@ -511,6 +522,11 @@ def enrich_search_index(site: Path) -> int:
     data = json.loads(index.read_text(encoding="utf-8"))
     surfaces = _catalog_surfaces()
     for doc in data.get("docs") or []:
+        # Truncating the entry text is the one change that reaches every visitor: Material's worker
+        # fetches this whole file before the search box can answer a keystroke.
+        text = doc.get("text", "")
+        if len(text) > SEARCH_TEXT_LIMIT:
+            doc["text"] = text[:SEARCH_TEXT_LIMIT]
         doc.update(search_record(doc.get("location", ""), surfaces))
     index.write_text(
         json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
