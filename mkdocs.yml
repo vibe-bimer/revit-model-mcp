@@ -438,6 +438,7 @@ nav:
           - MCP 规范问答: mcp-specifications.md
       - 工具开发:
           - 新增 Revit 工具: agents/adding-revit-tools.md
+          - 工作站开发: agents/workstation-dev.md
           - 建模工具规格: modeling-tools.md
           - 模型审计设计: design/model-audit.md
           - 提示词: prompts.md
