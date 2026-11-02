@@ -83,16 +83,18 @@ These carry over from the repository as it stands; they are not new decisions:
 | `host_element_id` | No | `null` | `integer` | Explicit host (wall) ID |
 | `host_search_radius_mm` | No | `2000` | `number` | Nearest-host search radius when no host is given |
 | `level` | No | `null` | `string / null` | Placement level; when empty, the nearest level is used |
-| `rotation_deg` | No | `0` | `number` | Rotation about the Z axis |
+| `rotation_deg` | No | `0` | `number` | Must be `0`: the host wall decides the orientation of a hosted family; use `flip_facing` to turn it |
 | `sill_height_mm` | No | `null` | `number` | Sill height (`INSTANCE_SILL_HEIGHT_PARAM`) |
 | `flip_facing` | No | `null` | `boolean` | Calls `flipFacing()` when needed |
 
 Host resolution has two paths:
 
 1. **Explicit `host_element_id`**: check that the element exists, is a `Wall`, and that the symbol's `Family.FamilyPlacementType == OneLevelBasedHosted`. Revit does not validate the host itself, and a failure has no documented exception type, so the tool must own this layer.
-2. **Find the nearest wall**: project the placement point onto each candidate wall's location line and take the smallest horizontal distance; the distance must not exceed `host_search_radius_mm` and the projection parameter must fall in 0..1 (the point really lies on that wall segment). **Nothing found, a distance over the radius, or a tie for the nearest distance** are all rejected with the candidate list `{ id, distanceMm }`, so the caller can name a host explicitly.
+2. **Find the nearest wall**: the candidates are only the walls of the placement level — the level named by `level`, or the one whose elevation is closest to the point when `level` is null; a wall's storey band comes from `WALL_BASE_CONSTRAINT` and `WALL_HEIGHT_TYPE` (its own height when it is unconnected). In a model that draws each storey's walls separately, walls above and below coincide in plan, so without the level filter they would always tie; the level is resolved before the host. Project the placement point onto each candidate wall's location line and take the smallest horizontal distance; the distance must not exceed `host_search_radius_mm` and the projection parameter must fall in 0..1 (the point really lies on that wall segment). **Nothing found, a distance over the radius, or a tie for the nearest distance on that level** are all rejected with the candidate list `{ id, distanceMm }`, so the caller can name a host explicitly. The radius is judged first and the tie second: a search that landed outside its radius owes no tie verdict.
 
 The response reports `hostResolution: { mode: "explicit" | "nearest", hostId, distanceMm }`, so a dry run also shows which wall it would host on.
+
+The host wall decides the orientation and the hand of a hosted instance, so `rotation_deg` accepts `0` only: rotating a hosted instance through the API is either ignored or turns into a slide along the wall, so a non-zero angle is refused with a pointer to `flip_facing`.
 
 The existing `revit_place_family` (unhosted, level-based) **keeps its name unchanged**; the two coexist.
 

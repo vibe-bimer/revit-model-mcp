@@ -40,6 +40,7 @@ def test_every_fork_tool_is_registered():
         "revit_create_grid",
         "revit_create_column",
         "revit_load_family_file",
+        "revit_place_hosted_family",
         "revit_set_phase",
         "revit_merge_phases",
         "revit_reset_element_ids",
@@ -246,6 +247,91 @@ async def test_create_column_refuses_a_height_that_is_not_positive():
 
 
 @pytest.mark.anyio
+async def test_place_hosted_family_sends_its_point_at_the_top_level_and_the_search_in_the_fork_bag():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen["command"] = command
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_place_hosted_family"][0]
+    await function(
+        family="Single-Flush",
+        x_mm=3000,
+        y_mm=4500,
+        type_name="0900 x 2100",
+        host_element_id=101,
+        host_search_radius_mm=1500,
+        level="1F",
+        dry_run=True,
+    )
+
+    assert seen["command"] == "place-hosted-family"
+    assert seen["family"] == "Single-Flush"
+    assert seen["typeName"] == "0900 x 2100"
+    assert seen["level"] == "1F"
+    assert seen["xMm"] == 3000
+    assert seen["yMm"] == 4500
+    assert seen["fork"] == {"hostSearchRadiusMm": 1500, "hostElementId": 101}
+    assert seen["dryRun"] is True
+
+
+@pytest.mark.anyio
+async def test_place_hosted_family_sends_the_default_radius_and_leaves_the_host_unset():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_place_hosted_family"][0]
+    await function(family="Single-Flush", x_mm=0, y_mm=0)
+
+    # A sparse bag: an absent key means "leave this input alone", so a null sill or flip never travels.
+    assert seen["fork"] == {"hostSearchRadiusMm": 2000}
+    assert seen["level"] is None
+    assert seen["rotationDeg"] == 0
+
+
+@pytest.mark.anyio
+async def test_place_hosted_family_carries_the_sill_and_the_flip_when_given():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_place_hosted_family"][0]
+    await function(family="Single-Flush", x_mm=0, y_mm=0, sill_height_mm=900, flip_facing=False)
+
+    assert seen["fork"] == {"hostSearchRadiusMm": 2000, "sillHeightMm": 900, "flipFacing": False}
+    assert seen["rotationDeg"] == 0
+
+
+@pytest.mark.anyio
+async def test_place_hosted_family_refuses_a_rotation_because_its_host_wall_decides_it():
+    with pytest.raises(ToolError, match="takes its orientation from its host wall"):
+        await tool("revit_place_hosted_family")(
+            family="Single-Flush", x_mm=0, y_mm=0, rotation_deg=90
+        )
+
+
+@pytest.mark.anyio
+async def test_place_hosted_family_refuses_a_search_radius_that_is_not_positive():
+    with pytest.raises(ToolError, match="host_search_radius_mm must be a positive number"):
+        await tool("revit_place_hosted_family")(
+            family="Single-Flush", x_mm=0, y_mm=0, host_search_radius_mm=0
+        )
+
+
+@pytest.mark.anyio
 async def test_load_family_file_sends_its_path_in_the_fork_bag():
     seen: dict = {}
 
@@ -435,6 +521,7 @@ def test_fork_tools_are_listed_by_the_server():
         "revit_create_grid",
         "revit_create_column",
         "revit_load_family_file",
+        "revit_place_hosted_family",
         "revit_set_phase",
         "revit_merge_phases",
         "revit_reset_element_ids",
@@ -493,6 +580,20 @@ def test_fork_tools_are_listed_by_the_server():
         "path",
         "type_name",
         "overwrite_parameters",
+        "dry_run",
+        "document",
+    }
+    assert set(tools["revit_place_hosted_family"].input_schema["properties"]) == {
+        "family",
+        "type_name",
+        "x_mm",
+        "y_mm",
+        "host_element_id",
+        "host_search_radius_mm",
+        "level",
+        "rotation_deg",
+        "sill_height_mm",
+        "flip_facing",
         "dry_run",
         "document",
     }
@@ -571,6 +672,31 @@ def test_a_column_step_keeps_its_point_at_the_top_level():
         "rotationDeg": 0,
         "dryRun": False,
         "fork": {"topLevel": "3F", "baseOffsetMm": 0, "topOffsetMm": 0},
+    }
+
+
+def test_a_hosted_family_step_keeps_its_host_search_in_the_fork_bag():
+    from revit_model_mcp.actions import ActionStep
+
+    step = ActionStep(
+        action="place_hosted_family",
+        args={
+            "family": "Single-Flush",
+            "x_mm": 3000,
+            "y_mm": 4500,
+            "host_element_id": 101,
+        },
+    )
+    assert step.payload() == {
+        "command": "place-hosted-family",
+        "family": "Single-Flush",
+        "typeName": None,
+        "level": None,
+        "xMm": 3000,
+        "yMm": 4500,
+        "rotationDeg": 0,
+        "dryRun": False,
+        "fork": {"hostSearchRadiusMm": 2000, "hostElementId": 101},
     }
 
 

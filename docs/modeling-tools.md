@@ -83,16 +83,18 @@
 | `host_element_id` | 否 | `null` | `integer` | 显式宿主（墙）ID |
 | `host_search_radius_mm` | 否 | `2000` | `number` | 未给宿主时的就近搜索半径 |
 | `level` | 否 | `null` | `string / null` | 放置标高；为空时取最近标高 |
-| `rotation_deg` | 否 | `0` | `number` | 绕 Z 轴旋转 |
+| `rotation_deg` | 否 | `0` | `number` | 必须为 `0`：宿主族的方向由宿主墙决定，要翻面用 `flip_facing` |
 | `sill_height_mm` | 否 | `null` | `number` | 窗台高（`INSTANCE_SILL_HEIGHT_PARAM`） |
 | `flip_facing` | 否 | `null` | `boolean` | 需要时调用 `flipFacing()` |
 
 宿主解析有两条路：
 
 1. **显式 `host_element_id`**：校验构件存在、是 `Wall`，且符号的 `Family.FamilyPlacementType == OneLevelBasedHosted`。Revit 自己不校验宿主，失败也没有文档化的异常类型，这一层必须由工具做。
-2. **就近找墙**：把定位点投影到候选墙的定位线上，取水平距离最小者；要求距离不超过 `host_search_radius_mm`，且投影参数落在 0..1（点确实落在这段墙上）。**找不到、超出半径、或最近距离并列**，一律拒绝并列出候选 `{ id, distanceMm }`，让调用者显式指定。
+2. **就近找墙**：候选只有**放置标高这一层**的墙——标高由 `level` 给出，为空时取定位点高程最近者；墙的层高区间按 `WALL_BASE_CONSTRAINT` 与 `WALL_HEIGHT_TYPE`（未连接高度时用自身高度）判定。每层各画一遍墙的模型里，上下层墙在平面上完全重合，不先按层筛掉就永远并列，所以标高先于宿主解析。把定位点投影到候选墙的定位线上，取水平距离最小者；要求距离不超过 `host_search_radius_mm`，且投影参数落在 0..1（点确实落在这段墙上）。**找不到、超出半径、或同层最近距离并列**，一律拒绝并列出候选 `{ id, distanceMm }`，让调用者显式指定；半径先判、并列后判，因为一次落在半径外的搜索不该报并列。
 
 响应回报 `hostResolution: { mode: "explicit" | "nearest", hostId, distanceMm }`，因此试运行也能看清它会挂到哪面墙上。
+
+宿主族的方向、手向都由宿主墙决定，`rotation_deg` 因此只接受 `0`——转一个宿主实例在 API 里要么被忽略、要么变成沿着墙移动，所以非零角度会被拒绝并说明改用 `flip_facing`。
 
 现有的 `revit_place_family`（非宿主、基于标高）**保留原名不动**，两者并存。
 

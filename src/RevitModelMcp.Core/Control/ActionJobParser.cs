@@ -417,6 +417,12 @@ public static class ActionJobParser
                 Require(Finite(action.XMm, action.YMm, action.RotationDeg), "Placement coordinates and rotation must be finite.");
                 Require(action.TypeName is null || !string.IsNullOrWhiteSpace(action.TypeName), "typeName must not be blank.");
             }
+            if (command == "place-hosted-family")
+            {
+                Require(!string.IsNullOrWhiteSpace(action.Family), "family is required.");
+                action.Family = action.Family!.Trim();
+                Require(job.XMm.HasValue && job.YMm.HasValue, "xMm and yMm are required.");
+            }
             if (command == "load-family") ValidateFamilyPaths(action.Paths, "paths", trustedNetworkRoots);
             if (command == "place-families")
             {

@@ -41,6 +41,12 @@ public sealed class ForkOptions
     public double? BaseOffsetMm { get; set; }
     public double? TopOffsetMm { get; set; }
 
+    // place-hosted-family
+    public long? HostElementId { get; set; }
+    public double? HostSearchRadiusMm { get; set; }
+    public double? SillHeightMm { get; set; }
+    public bool? FlipFacing { get; set; }
+
     // load-family-file
     public string? FamilyPath { get; set; }
     public string? FamilyTypeName { get; set; }
@@ -88,6 +94,10 @@ public sealed class ForkOptions
         HeightMm = HeightMm,
         BaseOffsetMm = BaseOffsetMm,
         TopOffsetMm = TopOffsetMm,
+        HostElementId = HostElementId,
+        HostSearchRadiusMm = HostSearchRadiusMm,
+        SillHeightMm = SillHeightMm,
+        FlipFacing = FlipFacing,
         FamilyPath = FamilyPath,
         FamilyTypeName = FamilyTypeName,
         OverwriteParameters = OverwriteParameters,

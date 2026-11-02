@@ -164,6 +164,70 @@ public sealed class ForkInputTests
         await Assert.That(parsed.Error).IsEqualTo("fork.heightMm must be a number.");
     }
 
+    // The wire mapping, not the applier's rules: a hosted family refuses a non-zero angle, which the
+    // add-in checks once the document is open.
+    [Test]
+    public async Task PlaceHostedFamily_CarriesItsHostAndItsSill()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"place-hosted-family","family":"Single-Flush","typeName":"0900 x 2100","xMm":3000,"yMm":4500,"rotationDeg":90,"level":"1F","fork":{"hostElementId":101,"hostSearchRadiusMm":1500,"sillHeightMm":900,"flipFacing":true}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        var action = parsed.Action!;
+        await Assert.That(action.Family).IsEqualTo("Single-Flush");
+        await Assert.That(action.TypeName).IsEqualTo("0900 x 2100");
+        await Assert.That(action.XMm).IsEqualTo(3000d);
+        await Assert.That(action.YMm).IsEqualTo(4500d);
+        await Assert.That(action.RotationDeg).IsEqualTo(90d);
+        await Assert.That(action.Level).IsEqualTo("1F");
+        await Assert.That(action.Options.HostElementId).IsEqualTo(101L);
+        await Assert.That(action.Options.HostSearchRadiusMm).IsEqualTo(1500d);
+        await Assert.That(action.Options.SillHeightMm).IsEqualTo(900d);
+        await Assert.That(action.Options.FlipFacing).IsTrue();
+    }
+
+    // A host id is a number that identifies a wall, so it must not be rounded into one: 101.5 is a typo.
+    [Test]
+    public async Task PlaceHostedFamily_RefusesAHostThatIsNotAWholeNumber()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"place-hosted-family","family":"Single-Flush","xMm":0,"yMm":0,"fork":{"hostElementId":"the one by the stair"}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(parsed.Error).IsEqualTo("fork.hostElementId must be an element id.");
+    }
+
+    [Test]
+    public async Task PlaceHostedFamily_LeavesTheHostAndTheSillAloneWhenThereIsNoBag()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"place-hosted-family","family":"Single-Flush","xMm":0,"yMm":0}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Options.HostElementId).IsNull();
+        await Assert.That(parsed.Action!.Options.HostSearchRadiusMm).IsNull();
+        await Assert.That(parsed.Action!.Options.SillHeightMm).IsNull();
+        await Assert.That(parsed.Action!.Options.FlipFacing).IsNull();
+        await Assert.That(parsed.Action!.Level).IsNull();
+    }
+
+    // The point decides which wall hosts the family, so a placement without one is a typo and not a
+    // request to put a door at the origin.
+    [Test]
+    public async Task PlaceHostedFamily_RefusesAPlacementWithoutItsPoint()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"place-hosted-family","family":"Single-Flush"}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(parsed.Error).IsEqualTo("xMm and yMm are required.");
+    }
+
+    [Test]
+    public async Task PlaceHostedFamily_TrimsTheFamilyName()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"place-hosted-family","family":"  Single-Flush  ","xMm":0,"yMm":0}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Family).IsEqualTo("Single-Flush");
+    }
+
     [Test]
     public async Task CreateGrid_RefusesAPointOfTheWrongShape()
     {
@@ -265,7 +329,7 @@ public sealed class ForkInputTests
         await Assert.That(Core.Fork.ForkRegistry.Commands).IsEquivalentTo(
         [
             "set-view-lighting", "create-level", "create-floor", "create-grid", "create-column",
-            "load-family-file",
+            "load-family-file", "place-hosted-family",
             "set-phase", "merge-phases", "reset-element-ids", "rebuild-model-ids"
         ]);
         // The add-in advertises both lists in its handshake, so the register's command has to be in one of

@@ -74,6 +74,7 @@ ACTION_TOOLS = {
     "revit_create_grid",
     "revit_create_column",
     "revit_load_family_file",
+    "revit_place_hosted_family",
     "revit_set_phase",
     "revit_merge_phases",
     "revit_reset_element_ids",

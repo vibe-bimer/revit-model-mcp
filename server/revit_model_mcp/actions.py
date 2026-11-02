@@ -373,6 +373,7 @@ class ActionStep(BaseModel):
         "create_grid",
         "create_column",
         "load_family_file",
+        "place_hosted_family",
         "set_phase",
         "merge_phases",
         "reset_element_ids",

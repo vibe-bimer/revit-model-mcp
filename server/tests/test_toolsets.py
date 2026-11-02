@@ -15,10 +15,10 @@ from revit_model_mcp.toolsets import (
     select_tools,
 )
 
-# Upstream set 105,000 bytes for its own 79 tools. The fork ships eleven tools upstream does not
-# (adr/0005), and their input schemas cost about 12,500 bytes, so the guard carries an explicit fork
+# Upstream set 105,000 bytes for its own 79 tools. The fork ships twelve tools upstream does not
+# (adr/0005), and their input schemas cost about 14,500 bytes, so the guard carries an explicit fork
 # allowance instead of being applied to a surface it never measured.
-TOOLS_LIST_BUDGET_BYTES = 105_000 + 9_000
+TOOLS_LIST_BUDGET_BYTES = 105_000 + 11_500
 
 
 def _registered() -> set[str]:

@@ -57,6 +57,17 @@ def _check_column(height_mm, refuse) -> None:
         raise refuse("height_mm must be a positive number.")
 
 
+def _check_hosted(host_search_radius_mm, rotation_deg, refuse) -> None:
+    """A search radius is a length, so zero or a negative number is a typo, not a search."""
+    if host_search_radius_mm <= 0:
+        raise refuse("host_search_radius_mm must be a positive number.")
+    if rotation_deg != 0:
+        raise refuse(
+            "A one-level hosted family takes its orientation from its host wall, so rotation_deg "
+            "must be 0; use flip_facing to turn the family around."
+        )
+
+
 def _check_family_path(path, refuse) -> None:
     """A family load reads a .rfa; anything else is a typo worth refusing before the model is touched."""
     if not path.casefold().endswith(".rfa"):
@@ -152,6 +163,18 @@ STEP_FIELDS: dict[str, dict[str, tuple[Any, Any]]] = {
         "type_name": (Name | None, None),
         "overwrite_parameters": (bool, False),
     },
+    "place_hosted_family": {
+        "family": (Name, ...),
+        "type_name": (Name | None, None),
+        "x_mm": (Number, ...),
+        "y_mm": (Number, ...),
+        "host_element_id": (ElementId | None, None),
+        "host_search_radius_mm": (Number, 2000),
+        "level": (Name | None, None),
+        "rotation_deg": (Number, 0),
+        "sill_height_mm": (Number | None, None),
+        "flip_facing": (bool | None, None),
+    },
     "set_phase": {
         "element_ids": (ElementIds, ...),
         "created_phase": (str | None, None),
@@ -185,6 +208,7 @@ STEP_TOP_LEVEL: dict[str, tuple[str, ...]] = {
     "create_grid": ("label",),
     "create_column": ("family", "type_name", "level", "x_mm", "y_mm", "rotation_deg"),
     "load_family_file": (),
+    "place_hosted_family": ("family", "type_name", "x_mm", "y_mm", "level", "rotation_deg"),
     "set_phase": ("element_ids",),
     "merge_phases": (),
     "reset_element_ids": ("element_ids",),
@@ -223,6 +247,8 @@ def check_step(action: str, args: dict[str, Any], refuse) -> None:
         _check_column(args["height_mm"], refuse)
     elif action == "load_family_file":
         _check_family_path(args["path"], refuse)
+    elif action == "place_hosted_family":
+        _check_hosted(args["host_search_radius_mm"], args["rotation_deg"], refuse)
     elif action == "set_phase":
         _check_phase_assignment(args["created_phase"], args["demolished_phase"], refuse)
     elif action == "merge_phases":
@@ -452,6 +478,65 @@ def register_fork_actions(mcp, send) -> None:
             fork["overwriteParameters"] = True
         return await send(
             "load-family-file",
+            fork=fork,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @mcp.tool(
+        title="Place Hosted Family",
+        annotations=ToolAnnotations(
+            title="Place Hosted Family",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+        ),
+    )
+    @with_client_identity
+    async def revit_place_hosted_family(
+        family: Name,
+        x_mm: Number,
+        y_mm: Number,
+        type_name: Name | None = None,
+        host_element_id: ElementId | None = None,
+        host_search_radius_mm: Number = 2000,
+        level: Name | None = None,
+        rotation_deg: Number = 0,
+        sill_height_mm: Number | None = None,
+        flip_facing: bool | None = None,
+        dry_run: bool = False,
+        document: str | None = None,
+    ) -> dict[str, Any]:
+        """Place one door, window or other one-level hosted family of `family` at `x_mm`, `y_mm`.
+
+        The host is either the wall named by `host_element_id`, or the nearest wall of the placement
+        level whose location line passes within `host_search_radius_mm` of the point; `level` defaults
+        to the level whose elevation is closest to the point. A missing host, a distance over the
+        radius or two equally near walls are refused with the candidates, so the caller can name one.
+        The response reports `fork.hostResolution` ({mode, hostId, distanceMm}), which is why a dry
+        run already shows the wall the family would hang on. `sill_height_mm` writes the family's own
+        INSTANCE_SILL_HEIGHT_PARAM and `flip_facing` calls flipFacing(). `rotation_deg` must be 0: a
+        hosted instance takes its orientation from its host wall, so use `flip_facing` to turn it
+        around. Families that are not one-level hosted are refused: revit_place_family places those,
+        and it is the one that rotates. Nothing is attached to the host, because a door or a window
+        has no attachment target. dry_run returns the same verification block without changing the
+        model."""
+        _check_hosted(host_search_radius_mm, rotation_deg, ToolError)
+        fork: dict[str, Any] = {"hostSearchRadiusMm": host_search_radius_mm}
+        if host_element_id is not None:
+            fork["hostElementId"] = host_element_id
+        if sill_height_mm is not None:
+            fork["sillHeightMm"] = sill_height_mm
+        if flip_facing is not None:
+            fork["flipFacing"] = flip_facing
+        return await send(
+            "place-hosted-family",
+            family=family,
+            typeName=type_name,
+            level=level,
+            xMm=x_mm,
+            yMm=y_mm,
+            rotationDeg=rotation_deg,
             fork=fork,
             dryRun=dry_run,
             document=document,

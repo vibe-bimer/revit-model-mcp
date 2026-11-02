@@ -4,7 +4,7 @@ description: "可直接复制的提示词库，每个工具配有示例提示词
 
 # 提示词库
 
-35 个读取 + 55 个动作，共 90 个工具
+35 个读取 + 56 个动作，共 91 个工具
 
 动作默认允许；机器策略 `ReadOnly`、工作站 `read-only` 文件或 `REVIT_MCP_READ_ONLY=1` 三者任一打开即拒绝动作（全新安装的机器策略默认只读）。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
@@ -494,6 +494,18 @@ description: "可直接复制的提示词库，每个工具配有示例提示词
 
 ```text
 建一条叫 A 的轴线，从 (0,0) 到 (30000,0)
+```
+
+### <span class="state part">自研</span> [放置宿主族](revit_place_hosted_family.md)
+
+`revit_place_hosted_family` — 在墙上放门窗：宿主可点名也可就近找墙，回报挂在哪面墙上（mm）
+
+```text
+在 1F 的 (3000,0) 挂一扇门，就近找墙
+```
+
+```text
+把这扇窗挂到 105 号墙上，窗台高 900
 ```
 
 ### <span class="state part">自研</span> [创建柱](revit_create_column.md)
