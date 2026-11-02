@@ -10,7 +10,7 @@ This page is the deliverable of the wayfinder map [Architectural/structural base
 
 | Batch | Content |
 | --- | --- |
-| **First batch (this page)** | `create_level`, `create_grid`, `load_family`, `place_hosted_family`, `create_column`, `create_beam`, `copy_elements` |
+| **First batch (this page)** | `create_level`, `create_grid`, `load_family_file`, `place_hosted_family`, `create_column`, `create_beam`, `copy_elements` |
 | Second batch | Rooms, element type duplication, openings, materials, wall joins |
 | Third batch | Roofs, stairs, railings, curtain walls, annotations, views and sheets; ceilings on 2026 only |
 
@@ -54,23 +54,24 @@ These carry over from the repository as it stands; they are not new decisions:
 | `start_mm` / `end_mm` | Yes | — | `array<number>` | Start and end point `[x, y]` |
 | `mid_mm` | No | `null` | `array<number>` | When given, defines the arc from three points and uses `Grid.Create(Document, Arc)` |
 
-- A straight line goes through `Grid.Create(Document, Line)`; a curve must lie in a horizontal plane, otherwise it is rejected with the reason. The inputs carry `[x, y]` only, so Z is always 0, and a "non-horizontal" curve shows up as three collinear points (no arc exists) or coincident endpoints; `Validate` rejects both with the reason.
+- A straight line goes through `Grid.Create(Document, Line)`; a curve must lie in a horizontal plane, otherwise it is rejected with the reason. Inputs are `[x, y]` only, so Z is always 0; in the implementation "not on a horizontal plane" surfaces as three collinear points (no arc exists) or coincident endpoints, both refused in `Validate` with the reason stated.
 - The label is written to `Grid.Name`; a duplicate name is rejected.
 - **Extents and bubbles are not exposed**: those APIs all live on `DatumPlane`, split between `Model` / `ViewSpecific` semantics and requiring a named view, so they belong to the second batch.
 
 <a id="load-family"></a>
-### `revit_load_family`
+### `revit_load_family_file`
 
 | Parameter | Required | Default | Type | Meaning |
 | --- | :--: | --- | --- | --- |
 | `path` | Yes | — | `string` | Absolute path of the family file on the **Revit workstation** |
-| `type_name` | No | `null` | `string` | Load only this type; empty loads the whole family |
+| `type_name` | No | `null` | `string` | Load only this type (`LoadFamilySymbol`); empty loads the whole family (`LoadFamily`) |
 | `overwrite_parameters` | No | `false` | `boolean` | Whether values from the family overwrite the parameter values of a type already in the project |
 
-- **Always** pass `IFamilyLoadOptions`. Without it Revit uses its default handler and opens a **modal dialog**, which hangs every unattended run — the only reason this tool must accept that interface.
-- Default semantics: keep loading, but **do not overwrite** existing parameter values; when a family or type of the same name already exists, reuse the project's version.
-- The response reports `state: "new" | "existing"` and the type list `types: [{ id, name }]`.
-- A missing `path` is rejected, with the closest file name in the same directory.
+- **Why the name**: the base already ships `revit_load_family`, which takes a `paths` list and loads several files in one go — batch semantics. This section fixes a single file with an optional single type, so it lands as its own command, `load-family-file`, and the two coexist instead of displacing each other.
+- **Always** pass `IFamilyLoadOptions`, implementing both `OnFamilyFound` and `OnSharedFamilyFound`. Without it Revit uses its default handler and opens a **modal dialog**, which hangs every unattended run — the only reason this tool must accept that interface.
+- Default semantics: keep loading, but **do not overwrite** existing parameter values; when a family of the same name already exists, reuse the project's version.
+- The response reports `state: "new" | "existing"`, `familyName` and `familyTypes: [{ id, name }]` in the `fork` block — the fork's own result block, see adr/0005.
+- A missing `path` is rejected, listing the three closest file names in the same directory; the path rules are upstream's (absolute, no traversal, no cloud paths).
 
 <a id="place-hosted-family"></a>
 ### `revit_place_hosted_family`
@@ -181,6 +182,6 @@ These are already settled, so there is no need to check them again:
 - **There is no programmatic snap API**; `ObjectSnapTypes` only serves interactive picking.
 - **`revit_set_parameter` rejects ElementId parameters**, so writing level parameters must happen inside a dedicated tool.
 - **`Room.IsEnclosed` does not exist in either year**; room enclosure can only be judged with `Room.IsPointInRoom` / `ClosedShell`.
-- **The 2026 workstation's family library is incomplete**: `RVT 2026\Libraries` holds only 446 `.rfa` files (structural precast and path analysis) and no doors, windows, columns or beams; `RVT 2020\Libraries` holds 4,514, and its Chinese library has a full set of doors, windows, columns and beams. Validating `load_family` on 2026 needs family files from the 2020 library (families are backward compatible) or families already loaded in the model.
+- **The 2026 workstation's family library is incomplete**: `RVT 2026\Libraries` holds only 446 `.rfa` files (structural precast and path analysis) and no doors, windows, columns or beams; `RVT 2020\Libraries` holds 4,514, and its Chinese library has a full set of doors, windows, columns and beams. Validating `load_family_file` on 2026 needs family files from the 2020 library (families are backward compatible) or families already loaded in the model.
 - **`CloseMainWindow()` works on neither Revit 2020 nor Revit 2026 on that workstation**; before force-killing, confirm `isModified=false`, then clear the `%LOCALAPPDATA%\RevitModelMcp\instance_*.json` heartbeat.
 - **The "geometry only" boundary**: the corpus can neither confirm nor deny whether Revit creates analytical elements alongside a structural component. The contract only guarantees that these tools call no analytical API; whether analytical elements appear is decided by project settings, so record `IsStructuralAnalysisEnabled` as an environment fact during validation.

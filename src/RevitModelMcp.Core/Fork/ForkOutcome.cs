@@ -116,6 +116,30 @@ public sealed class ForkOutcome
     /// <summary>The result of each copy when the rebuild wrote more than one.</summary>
     [DataMember(Name = "copyResults", EmitDefaultValue = false)]
     public List<ForkCopyResult>? CopyResults { get; set; }
+
+    /// <summary>Whether a family load created the family or reused the one already in the project.</summary>
+    [DataMember(Name = "state", EmitDefaultValue = false)]
+    public string? State { get; set; }
+
+    /// <summary>The family a load reported, by the name the project knows it under.</summary>
+    [DataMember(Name = "familyName", EmitDefaultValue = false)]
+    public string? FamilyName { get; set; }
+
+    /// <summary>Every type the loaded family offers, so a caller can place one without asking again.</summary>
+    [DataMember(Name = "familyTypes", EmitDefaultValue = false)]
+    public List<ForkFamilyType>? FamilyTypes { get; set; }
+
+    /// <summary>The filenames a missing path most likely meant, closest first.</summary>
+    [DataMember(Name = "closestPaths", EmitDefaultValue = false)]
+    public List<string>? ClosestPaths { get; set; }
+}
+
+/// <summary>One type of a loaded family: the id to place with and the name to ask for.</summary>
+[DataContract]
+public sealed class ForkFamilyType
+{
+    [DataMember(Name = "id")] public long Id { get; set; }
+    [DataMember(Name = "name")] public string Name { get; set; } = string.Empty;
 }
 
 /// <summary>One replacement: the id an element had and the id it now has.</summary>

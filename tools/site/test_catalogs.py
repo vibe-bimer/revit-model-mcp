@@ -58,7 +58,7 @@ class IntegrationCatalogTests(unittest.TestCase):
 class ForkOwnershipTests(unittest.TestCase):
     def test_fork_tools_are_declared_with_status_and_both_languages(self):
         tools = catalogs.fork_tools()
-        self.assertEqual(len(tools), 9)
+        self.assertEqual(len(tools), 10)
         for name, item in tools.items():
             for field in ("status", "zh", "en", "zh_note", "en_note"):
                 self.assertTrue(item.get(field), f"{name} is missing {field}")

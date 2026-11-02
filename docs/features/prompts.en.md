@@ -4,7 +4,7 @@ description: "Copyable prompt library with a sample prompt and purpose summary f
 
 # Prompt library
 
-35 read + 53 action tools, 88 in total
+35 read + 54 action tools, 89 in total
 
 Actions are allowed unless one of three switches is on: the machine policy `ReadOnly`, the workstation `read-only` file, or `REVIT_MCP_READ_ONLY=1`. A fresh install ships with the machine policy read-only. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
 
@@ -684,6 +684,18 @@ Load the Double Door family, then place two instances in the meeting room
 
 ```text
 Edit the visibility parameter of the project family 'M_Column', previewing with a dry run first.
+```
+
+### <span class="state part">Fork</span> [Load family file](revit_load_family_file.md)
+
+`revit_load_family_file` — Load one family file from the workstation: the whole family, or one named type
+
+```text
+Load C:\lib\M_Door.rfa into the model
+```
+
+```text
+Load only the 0900 x 2100 type from M_Door.rfa
 ```
 
 ## Sheets and schedules {#group-sheets}

@@ -401,6 +401,19 @@ tools:
 
       '
     source: 05d38c39dfbb26c424e07f27d4fa1ab496ec533abf505f3d0b87a7ff7629e703
+  revit_load_family_file:
+    zh: '从工作站载入一个族文件：整族，或只载入 `type_name` 指定的那一个类型。
+
+      载入总是带族载入选项，所以不会弹出 Revit 自己的对话框；同名族已在项目里时复用它，且默认不覆盖既有的参数值——只有 `overwrite_parameters=true` 才用族里的值覆盖。
+
+      响应在 `fork` 块回报 `state`（`new` 或 `existing`）、`familyName` 与 `familyTypes`（每个类型的 `id` 与 `name`）。路径不存在时拒绝，并列出同目录下最接近的三个文件名。
+
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+      '
+    source: 304cdd7d9fd11bd2be74fc1bdbceec0a51d1ac8dd14e192f83783ee267394733
   revit_create_grid:
     zh: '创建一条轴网，用于布局：`start_mm` 到 `end_mm` 的直线，或给出 `mid_mm` 时的三点圆弧。
 

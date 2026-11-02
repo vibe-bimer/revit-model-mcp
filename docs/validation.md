@@ -40,5 +40,9 @@ Revit 批处理（`revit_run_actions`）在撤销菜单中的标签无法通过 
 轴网是基准面，模型里没有包围盒，所以 `verification.after` 用 `fork.name` 标识建出的轴号，而不是 `boundingBoxMinMm`／`boundingBoxMaxMm`。
 全部写入之后，模型文件的大小（19,918,848 字节）与 mtime（2026-10-02T12:08:34）都没有变化——动作没有保存模型。
 
+`revit_load_family_file`（2026-11-02）在 Revit 2026 上用 2020 中文库的 `入口门厅.rfa` 完成了真机验收，模型与通道同上。
+`dry_run` 回滚后回报 `fork = { state: "new", familyName: "入口门厅", familyTypes: [{ id, name: "3200 x 3000mm" }] }` 与 `wouldCreate: true`；真实写入载入整族并留下撤销记录；同一文件再载入一次回报 `state: "existing"`、`committed: false`，摘要是 `It changed nothing, so no undo entry was kept.`，既没有重复载入，也没有覆盖模型里已有的参数值；路径写错时回报 `Family file '…\入口门.rfa' was not found. Closest: 入口门厅.rfa.`；`type_name` 不在族里时回报 `Type 'NO-SUCH-TYPE' is not in family '入口门厅'. Available types: 3200 x 3000mm.`。
+同样，全部写入之后模型文件的大小与 mtime 都没有变化。
+
 !!! note "历史记录，不是本次新增验证"
     本页保留英文原文的日期、构建与真机检查范围。翻译工作没有执行新的 Revit 验证，也不将构建通过等同于真机行为已验证。

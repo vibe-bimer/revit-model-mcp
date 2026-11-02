@@ -621,6 +621,32 @@ tools:
     note:
       zh: 同名轴网被拒绝；曲线固定在水平面上，共线三点建不了弧
       en: A grid with the same name is refused; the curve stays on the horizontal plane and three collinear points cannot form an arc
+  revit_load_family_file:
+    source: '304cdd7d9fd1'
+    group: families
+    origin: fork
+    since: 0.10.0
+    title:
+      zh: 载入族文件
+      en: Load family file
+    summary:
+      zh: 从工作站载入一个族文件：整族，或只载入指定类型
+      en: 'Load one family file from the workstation: the whole family, or one named type'
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 把 C:\lib\M_Door.rfa 载进来
+      en: Load C:\lib\M_Door.rfa into the model
+    - zh: 只载入 M_Door.rfa 里 0900 x 2100 这个类型
+      en: Load only the 0900 x 2100 type from M_Door.rfa
+    note:
+      zh: 总是带族载入选项，不会弹出 Revit 自己的对话框；已有族复用，参数值默认不覆盖；路径不存在时报最近匹配。底座另有批量的 `revit_load_family`（收 `paths` 列表），本工具是单文件、可只取一个类型
+      en: The load always carries the family load options, so Revit's own dialog never appears; an existing family is reused with its parameter values kept, and a missing path reports the closest filenames. The base also ships the batch `revit_load_family`, which takes a `paths` list; this tool is one file with an optional single type
   revit_create_level:
     source: '68d2a6d6c941'
     group: edit
@@ -2084,6 +2110,17 @@ param_notes:
     create_view:
       zh: 同时创建对应的楼层平面视图
       en: also create the matching floor plan view
+  revit_load_family_file:
+    source: '304cdd7d9fd1'
+    path:
+      zh: 工作站上族文件的绝对路径（.rfa）
+      en: absolute path of the family file on the workstation (a .rfa)
+    type_name:
+      zh: 只载入该类型；为空时载入整族
+      en: load only this type; empty loads the whole family
+    overwrite_parameters:
+      zh: 用族里的值覆盖项目已有类型的参数值，默认不覆盖
+      en: overwrite the project's parameter values with the family's; off by default
   revit_create_grid:
     source: '493f845c18cc'
     label:

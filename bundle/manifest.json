@@ -350,6 +350,10 @@
       "description": "Create a grid line: straight from `start_mm` to `end_mm`, or a three-point arc through `mid_mm`.\n\n`label` names the grid (Grid.Name); a grid whose name already exists is refused.\nPoints are [x, y] in millimetres on the horizontal plane. dry_run returns the same\nverification block without changing the model."
     },
     {
+      "name": "revit_load_family_file",
+      "description": "Load one family file from the workstation: the whole family, or the single type `type_name`.\n\nThe load always carries the family load options, so it never waits on Revit's own dialog.\nAn existing family is reused, and its parameter values are left alone unless\n`overwrite_parameters` is true. The response reports `state` (\"new\" or \"existing\") and every\ntype the family now offers. A path that does not exist is refused with the closest filenames\nbeside it. dry_run returns the same verification block without changing the model."
+    },
+    {
       "name": "revit_set_phase",
       "description": "Set the creation and demolition phase of elements.\n\nAn empty string clears a phase and null leaves it alone; at least one must be given.\ndry_run returns the same verification block without changing the model."
     },

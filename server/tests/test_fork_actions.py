@@ -38,6 +38,7 @@ def test_every_fork_tool_is_registered():
         "revit_create_level",
         "revit_create_floor",
         "revit_create_grid",
+        "revit_load_family_file",
         "revit_set_phase",
         "revit_merge_phases",
         "revit_reset_element_ids",
@@ -187,6 +188,77 @@ async def test_create_grid_refuses_degenerate_geometry():
 
 
 @pytest.mark.anyio
+async def test_load_family_file_sends_its_path_in_the_fork_bag():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen["command"] = command
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_load_family_file"][0]
+    await function(path=r"C:\lib\M_Door.rfa")
+
+    assert seen["command"] == "load-family-file"
+    assert seen["fork"] == {"path": r"C:\lib\M_Door.rfa"}
+    assert seen["dryRun"] is False
+
+
+@pytest.mark.anyio
+async def test_load_family_file_names_the_type_and_the_overwrite_answer_when_given():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_load_family_file"][0]
+    await function(path=r"C:\lib\M_Door.rfa", type_name="0900 x 2100", overwrite_parameters=True)
+
+    assert seen["fork"] == {
+        "path": r"C:\lib\M_Door.rfa",
+        "typeName": "0900 x 2100",
+        "overwriteParameters": True,
+    }
+
+
+@pytest.mark.anyio
+async def test_load_family_file_refuses_a_path_that_is_not_a_family_file():
+    with pytest.raises(ToolError, match="must name a .rfa"):
+        await tool("revit_load_family_file")(path=r"C:\lib\notes.txt")
+
+
+@pytest.mark.anyio
+async def test_a_family_step_sends_its_path_in_the_fork_bag():
+    from revit_model_mcp.fork_actions import step_payload
+
+    payload = step_payload(
+        "load_family_file",
+        {
+            "path": r"C:\lib\M_Door.rfa",
+            "type_name": "0900 x 2100",
+            "overwrite_parameters": False,
+            "dry_run": True,
+        },
+    )
+    # A step keeps every value the caller wrote, so an explicit false travels as false; the tool
+    # omits it instead, and the add-in reads both the same way.
+    assert payload == {
+        "command": "load-family-file",
+        "fork": {
+            "path": r"C:\lib\M_Door.rfa",
+            "typeName": "0900 x 2100",
+            "overwriteParameters": False,
+        },
+        "dryRun": True,
+    }
+
+
+@pytest.mark.anyio
 async def test_set_phase_needs_one_of_the_two_phases():
     with pytest.raises(ToolError, match="At least one of"):
         await tool("revit_set_phase")(element_ids=[42])
@@ -303,6 +375,7 @@ def test_fork_tools_are_listed_by_the_server():
         "revit_create_level",
         "revit_create_floor",
         "revit_create_grid",
+        "revit_load_family_file",
         "revit_set_phase",
         "revit_merge_phases",
         "revit_reset_element_ids",
@@ -340,6 +413,13 @@ def test_fork_tools_are_listed_by_the_server():
         "start_mm",
         "end_mm",
         "mid_mm",
+        "dry_run",
+        "document",
+    }
+    assert set(tools["revit_load_family_file"].input_schema["properties"]) == {
+        "path",
+        "type_name",
+        "overwrite_parameters",
         "dry_run",
         "document",
     }

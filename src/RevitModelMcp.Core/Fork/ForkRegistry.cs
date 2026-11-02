@@ -24,6 +24,8 @@ public static class ForkRegistry
             $"{(context.DryRun ? "Would create" : "Created")} a floor in {Subject(context)}.");
         Register("create-grid", "Created grid", "Creating grid", "grid", "grids", context =>
             $"{(context.DryRun ? "Would create" : "Created")} a grid in {Subject(context)}.");
+        Register("load-family-file", "Loaded family", "Loading family", "family", "families", context =>
+            $"{(context.DryRun ? "Would load" : "Loaded")} a family file in {Subject(context)}.");
         Register("set-phase", "Set element phase", "Setting element phase", "element", "elements", context =>
             $"{(context.DryRun ? "Would set" : "Set")} the phase of {Plural(context.Count, "element")} in {Subject(context)}.");
         Register("merge-phases", "Merged phases", "Merging phases", null, null, context =>

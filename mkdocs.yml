@@ -302,6 +302,7 @@ nav:
               - features/revit_load_family.md
               - features/revit_place_families.md
               - features/revit_edit_families.md
+              - features/revit_load_family_file.md
           - 图纸与明细表:
               - features/revit_create_sheet.md
               - features/revit_place_views_on_sheet.md

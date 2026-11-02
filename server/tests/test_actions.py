@@ -72,6 +72,7 @@ ACTION_TOOLS = {
     "revit_create_level",
     "revit_create_floor",
     "revit_create_grid",
+    "revit_load_family_file",
     "revit_set_phase",
     "revit_merge_phases",
     "revit_reset_element_ids",

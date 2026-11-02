@@ -51,6 +51,12 @@ def _check_grid_points(start_mm, end_mm, mid_mm, refuse) -> None:
         )
 
 
+def _check_family_path(path, refuse) -> None:
+    """A family load reads a .rfa; anything else is a typo worth refusing before the model is touched."""
+    if not path.casefold().endswith(".rfa"):
+        raise refuse("path must name a .rfa family file.")
+
+
 def _check_phase_assignment(created_phase, demolished_phase, refuse) -> None:
     if created_phase is None and demolished_phase is None:
         raise refuse("At least one of created_phase or demolished_phase is required.")
@@ -123,6 +129,11 @@ STEP_FIELDS: dict[str, dict[str, tuple[Any, Any]]] = {
         "end_mm": (Point, ...),
         "mid_mm": (Point | None, None),
     },
+    "load_family_file": {
+        "path": (Name, ...),
+        "type_name": (Name | None, None),
+        "overwrite_parameters": (bool, False),
+    },
     "set_phase": {
         "element_ids": (ElementIds, ...),
         "created_phase": (str | None, None),
@@ -154,6 +165,7 @@ STEP_TOP_LEVEL: dict[str, tuple[str, ...]] = {
     "create_level": ("name",),
     "create_floor": ("points_mm", "level"),
     "create_grid": ("label",),
+    "load_family_file": (),
     "set_phase": ("element_ids",),
     "merge_phases": (),
     "reset_element_ids": ("element_ids",),
@@ -188,6 +200,8 @@ def check_step(action: str, args: dict[str, Any], refuse) -> None:
         _check_floor_points(args["points_mm"], refuse)
     elif action == "create_grid":
         _check_grid_points(args["start_mm"], args["end_mm"], args["mid_mm"], refuse)
+    elif action == "load_family_file":
+        _check_family_path(args["path"], refuse)
     elif action == "set_phase":
         _check_phase_assignment(args["created_phase"], args["demolished_phase"], refuse)
     elif action == "merge_phases":
@@ -380,6 +394,43 @@ def register_fork_actions(mcp, send) -> None:
         return await send(
             "create-grid",
             name=label,
+            fork=fork,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @mcp.tool(
+        title="Load Family File",
+        annotations=ToolAnnotations(
+            title="Load Family File",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=True,
+        ),
+    )
+    @with_client_identity
+    async def revit_load_family_file(
+        path: Name,
+        type_name: Name | None = None,
+        overwrite_parameters: bool = False,
+        dry_run: bool = False,
+        document: str | None = None,
+    ) -> dict[str, Any]:
+        """Load one family file from the workstation: the whole family, or the single type `type_name`.
+
+        The load always carries the family load options, so it never waits on Revit's own dialog.
+        An existing family is reused, and its parameter values are left alone unless
+        `overwrite_parameters` is true. The response reports `state` ("new" or "existing") and every
+        type the family now offers. A path that does not exist is refused with the closest filenames
+        beside it. dry_run returns the same verification block without changing the model."""
+        _check_family_path(path, ToolError)
+        fork: dict[str, Any] = {"path": path}
+        if type_name is not None:
+            fork["typeName"] = type_name
+        if overwrite_parameters:
+            fork["overwriteParameters"] = True
+        return await send(
+            "load-family-file",
             fork=fork,
             dryRun=dry_run,
             document=document,

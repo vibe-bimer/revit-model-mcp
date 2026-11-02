@@ -36,6 +36,9 @@ internal static class ForkActions
             case "create-grid":
                 result = ForkGrids.Apply(document, action);
                 return true;
+            case "load-family-file":
+                result = ForkFamilies.Apply(document, action);
+                return true;
             case "set-phase":
                 result = ForkPhases.Set(document, action, ids);
                 return true;
@@ -95,6 +98,9 @@ internal static class ForkActions
             case "create-grid":
                 ForkGrids.Validate(action);
                 return null;
+            case "load-family-file":
+                ForkFamilies.Validate(action);
+                return null;
             case "set-phase":
                 return ForkPhases.ReadAssignment(document, ids);
             case "merge-phases":
@@ -143,6 +149,13 @@ internal static class ForkActions
                 {
                     if (result.Id is not { } id) return false;
                     verification.After = ForkGrids.Read(document, ForkLookup.CreateId(id));
+                    verification.WouldCreate = action.DryRun ? true : null;
+                    return true;
+                }
+            case "load-family-file":
+                {
+                    if (result.Id is not { } id) return false;
+                    verification.After = ForkFamilies.Read(document, ForkLookup.CreateId(id), action.Options.FamilyTypeName);
                     verification.WouldCreate = action.DryRun ? true : null;
                     return true;
                 }

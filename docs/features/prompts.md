@@ -4,7 +4,7 @@ description: "可直接复制的提示词库，每个工具配有示例提示词
 
 # 提示词库
 
-35 个读取 + 53 个动作，共 88 个工具
+35 个读取 + 54 个动作，共 89 个工具
 
 动作默认允许；机器策略 `ReadOnly`、工作站 `read-only` 文件或 `REVIT_MCP_READ_ONLY=1` 三者任一打开即拒绝动作（全新安装的机器策略默认只读）。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
@@ -684,6 +684,18 @@ description: "可直接复制的提示词库，每个工具配有示例提示词
 
 ```text
 帮我编辑项目族 'M_Column' 的可见性参数，先用 dry_run 预览。
+```
+
+### <span class="state part">自研</span> [载入族文件](revit_load_family_file.md)
+
+`revit_load_family_file` — 从工作站载入一个族文件：整族，或只载入指定类型
+
+```text
+把 C:\lib\M_Door.rfa 载进来
+```
+
+```text
+只载入 M_Door.rfa 里 0900 x 2100 这个类型
 ```
 
 ## 图纸与明细表 {#group-sheets}

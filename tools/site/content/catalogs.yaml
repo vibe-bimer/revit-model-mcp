@@ -77,6 +77,12 @@ fork_tools:
     en: Create floor
     zh_note: 已有本地实现，待重映射。
     en_note: The local implementation exists; it still has to be remapped.
+  revit_load_family_file:
+    status: pending
+    zh: 载入族文件
+    en: Load family file
+    zh_note: 已按 fork 注册表实现（单文件、可选定点类型、总是带族载入选项、路径不存在报最近匹配），Python 与 Core 测试通过；随首批工具一起翻 grafted。
+    en_note: Implemented on the fork registry (one file, an optional single type, the load options always supplied, closest names for a missing path) with Python and Core tests passing; flips to grafted with the first batch.
   revit_create_grid:
     status: pending
     zh: 创建轴网

@@ -97,6 +97,36 @@ public sealed class ForkInputTests
     }
 
     [Test]
+    public async Task LoadFamilyFile_CarriesItsPathAndOverwriteAnswer()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"load-family-file","fork":{"path":"C:\\lib\\Door.rfa","typeName":"900 x 2100","overwriteParameters":true}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Options.FamilyPath).IsEqualTo(@"C:\lib\Door.rfa");
+        await Assert.That(parsed.Action!.Options.FamilyTypeName).IsEqualTo("900 x 2100");
+        await Assert.That(parsed.Action!.Options.OverwriteParameters).IsTrue();
+    }
+
+    [Test]
+    public async Task LoadFamilyFile_LeavesTheOverwriteAnswerUnsetWhenItIsAbsent()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"load-family-file","fork":{"path":"C:\\lib\\Door.rfa"}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Options.OverwriteParameters).IsNull();
+        await Assert.That(parsed.Action!.Options.FamilyTypeName).IsNull();
+    }
+
+    [Test]
+    public async Task LoadFamilyFile_RefusesAPathThatIsNotAString()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"load-family-file","fork":{"path":7}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(parsed.Error).IsEqualTo("fork.path must be text.");
+    }
+
+    [Test]
     public async Task CreateGrid_RefusesAPointOfTheWrongShape()
     {
         var parsed = ControlJobParser.Parse(
@@ -196,7 +226,7 @@ public sealed class ForkInputTests
 
         await Assert.That(Core.Fork.ForkRegistry.Commands).IsEquivalentTo(
         [
-            "set-view-lighting", "create-level", "create-floor", "create-grid",
+            "set-view-lighting", "create-level", "create-floor", "create-grid", "load-family-file",
             "set-phase", "merge-phases", "reset-element-ids", "rebuild-model-ids"
         ]);
         // The add-in advertises both lists in its handshake, so the register's command has to be in one of

@@ -3261,6 +3261,49 @@
     ],
     "type": "object"
   },
+  "revit_load_family_file": {
+    "properties": {
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "overwrite_parameters": {
+        "default": false,
+        "type": "boolean"
+      },
+      "path": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type_name": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      }
+    },
+    "required": [
+      "path"
+    ],
+    "type": "object"
+  },
   "revit_merge_phases": {
     "properties": {
       "document": {
@@ -4294,6 +4337,7 @@
               "create_level",
               "create_floor",
               "create_grid",
+              "load_family_file",
               "set_phase",
               "merge_phases",
               "reset_element_ids",
@@ -5095,6 +5139,7 @@
               "create_level",
               "create_floor",
               "create_grid",
+              "load_family_file",
               "set_phase",
               "merge_phases",
               "reset_element_ids",

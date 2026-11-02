@@ -16,7 +16,7 @@ hide:
       <p class="rmc-hero__lede">把 Autodesk Revit 模型接到 AI 助手上：查参数与几何、统计构件、检查模型、导出清单、编辑构件，以及复制模型并换新 ID。默认只读，动作需要双门禁。</p>
       <p class="rmc-hero__actions">
         <a class="rmc-btn rmc-btn--primary" href="server/">开始安装</a>
-        <a class="rmc-btn" href="features/">浏览 88 个功能</a>
+        <a class="rmc-btn" href="features/">浏览 89 个功能</a>
       </p>
     </div>
     <div class="rmc-hero__art"><svg class="rmc-frame" xmlns="http://www.w3.org/2000/svg" viewBox="8 52 620 400" role="img" aria-labelledby="rmc-frame-title">
@@ -84,7 +84,7 @@ hide:
     </div>
     <div class="rmc-spec__cell">
       <dt>动作工具</dt>
-      <dd>53</dd>
+      <dd>54</dd>
       <p>需双门禁授权</p>
     </div>
     <div class="rmc-spec__cell">
@@ -104,7 +104,7 @@ hide:
   <header class="rmc-section__head">
     <span class="rmc-section__num" aria-hidden="true">↗</span>
     <h2 class="rmc-section__title">新版底座与移植进展</h2>
-    <p class="rmc-section__lede">当前网站的 88 个工具对应现有版本。新版正在独立分支上集成，尚未作为当前版本发布。</p>
+    <p class="rmc-section__lede">当前网站的 89 个工具对应现有版本。新版正在独立分支上集成，尚未作为当前版本发布。</p>
     <a class="rmc-section__link" href="platform/">按基座与自研查阅 80 个工具</a>
     <a class="rmc-section__link" href="https://github.com/vibe-bimer/revit-model-mcp/issues/27">查看集成规格与进展</a>
   </header>
@@ -179,7 +179,7 @@ hide:
   <header class="rmc-section__head">
     <span class="rmc-section__num" aria-hidden="true">02</span>
     <h2 class="rmc-section__title">能力范围</h2>
-    <p class="rmc-section__lede">按场景分成 13 组，共 88 个工具。每个工具页都有用途、参数、返回结果与限制。</p>
+    <p class="rmc-section__lede">按场景分成 13 组，共 89 个工具。每个工具页都有用途、参数、返回结果与限制。</p>
     <a class="rmc-section__link" href="features/">功能总览</a>
   </header>
   <div class="rmc-caps">
@@ -269,7 +269,7 @@ hide:
           <span class="rmc-cap__name">族</span>
           <span class="rmc-cap__desc">审计打开的族或按名称审计项目族，不保存或加载更改；detail=full 返回全部参数元数据</span>
         </span>
-        <span class="rmc-cap__count">4</span>
+        <span class="rmc-cap__count">5</span>
       </a>
       <a class="rmc-cap" href="features/#group-sheets">
         <span class="rmc-cap__num" aria-hidden="true">12</span>

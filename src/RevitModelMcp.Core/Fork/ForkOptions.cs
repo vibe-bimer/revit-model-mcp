@@ -35,6 +35,11 @@ public sealed class ForkOptions
     public List<double>? EndMm { get; set; }
     public List<double>? MidMm { get; set; }
 
+    // load-family-file
+    public string? FamilyPath { get; set; }
+    public string? FamilyTypeName { get; set; }
+    public bool? OverwriteParameters { get; set; }
+
     // set-phase
     public string? CreatedPhase { get; set; }
     public string? DemolishedPhase { get; set; }
@@ -73,6 +78,9 @@ public sealed class ForkOptions
         StartMm = StartMm is null ? null : [.. StartMm],
         EndMm = EndMm is null ? null : [.. EndMm],
         MidMm = MidMm is null ? null : [.. MidMm],
+        FamilyPath = FamilyPath,
+        FamilyTypeName = FamilyTypeName,
+        OverwriteParameters = OverwriteParameters,
         CreatedPhase = CreatedPhase,
         DemolishedPhase = DemolishedPhase,
         SourcePhase = SourcePhase,

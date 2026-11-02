@@ -4,9 +4,9 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 
 # 功能总览
 
-35 个读取 + 53 个动作，共 88 个工具
+35 个读取 + 54 个动作，共 89 个工具
 
-这一节是现有版本的 88 个工具。集成分支的 80 个工具按基座与自研分开，见 [新版基座工具目录](../platform/index.md)。
+这一节是现有版本的 89 个工具。集成分支的 80 个工具按基座与自研分开，见 [新版基座工具目录](../platform/index.md)。
 
 ## 版本入口 {#versions}
 
@@ -16,15 +16,15 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | --- | --- | --- |
 | 版本 | 0.9.0 | 1.0.0 未发布（集成分支） |
 | 分支 | main | `integration/upstream-1.0` |
-| 工具 | 88 | 80 |
+| 工具 | 89 | 80 |
 | 目录 | index.md | [新版基座工具目录](../platform/index.md) |
 
 ## 按 Revit 年份查阅 {#by-version}
 
 | Revit 年份 | 验证状态 |
 | --- | --- |
-| [Revit 2020](v2020.md) | 读取 19/35、动作 15/53 已实测；其余仅构建 |
-| [Revit 2026](v2026.md) | 读取 18/35、动作 8/53 已实测；其余仅构建 |
+| [Revit 2020](v2020.md) | 读取 19/35、动作 15/54 已实测；其余仅构建 |
+| [Revit 2026](v2026.md) | 读取 18/35、动作 8/54 已实测；其余仅构建 |
 | 2022–2025 / 2027 | 仅构建，未实测 |
 
 已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
@@ -157,7 +157,7 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | [取消批量收集](revit_batch_cancel.md)<br>`revit_batch_cancel` | 持久化取消状态，阻止批量任务中未启动的模型继续运行 |
 | [获取批量快照](revit_batch_fetch.md)<br>`revit_batch_fetch` | 把已完成的快照下载为新的本地文件，不覆盖已有文件 |
 
-### 族 (4) {#group-families}
+### 族 (5) {#group-families}
 
 | 工具 | 用途 |
 | --- | --- |
@@ -165,6 +165,7 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | [加载族](revit_load_family.md)<br>`revit_load_family` | 在工作站把 .rfa 族文件加载进一个撤销步骤 |
 | [放置族实例](revit_place_families.md)<br>`revit_place_families` | 加载可选族并在一个事务与撤销项中放置实例 |
 | [编辑族](revit_edit_families.md)<br>`revit_edit_families` | 就地编辑已打开的族或项目族，dry_run 会回滚全部改动 |
+| <span class="state part">自研</span> [载入族文件](revit_load_family_file.md)<br>`revit_load_family_file` | 从工作站载入一个族文件：整族，或只载入指定类型 |
 
 ### 图纸与明细表 (4) {#group-sheets}
 

@@ -10,7 +10,7 @@
 
 | 批次 | 内容 |
 | --- | --- |
-| **首批（本页）** | `create_level`、`create_grid`、`load_family`、`place_hosted_family`、`create_column`、`create_beam`、`copy_elements` |
+| **首批（本页）** | `create_level`、`create_grid`、`load_family_file`、`place_hosted_family`、`create_column`、`create_beam`、`copy_elements` |
 | 第二批 | 房间、构件类型复制、开洞、材质、墙连接 |
 | 第三批 | 屋顶、楼梯、栏杆、幕墙、标注、视图与图纸；天花只做 2026 |
 
@@ -59,18 +59,19 @@
 - **不暴露范围与标头**：那些 API 都在 `DatumPlane` 上，分 `Model` / `ViewSpecific` 两种语义且需要指定视图，属于第二批。
 
 <a id="load-family"></a>
-### `revit_load_family`
+### `revit_load_family_file`
 
 | 参数 | 必填 | 默认值 | 类型 | 说明 |
 | --- | :--: | --- | --- | --- |
 | `path` | 是 | — | `string` | **Revit 工作站**上的族文件绝对路径 |
-| `type_name` | 否 | `null` | `string` | 只载入该类型；为空时载入整族 |
+| `type_name` | 否 | `null` | `string` | 只载入该类型（`LoadFamilySymbol`）；为空时载入整族（`LoadFamily`） |
 | `overwrite_parameters` | 否 | `false` | `boolean` | 是否用族里的值覆盖项目已有类型的参数值 |
 
-- **总是**传入 `IFamilyLoadOptions`。不传时 Revit 会用默认处理器并弹出**模态对话框**，无人值守必然卡死——这是本工具必须接受该接口的唯一理由。
-- 默认语义：继续载入，但**不覆盖**既有参数值；同名族/类型已存在时复用项目里的版本。
-- 响应回报 `state: "new" | "existing"` 与类型清单 `types: [{ id, name }]`。
-- `path` 不存在时拒绝，并给出同目录下最接近的文件名。
+- **名字的由来**：底座自带的 `revit_load_family` 收的是 `paths` 列表、一次载入多个族文件，语义是批量；本节定的是单文件、可只取一个类型，所以落成独立命令 `load-family-file`，两者并存而不是互相顶掉。
+- **总是**传入 `IFamilyLoadOptions`，且 `OnFamilyFound` 与 `OnSharedFamilyFound` 两个回调都实现。不传时 Revit 会用默认处理器并弹出**模态对话框**，无人值守必然卡死——这是本工具必须接受该接口的唯一理由。
+- 默认语义：继续载入，但**不覆盖**既有参数值；同名族已存在时复用项目里的版本。
+- 响应在 `fork` 块回报 `state: "new" | "existing"`、`familyName` 与 `familyTypes: [{ id, name }]`（fork 自己的结果块，见 adr/0005）。
+- `path` 不存在时拒绝，并列出同目录下最接近的三个文件名；路径规则与上游文件动作一致（绝对路径、不许穿越、不接云端路径）。
 
 <a id="place-hosted-family"></a>
 ### `revit_place_hosted_family`
@@ -181,6 +182,6 @@
 - **没有程序化吸附 API**；`ObjectSnapTypes` 只服务交互式拾取。
 - **`revit_set_parameter` 拒绝 ElementId 参数**，所以标高类参数的写入必须由专门工具内部完成。
 - **`Room.IsEnclosed` 在两个年份都不存在**；房间封闭性只能用 `Room.IsPointInRoom` / `ClosedShell` 判断。
-- **2026 工作站的族库不完整**：`RVT 2026\Libraries` 只有 446 个 `.rfa`（结构预制与路径分析），没有门窗柱梁；`RVT 2020\Libraries` 有 4,514 个，中文库门窗柱梁齐全。在 2026 上验证 `load_family` 要用 2020 库的族文件（族向后兼容）或模型里已载入的族。
+- **2026 工作站的族库不完整**：`RVT 2026\Libraries` 只有 446 个 `.rfa`（结构预制与路径分析），没有门窗柱梁；`RVT 2020\Libraries` 有 4,514 个，中文库门窗柱梁齐全。在 2026 上验证 `load_family_file` 要用 2020 库的族文件（族向后兼容）或模型里已载入的族。
 - **`CloseMainWindow()` 在该工作站上对 Revit 2020 与 2026 都不生效**；强杀前必须先确认 `isModified=false`，之后再清掉 `%LOCALAPPDATA%\RevitModelMcp\instance_*.json` 心跳。
 - **「仅几何构件」的边界**：语料既不能证实也不能证伪 Revit 会不会在建结构构件时顺带生成分析构件。契约只保证这些工具不调用任何分析 API；是否产生分析构件由项目设置决定，验证时把 `IsStructuralAnalysisEnabled` 当作环境事实记录。

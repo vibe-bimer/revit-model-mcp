@@ -4,9 +4,9 @@ description: "Feature overview of every tool in the current release, grouped wit
 
 # Feature overview
 
-35 read + 53 action tools, 88 in total
+35 read + 54 action tools, 89 in total
 
-This section covers the 88 tools of the current release. The integration branch's 80 tools, split into base and fork, are in the [platform tool catalog](../platform/index.md).
+This section covers the 89 tools of the current release. The integration branch's 80 tools, split into base and fork, are in the [platform tool catalog](../platform/index.md).
 
 ## Version entries {#versions}
 
@@ -16,15 +16,15 @@ This catalog records the released version. The integration branch is unreleased,
 | --- | --- | --- |
 | Version | 0.9.0 | 1.0.0 Unreleased (integration branch) |
 | Branch | main | `integration/upstream-1.0` |
-| Tool | 88 | 80 |
+| Tool | 89 | 80 |
 | Catalog | index.md | [Platform tool catalog](../platform/index.md) |
 
 ## Browse by Revit year {#by-version}
 
 | Revit year | Validation |
 | --- | --- |
-| [Revit 2020](v2020.md) | 19/35 reads and 15/53 actions validated live; the rest are build-only |
-| [Revit 2026](v2026.md) | 18/35 reads and 8/53 actions validated live; the rest are build-only |
+| [Revit 2020](v2020.md) | 19/35 reads and 15/54 actions validated live; the rest are build-only |
+| [Revit 2026](v2026.md) | 18/35 reads and 8/54 actions validated live; the rest are build-only |
 | 2022–2025 / 2027 | Build only, not live-tested |
 
 Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.
@@ -157,7 +157,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Cancel batch collection](revit_batch_cancel.md)<br>`revit_batch_cancel` | Persist cancellation and prevent unstarted models from running |
 | [Fetch Batch Snapshots](revit_batch_fetch.md)<br>`revit_batch_fetch` | Download completed snapshots to new local files without overwriting them |
 
-### Families (4) {#group-families}
+### Families (5) {#group-families}
 
 | Tool | Purpose |
 | --- | --- |
@@ -165,6 +165,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Load Families](revit_load_family.md)<br>`revit_load_family` | Load .rfa family files on the workstation in a single undo entry |
 | [Place families](revit_place_families.md)<br>`revit_place_families` | Load optional families and place instances in one transaction and undo entry |
 | [Edit Families](revit_edit_families.md)<br>`revit_edit_families` | Edit an open family in place or named project families, rolled back on a dry run |
+| <span class="state part">Fork</span> [Load family file](revit_load_family_file.md)<br>`revit_load_family_file` | Load one family file from the workstation: the whole family, or one named type |
 
 ### Sheets and schedules (4) {#group-sheets}
 

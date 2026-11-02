@@ -46,6 +46,12 @@ public static class ForkInputs
                 ["endMm"] = (action, value) => action.Options.EndMm = Numbers("endMm", value),
                 ["midMm"] = (action, value) => action.Options.MidMm = Numbers("midMm", value)
             },
+            ["load-family-file"] = new(StringComparer.Ordinal)
+            {
+                ["path"] = (action, value) => action.Options.FamilyPath = Text("path", value),
+                ["typeName"] = (action, value) => action.Options.FamilyTypeName = Text("typeName", value),
+                ["overwriteParameters"] = (action, value) => action.Options.OverwriteParameters = Flag("overwriteParameters", value)
+            },
             ["set-phase"] = new(StringComparer.Ordinal)
             {
                 ["createdPhase"] = (action, value) => action.Options.CreatedPhase = Text("createdPhase", value),

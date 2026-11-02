@@ -6204,6 +6204,7 @@
                 "create_level",
                 "create_floor",
                 "create_grid",
+                "load_family_file",
                 "set_phase",
                 "merge_phases",
                 "reset_element_ids",
@@ -6299,6 +6300,7 @@
                 "create_level",
                 "create_floor",
                 "create_grid",
+                "load_family_file",
                 "set_phase",
                 "merge_phases",
                 "reset_element_ids",
@@ -7287,6 +7289,64 @@
       "type": "object"
     },
     "title": "Create Grid"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "readOnlyHint": false,
+      "title": "Load Family File"
+    },
+    "description": "Load one family file from the workstation: the whole family, or the single type `type_name`.\n\n        The load always carries the family load options, so it never waits on Revit's own dialog.\n        An existing family is reused, and its parameter values are left alone unless\n        `overwrite_parameters` is true. The response reports `state` (\"new\" or \"existing\") and every\n        type the family now offers. A path that does not exist is refused with the closest filenames\n        beside it. dry_run returns the same verification block without changing the model.",
+    "inputSchema": {
+      "properties": {
+        "document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dry_run": {
+          "default": false,
+          "type": "boolean"
+        },
+        "overwrite_parameters": {
+          "default": false,
+          "type": "boolean"
+        },
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "name": "revit_load_family_file",
+    "outputSchema": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "title": "Load Family File"
   },
   {
     "annotations": {
