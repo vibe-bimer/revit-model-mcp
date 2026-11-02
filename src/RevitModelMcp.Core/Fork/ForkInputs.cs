@@ -40,6 +40,12 @@ public static class ForkInputs
             {
                 ["floorType"] = (action, value) => action.Options.FloorType = Text("floorType", value)
             },
+            ["create-grid"] = new(StringComparer.Ordinal)
+            {
+                ["startMm"] = (action, value) => action.Options.StartMm = Numbers("startMm", value),
+                ["endMm"] = (action, value) => action.Options.EndMm = Numbers("endMm", value),
+                ["midMm"] = (action, value) => action.Options.MidMm = Numbers("midMm", value)
+            },
             ["set-phase"] = new(StringComparer.Ordinal)
             {
                 ["createdPhase"] = (action, value) => action.Options.CreatedPhase = Text("createdPhase", value),
@@ -133,8 +139,19 @@ public static class ForkInputs
         _ => throw Invalid(key, "a list of three '#RRGGBB' colors")
     };
 
+    private static List<double>? Numbers(string key, object? value) => value switch
+    {
+        null => null,
+        object?[] items => CoordinateItems(key, items),
+        List<object?> items => CoordinateItems(key, items),
+        _ => throw Invalid(key, "a list of two or three numbers")
+    };
+
     private static List<string> Items(string key, IReadOnlyList<object?> values) =>
         values.Select(item => item as string ?? throw Invalid(key, "a list of three '#RRGGBB' colors")).ToList();
+
+    private static List<double> CoordinateItems(string key, IReadOnlyList<object?> values) =>
+        values.Select(item => (double?)Number(key, item) ?? throw Invalid(key, "a list of two or three numbers")).ToList();
 
     private static ArgumentException Invalid(string key, string expected) => new($"fork.{key} must be {expected}.");
 }

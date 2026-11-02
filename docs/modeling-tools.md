@@ -26,7 +26,7 @@
 - 每个动作都接受通用参数 `document=null`，并支持 `dry_run=false`；试运行执行后回滚，返回同形 `verification`。
 - 创建类动作的成功响应含 `verification.after = { id, category, family, type, level, boundingBoxMinMm, boundingBoxMaxMm }`，试运行时追加 `wouldCreate: true`。
 - 所有首批工具都可进入 `revit_run_actions`（单次撤销、最多 50 步）。
-- 两道写入门禁（`REVIT_MCP_ALLOW_WRITE=1` 与工作站 `allow-write`）与「动作不得保存模型」不因新工具放宽。
+- 只读门禁（机器策略 `ReadOnly`、工作站 `read-only` 文件、`REVIT_MCP_READ_ONLY=1`）与「动作不得保存模型」不因新工具放宽；旧的两道 `allow-write` 门禁已随 1.0 底座移除。
 
 <a id="batch-one"></a>
 ## 首批工具
@@ -54,7 +54,7 @@
 | `start_mm` / `end_mm` | 是 | — | `array<number>` | 起点、终点 `[x, y]` |
 | `mid_mm` | 否 | `null` | `array<number>` | 给定时按三点定弧，走 `Grid.Create(Document, Arc)` |
 
-- 直线走 `Grid.Create(Document, Line)`；曲线必须落在水平面上，否则拒绝并说明原因。
+- 直线走 `Grid.Create(Document, Line)`；曲线必须落在水平面上，否则拒绝并说明原因。输入只有 `[x, y]`，Z 恒为 0，因此「非水平面」在实现里表现为共线三点（定不出弧）与重合端点，两者都在 `Validate` 里拒绝并说明原因。
 - 轴号写入 `Grid.Name`；重名即拒绝。
 - **不暴露范围与标头**：那些 API 都在 `DatumPlane` 上，分 `Model` / `ViewSpecific` 两种语义且需要指定视图，属于第二批。
 

@@ -33,6 +33,9 @@ internal static class ForkActions
             case "create-floor":
                 result = ForkFloors.Apply(document, action);
                 return true;
+            case "create-grid":
+                result = ForkGrids.Apply(document, action);
+                return true;
             case "set-phase":
                 result = ForkPhases.Set(document, action, ids);
                 return true;
@@ -89,6 +92,9 @@ internal static class ForkActions
             case "create-floor":
                 ForkFloors.Validate(action);
                 return null;
+            case "create-grid":
+                ForkGrids.Validate(action);
+                return null;
             case "set-phase":
                 return ForkPhases.ReadAssignment(document, ids);
             case "merge-phases":
@@ -130,6 +136,13 @@ internal static class ForkActions
                 {
                     if (result.Id is not { } id) return false;
                     verification.After = ForkFloors.Read(document, ForkLookup.CreateId(id));
+                    verification.WouldCreate = action.DryRun ? true : null;
+                    return true;
+                }
+            case "create-grid":
+                {
+                    if (result.Id is not { } id) return false;
+                    verification.After = ForkGrids.Read(document, ForkLookup.CreateId(id));
                     verification.WouldCreate = action.DryRun ? true : null;
                     return true;
                 }

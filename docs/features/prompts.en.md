@@ -4,9 +4,9 @@ description: "Copyable prompt library with a sample prompt and purpose summary f
 
 # Prompt library
 
-35 read + 52 action tools, 87 in total
+35 read + 53 action tools, 88 in total
 
-Set `REVIT_MCP_ALLOW_WRITE=1` in the client and create the workstation `allow-write` file. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
+Actions are allowed unless one of three switches is on: the machine policy `ReadOnly`, the workstation `read-only` file, or `REVIT_MCP_READ_ONLY=1`. A fresh install ships with the machine policy read-only. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
 
 ## Connection and documents {#group-connection}
 
@@ -486,6 +486,14 @@ Create a level named 4F at 15000 mm
 
 ```text
 Create a floor on 2F from these four points
+```
+
+### <span class="state part">Fork</span> [Create grid](revit_create_grid.md)
+
+`revit_create_grid` — Create a straight grid from two points, or a three-point arc through a mid point
+
+```text
+Create a grid named A from 0,0 to 30000,0
 ```
 
 ## Phases {#group-phases}

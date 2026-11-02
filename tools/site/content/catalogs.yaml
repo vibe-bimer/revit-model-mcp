@@ -77,6 +77,12 @@ fork_tools:
     en: Create floor
     zh_note: 已有本地实现，待重映射。
     en_note: The local implementation exists; it still has to be remapped.
+  revit_create_grid:
+    status: pending
+    zh: 创建轴网
+    en: Create grid
+    zh_note: 已按 fork 注册表实现（直线与三点定弧、重名拒绝、批量步骤词表），Python 与 Core 测试通过；随首批工具一起翻 grafted。
+    en_note: Implemented on the fork registry (line and three-point arc, duplicate-name refusal, batch step vocabulary) with Python and Core tests passing; flips to grafted with the first batch.
   revit_set_phase:
     status: pending
     zh: 设置阶段

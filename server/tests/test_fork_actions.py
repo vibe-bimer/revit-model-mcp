@@ -37,6 +37,7 @@ def test_every_fork_tool_is_registered():
         "revit_set_view_lighting",
         "revit_create_level",
         "revit_create_floor",
+        "revit_create_grid",
         "revit_set_phase",
         "revit_merge_phases",
         "revit_reset_element_ids",
@@ -133,6 +134,56 @@ async def test_create_floor_sends_the_closed_boundary():
 async def test_create_floor_refuses_a_repeated_vertex():
     with pytest.raises(ToolError, match="must not repeat consecutively"):
         await tool("revit_create_floor")(points_mm=[[0, 0], [0, 0], [4000, 0]], level="L1")
+
+
+@pytest.mark.anyio
+async def test_create_grid_sends_its_curve_in_the_fork_bag():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen["command"] = command
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_create_grid"][0]
+    await function(label="A", start_mm=[0, 0], end_mm=[30000, 0], dry_run=True)
+
+    assert seen["command"] == "create-grid"
+    assert seen["name"] == "A"
+    assert seen["fork"] == {"startMm": [0, 0], "endMm": [30000, 0]}
+    assert seen["dryRun"] is True
+
+
+@pytest.mark.anyio
+async def test_create_grid_sends_the_arc_mid_point_when_given():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_create_grid"][0]
+    await function(label="B", start_mm=[0, 0], end_mm=[30000, 0], mid_mm=[15000, 4000])
+
+    assert seen["fork"] == {"startMm": [0, 0], "endMm": [30000, 0], "midMm": [15000, 4000]}
+
+
+@pytest.mark.anyio
+async def test_create_grid_refuses_degenerate_geometry():
+    with pytest.raises(ToolError, match="must not be the same point"):
+        await tool("revit_create_grid")(label="A", start_mm=[0, 0], end_mm=[0, 0])
+    with pytest.raises(ToolError, match="must differ from"):
+        await tool("revit_create_grid")(
+            label="A", start_mm=[0, 0], end_mm=[30000, 0], mid_mm=[0, 0]
+        )
+    with pytest.raises(ToolError, match="collinear"):
+        await tool("revit_create_grid")(
+            label="A", start_mm=[0, 0], end_mm=[30000, 0], mid_mm=[15000, 0]
+        )
 
 
 @pytest.mark.anyio
@@ -251,6 +302,7 @@ def test_fork_tools_are_listed_by_the_server():
         "revit_set_view_lighting",
         "revit_create_level",
         "revit_create_floor",
+        "revit_create_grid",
         "revit_set_phase",
         "revit_merge_phases",
         "revit_reset_element_ids",
@@ -280,6 +332,14 @@ def test_fork_tools_are_listed_by_the_server():
         "name",
         "elevation_mm",
         "create_view",
+        "dry_run",
+        "document",
+    }
+    assert set(tools["revit_create_grid"].input_schema["properties"]) == {
+        "label",
+        "start_mm",
+        "end_mm",
+        "mid_mm",
         "dry_run",
         "document",
     }
@@ -317,6 +377,21 @@ def test_a_fork_action_runs_as_a_batch_step():
         "name": "L2",
         "dryRun": False,
         "fork": {"elevationMm": 4000.0, "createView": True},
+    }
+
+
+def test_a_grid_step_names_the_grid_at_the_top_level():
+    from revit_model_mcp.actions import ActionStep
+
+    step = ActionStep(
+        action="create_grid",
+        args={"label": "A", "start_mm": [0, 0], "end_mm": [30000, 0], "mid_mm": [15000, 4000]},
+    )
+    assert step.payload() == {
+        "command": "create-grid",
+        "name": "A",
+        "dryRun": False,
+        "fork": {"startMm": [0, 0], "endMm": [30000, 0], "midMm": [15000, 4000]},
     }
 
 

@@ -985,6 +985,67 @@
     ],
     "type": "object"
   },
+  "revit_create_grid": {
+    "properties": {
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "end_mm": {
+        "items": {
+          "type": "number"
+        },
+        "maxItems": 2,
+        "minItems": 2,
+        "type": "array"
+      },
+      "label": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "mid_mm": {
+        "anyOf": [
+          {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "start_mm": {
+        "items": {
+          "type": "number"
+        },
+        "maxItems": 2,
+        "minItems": 2,
+        "type": "array"
+      }
+    },
+    "required": [
+      "end_mm",
+      "label",
+      "start_mm"
+    ],
+    "type": "object"
+  },
   "revit_create_level": {
     "properties": {
       "create_view": {
@@ -4232,6 +4293,7 @@
               "set_view_lighting",
               "create_level",
               "create_floor",
+              "create_grid",
               "set_phase",
               "merge_phases",
               "reset_element_ids",
@@ -5032,6 +5094,7 @@
               "set_view_lighting",
               "create_level",
               "create_floor",
+              "create_grid",
               "set_phase",
               "merge_phases",
               "reset_element_ids",

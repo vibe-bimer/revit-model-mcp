@@ -35,5 +35,10 @@ Revit 批处理（`revit_run_actions`）在撤销菜单中的标签无法通过 
 两个年份上：`dry_run` 回滚后 `isModified` 仍为 `false`；真实写入建出标高并回报 `verification.after = { id, category: "标高", name, elevationMm }`；同名标高被拒绝并回报 `Level '1F' already exists at 0 mm.`；`create_view=true` 使视图数从 52 增到 53。
 两个年份的真实写入之后，模型文件的大小与 mtime 都没有变化——动作没有保存模型。
 
+`revit_create_grid`（2026-11-02）在 Revit 2026 上完成了真机验收，使用 `mcp-verify-2026.rvt`，由 Linux 经 SSH 通道调用；2020 没有对应验收——本仓库的 csproj 只有 R22–R27 配置，2020 的构建不在本树内。
+在干净模型上 `dry_run` 回滚后 `isModified` 仍为 `false`，回报 `verification.after = { id, category: "轴网", fork: { name } }` 与 `wouldCreate: true`；真实写入建出轴网并留下一条撤销记录 `MCP (mcp): Created a grid in mcp-verify-2026`；同名轴号被拒绝并回报 `Grid 'MCP-VERIFY-GRID' already exists.`；`mid_mm` 三点建出弧轴网；共线三点回报 `start_mm, mid_mm and end_mm must not be collinear: an arc needs a mid point off the start-end line.`；两端点重合回报 `start_mm and end_mm must not be the same point.`。
+轴网是基准面，模型里没有包围盒，所以 `verification.after` 用 `fork.name` 标识建出的轴号，而不是 `boundingBoxMinMm`／`boundingBoxMaxMm`。
+全部写入之后，模型文件的大小（19,918,848 字节）与 mtime（2026-10-02T12:08:34）都没有变化——动作没有保存模型。
+
 !!! note "历史记录，不是本次新增验证"
     本页保留英文原文的日期、构建与真机检查范围。翻译工作没有执行新的 Revit 验证，也不将构建通过等同于真机行为已验证。

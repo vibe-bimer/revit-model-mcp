@@ -4,9 +4,9 @@ description: "可直接复制的提示词库，每个工具配有示例提示词
 
 # 提示词库
 
-35 个读取 + 52 个动作，共 87 个工具
+35 个读取 + 53 个动作，共 88 个工具
 
-客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
+动作默认允许；机器策略 `ReadOnly`、工作站 `read-only` 文件或 `REVIT_MCP_READ_ONLY=1` 三者任一打开即拒绝动作（全新安装的机器策略默认只读）。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
 ## 连接与文档 {#group-connection}
 
@@ -486,6 +486,14 @@ description: "可直接复制的提示词库，每个工具配有示例提示词
 
 ```text
 用这四个点在 2F 建一块楼板
+```
+
+### <span class="state part">自研</span> [创建轴网](revit_create_grid.md)
+
+`revit_create_grid` — 按两点建直线轴网，或给中点走三点定弧（mm）
+
+```text
+建一条叫 A 的轴线，从 (0,0) 到 (30000,0)
 ```
 
 ## 阶段 {#group-phases}

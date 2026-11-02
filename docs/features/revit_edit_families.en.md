@@ -10,8 +10,8 @@ description: "Edit an open family in place or named project families, rolled bac
 
 Edit an open family in place or named project families, rolled back on a dry run
 
-!!! warning "Actions require both write gates"
-    Set `REVIT_MCP_ALLOW_WRITE=1` in the client and create the workstation `allow-write` file. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
+!!! warning "Actions are allowed by default; read-only is explicit"
+    Actions are allowed unless one of three switches is on: the machine policy `ReadOnly`, the workstation `read-only` file, or `REVIT_MCP_READ_ONLY=1`. A fresh install ships with the machine policy read-only. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
 
 [Same-name integration branch page](../platform/revit_edit_families.md)
 

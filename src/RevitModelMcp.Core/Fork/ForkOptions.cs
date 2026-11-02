@@ -30,6 +30,11 @@ public sealed class ForkOptions
     // create-floor
     public string? FloorType { get; set; }
 
+    // create-grid
+    public List<double>? StartMm { get; set; }
+    public List<double>? EndMm { get; set; }
+    public List<double>? MidMm { get; set; }
+
     // set-phase
     public string? CreatedPhase { get; set; }
     public string? DemolishedPhase { get; set; }
@@ -65,6 +70,9 @@ public sealed class ForkOptions
         ElevationMm = ElevationMm,
         CreateView = CreateView,
         FloorType = FloorType,
+        StartMm = StartMm is null ? null : [.. StartMm],
+        EndMm = EndMm is null ? null : [.. EndMm],
+        MidMm = MidMm is null ? null : [.. MidMm],
         CreatedPhase = CreatedPhase,
         DemolishedPhase = DemolishedPhase,
         SourcePhase = SourcePhase,

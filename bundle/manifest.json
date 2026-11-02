@@ -346,6 +346,10 @@
       "description": "Create a floor from a closed boundary on a level.\n\n`points_mm` is the polygon, three vertices or more, each [x, y] in millimetres; consecutive\nduplicates are refused. dry_run returns the same verification block without changing the model."
     },
     {
+      "name": "revit_create_grid",
+      "description": "Create a grid line: straight from `start_mm` to `end_mm`, or a three-point arc through `mid_mm`.\n\n`label` names the grid (Grid.Name); a grid whose name already exists is refused.\nPoints are [x, y] in millimetres on the horizontal plane. dry_run returns the same\nverification block without changing the model."
+    },
+    {
       "name": "revit_set_phase",
       "description": "Set the creation and demolition phase of elements.\n\nAn empty string clears a phase and null leaves it alone; at least one must be given.\ndry_run returns the same verification block without changing the model."
     },

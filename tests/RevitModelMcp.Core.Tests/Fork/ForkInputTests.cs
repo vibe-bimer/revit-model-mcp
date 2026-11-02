@@ -85,6 +85,27 @@ public sealed class ForkInputTests
     }
 
     [Test]
+    public async Task CreateGrid_CarriesItsCurvePoints()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-grid","name":"A","fork":{"startMm":[0,0],"endMm":[30000,0],"midMm":[15000,4000]}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Name).IsEqualTo("A");
+        await Assert.That(parsed.Action!.Options.StartMm).IsEquivalentTo([0d, 0d]);
+        await Assert.That(parsed.Action!.Options.EndMm).IsEquivalentTo([30000d, 0d]);
+        await Assert.That(parsed.Action!.Options.MidMm).IsEquivalentTo([15000d, 4000d]);
+    }
+
+    [Test]
+    public async Task CreateGrid_RefusesAPointOfTheWrongShape()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-grid","name":"A","fork":{"startMm":[0,0],"endMm":"far"}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(parsed.Error).IsEqualTo("fork.endMm must be a list of two or three numbers.");
+    }
+
+    [Test]
     public async Task SetPhase_CarriesBothPhasesAndKeepsAnEmptyName()
     {
         var parsed = ControlJobParser.Parse(
@@ -175,8 +196,8 @@ public sealed class ForkInputTests
 
         await Assert.That(Core.Fork.ForkRegistry.Commands).IsEquivalentTo(
         [
-            "set-view-lighting", "create-level", "create-floor", "set-phase", "merge-phases",
-            "reset-element-ids", "rebuild-model-ids"
+            "set-view-lighting", "create-level", "create-floor", "create-grid",
+            "set-phase", "merge-phases", "reset-element-ids", "rebuild-model-ids"
         ]);
         // The add-in advertises both lists in its handshake, so the register's command has to be in one of
         // them or a client is told the add-in cannot answer a read it does answer.

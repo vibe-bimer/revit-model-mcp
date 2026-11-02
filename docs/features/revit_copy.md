@@ -10,8 +10,8 @@ description: "按毫米偏移复制 1 到 100 个构件，dry_run 会回滚"
 
 按毫米偏移复制 1 到 100 个构件，dry_run 会回滚
 
-!!! warning "动作工具需要双门禁"
-    客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
+!!! warning "动作工具默认允许，只读需显式开启"
+    动作默认允许；机器策略 `ReadOnly`、工作站 `read-only` 文件或 `REVIT_MCP_READ_ONLY=1` 三者任一打开即拒绝动作（全新安装的机器策略默认只读）。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
 
 [同名集成分支页面](../platform/revit_copy.md)
 

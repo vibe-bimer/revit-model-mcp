@@ -45,6 +45,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 | `revit_create_wall` | `start_mm`、`end_mm`、`level`、`wall_type`、`height_mm=3000` | 创建直墙；端点为模型坐标中的 `[x,y]`，单位为 mm。 |
 | `revit_create_floor` | `points_mm`、`level`、`floor_type` | 从闭合边界创建楼板；`points_mm` 是模型坐标中的 `[x,y]` 多边形顶点，单位为 mm，至少 3 个，自动闭合；`floor_type` 为 null 时选择第一个楼板类型。 |
 | `revit_create_level` | `name`、`elevation_mm`、`create_view=false` | 在指定高程新建标高，单位为 mm；已存在同名标高时被拒绝，避免后续工具解析到有歧义的标高；`create_view=true` 时同时创建对应的楼层平面视图，视图类型按视图族选择，不按名称。 |
+| `revit_create_grid` | `label`、`start_mm`、`end_mm`、`mid_mm=null` | 创建轴网：`start_mm` 到 `end_mm` 的直线，或给出 `mid_mm` 时的三点圆弧；端点与中点均为模型坐标中的 `[x,y]`，单位为 mm，曲线恒在水平面上。轴号写入 `Grid.Name`，已存在同名轴网时被拒绝；三点共线或与端点重合时被拒绝并说明原因。 |
 | `revit_set_phase` | `element_ids`、`created_phase`、`demolished_phase` | 按阶段的准确名称赋值；每个阶段参数可为名称、清除赋值的 `""`，或保持不变的 null；至少一个参数非 null。这些工具不创建或重命名阶段，应先在 Revit 界面中添加新阶段。 |
 | `revit_merge_phases` | `source_phase`、`target_phase` | 将所有创建与拆除引用从源阶段移到目标阶段，再删除空源阶段；删除被拒绝时以 `sourceDeleted:false` 和 `phaseDeleteError` 报告。不支持放入批次。 |
 | `revit_set_parameter` | `element_id`、`parameter`、`value` | 按参数名传入字符串形式的值；长度使用 mm，面积使用 m2，其余 Double 使用内部单位。 |
@@ -59,7 +60,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 <a id="dry-runs-and-id-replacement"></a>
 ## 试运行与 ID 替换
 
-`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_create_level`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter`、`revit_set_view_lighting` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
+`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_create_level`、`revit_create_grid`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter`、`revit_set_view_lighting` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
 试运行会执行修改、读取预期结果，然后回滚事务。
 成功的试运行包含 `data.dryRun:true`、`data.rolledBack:true`，以及与真实写入相同结构的 `verification`。
 动作抛出异常时返回错误，不带验证块；单动作工具遇到缺失族时还返回 `closestFamilies`。
@@ -190,26 +191,22 @@ Revit 为复制构件分配紧接新模型已有构件之后的 ID，因此从�
 
 ## 动作门禁 {#gates}
 
-两个门禁都必须启用：
+动作默认允许，只读是显式开启的。以下任一开关打开时，动作被拒绝，MCP `list_tools` 也不列出动作工具：
 
-1. 在 Python 服务进程的环境中设置 `REVIT_MCP_ALLOW_WRITE=1`，然后重启服务。
-   布尔解析器会去除首尾空白且不区分大小写：`1`、`true`、`yes`、`on` 启用动作；`0`、`false`、`no`、`off` 禁用动作。
-   未设置时默认禁用，MCP `list_tools` 不列出动作工具。无法识别的值会抛出配置错误，而不是静默禁用。
-2. 在 Revit 工作站创建 `%LOCALAPPDATA%\RevitModelMcp\allow-write`：
+1. **机器策略**：注册表 `Software\Policies\RevitModelMcp` 或策略文件里的 `ReadOnly: true`（安装器默认写入 `ReadOnly: true`，全新安装因此是只读的）。策略文件读不出来时按只读处理，即 fail-closed。
+2. **工作站门禁文件**：`%LOCALAPPDATA%\RevitModelMcp\read-only`。插件对每个动作都检查它，包括选择与导航。
 
    ```powershell
    New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\RevitModelMcp" | Out-Null
-   New-Item -ItemType File -Force "$env:LOCALAPPDATA\RevitModelMcp\allow-write" | Out-Null
+   New-Item -ItemType File -Force "$env:LOCALAPPDATA\RevitModelMcp\read-only" | Out-Null
    ```
 
-插件对每个动作都检查门禁文件，包括选择与导航。
-文件不存在时，响应包含 `success:false` 和 `error:"actions disabled on the workstation"`。
-删除该文件即可立即禁用动作，无须重启 Revit。
-即使传输使用 `REVIT_MCP_CHANNEL_DIR`，门禁文件也仍位于默认的本地应用数据目录。
+   删除该文件即可立即恢复动作，无须重启 Revit。
+3. **服务进程环境变量**：`REVIT_MCP_READ_ONLY=1`，重启服务后生效。
 
-直接 HTTP 动作请求要求认证及工作站门禁；Python 环境门禁控制是否暴露 MCP 动作工具。
+`REVIT_MCP_ALLOW_WRITE` 与工作站 `allow-write` 文件已随 1.0 底座移除：旧的两道门禁不再存在，上面的三项是现行开关。
+直接 HTTP 动作请求同样受这三项约束，并且仍然要求认证。
 
-<a id="units-and-parameter-scope"></a>
 ## 单位与参数作用范围
 
 动作寻址传输报告的进程 ID。

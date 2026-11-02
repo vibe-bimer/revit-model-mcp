@@ -43,6 +43,7 @@ See the [feature overview](features/index.md) for each tool's full parameter tab
 | `revit_create_wall` | `start_mm`, `end_mm`, `level`, `wall_type`, `height_mm=3000` | Create a straight wall; endpoints are `[x,y]` in model mm. |
 | `revit_create_floor` | `points_mm`, `level`, `floor_type` | Create a floor from a closed boundary; `points_mm` are `[x,y]` polygon vertices in model mm, at least 3, closed automatically; null `floor_type` chooses the first floor type. |
 | `revit_create_level` | `name`, `elevation_mm`, `create_view=false` | Create a level at a given elevation in mm; an existing level with that exact name is refused, so a later tool never resolves an ambiguous level; `create_view=true` also creates the matching floor plan, whose view type is chosen by view family rather than by name. |
+| `revit_create_grid` | `label`, `start_mm`, `end_mm`, `mid_mm=null` | Create a grid: a straight line from `start_mm` to `end_mm`, or a three-point arc through `mid_mm` when given; points are `[x,y]` in model coordinates in mm and the curve always lies on the horizontal plane. The label is written to `Grid.Name` and an existing grid with that name is refused; collinear or coincident points are rejected with the reason. |
 | `revit_set_phase` | `element_ids`, `created_phase`, `demolished_phase` | Assign project phases by exact name; each phase argument is a name, `""` to clear that assignment, or null to leave it unchanged; at least one non-null. These tools do not create or rename phases — add new phases in the UI first. |
 | `revit_merge_phases` | `source_phase`, `target_phase` | Move every creation and demolition reference off the source phase into the target, then delete the empty source phase; a refused deletion is reported with `sourceDeleted:false` and `phaseDeleteError`. Not batchable. |
 | `revit_set_parameter` | `element_id`, `parameter`, `value` | Set a string value by parameter name; lengths use mm, areas m2, other doubles internal units. |
@@ -56,7 +57,7 @@ See the [feature overview](features/index.md) for each tool's full parameter tab
 
 ## Dry runs and ID replacement
 
-`revit_move`, `revit_place_family`, `revit_create_wall`, `revit_create_floor`, `revit_create_level`, `revit_set_phase`, `revit_merge_phases`, `revit_set_parameter`, `revit_set_view_lighting` and `revit_delete` also accept `dry_run=false`, before the common `document` argument.
+`revit_move`, `revit_place_family`, `revit_create_wall`, `revit_create_floor`, `revit_create_level`, `revit_create_grid`, `revit_set_phase`, `revit_merge_phases`, `revit_set_parameter`, `revit_set_view_lighting` and `revit_delete` also accept `dry_run=false`, before the common `document` argument.
 A dry run executes the mutation, reads its prospective result, and rolls back the transaction.
 A successful dry run includes `data.dryRun:true`, `data.rolledBack:true` and the same `verification` shape as a real write.
 An action that throws returns an error without a verification block; a missing family also returns `closestFamilies` on the single-action tool.
@@ -182,24 +183,21 @@ The behaviour above comes from reading the source (`src/RevitModelMcp.Addin/Cont
 
 ## Gates {#gates}
 
-Both gates must be enabled:
+Actions are allowed by default; read-only is the switch you turn on. Any of the following disables them: the MCP `list_tools` then omits the action tools.
 
-1. Set `REVIT_MCP_ALLOW_WRITE=1` in the Python server process environment and restart the server.
-   The boolean parser trims whitespace and ignores case: `1`, `true`, `yes` and `on` enable actions; `0`, `false`, `no` and `off` disable them.
-   When unset, actions are disabled and MCP `list_tools` omits them. Unrecognized values raise a configuration error rather than silently disabling actions.
-2. Create `%LOCALAPPDATA%\RevitModelMcp\allow-write` on the Revit workstation:
+1. **Machine policy**: `ReadOnly: true` in the registry key `Software\Policies\RevitModelMcp` or in the policy file. The installer writes `ReadOnly: true`, so a fresh install is read-only. A policy file that cannot be read counts as read-only: the gate fails closed.
+2. **Workstation gate file**: `%LOCALAPPDATA%\RevitModelMcp\read-only`. The add-in checks it for every action, including selection and navigation.
 
    ```powershell
    New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\RevitModelMcp" | Out-Null
-   New-Item -ItemType File -Force "$env:LOCALAPPDATA\RevitModelMcp\allow-write" | Out-Null
+   New-Item -ItemType File -Force "$env:LOCALAPPDATA\RevitModelMcp\read-only" | Out-Null
    ```
 
-The add-in checks the gate file for every action, including selection and navigation.
-Without it, the response contains `success:false` and `error:"actions disabled on the workstation"`.
-Removing the file disables actions immediately; restarting Revit is unnecessary.
-The gate stays in the default local application data directory even if the transport uses `REVIT_MCP_CHANNEL_DIR`.
+   Removing the file restores actions immediately; restarting Revit is unnecessary.
+3. **Server environment**: `REVIT_MCP_READ_ONLY=1`, taking effect after a server restart.
 
-Direct HTTP action requests require authentication and the workstation gate; the Python environment gate controls exposure of the MCP action tools.
+`REVIT_MCP_ALLOW_WRITE` and the workstation `allow-write` file were removed with the 1.0 base: the old two gates no longer exist, and the three above replace them.
+Direct HTTP action requests obey the same three switches and still require authentication.
 
 ## Units and parameter scope
 

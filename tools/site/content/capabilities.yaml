@@ -597,6 +597,30 @@ tools:
     note:
       zh: 2020 走 Document.Create.NewFloor，2022+ 走 Floor.Create
       en: On 2020 it uses Document.Create.NewFloor, from 2022 Floor.Create
+  revit_create_grid:
+    source: '493f845c18cc'
+    group: edit
+    origin: fork
+    since: 0.10.0
+    title:
+      zh: 创建轴网
+      en: Create grid
+    summary:
+      zh: 按两点建直线轴网，或给中点走三点定弧（mm）
+      en: Create a straight grid from two points, or a three-point arc through a mid point
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 建一条叫 A 的轴线，从 (0,0) 到 (30000,0)
+      en: Create a grid named A from 0,0 to 30000,0
+    note:
+      zh: 同名轴网被拒绝；曲线固定在水平面上，共线三点建不了弧
+      en: A grid with the same name is refused; the curve stays on the horizontal plane and three collinear points cannot form an arc
   revit_create_level:
     source: '68d2a6d6c941'
     group: edit
@@ -2060,6 +2084,20 @@ param_notes:
     create_view:
       zh: 同时创建对应的楼层平面视图
       en: also create the matching floor plan view
+  revit_create_grid:
+    source: '493f845c18cc'
+    label:
+      zh: 轴号，写入 Grid.Name；重名会被拒绝
+      en: grid label written to Grid.Name; a duplicate name is refused
+    start_mm:
+      zh: 起点坐标 [x, y]（mm，水平面）
+      en: start point [x, y] in millimetres on the horizontal plane
+    end_mm:
+      zh: 终点坐标 [x, y]（mm，水平面）
+      en: end point [x, y] in millimetres on the horizontal plane
+    mid_mm:
+      zh: 可选弧中点 [x, y]；给出即三点定弧，不得与起终点共线
+      en: optional mid point [x, y]; supplying it makes a three-point arc and it must not be collinear with the endpoints
   revit_set_phase:
     source: 'e6065da74fe8'
     element_ids:

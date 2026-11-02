@@ -6203,6 +6203,7 @@
                 "set_view_lighting",
                 "create_level",
                 "create_floor",
+                "create_grid",
                 "set_phase",
                 "merge_phases",
                 "reset_element_ids",
@@ -6297,6 +6298,7 @@
                 "set_view_lighting",
                 "create_level",
                 "create_floor",
+                "create_grid",
                 "set_phase",
                 "merge_phases",
                 "reset_element_ids",
@@ -7209,6 +7211,82 @@
       "type": "object"
     },
     "title": "Create Floor"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "readOnlyHint": false,
+      "title": "Create Grid"
+    },
+    "description": "Create a grid line: straight from `start_mm` to `end_mm`, or a three-point arc through `mid_mm`.\n\n        `label` names the grid (Grid.Name); a grid whose name already exists is refused.\n        Points are [x, y] in millimetres on the horizontal plane. dry_run returns the same\n        verification block without changing the model.",
+    "inputSchema": {
+      "properties": {
+        "document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dry_run": {
+          "default": false,
+          "type": "boolean"
+        },
+        "end_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "label": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "mid_mm": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "start_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "label",
+        "start_mm",
+        "end_mm"
+      ],
+      "type": "object"
+    },
+    "name": "revit_create_grid",
+    "outputSchema": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "title": "Create Grid"
   },
   {
     "annotations": {

@@ -401,6 +401,17 @@ tools:
 
       '
     source: 05d38c39dfbb26c424e07f27d4fa1ab496ec533abf505f3d0b87a7ff7629e703
+  revit_create_grid:
+    zh: '创建一条轴网，用于布局：`start_mm` 到 `end_mm` 的直线，或给出 `mid_mm` 时的三点圆弧。
+
+      `label` 是轴号，写入 Grid.Name；已存在同名轴网时会被拒绝，这样后续工具永远不会解析到有歧义的轴网。端点与中点都是模型 XY 坐标系中的 `[x, y]`，单位为毫米；曲线始终位于水平面上，且 `mid_mm` 不得与端点共线（共线三点定不出弧，会被拒绝）。
+
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+      '
+    source: 493f845c18cc51115f0a79af1ea825d5ca08e001e6d30173fcdec9dad075a06c
   revit_create_level:
     zh: '在指定高程新建标高，用于布局。
 

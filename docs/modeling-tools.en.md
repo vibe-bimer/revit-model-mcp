@@ -26,7 +26,7 @@ These carry over from the repository as it stands; they are not new decisions:
 - Every action accepts the common `document=null` argument and supports `dry_run=false`; a dry run executes, rolls back and returns a `verification` block of the same shape.
 - A successful create action carries `verification.after = { id, category, family, type, level, boundingBoxMinMm, boundingBoxMaxMm }`, and a dry run adds `wouldCreate: true`.
 - Every first-batch tool can go into `revit_run_actions` (one undo step, at most 50 steps).
-- The two write gates (`REVIT_MCP_ALLOW_WRITE=1` and the workstation `allow-write` file) and the rule that actions must not save the model are not relaxed for the new tools.
+- The read-only switches (the machine policy `ReadOnly`, the workstation `read-only` file, `REVIT_MCP_READ_ONLY=1`) and the rule that actions must not save the model are not relaxed for the new tools; the old two `allow-write` gates went away with the 1.0 base.
 
 <a id="batch-one"></a>
 ## First-batch tools
@@ -54,7 +54,7 @@ These carry over from the repository as it stands; they are not new decisions:
 | `start_mm` / `end_mm` | Yes | — | `array<number>` | Start and end point `[x, y]` |
 | `mid_mm` | No | `null` | `array<number>` | When given, defines the arc from three points and uses `Grid.Create(Document, Arc)` |
 
-- A straight line goes through `Grid.Create(Document, Line)`; a curve must lie in a horizontal plane, otherwise it is rejected with the reason.
+- A straight line goes through `Grid.Create(Document, Line)`; a curve must lie in a horizontal plane, otherwise it is rejected with the reason. The inputs carry `[x, y]` only, so Z is always 0, and a "non-horizontal" curve shows up as three collinear points (no arc exists) or coincident endpoints; `Validate` rejects both with the reason.
 - The label is written to `Grid.Name`; a duplicate name is rejected.
 - **Extents and bubbles are not exposed**: those APIs all live on `DatumPlane`, split between `Model` / `ViewSpecific` semantics and requiring a named view, so they belong to the second batch.
 

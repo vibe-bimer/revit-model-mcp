@@ -111,6 +111,7 @@ ACTION_TOOL_NAMES = {
     "revit_set_view_lighting",
     "revit_create_level",
     "revit_create_floor",
+    "revit_create_grid",
     "revit_set_phase",
     "revit_merge_phases",
     "revit_reset_element_ids",

@@ -1484,6 +1484,25 @@
       "networkAccess": "none"
     },
     {
+      "name": "revit_create_grid",
+      "description": "Create a grid line: straight from `start_mm` to `end_mm`, or a three-point arc through `mid_mm`.\n\n`label` names the grid (Grid.Name); a grid whose name already exists is refused.\nPoints are [x, y] in millimetres on the horizontal plane. dry_run returns the same\nverification block without changing the model.",
+      "toolset": "actions",
+      "access": "modifying",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      },
+      "irreversible": false,
+      "confirmation": {
+        "required": "never"
+      },
+      "fileSystem": {
+        "access": "none"
+      },
+      "networkAccess": "none"
+    },
+    {
       "name": "revit_set_phase",
       "description": "Set the creation and demolition phase of elements.\n\nAn empty string clears a phase and null leaves it alone; at least one must be given.\ndry_run returns the same verification block without changing the model.",
       "toolset": "actions",

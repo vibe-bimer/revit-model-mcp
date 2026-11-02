@@ -35,6 +35,22 @@ def _check_floor_points(points_mm, refuse) -> None:
             raise refuse("Floor boundary points must not repeat consecutively.")
 
 
+def _check_grid_points(start_mm, end_mm, mid_mm, refuse) -> None:
+    if start_mm == end_mm:
+        raise refuse("start_mm and end_mm must not be the same point.")
+    if mid_mm is None:
+        return
+    if mid_mm in (start_mm, end_mm):
+        raise refuse("mid_mm must differ from start_mm and end_mm.")
+    cross = (mid_mm[0] - start_mm[0]) * (end_mm[1] - start_mm[1]) - (mid_mm[1] - start_mm[1]) * (
+        end_mm[0] - start_mm[0]
+    )
+    if abs(cross) <= 1e-9:
+        raise refuse(
+            "start_mm, mid_mm and end_mm must not be collinear: an arc needs a mid point off the start-end line."
+        )
+
+
 def _check_phase_assignment(created_phase, demolished_phase, refuse) -> None:
     if created_phase is None and demolished_phase is None:
         raise refuse("At least one of created_phase or demolished_phase is required.")
@@ -101,6 +117,12 @@ STEP_FIELDS: dict[str, dict[str, tuple[Any, Any]]] = {
         "level": (Name, ...),
         "floor_type": (Name | None, None),
     },
+    "create_grid": {
+        "label": (Name, ...),
+        "start_mm": (Point, ...),
+        "end_mm": (Point, ...),
+        "mid_mm": (Point | None, None),
+    },
     "set_phase": {
         "element_ids": (ElementIds, ...),
         "created_phase": (str | None, None),
@@ -131,12 +153,13 @@ STEP_TOP_LEVEL: dict[str, tuple[str, ...]] = {
     "set_view_lighting": ("view",),
     "create_level": ("name",),
     "create_floor": ("points_mm", "level"),
+    "create_grid": ("label",),
     "set_phase": ("element_ids",),
     "merge_phases": (),
     "reset_element_ids": ("element_ids",),
     "rebuild_model_ids": ("view",),
 }
-_TOP_LEVEL_NAMES = {"element_ids": "elementIds", "points_mm": "pointsMm"}
+_TOP_LEVEL_NAMES = {"element_ids": "elementIds", "points_mm": "pointsMm", "label": "name"}
 
 
 def step_models() -> dict[str, Any]:
@@ -163,6 +186,8 @@ def check_step(action: str, args: dict[str, Any], refuse) -> None:
         _check_lighting(settings, refuse)
     elif action == "create_floor":
         _check_floor_points(args["points_mm"], refuse)
+    elif action == "create_grid":
+        _check_grid_points(args["start_mm"], args["end_mm"], args["mid_mm"], refuse)
     elif action == "set_phase":
         _check_phase_assignment(args["created_phase"], args["demolished_phase"], refuse)
     elif action == "merge_phases":
@@ -317,6 +342,44 @@ def register_fork_actions(mcp, send) -> None:
             "create-floor",
             pointsMm=[list(point) for point in points_mm],
             level=level,
+            fork=fork,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @mcp.tool(
+        title="Create Grid",
+        annotations=ToolAnnotations(
+            title="Create Grid",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+        ),
+    )
+    @with_client_identity
+    async def revit_create_grid(
+        label: Name,
+        start_mm: Point,
+        end_mm: Point,
+        mid_mm: Point | None = None,
+        dry_run: bool = False,
+        document: str | None = None,
+    ) -> dict[str, Any]:
+        """Create a grid line: straight from `start_mm` to `end_mm`, or a three-point arc through `mid_mm`.
+
+        `label` names the grid (Grid.Name); a grid whose name already exists is refused.
+        Points are [x, y] in millimetres on the horizontal plane. dry_run returns the same
+        verification block without changing the model."""
+        _check_grid_points(start_mm, end_mm, mid_mm, ToolError)
+        fork: dict[str, Any] = {
+            "startMm": list(start_mm),
+            "endMm": list(end_mm),
+        }
+        if mid_mm is not None:
+            fork["midMm"] = list(mid_mm)
+        return await send(
+            "create-grid",
+            name=label,
             fork=fork,
             dryRun=dry_run,
             document=document,

@@ -370,6 +370,7 @@ class ActionStep(BaseModel):
         "set_view_lighting",
         "create_level",
         "create_floor",
+        "create_grid",
         "set_phase",
         "merge_phases",
         "reset_element_ids",

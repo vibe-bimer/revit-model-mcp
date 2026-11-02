@@ -4,9 +4,9 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 
 # 功能总览
 
-35 个读取 + 52 个动作，共 87 个工具
+35 个读取 + 53 个动作，共 88 个工具
 
-这一节是现有版本的 87 个工具。集成分支的 80 个工具按基座与自研分开，见 [新版基座工具目录](../platform/index.md)。
+这一节是现有版本的 88 个工具。集成分支的 80 个工具按基座与自研分开，见 [新版基座工具目录](../platform/index.md)。
 
 ## 版本入口 {#versions}
 
@@ -16,15 +16,15 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | --- | --- | --- |
 | 版本 | 0.9.0 | 1.0.0 未发布（集成分支） |
 | 分支 | main | `integration/upstream-1.0` |
-| 工具 | 87 | 80 |
+| 工具 | 88 | 80 |
 | 目录 | index.md | [新版基座工具目录](../platform/index.md) |
 
 ## 按 Revit 年份查阅 {#by-version}
 
 | Revit 年份 | 验证状态 |
 | --- | --- |
-| [Revit 2020](v2020.md) | 读取 19/35、动作 15/52 已实测；其余仅构建 |
-| [Revit 2026](v2026.md) | 读取 18/35、动作 8/52 已实测；其余仅构建 |
+| [Revit 2020](v2020.md) | 读取 19/35、动作 15/53 已实测；其余仅构建 |
+| [Revit 2026](v2026.md) | 读取 18/35、动作 8/53 已实测；其余仅构建 |
 | 2022–2025 / 2027 | 仅构建，未实测 |
 
 已实测表示记录过真机执行；仅构建表示通过编译，不代表已完成真机功能验证。Revit 2021 不在本项目构建范围。
@@ -96,7 +96,7 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | [着色构件](revit_override_graphics.md)<br>`revit_override_graphics` | 在指定视图里给构件着色，reset 可还原本次会话的覆盖 |
 | [标注构件](revit_tag_elements.md)<br>`revit_tag_elements` | 在视图里按类别或构件 ID 加标记，房间标记需平面视图 |
 
-### 编辑 (17) {#group-edit}
+### 编辑 (18) {#group-edit}
 
 | 工具 | 用途 |
 | --- | --- |
@@ -117,6 +117,7 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | [批量处理模型](revit_process_models.md)<br>`revit_process_models` | 在交互会话中逐个打开模型执行步骤和 C# 代码并按需导出保存；原地保存与代码需 confirm_token 确认 |
 | <span class="state part">自研</span> [创建标高](revit_create_level.md)<br>`revit_create_level` | 在指定高程新建标高（mm） |
 | <span class="state part">自研</span> [创建楼板](revit_create_floor.md)<br>`revit_create_floor` | 按闭合轮廓建楼板（至少 3 个顶点，mm） |
+| <span class="state part">自研</span> [创建轴网](revit_create_grid.md)<br>`revit_create_grid` | 按两点建直线轴网，或给中点走三点定弧（mm） |
 
 ### 阶段 (2) {#group-phases}
 
@@ -230,5 +231,5 @@ description: "当前发布版全部工具的功能总览，按分组列出每个
 | [着色构件](revit_override_graphics.md)<br>`revit_override_graphics` | 在指定视图里给构件着色，reset 可还原本次会话的覆盖 |
 | [标注构件](revit_tag_elements.md)<br>`revit_tag_elements` | 在视图里按类别或构件 ID 加标记，房间标记需平面视图 |
 
-!!! warning "动作工具需要双门禁"
-    客户端设置 `REVIT_MCP_ALLOW_WRITE=1`，工作站创建 `allow-write` 文件。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。
+!!! warning "动作工具默认允许，只读需显式开启"
+    动作默认允许；机器策略 `ReadOnly`、工作站 `read-only` 文件或 `REVIT_MCP_READ_ONLY=1` 三者任一打开即拒绝动作（全新安装的机器策略默认只读）。动作连接必须指向单一 Revit 实例；实例中有多个文档时，用 `document` 明确目标。选择、显示和隔离还要求目标文档处于活动状态。

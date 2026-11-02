@@ -46,7 +46,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Build snapshot report](revit_build_report.md)<br>`revit_build_report` | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | [Issue register](revit_issue_register.md)<br>`revit_issue_register` | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 
-## Action tools (52) {#action-tools}
+## Action tools (53) {#action-tools}
 
 | Tool | 2020 | 2026 | 2022–2025 / 2027 |
 | --- | :--: | :--: | :--: |
@@ -98,6 +98,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | <span class="state part">Fork</span> [Set view lighting](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | <span class="state part">Fork</span> [Create level](revit_create_level.md)<br>`revit_create_level` | <span class="state ok">Validated live</span> | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> |
 | <span class="state part">Fork</span> [Create floor](revit_create_floor.md)<br>`revit_create_floor` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
+| <span class="state part">Fork</span> [Create grid](revit_create_grid.md)<br>`revit_create_grid` | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | <span class="state part">Fork</span> [Set element phases](revit_set_phase.md)<br>`revit_set_phase` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | <span class="state part">Fork</span> [Merge project phases](revit_merge_phases.md)<br>`revit_merge_phases` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
 | <span class="state part">Fork</span> [Replace IDs in place](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | <span class="state ok">Validated live</span> | <span class="state part">Build only, not live-tested</span> | <span class="state part">Build only, not live-tested</span> |
