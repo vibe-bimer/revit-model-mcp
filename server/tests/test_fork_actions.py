@@ -38,6 +38,7 @@ def test_every_fork_tool_is_registered():
         "revit_create_level",
         "revit_create_floor",
         "revit_create_grid",
+        "revit_create_column",
         "revit_load_family_file",
         "revit_set_phase",
         "revit_merge_phases",
@@ -184,6 +185,63 @@ async def test_create_grid_refuses_degenerate_geometry():
     with pytest.raises(ToolError, match="collinear"):
         await tool("revit_create_grid")(
             label="A", start_mm=[0, 0], end_mm=[30000, 0], mid_mm=[15000, 0]
+        )
+
+
+@pytest.mark.anyio
+async def test_create_column_sends_its_point_at_the_top_level_and_its_top_in_the_fork_bag():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen["command"] = command
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_create_column"][0]
+    await function(
+        family="M_Concrete-Column",
+        level="1F",
+        x_mm=3000,
+        y_mm=4500,
+        type_name="600x600",
+        top_level="3F",
+        base_offset_mm=-150,
+        dry_run=True,
+    )
+
+    assert seen["command"] == "create-column"
+    assert seen["family"] == "M_Concrete-Column"
+    assert seen["typeName"] == "600x600"
+    assert seen["level"] == "1F"
+    assert seen["xMm"] == 3000
+    assert seen["yMm"] == 4500
+    assert seen["fork"] == {"topLevel": "3F", "baseOffsetMm": -150, "topOffsetMm": 0}
+    assert seen["dryRun"] is True
+
+
+@pytest.mark.anyio
+async def test_create_column_falls_back_to_a_3000_mm_height_when_no_top_is_named():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_create_column"][0]
+    await function(family="M_Concrete-Column", level="1F", x_mm=0, y_mm=0)
+
+    assert seen["fork"] == {"baseOffsetMm": 0, "topOffsetMm": 0, "heightMm": 3000}
+
+
+@pytest.mark.anyio
+async def test_create_column_refuses_a_height_that_is_not_positive():
+    with pytest.raises(ToolError, match="height_mm must be a positive number"):
+        await tool("revit_create_column")(
+            family="M_Concrete-Column", level="1F", x_mm=0, y_mm=0, height_mm=0
         )
 
 
@@ -375,6 +433,7 @@ def test_fork_tools_are_listed_by_the_server():
         "revit_create_level",
         "revit_create_floor",
         "revit_create_grid",
+        "revit_create_column",
         "revit_load_family_file",
         "revit_set_phase",
         "revit_merge_phases",
@@ -413,6 +472,20 @@ def test_fork_tools_are_listed_by_the_server():
         "start_mm",
         "end_mm",
         "mid_mm",
+        "dry_run",
+        "document",
+    }
+    assert set(tools["revit_create_column"].input_schema["properties"]) == {
+        "family",
+        "level",
+        "x_mm",
+        "y_mm",
+        "type_name",
+        "top_level",
+        "height_mm",
+        "base_offset_mm",
+        "top_offset_mm",
+        "rotation_deg",
         "dry_run",
         "document",
     }
@@ -472,6 +545,32 @@ def test_a_grid_step_names_the_grid_at_the_top_level():
         "name": "A",
         "dryRun": False,
         "fork": {"startMm": [0, 0], "endMm": [30000, 0], "midMm": [15000, 4000]},
+    }
+
+
+def test_a_column_step_keeps_its_point_at_the_top_level():
+    from revit_model_mcp.actions import ActionStep
+
+    step = ActionStep(
+        action="create_column",
+        args={
+            "family": "M_Concrete-Column",
+            "level": "1F",
+            "x_mm": 3000,
+            "y_mm": 4500,
+            "top_level": "3F",
+        },
+    )
+    assert step.payload() == {
+        "command": "create-column",
+        "family": "M_Concrete-Column",
+        "typeName": None,
+        "level": "1F",
+        "xMm": 3000,
+        "yMm": 4500,
+        "rotationDeg": 0,
+        "dryRun": False,
+        "fork": {"topLevel": "3F", "baseOffsetMm": 0, "topOffsetMm": 0},
     }
 
 

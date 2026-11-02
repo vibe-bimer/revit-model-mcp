@@ -112,6 +112,7 @@ ACTION_TOOL_NAMES = {
     "revit_create_level",
     "revit_create_floor",
     "revit_create_grid",
+    "revit_create_column",
     "revit_load_family_file",
     "revit_set_phase",
     "revit_merge_phases",

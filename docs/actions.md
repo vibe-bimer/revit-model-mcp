@@ -45,6 +45,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 | `revit_create_wall` | `start_mm`、`end_mm`、`level`、`wall_type`、`height_mm=3000` | 创建直墙；端点为模型坐标中的 `[x,y]`，单位为 mm。 |
 | `revit_create_floor` | `points_mm`、`level`、`floor_type` | 从闭合边界创建楼板；`points_mm` 是模型坐标中的 `[x,y]` 多边形顶点，单位为 mm，至少 3 个，自动闭合；`floor_type` 为 null 时选择第一个楼板类型。 |
 | `revit_create_level` | `name`、`elevation_mm`、`create_view=false` | 在指定高程新建标高，单位为 mm；已存在同名标高时被拒绝，避免后续工具解析到有歧义的标高；`create_view=true` 时同时创建对应的楼层平面视图，视图类型按视图族选择，不按名称。 |
+| `revit_create_column` | `family`、`type_name=null`、`level`、`x_mm`、`y_mm`、`top_level=null`、`height_mm=null`、`base_offset_mm=0`、`top_offset_mm=0`、`rotation_deg=0` | 在指定标高的点上放一根结构柱：`top_level` 给定时柱顶落在那个标高上，不给 `top_level` 时用 `height_mm` 从底部偏移往上量（两者都不给按 3000 mm）。顶底标高与两个偏移由工具自己写入，因为通用的 `revit_set_parameter` 拒绝 ElementId 参数；不做附着。类型不存在时拒绝并列出该族现有的类型。 |
 | `revit_create_grid` | `label`、`start_mm`、`end_mm`、`mid_mm=null` | 创建轴网：`start_mm` 到 `end_mm` 的直线，或给出 `mid_mm` 时的三点圆弧；端点与中点均为模型坐标中的 `[x,y]`，单位为 mm，曲线恒在水平面上。轴号写入 `Grid.Name`，已存在同名轴网时被拒绝；三点共线或与端点重合时被拒绝并说明原因。 |
 | `revit_load_family_file` | `path`、`type_name=null`、`overwrite_parameters=false` | 从工作站载入一个族文件：整族，或只载入 `type_name` 指定的类型；载入总是带族载入选项，不会弹出 Revit 自己的对话框；同名族复用且默认不覆盖既有参数值；响应在 `fork` 块回报 `state`（`new`／`existing`）与类型清单；路径不存在时拒绝并列出同目录最接近的三个文件名。 |
 | `revit_set_phase` | `element_ids`、`created_phase`、`demolished_phase` | 按阶段的准确名称赋值；每个阶段参数可为名称、清除赋值的 `""`，或保持不变的 null；至少一个参数非 null。这些工具不创建或重命名阶段，应先在 Revit 界面中添加新阶段。 |
@@ -61,7 +62,7 @@ MCP 的 `document` 参数会转换为动作任务中的 `targetDocument`。
 <a id="dry-runs-and-id-replacement"></a>
 ## 试运行与 ID 替换
 
-`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_create_level`、`revit_create_grid`、`revit_load_family_file`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter`、`revit_set_view_lighting` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
+`revit_move`、`revit_place_family`、`revit_create_wall`、`revit_create_floor`、`revit_create_level`、`revit_create_grid`、`revit_create_column`、`revit_load_family_file`、`revit_set_phase`、`revit_merge_phases`、`revit_set_parameter`、`revit_set_view_lighting` 和 `revit_delete` 还接受 `dry_run=false`，其位置在通用 `document` 参数之前。
 试运行会执行修改、读取预期结果，然后回滚事务。
 成功的试运行包含 `data.dryRun:true`、`data.rolledBack:true`，以及与真实写入相同结构的 `verification`。
 动作抛出异常时返回错误，不带验证块；单动作工具遇到缺失族时还返回 `closestFamilies`。

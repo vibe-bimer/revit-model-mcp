@@ -112,6 +112,7 @@
 - 创建：`document.Create.NewFamilyInstance(point, symbol, level, StructuralType.Column)`。这一处在两个年份只有**声明类型**不同（2020 在 `Creation.Document`，2026 在 `ItemFactoryBase`），`document.Create.*` 的调用点两边都编译，**不需要 `#if`**。
 - 顶底标高由工具**内部直接写** `FAMILY_BASE_LEVEL_PARAM` / `FAMILY_TOP_LEVEL_PARAM` 与两个偏移参数。这些是 ElementId 值，而现有的 `revit_set_parameter` 明确拒绝 ElementId 参数，所以只能在这里设。
 - **不做附着**：`ColumnAttachment` 的合法目标是楼板、屋顶、天花、梁、支撑——**标高不是合法目标**，「附着到顶标高」在 API 上不成立。
+- 实现口径：柱顶不另设「高度」参数——不给 `top_level` 时顶部标高仍写底部标高，顶部偏移写 `base_offset_mm + height_mm`，于是柱顶高程等于「底部标高 + 底部偏移 + 高度」。旋转走 `LocationPoint.Rotate`，轴是一条穿过放置点的竖直线（`Line.CreateBound`），因为该方法收的是 `Line` 而不是向量。`verification.after` 报 id、类别、族、类型、底部标高与包围盒。
 
 <a id="create-beam"></a>
 ### `revit_create_beam`

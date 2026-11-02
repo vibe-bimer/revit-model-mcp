@@ -1522,6 +1522,25 @@
       "networkAccess": "none"
     },
     {
+      "name": "revit_create_column",
+      "description": "Place one structural column of `family` (optionally `type_name`) at `x_mm`, `y_mm` on `level`.\n\nThe top is either `top_level` or `height_mm` above the base (3000 mm when neither is given).\nBase and top levels and both offsets are written by the tool itself, because they are\nElementId-valued parameters that revit_set_parameter refuses on purpose. The column is not\nattached to anything: no attachment is attempted. dry_run returns the same verification\nblock without changing the model.",
+      "toolset": "actions",
+      "access": "modifying",
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": true,
+        "idempotentHint": false
+      },
+      "irreversible": false,
+      "confirmation": {
+        "required": "never"
+      },
+      "fileSystem": {
+        "access": "none"
+      },
+      "networkAccess": "none"
+    },
+    {
       "name": "revit_set_phase",
       "description": "Set the creation and demolition phase of elements.\n\nAn empty string clears a phase and null leaves it alone; at least one must be given.\ndry_run returns the same verification block without changing the model.",
       "toolset": "actions",

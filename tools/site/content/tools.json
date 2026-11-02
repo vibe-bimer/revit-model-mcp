@@ -6204,6 +6204,7 @@
                 "create_level",
                 "create_floor",
                 "create_grid",
+                "create_column",
                 "load_family_file",
                 "set_phase",
                 "merge_phases",
@@ -6300,6 +6301,7 @@
                 "create_level",
                 "create_floor",
                 "create_grid",
+                "create_column",
                 "load_family_file",
                 "set_phase",
                 "merge_phases",
@@ -7347,6 +7349,108 @@
       "type": "object"
     },
     "title": "Load Family File"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "readOnlyHint": false,
+      "title": "Create Column"
+    },
+    "description": "Place one structural column of `family` (optionally `type_name`) at `x_mm`, `y_mm` on `level`.\n\n        The top is either `top_level` or `height_mm` above the base (3000 mm when neither is given).\n        Base and top levels and both offsets are written by the tool itself, because they are\n        ElementId-valued parameters that revit_set_parameter refuses on purpose. The column is not\n        attached to anything: no attachment is attempted. dry_run returns the same verification\n        block without changing the model.",
+    "inputSchema": {
+      "properties": {
+        "base_offset_mm": {
+          "default": 0,
+          "type": "number"
+        },
+        "document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dry_run": {
+          "default": false,
+          "type": "boolean"
+        },
+        "family": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "height_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "level": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "rotation_deg": {
+          "default": 0,
+          "type": "number"
+        },
+        "top_level": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "top_offset_mm": {
+          "default": 0,
+          "type": "number"
+        },
+        "type_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "x_mm": {
+          "type": "number"
+        },
+        "y_mm": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "family",
+        "level",
+        "x_mm",
+        "y_mm"
+      ],
+      "type": "object"
+    },
+    "name": "revit_create_column",
+    "outputSchema": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "title": "Create Column"
   },
   {
     "annotations": {

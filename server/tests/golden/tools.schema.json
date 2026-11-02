@@ -933,6 +933,93 @@
     ],
     "type": "object"
   },
+  "revit_create_column": {
+    "properties": {
+      "base_offset_mm": {
+        "default": 0,
+        "type": "number"
+      },
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "family": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "height_mm": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "level": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "rotation_deg": {
+        "default": 0,
+        "type": "number"
+      },
+      "top_level": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "top_offset_mm": {
+        "default": 0,
+        "type": "number"
+      },
+      "type_name": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "x_mm": {
+        "type": "number"
+      },
+      "y_mm": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "family",
+      "level",
+      "x_mm",
+      "y_mm"
+    ],
+    "type": "object"
+  },
   "revit_create_floor": {
     "properties": {
       "document": {
@@ -4337,6 +4424,7 @@
               "create_level",
               "create_floor",
               "create_grid",
+              "create_column",
               "load_family_file",
               "set_phase",
               "merge_phases",
@@ -5139,6 +5227,7 @@
               "create_level",
               "create_floor",
               "create_grid",
+              "create_column",
               "load_family_file",
               "set_phase",
               "merge_phases",

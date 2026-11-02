@@ -55,8 +55,8 @@ class SnapshotAuditTests(unittest.TestCase):
 
 
 class ForkToolTests(unittest.TestCase):
-    def test_the_fork_owns_ten_tools(self):
-        self.assertEqual(len(platform_catalog.FORK_TOOLS), 10)
+    def test_the_fork_owns_eleven_tools(self):
+        self.assertEqual(len(platform_catalog.FORK_TOOLS), 11)
 
     def test_only_the_lighting_tool_is_grafted(self):
         grafted = [
@@ -75,7 +75,7 @@ class ForkToolTests(unittest.TestCase):
             if item["status"] == "pending"
         }
         self.assertEqual(sorted(pending & names), [])
-        self.assertEqual(len(pending), 9)
+        self.assertEqual(len(pending), 10)
 
     def test_every_fork_tool_carries_both_note_languages(self):
         for name, item in platform_catalog.FORK_TOOLS.items():

@@ -46,6 +46,13 @@ public static class ForkInputs
                 ["endMm"] = (action, value) => action.Options.EndMm = Numbers("endMm", value),
                 ["midMm"] = (action, value) => action.Options.MidMm = Numbers("midMm", value)
             },
+            ["create-column"] = new(StringComparer.Ordinal)
+            {
+                ["topLevel"] = (action, value) => action.Options.TopLevel = Text("topLevel", value),
+                ["heightMm"] = (action, value) => action.Options.HeightMm = Number("heightMm", value),
+                ["baseOffsetMm"] = (action, value) => action.Options.BaseOffsetMm = Number("baseOffsetMm", value),
+                ["topOffsetMm"] = (action, value) => action.Options.TopOffsetMm = Number("topOffsetMm", value)
+            },
             ["load-family-file"] = new(StringComparer.Ordinal)
             {
                 ["path"] = (action, value) => action.Options.FamilyPath = Text("path", value),

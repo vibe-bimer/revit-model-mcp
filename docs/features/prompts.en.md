@@ -4,7 +4,7 @@ description: "Copyable prompt library with a sample prompt and purpose summary f
 
 # Prompt library
 
-35 read + 54 action tools, 89 in total
+35 read + 55 action tools, 90 in total
 
 Actions are allowed unless one of three switches is on: the machine policy `ReadOnly`, the workstation `read-only` file, or `REVIT_MCP_READ_ONLY=1`. A fresh install ships with the machine policy read-only. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
 
@@ -494,6 +494,18 @@ Create a floor on 2F from these four points
 
 ```text
 Create a grid named A from 0,0 to 30000,0
+```
+
+### <span class="state part">Fork</span> [Create column](revit_create_column.md)
+
+`revit_create_column` — Place a structural column on a level at a point, with its top on a level or at a height
+
+```text
+Put a 600x600 concrete column at 3000,4500 on 1F, topping out at 3F
+```
+
+```text
+Put a column at the origin of 1F, 4200 high
 ```
 
 ## Phases {#group-phases}

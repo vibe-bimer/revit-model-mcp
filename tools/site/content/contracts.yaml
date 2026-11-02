@@ -414,6 +414,19 @@ tools:
 
       '
     source: 304cdd7d9fd11bd2be74fc1bdbceec0a51d1ac8dd14e192f83783ee267394733
+  revit_create_column:
+    zh: '在 `level` 上的点 `x_mm`、`y_mm` 处放一根 `family`（可指定 `type_name`）的结构柱。
+
+      柱顶有两种给法：给 `top_level` 时柱顶落在那个标高上；不给 `top_level` 时用 `height_mm` 从底部偏移往上量（两者都不给按 3000 mm）。顶底标高、底部偏移与顶部偏移都由工具自己写入，因为这些是 ElementId 类型的参数，通用的 revit_set_parameter 出于安全考虑拒绝设置它们。
+
+      不做附着：柱顶不是「附着到某个构件」，而是一个标高或一段高度。柱族必须已经在项目里，`type_name` 不存在时会列出该族现有的类型。
+
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+      '
+    source: 094397ba54f047e87060b505d4e94b3d222a550731d436f375d52692708df70b
   revit_create_grid:
     zh: '创建一条轴网，用于布局：`start_mm` 到 `end_mm` 的直线，或给出 `mid_mm` 时的三点圆弧。
 

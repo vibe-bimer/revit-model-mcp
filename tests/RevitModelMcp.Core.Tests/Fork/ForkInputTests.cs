@@ -127,6 +127,44 @@ public sealed class ForkInputTests
     }
 
     [Test]
+    public async Task CreateColumn_CarriesItsPointAndItsTop()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-column","family":"M_Concrete-Column","typeName":"600x600","level":"1F","xMm":3000,"yMm":4500,"rotationDeg":30,"fork":{"topLevel":"3F","baseOffsetMm":-150,"topOffsetMm":200}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        var action = parsed.Action!;
+        await Assert.That(action.Family).IsEqualTo("M_Concrete-Column");
+        await Assert.That(action.TypeName).IsEqualTo("600x600");
+        await Assert.That(action.Level).IsEqualTo("1F");
+        await Assert.That(action.XMm).IsEqualTo(3000d);
+        await Assert.That(action.YMm).IsEqualTo(4500d);
+        await Assert.That(action.RotationDeg).IsEqualTo(30d);
+        await Assert.That(action.Options.TopLevel).IsEqualTo("3F");
+        await Assert.That(action.Options.BaseOffsetMm).IsEqualTo(-150d);
+        await Assert.That(action.Options.TopOffsetMm).IsEqualTo(200d);
+        await Assert.That(action.Options.HeightMm).IsNull();
+    }
+
+    [Test]
+    public async Task CreateColumn_CarriesAHeightWhenTheTopIsNotNamed()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-column","family":"M_Concrete-Column","level":"1F","xMm":0,"yMm":0,"fork":{"heightMm":4200}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Options.HeightMm).IsEqualTo(4200d);
+        await Assert.That(parsed.Action!.Options.TopLevel).IsNull();
+    }
+
+    [Test]
+    public async Task CreateColumn_RefusesAHeightThatIsNotANumber()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-column","family":"M_Concrete-Column","level":"1F","xMm":0,"yMm":0,"fork":{"heightMm":"tall"}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(parsed.Error).IsEqualTo("fork.heightMm must be a number.");
+    }
+
+    [Test]
     public async Task CreateGrid_RefusesAPointOfTheWrongShape()
     {
         var parsed = ControlJobParser.Parse(
@@ -226,7 +264,8 @@ public sealed class ForkInputTests
 
         await Assert.That(Core.Fork.ForkRegistry.Commands).IsEquivalentTo(
         [
-            "set-view-lighting", "create-level", "create-floor", "create-grid", "load-family-file",
+            "set-view-lighting", "create-level", "create-floor", "create-grid", "create-column",
+            "load-family-file",
             "set-phase", "merge-phases", "reset-element-ids", "rebuild-model-ids"
         ]);
         // The add-in advertises both lists in its handshake, so the register's command has to be in one of

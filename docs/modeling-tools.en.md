@@ -112,6 +112,7 @@ The existing `revit_place_family` (unhosted, level-based) **keeps its name uncha
 - Create with `document.Create.NewFamilyInstance(point, symbol, level, StructuralType.Column)`. Between the two years only the **declaring type** differs (2020 on `Creation.Document`, 2026 on `ItemFactoryBase`), so a `document.Create.*` call site compiles on both and **needs no `#if`**.
 - The tool writes the base and top levels **directly, inside the tool**, through `FAMILY_BASE_LEVEL_PARAM` / `FAMILY_TOP_LEVEL_PARAM` and the two offset parameters. These are ElementId values, and the existing `revit_set_parameter` explicitly rejects ElementId parameters, so they can only be set here.
 - **No attachment**: the legal targets of `ColumnAttachment` are floors, roofs, ceilings, beams and braces — **a level is not a legal target**, so "attach to the top level" is not possible in the API.
+- How it lands: there is no separate "height" parameter — without `top_level` the top level is written as the base level and the top offset as `base_offset_mm + height_mm`, so the top elevation is the base level plus the base offset plus the height. Rotation goes through `LocationPoint.Rotate`, whose axis is a vertical `Line` through the placement point, because that method takes a `Line`, not a vector. `verification.after` reports the id, category, family, type, base level and bounding box.
 
 <a id="create-beam"></a>
 ### `revit_create_beam`

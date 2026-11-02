@@ -44,5 +44,11 @@ Revit 批处理（`revit_run_actions`）在撤销菜单中的标签无法通过 
 `dry_run` 回滚后回报 `fork = { state: "new", familyName: "入口门厅", familyTypes: [{ id, name: "3200 x 3000mm" }] }` 与 `wouldCreate: true`；真实写入载入整族并留下撤销记录；同一文件再载入一次回报 `state: "existing"`、`committed: false`，摘要是 `It changed nothing, so no undo entry was kept.`，既没有重复载入，也没有覆盖模型里已有的参数值；路径写错时回报 `Family file '…\入口门.rfa' was not found. Closest: 入口门厅.rfa.`；`type_name` 不在族里时回报 `Type 'NO-SUCH-TYPE' is not in family '入口门厅'. Available types: 3200 x 3000mm.`。
 同样，全部写入之后模型文件的大小与 mtime 都没有变化。
 
+`revit_create_column`（2026-11-02）在 Revit 2026 上完成了真机验收，模型与通道同上，柱族用 2020 中文库的 `混凝土 - 正方形 - 柱.rfa`（四个类型 `300 x 300mm`…`750 x 750mm`），先由 `revit_load_family_file` 载入；2020 同样没有验收，原因同上一段。
+只给底标高与 `height_mm`：`dry_run` 回报 `rolledBack: true`、`wouldCreate: true` 与 `verification.after = { id, category: "结构柱", level: "1F", type: "300 x 300mm", boundingBoxMinMm: [11850, -150, 0], boundingBoxMaxMm: [12150, 150, 3000] }`，回滚后该 id 用 `revit_element_details` 查不到；真实写入建出柱子（`id 364295`），读回 `底部标高 = 1F`、`顶部标高 = 1F`、`顶部偏移 = 3000 mm`，即柱顶高程等于底部标高加底部偏移加高度。
+给 `top_level`：`top_level = "3F"` 的柱子包围盒高度到 7600 mm，与 3F 的标高一致；给 `base_offset_mm = 500`、`rotation_deg = 45` 的 `600 x 600mm` 柱子包围盒为 `[-424.3, 5575.7, 4300]`–`[424.3, 6424.3, 7300]`，偏移与旋转都落到了模型里。
+`type_name` 不存在时回报 `Type 'NO-SUCH-TYPE' was not found in family '混凝土 - 正方形 - 柱'. Available types: 300 x 300mm, 450 x 450mm, 600 x 600mm, 750 x 750mm.`；族不存在时回报 `Family 'NO-SUCH-FAMILY' was not found. Use revit_load_family_file to load it first.`。
+全部写入之后，模型文件的大小（19,918,848 字节）与 mtime（2026-10-02T12:08:34）都没有变化——动作没有保存模型。
+
 !!! note "历史记录，不是本次新增验证"
     本页保留英文原文的日期、构建与真机检查范围。翻译工作没有执行新的 Revit 验证，也不将构建通过等同于真机行为已验证。

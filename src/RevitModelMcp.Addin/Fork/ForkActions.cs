@@ -36,6 +36,9 @@ internal static class ForkActions
             case "create-grid":
                 result = ForkGrids.Apply(document, action);
                 return true;
+            case "create-column":
+                result = ForkColumns.Apply(document, action);
+                return true;
             case "load-family-file":
                 result = ForkFamilies.Apply(document, action);
                 return true;
@@ -98,6 +101,9 @@ internal static class ForkActions
             case "create-grid":
                 ForkGrids.Validate(action);
                 return null;
+            case "create-column":
+                ForkColumns.Validate(action);
+                return null;
             case "load-family-file":
                 ForkFamilies.Validate(action);
                 return null;
@@ -149,6 +155,13 @@ internal static class ForkActions
                 {
                     if (result.Id is not { } id) return false;
                     verification.After = ForkGrids.Read(document, ForkLookup.CreateId(id));
+                    verification.WouldCreate = action.DryRun ? true : null;
+                    return true;
+                }
+            case "create-column":
+                {
+                    if (result.Id is not { } id) return false;
+                    verification.After = ForkColumns.Read(document, ForkLookup.CreateId(id));
                     verification.WouldCreate = action.DryRun ? true : null;
                     return true;
                 }

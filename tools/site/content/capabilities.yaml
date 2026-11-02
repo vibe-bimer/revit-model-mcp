@@ -621,6 +621,32 @@ tools:
     note:
       zh: 同名轴网被拒绝；曲线固定在水平面上，共线三点建不了弧
       en: A grid with the same name is refused; the curve stays on the horizontal plane and three collinear points cannot form an arc
+  revit_create_column:
+    source: '094397ba54f0'
+    group: edit
+    origin: fork
+    since: 0.10.0
+    title:
+      zh: 创建柱
+      en: Create column
+    summary:
+      zh: 在指定标高的点上放一根结构柱，柱顶给标高或给高度（mm）
+      en: Place a structural column on a level at a point, with its top on a level or at a height
+    years:
+      '2020':
+        state: built
+      '2026':
+        state: built
+      other:
+        state: built
+    prompts:
+    - zh: 在 1F 的 (3000,4500) 放一根 600x600 的混凝土柱，柱顶到 3F
+      en: Put a 600x600 concrete column at 3000,4500 on 1F, topping out at 3F
+    - zh: 在 1F 原点放一根柱，高 4200
+      en: Put a column at the origin of 1F, 4200 high
+    note:
+      zh: 顶底标高与偏移由工具自己写（set_parameter 拒绝 ElementId 参数）；不做附着，柱顶只能给标高或高度
+      en: The tool writes both levels and both offsets itself, because set_parameter refuses ElementId parameters; nothing is attached, so the top is a level or a height
   revit_load_family_file:
     source: '304cdd7d9fd1'
     group: families
@@ -2135,6 +2161,38 @@ param_notes:
     mid_mm:
       zh: 可选弧中点 [x, y]；给出即三点定弧，不得与起终点共线
       en: optional mid point [x, y]; supplying it makes a three-point arc and it must not be collinear with the endpoints
+  revit_create_column:
+    source: '094397ba54f0'
+    family:
+      zh: 柱族名，必须已在项目里（先用 revit_load_family_file 载入）
+      en: column family name, already in the project (load it with revit_load_family_file first)
+    type_name:
+      zh: 族类型名；留空用族的第一个类型
+      en: family type name; empty takes the family's first type
+    level:
+      zh: 底部标高名
+      en: base level name
+    x_mm:
+      zh: 放置点 X 坐标（mm，模型坐标）
+      en: placement X in millimetres in model coordinates
+    y_mm:
+      zh: 放置点 Y 坐标（mm，模型坐标）
+      en: placement Y in millimetres in model coordinates
+    top_level:
+      zh: 顶部标高名；给出时忽略 height_mm
+      en: top level name; height_mm is ignored when it is given
+    height_mm:
+      zh: 未给 top_level 时的柱高（mm，相对底部偏移），缺省 3000
+      en: column height in millimetres above the base offset when top_level is absent; 3000 by default
+    base_offset_mm:
+      zh: 底部偏移（mm），默认 0
+      en: base offset in millimetres; 0 by default
+    top_offset_mm:
+      zh: 顶部偏移（mm，相对顶部标高），默认 0
+      en: top offset in millimetres above the top level; 0 by default
+    rotation_deg:
+      zh: 绕竖轴旋转角度（度），默认 0
+      en: rotation about the vertical axis in degrees; 0 by default
   revit_set_phase:
     source: 'e6065da74fe8'
     element_ids:

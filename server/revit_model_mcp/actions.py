@@ -371,6 +371,7 @@ class ActionStep(BaseModel):
         "create_level",
         "create_floor",
         "create_grid",
+        "create_column",
         "load_family_file",
         "set_phase",
         "merge_phases",

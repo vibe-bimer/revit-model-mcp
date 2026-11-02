@@ -152,6 +152,7 @@
 | 8 | `revit_create_level` | 先 dry run，再按名称与高程（mm）新建标高；核对 `verification.after` 的 ID、类别与 `elevationMm`；同名标高被拒绝；`create_view=true` 时视图数加一，视图类型按视图族选择 | 删除测试标高或丢弃副本；先确认没有同名标高；`name` 与 `elevation_mm` 必填，空白名称被拒绝 | [ ] |
 | 8a | `revit_create_grid` | 先 dry run，再按 `label` 与两点（mm）建直线轴网；核对 `verification.after` 的 ID、类别与 `fork.name`（轴网是基准面，模型里没有包围盒）；同名轴号被拒绝；`mid_mm` 三点建弧，共线三点或与端点重合被拒绝并说明原因；确认写入后模型文件大小与 mtime 不变 | 删除测试轴网或丢弃副本；先确认没有同名轴号；`label`、`start_mm`、`end_mm` 必填，空白轴号被拒绝 | [ ] |
 | 8b | `revit_load_family_file` | 先 dry run，再用工作站上一个 `.rfa` 的绝对路径载入整族；核对 `fork` 块的 `state`、`familyName` 与 `familyTypes`；重复载入同一文件报 `state: existing` 且参数值不被覆盖；给 `type_name` 时只载入该类型，类型不在族里时被拒绝并列出可用类型；路径不存在时被拒绝并给出最接近的文件名；确认写入后模型文件大小与 mtime 不变 | 丢弃副本或删除载入的族；`path` 必填且必须是 `.rfa`；2026 工作站族库不全，用 2020 库的族文件或模型里已载入的族验收 | [ ] |
+| 8c | `revit_create_column` | 先 dry run，再只给底标高与 `height_mm` 放一根柱；核对 `verification.after` 的 ID、类别、族、类型、底部标高与包围盒；再给 `top_level` 放第二根，核对柱顶落在该标高上；`type_name` 不存在时被拒绝并列出该族现有类型；确认写入后模型文件大小与 mtime 不变 | 删除测试柱或丢弃副本；柱族必须已载入（可先用 `revit_load_family_file`）；`family`、`level`、`x_mm`、`y_mm` 必填，`top_level` 与 `height_mm` 至少给一个 | [ ] |
 | 9 | `revit_set_phase` | 先 dry run，再用目录阶段名；测试创建／拆除赋值、`""` 清除及 null 保持不变；检查阶段引用 | 恢复原赋值或丢弃副本；不创建／重命名阶段；两个参数均 null 被拒绝 | [ ] |
 | 10 | `revit_merge_phases` | 先 dry run，再将源阶段创建／拆除引用转到目标；核对数量、`sourceDeleted`；仍被引用的阶段可能保留且 `sourceDeleted=false` | 专用一次性副本；源／目标必须不同；不能加入批处理 | [ ] |
 | 11 | `revit_set_parameter` | 先 dry run，再改可写参数；核对前后值及实例／类型归属；长度 mm、面积 m²、其他 double 内部单位 | 恢复值或丢弃副本；共享类型修改影响全部实例；只读／ElementId 参数被拒绝 | [ ] |

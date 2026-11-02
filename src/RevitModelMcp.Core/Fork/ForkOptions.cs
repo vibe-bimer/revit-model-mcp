@@ -35,6 +35,12 @@ public sealed class ForkOptions
     public List<double>? EndMm { get; set; }
     public List<double>? MidMm { get; set; }
 
+    // create-column
+    public string? TopLevel { get; set; }
+    public double? HeightMm { get; set; }
+    public double? BaseOffsetMm { get; set; }
+    public double? TopOffsetMm { get; set; }
+
     // load-family-file
     public string? FamilyPath { get; set; }
     public string? FamilyTypeName { get; set; }
@@ -78,6 +84,10 @@ public sealed class ForkOptions
         StartMm = StartMm is null ? null : [.. StartMm],
         EndMm = EndMm is null ? null : [.. EndMm],
         MidMm = MidMm is null ? null : [.. MidMm],
+        TopLevel = TopLevel,
+        HeightMm = HeightMm,
+        BaseOffsetMm = BaseOffsetMm,
+        TopOffsetMm = TopOffsetMm,
         FamilyPath = FamilyPath,
         FamilyTypeName = FamilyTypeName,
         OverwriteParameters = OverwriteParameters,

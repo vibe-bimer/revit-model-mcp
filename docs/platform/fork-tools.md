@@ -1,10 +1,10 @@
 ---
-description: "本仓库自研 10 个工具的移植状态：1 个已接到新版底座，9 个仍在待移植队列。"
+description: "本仓库自研 11 个工具的移植状态：1 个已接到新版底座，10 个仍在待移植队列。"
 ---
 
 # 自研工具的移植状态
 
-本仓库自己设计的工具一共 10 个，其中 1 个已经接到新版底座上，9 个还在待移植队列里。这些工具都不改变基座的行为，只通过 fork 注册表追加命令。
+本仓库自己设计的工具一共 11 个，其中 1 个已经接到新版底座上，10 个还在待移植队列里。这些工具都不改变基座的行为，只通过 fork 注册表追加命令。
 
 | 工具数 | 基座与自研的区分 | 移植状态 |
 | --- | --- | --- |
@@ -13,6 +13,7 @@ description: "本仓库自研 10 个工具的移植状态：1 个已接到新版
 | [创建楼板](#revit-create-floor)<br>`revit_create_floor` | 自研（本仓库） | <span class="state no">待移植</span> |
 | [载入族文件](#revit-load-family-file)<br>`revit_load_family_file` | 自研（本仓库） | <span class="state no">待移植</span> |
 | [创建轴网](#revit-create-grid)<br>`revit_create_grid` | 自研（本仓库） | <span class="state no">待移植</span> |
+| [创建柱](#revit-create-column)<br>`revit_create_column` | 自研（本仓库） | <span class="state no">待移植</span> |
 | [设置阶段](#revit-set-phase)<br>`revit_set_phase` | 自研（本仓库） | <span class="state no">待移植</span> |
 | [合并阶段](#revit-merge-phases)<br>`revit_merge_phases` | 自研（本仓库） | <span class="state no">待移植</span> |
 | [导出构件 ID 台账](#revit-export-element-ids)<br>`revit_export_element_ids` | 自研（本仓库） | <span class="state no">待移植</span> |
@@ -36,6 +37,10 @@ description: "本仓库自研 10 个工具的移植状态：1 个已接到新版
 ## 创建轴网 {#revit-create-grid}
 
 `revit_create_grid` — 已按 fork 注册表实现（直线与三点定弧、重名拒绝、批量步骤词表），Python 与 Core 测试通过；随首批工具一起翻 grafted。
+
+## 创建柱 {#revit-create-column}
+
+`revit_create_column` — 已按 fork 注册表实现（顶底标高与偏移由工具写、柱顶给标高或高度、不做附着、类型不存在列出可用类型），Python 与 Core 测试通过；随首批工具一起翻 grafted。
 
 ## 设置阶段 {#revit-set-phase}
 

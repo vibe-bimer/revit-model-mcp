@@ -51,6 +51,12 @@ def _check_grid_points(start_mm, end_mm, mid_mm, refuse) -> None:
         )
 
 
+def _check_column(height_mm, refuse) -> None:
+    """A height is a length above the base, so zero or a negative number is a typo, not a column."""
+    if height_mm is not None and height_mm <= 0:
+        raise refuse("height_mm must be a positive number.")
+
+
 def _check_family_path(path, refuse) -> None:
     """A family load reads a .rfa; anything else is a typo worth refusing before the model is touched."""
     if not path.casefold().endswith(".rfa"):
@@ -129,6 +135,18 @@ STEP_FIELDS: dict[str, dict[str, tuple[Any, Any]]] = {
         "end_mm": (Point, ...),
         "mid_mm": (Point | None, None),
     },
+    "create_column": {
+        "family": (Name, ...),
+        "type_name": (Name | None, None),
+        "level": (Name, ...),
+        "x_mm": (Number, ...),
+        "y_mm": (Number, ...),
+        "top_level": (Name | None, None),
+        "height_mm": (Number | None, None),
+        "base_offset_mm": (Number, 0),
+        "top_offset_mm": (Number, 0),
+        "rotation_deg": (Number, 0),
+    },
     "load_family_file": {
         "path": (Name, ...),
         "type_name": (Name | None, None),
@@ -165,6 +183,7 @@ STEP_TOP_LEVEL: dict[str, tuple[str, ...]] = {
     "create_level": ("name",),
     "create_floor": ("points_mm", "level"),
     "create_grid": ("label",),
+    "create_column": ("family", "type_name", "level", "x_mm", "y_mm", "rotation_deg"),
     "load_family_file": (),
     "set_phase": ("element_ids",),
     "merge_phases": (),
@@ -200,6 +219,8 @@ def check_step(action: str, args: dict[str, Any], refuse) -> None:
         _check_floor_points(args["points_mm"], refuse)
     elif action == "create_grid":
         _check_grid_points(args["start_mm"], args["end_mm"], args["mid_mm"], refuse)
+    elif action == "create_column":
+        _check_column(args["height_mm"], refuse)
     elif action == "load_family_file":
         _check_family_path(args["path"], refuse)
     elif action == "set_phase":
@@ -431,6 +452,59 @@ def register_fork_actions(mcp, send) -> None:
             fork["overwriteParameters"] = True
         return await send(
             "load-family-file",
+            fork=fork,
+            dryRun=dry_run,
+            document=document,
+        )
+
+    @mcp.tool(
+        title="Create Column",
+        annotations=ToolAnnotations(
+            title="Create Column",
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+        ),
+    )
+    @with_client_identity
+    async def revit_create_column(
+        family: Name,
+        level: Name,
+        x_mm: Number,
+        y_mm: Number,
+        type_name: Name | None = None,
+        top_level: Name | None = None,
+        height_mm: Number | None = None,
+        base_offset_mm: Number = 0,
+        top_offset_mm: Number = 0,
+        rotation_deg: Number = 0,
+        dry_run: bool = False,
+        document: str | None = None,
+    ) -> dict[str, Any]:
+        """Place one structural column of `family` (optionally `type_name`) at `x_mm`, `y_mm` on `level`.
+
+        The top is either `top_level` or `height_mm` above the base (3000 mm when neither is given).
+        Base and top levels and both offsets are written by the tool itself, because they are
+        ElementId-valued parameters that revit_set_parameter refuses on purpose. The column is not
+        attached to anything: no attachment is attempted. dry_run returns the same verification
+        block without changing the model."""
+        _check_column(height_mm, ToolError)
+        fork: dict[str, Any] = {
+            "baseOffsetMm": base_offset_mm,
+            "topOffsetMm": top_offset_mm,
+        }
+        if top_level is not None:
+            fork["topLevel"] = top_level
+        else:
+            fork["heightMm"] = height_mm if height_mm is not None else 3000
+        return await send(
+            "create-column",
+            family=family,
+            typeName=type_name,
+            level=level,
+            xMm=x_mm,
+            yMm=y_mm,
+            rotationDeg=rotation_deg,
             fork=fork,
             dryRun=dry_run,
             document=document,

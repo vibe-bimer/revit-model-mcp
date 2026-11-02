@@ -4,9 +4,9 @@ description: "Feature overview of every tool in the current release, grouped wit
 
 # Feature overview
 
-35 read + 54 action tools, 89 in total
+35 read + 55 action tools, 90 in total
 
-This section covers the 89 tools of the current release. The integration branch's 80 tools, split into base and fork, are in the [platform tool catalog](../platform/index.md).
+This section covers the 90 tools of the current release. The integration branch's 80 tools, split into base and fork, are in the [platform tool catalog](../platform/index.md).
 
 ## Version entries {#versions}
 
@@ -16,15 +16,15 @@ This catalog records the released version. The integration branch is unreleased,
 | --- | --- | --- |
 | Version | 0.9.0 | 1.0.0 Unreleased (integration branch) |
 | Branch | main | `integration/upstream-1.0` |
-| Tool | 89 | 80 |
+| Tool | 90 | 80 |
 | Catalog | index.md | [Platform tool catalog](../platform/index.md) |
 
 ## Browse by Revit year {#by-version}
 
 | Revit year | Validation |
 | --- | --- |
-| [Revit 2020](v2020.md) | 19/35 reads and 15/54 actions validated live; the rest are build-only |
-| [Revit 2026](v2026.md) | 18/35 reads and 8/54 actions validated live; the rest are build-only |
+| [Revit 2020](v2020.md) | 19/35 reads and 15/55 actions validated live; the rest are build-only |
+| [Revit 2026](v2026.md) | 18/35 reads and 8/55 actions validated live; the rest are build-only |
 | 2022–2025 / 2027 | Build only, not live-tested |
 
 Validated live means an execution was recorded on a real workstation. Build only means compilation passed, not live functional validation. Revit 2021 is outside this project's build targets.
@@ -96,7 +96,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | [Highlight elements](revit_override_graphics.md)<br>`revit_override_graphics` | Colour elements in selected views; reset restores this session's overrides |
 | [Tag elements](revit_tag_elements.md)<br>`revit_tag_elements` | Tag elements by category or element ids in a view; room tags need a plan view |
 
-### Editing (18) {#group-edit}
+### Editing (19) {#group-edit}
 
 | Tool | Purpose |
 | --- | --- |
@@ -118,6 +118,7 @@ Validated live means an execution was recorded on a real workstation. Build only
 | <span class="state part">Fork</span> [Create level](revit_create_level.md)<br>`revit_create_level` | Create a level at a given elevation in millimetres |
 | <span class="state part">Fork</span> [Create floor](revit_create_floor.md)<br>`revit_create_floor` | Create a floor from a closed XY boundary with at least three vertices |
 | <span class="state part">Fork</span> [Create grid](revit_create_grid.md)<br>`revit_create_grid` | Create a straight grid from two points, or a three-point arc through a mid point |
+| <span class="state part">Fork</span> [Create column](revit_create_column.md)<br>`revit_create_column` | Place a structural column on a level at a point, with its top on a level or at a height |
 
 ### Phases (2) {#group-phases}
 
