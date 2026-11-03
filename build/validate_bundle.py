@@ -27,7 +27,7 @@ PYPI_SPEC_PATTERN = re.compile(r"\brevit-model-mcp\s*(?:==|>=|<=|~=|!=|>|<|\^>=)
 
 
 def parse_years(text: str) -> list[int]:
-    """Parse `2022-2027` or `2022,2023` into a list of years."""
+    """Parse `2022-2027` or `2020,2022` into a list of years."""
     if "-" in text:
         first, last = text.split("-", 1)
         return list(range(int(first), int(last) + 1))
@@ -288,7 +288,9 @@ def main() -> None:
     )
     parser.add_argument("path", help="Bundle zip or extracted directory")
     parser.add_argument(
-        "--years", default="2022-2027", help="Range 2022-2027 or list 2022,2023"
+        "--years",
+        default="2020,2022,2023,2024,2025,2026,2027",
+        help="Range 2022-2027 or list 2020,2022",
     )
     parser.add_argument(
         "--store",
@@ -309,7 +311,7 @@ def main() -> None:
         sys.exit(1)
     print("OK")
     print(
-        f"{arguments.path}: {len(years)} Revit years ({years[0]}-{years[-1]}) validated"
+        f"{arguments.path}: {len(years)} Revit years ({', '.join(str(year) for year in years)}) validated"
     )
     sys.exit(0)
 

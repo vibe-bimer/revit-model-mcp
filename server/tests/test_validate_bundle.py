@@ -12,7 +12,8 @@ validator = runpy.run_path(str(REPOSITORY_ROOT / "build" / "validate_bundle.py")
 validate = validator["validate"]
 main = validator["main"]
 
-YEARS = list(range(2022, 2028))
+# Revit 2021 is not supported; the fork ships 2020 plus 2022 through 2027.
+YEARS = [2020, *range(2022, 2028)]
 PRODUCT_CODE = "{1A2B3C4D-0000-4000-8000-0123456789AB}"
 UPGRADE_CODE = "{6C0E2B3D-52A1-4F5E-9B7A-3D1C8E4A7F21}"
 
@@ -182,13 +183,15 @@ def duplicate_year(files: dict[str, str]) -> dict[str, str]:
 
 
 def bad_series_max(files: dict[str, str]) -> dict[str, str]:
-    components = component_xml(2022, "R2023") + "".join(component_xml(y) for y in YEARS[1:])
+    components = component_xml(2022, "R2023") + "".join(
+        component_xml(y) for y in YEARS if y != 2022
+    )
     return replace_manifest(files, components=components)
 
 
 def module_backslash(files: dict[str, str]) -> dict[str, str]:
     components = component_xml(2022).replace("2022/RevitModelMcp", "2022\\RevitModelMcp")
-    components += "".join(component_xml(y) for y in YEARS[1:])
+    components += "".join(component_xml(y) for y in YEARS if y != 2022)
     return replace_manifest(files, components=components)
 
 

@@ -38,8 +38,8 @@ def test_every_add_in_build_in_ci_carries_the_repository_version():
 
 def test_ci_installer_contains_every_supported_year():
     job = _test_job()
-    assert "foreach ($year in '22', '23', '24', '25', '26', '27')" in job
-    assert "$manifests.Count -ne 6" in job
+    assert "foreach ($year in '20', '22', '23', '24', '25', '26', '27')" in job
+    assert "$manifests.Count -ne 7" in job
     assert "-ne 3" not in job
 
 

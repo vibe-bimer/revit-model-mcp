@@ -163,7 +163,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        year: ['22', '23', '24', '25', '26', '27']
+        year: ['20', '22', '23', '24', '25', '26', '27']
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
@@ -237,7 +237,7 @@ jobs:
       - name: Build installer Revit versions
         shell: pwsh
         run: |
-          foreach ($year in '22', '23', '24', '25', '26', '27') {
+          foreach ($year in '20', '22', '23', '24', '25', '26', '27') {
             dotnet restore src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj --locked-mode "-p:Configuration=Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION"
             if ($LASTEXITCODE -ne 0) { throw "R$year locked restore failed" }
             dotnet build src/RevitModelMcp.Addin -c "Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION" -p:IsRepackable=true --no-restore
@@ -291,8 +291,8 @@ jobs:
             if ($servers.Count -ne 1) { throw "Expected one bundled server executable in $($msi.Name), found $($servers.Count)" }
             if (!(Test-Path (Join-Path $servers[0].DirectoryName 'licenses/PYTHON-LICENSE.txt'))) { throw "Missing Python license in $($msi.Name)" }
             $manifests = @($files | Where-Object Name -EQ 'RevitModelMcp.addin')
-            if ($manifests.Count -ne 6) { throw 'Unexpected Revit year count in MSI' }
-            foreach ($year in '22', '23', '24', '25', '26', '27') {
+            if ($manifests.Count -ne 7) { throw 'Unexpected Revit year count in MSI' }
+            foreach ($year in '20', '22', '23', '24', '25', '26', '27') {
               $manifest = @($manifests | Where-Object { $_.Directory.Name -eq "20$year" })
               if ($manifest.Count -ne 1) { throw "Missing or duplicate R$year manifest in MSI" }
               [xml]$manifestXml = Get-Content -LiteralPath $manifest[0].FullName
@@ -564,7 +564,7 @@ jobs:
       - name: Stage add-in artifacts
         shell: pwsh
         run: |
-          foreach ($year in '22', '26', '27') {
+          foreach ($year in '20', '22', '26', '27') {
             $stage = "artifacts/addin-R$year"
             New-Item -ItemType Directory -Force "$stage/RevitModelMcp" | Out-Null
             Get-ChildItem "src/RevitModelMcp.Addin/bin/Release.R$year" |
@@ -605,7 +605,7 @@ jobs:
         run: |
           dotnet run --no-restore --project build -- bundle
           if ($LASTEXITCODE -ne 0) { throw 'Bundle build failed' }
-          python build/validate_bundle.py output/RevitModelMcp.bundle.zip --years 2022-2027
+          python build/validate_bundle.py output/RevitModelMcp.bundle.zip --years 2020,2022,2023,2024,2025,2026,2027
           if ($LASTEXITCODE -ne 0) { throw 'Bundle validation failed' }
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -619,7 +619,7 @@ jobs:
           Build__Version: ${{ env.CI_VERSION }}
           Bundle__Managed: 'true'
         run: |
-          foreach ($year in '22', '23', '24', '25', '26', '27') {
+          foreach ($year in '20', '22', '23', '24', '25', '26', '27') {
             dotnet restore src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj --locked-mode "-p:Configuration=Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION"
             if ($LASTEXITCODE -ne 0) { throw "R$year locked restore failed" }
             dotnet build src/RevitModelMcp.Addin -c "Release.R$year" -p:DeployAddin=false "-p:Version=$env:CI_VERSION" -p:IsRepackable=true -p:ManagedInstall=true --no-restore
@@ -630,7 +630,7 @@ jobs:
           }
           dotnet run --no-restore --project build -- bundle
           if ($LASTEXITCODE -ne 0) { throw 'Managed bundle build failed' }
-          python build/validate_bundle.py "output/revit-model-mcp-$env:CI_VERSION-managed.bundle.zip" --years 2022-2027 --managed-version $env:CI_VERSION
+          python build/validate_bundle.py "output/revit-model-mcp-$env:CI_VERSION-managed.bundle.zip" --years 2020,2022,2023,2024,2025,2026,2027 --managed-version $env:CI_VERSION
           if ($LASTEXITCODE -ne 0) { throw 'Managed bundle validation failed' }
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
