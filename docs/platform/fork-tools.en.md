@@ -1,10 +1,10 @@
 ---
-description: "Migration status of this repository's 12 fork tools: 1 attached to the new base and 11 still queued."
+description: "Migration status of this repository's 13 fork tools: 1 attached to the new base and 12 still queued."
 ---
 
 # Fork tool migration status
 
-This repository owns 12 tools. 1 is attached to the new base and 11 are still queued. None of them change base behaviour; they append commands through the fork registry.
+This repository owns 13 tools. 1 is attached to the new base and 12 are still queued. None of them change base behaviour; they append commands through the fork registry.
 
 | Tools | Base and fork tools | Migration status |
 | --- | --- | --- |
@@ -14,6 +14,7 @@ This repository owns 12 tools. 1 is attached to the new base and 11 are still qu
 | [Load family file](#revit-load-family-file)<br>`revit_load_family_file` | Fork (this repository) | <span class="state no">Pending</span> |
 | [Create grid](#revit-create-grid)<br>`revit_create_grid` | Fork (this repository) | <span class="state no">Pending</span> |
 | [Create column](#revit-create-column)<br>`revit_create_column` | Fork (this repository) | <span class="state no">Pending</span> |
+| [Create beam](#revit-create-beam)<br>`revit_create_beam` | Fork (this repository) | <span class="state no">Pending</span> |
 | [Place hosted family](#revit-place-hosted-family)<br>`revit_place_hosted_family` | Fork (this repository) | <span class="state no">Pending</span> |
 | [Set phase](#revit-set-phase)<br>`revit_set_phase` | Fork (this repository) | <span class="state no">Pending</span> |
 | [Merge phases](#revit-merge-phases)<br>`revit_merge_phases` | Fork (this repository) | <span class="state no">Pending</span> |
@@ -42,6 +43,10 @@ Grafted means the branch lists and runs it. Pending means the implementation exi
 ## Create column {#revit-create-column}
 
 `revit_create_column` — Implemented on the fork registry (the tool writes both levels and both offsets, the top is a level or a height, nothing is attached, a missing type lists the ones that exist) with Python and Core tests passing; flips to grafted with the first batch.
+
+## Create beam {#revit-create-beam}
+
+`revit_create_beam` — Implemented on the fork registry (the curve-and-level overload, an axis that is never snapped, structural usage written from the enum, the vertical offset through the family's elevation parameter with a move as the fallback, a missing type listing the ones that exist) with Python and Core tests passing; flips to grafted with the first batch.
 
 ## Place hosted family {#revit-place-hosted-family}
 
