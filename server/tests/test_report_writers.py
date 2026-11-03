@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from openpyxl import Workbook
+from support_paths import canonical
 
 from revit_model_mcp.health_workbook import write_health_workbook
 from revit_model_mcp.issue_register import write_register
@@ -18,6 +19,7 @@ def report_writer(request):
         return (
             lambda target: write_health_workbook(str(target), {"data": {"counts": {}}}, []),
             "output_path already exists",
+            str,
         )
     if request.param == "register":
         return (
@@ -34,15 +36,17 @@ def report_writer(request):
                 ],
             ),
             "output_path already exists",
+            str,
         )
     return (
         lambda target: build_report(str(CURRENT), str(target)),
         "Local file already exists",
+        canonical,
     )
 
 
 def test_save_failure_leaves_no_partial_report(tmp_path, monkeypatch, report_writer):
-    write, _ = report_writer
+    write, *_ = report_writer
     target = tmp_path / "report.xlsx"
 
     def fail_save(self, output):
@@ -57,17 +61,17 @@ def test_save_failure_leaves_no_partial_report(tmp_path, monkeypatch, report_wri
 
 
 def test_existing_target_message_and_content(tmp_path, report_writer):
-    write, message = report_writer
+    write, message, path_of = report_writer
     target = tmp_path / "report.xlsx"
     target.write_bytes(b"original")
-    with pytest.raises(ValueError, match=re.escape(f"{message}: {target}")):
+    with pytest.raises(ValueError, match=re.escape(f"{message}: {path_of(target)}")):
         write(target)
     assert target.read_bytes() == b"original"
     assert list(tmp_path.iterdir()) == [target]
 
 
 def test_destination_created_during_save_is_preserved(tmp_path, monkeypatch, report_writer):
-    write, message = report_writer
+    write, message, path_of = report_writer
     target = tmp_path / "report.xlsx"
 
     def racing_save(self, output):
@@ -75,7 +79,7 @@ def test_destination_created_during_save_is_preserved(tmp_path, monkeypatch, rep
         target.write_bytes(b"original")
 
     monkeypatch.setattr(Workbook, "save", racing_save)
-    with pytest.raises(ValueError, match=re.escape(f"{message}: {target}")):
+    with pytest.raises(ValueError, match=re.escape(f"{message}: {path_of(target)}")):
         write(target)
     assert target.read_bytes() == b"original"
     assert list(tmp_path.iterdir()) == [target]

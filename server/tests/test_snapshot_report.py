@@ -6,6 +6,7 @@ from unittest.mock import patch
 import pytest
 from mcp.server.mcpserver.exceptions import ToolError
 from openpyxl import load_workbook
+from support_paths import canonical
 
 from revit_model_mcp import server
 from revit_model_mcp.snapshot_report import HEADERS, build_report
@@ -38,7 +39,7 @@ def test_workbook_sheets_and_values(tmp_path, with_previous):
         expected.append("Changes")
     expected.append("Findings")
     assert workbook.sheetnames == expected
-    assert result == {"outputPath": str(output), "snapshotCount": 2, "sheets": expected}
+    assert result == {"outputPath": canonical(output), "snapshotCount": 2, "sheets": expected}
     for sheet in workbook:
         assert [cell.value for cell in sheet[1]] == HEADERS[sheet.title]
         assert sheet.freeze_panes == "A2"

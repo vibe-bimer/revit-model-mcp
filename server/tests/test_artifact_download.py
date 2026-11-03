@@ -7,6 +7,7 @@ import sys
 from unittest.mock import AsyncMock
 
 import pytest
+from support_paths import canonical
 
 from revit_model_mcp import atomic_write
 from revit_model_mcp.artifact_download import preflight_artifact_target
@@ -88,7 +89,7 @@ def test_success_deletes_remote_files_after_save(tmp_path, host):
         return host._run.return_value
 
     host._run.side_effect = run
-    assert finish(host, target) == (CONTENT, str(target))
+    assert finish(host, target) == (CONTENT, canonical(target))
     assert target.read_bytes() == PNG
     assert list(tmp_path.iterdir()) == [target]
     assert host._run.await_count == 2
@@ -104,7 +105,7 @@ def test_success_deletes_remote_files_after_save(tmp_path, host):
 def test_delete_failure_returns_saved_image(tmp_path, host, caplog):
     target = tmp_path / "capture.png"
     host._run.side_effect = [host._run.return_value, RevitChannelError("cleanup failed")]
-    assert finish(host, target) == (CONTENT, str(target))
+    assert finish(host, target) == (CONTENT, canonical(target))
     assert target.read_bytes() == PNG
     assert host._run.await_count == 2
     assert "remote capture cleanup failed" in caplog.text
