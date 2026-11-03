@@ -72,7 +72,7 @@ description: "在墙上放门窗：宿主可点名也可就近找墙，回报挂
 
 | Revit 年份 | 验证状态 |
 | --- | --- |
-| 2020 | <span class="state no">不支持</span> |
+| 2020 | <span class="state ok">已实测</span> |
 | 2026 | <span class="state ok">已实测</span> |
 | 2022–2025 / 2027 | <span class="state part">仅构建，未实测</span> |
 

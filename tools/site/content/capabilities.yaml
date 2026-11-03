@@ -610,7 +610,7 @@ tools:
       en: Create a straight grid from two points, or a three-point arc through a mid point
     years:
       '2020':
-        state: built
+        state: validated
       '2026':
         state: built
       other:
@@ -634,7 +634,7 @@ tools:
       en: Place a structural column on a level at a point, with its top on a level or at a height
     years:
       '2020':
-        state: built
+        state: validated
       '2026':
         state: built
       other:
@@ -660,7 +660,7 @@ tools:
       en: Place a door or window on a wall, named or found nearby, and report which wall it hangs on
     years:
       '2020':
-        state: 'no'
+        state: validated
       '2026':
         state: validated
       other:
@@ -686,7 +686,7 @@ tools:
       en: 'Load one family file from the workstation: the whole family, or one named type'
     years:
       '2020':
-        state: built
+        state: validated
       '2026':
         state: built
       other:
