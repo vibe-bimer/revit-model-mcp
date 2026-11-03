@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import inspect
 import json
 import os
 import re
@@ -916,6 +917,20 @@ def worktree_command_candidates(server: Path) -> list[list[str]]:
     return candidates
 
 
+def normalise_descriptions(tools: list[dict]) -> list[dict]:
+    """Dedent every tool description the way the docstring compiler does.
+
+    Python 3.13 removes the indentation of a docstring at compile time and 3.12 keeps it, so the
+    same source yields a different description per interpreter. Cleaning here keeps the snapshot,
+    and the pages generated from it, independent of the Python that ran the dump.
+    """
+    for tool in tools:
+        description = tool.get("description")
+        if isinstance(description, str):
+            tool["description"] = inspect.cleandoc(description)
+    return tools
+
+
 def _list_tools(
     command: list[str], env: dict[str, str], cwd: Path | None = None
 ) -> list[dict]:
@@ -970,9 +985,10 @@ def _list_tools(
                 + "\n"
             )
             proc.stdin.flush()
-            return call("tools/list", 2)["result"]["tools"]
+            tools = call("tools/list", 2)["result"]["tools"]
         finally:
             proc.terminate()
+        return normalise_descriptions(tools)
 
 
 def dump_registry() -> list[dict]:

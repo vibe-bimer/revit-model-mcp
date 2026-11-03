@@ -232,3 +232,29 @@ class ServerCommandTests(unittest.TestCase):
                 candidates = generate_features.worktree_command_candidates(server)
         self.assertEqual(candidates[0], [str(executable)])
         self.assertEqual(candidates[-1], [sys.executable, "-m", "revit_model_mcp"])
+
+
+class DescribeNormalisationTests(unittest.TestCase):
+    def test_an_indented_description_loses_its_common_indent(self):
+        tools = generate_features.normalise_descriptions(
+            [
+                {
+                    "name": "revit_probe",
+                    "description": "First line.\n\n    Second line,\n    still second.",
+                }
+            ]
+        )
+        self.assertEqual(
+            tools[0]["description"], "First line.\n\nSecond line,\nstill second."
+        )
+
+    def test_a_cleaned_description_is_left_alone(self):
+        description = "First line.\n\nSecond line."
+        tools = generate_features.normalise_descriptions(
+            [{"name": "revit_probe", "description": description}]
+        )
+        self.assertEqual(tools[0]["description"], description)
+
+    def test_a_tool_without_a_description_keeps_its_shape(self):
+        tools = generate_features.normalise_descriptions([{"name": "revit_probe"}])
+        self.assertNotIn("description", tools[0])
