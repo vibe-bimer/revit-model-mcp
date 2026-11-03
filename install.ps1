@@ -34,7 +34,7 @@ $headers = @{ 'User-Agent' = 'revit-model-mcp-install' }
 if ($env:GITHUB_TOKEN) { $headers.Authorization = "Bearer $env:GITHUB_TOKEN" }
 
 function Get-InstalledRevitYears {
-    foreach ($candidate in 2020, 2022..2027) {
+    foreach ($candidate in @(2020) + (2022..2027)) {
         if (Test-Path "C:\Program Files\Autodesk\Revit $candidate\Revit.exe" -PathType Leaf) {
             [string]$candidate
         }
@@ -178,7 +178,7 @@ function Update-HttpUrlAcl {
         }
     }
     if ($Uninstall) {
-        foreach ($candidate in 2020, 2022..2027) {
+        foreach ($candidate in @(2020) + (2022..2027)) {
             if (Test-Path (Join-Path $env:APPDATA "Autodesk\Revit\Addins\$candidate\RevitModelMcp.addin")) {
                 return
             }
