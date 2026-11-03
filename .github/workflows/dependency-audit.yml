@@ -29,6 +29,7 @@ jobs:
         shell: pwsh
         run: |
           $projects = @(
+            @{ Path = 'src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj'; Configuration = 'Release.R20' },
             @{ Path = 'src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj'; Configuration = 'Release.R22' },
             @{ Path = 'src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj'; Configuration = 'Release.R23' },
             @{ Path = 'src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj'; Configuration = 'Release.R24' },

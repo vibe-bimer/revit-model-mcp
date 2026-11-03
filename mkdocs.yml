@@ -282,7 +282,9 @@ nav:
               - features/revit_create_level.md
               - features/revit_create_floor.md
               - features/revit_create_grid.md
+              - features/revit_place_hosted_family.md
               - features/revit_create_column.md
+              - features/revit_create_beam.md
           - 阶段:
               - features/revit_set_phase.md
               - features/revit_merge_phases.md

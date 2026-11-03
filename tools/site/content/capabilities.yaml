@@ -292,7 +292,7 @@ tools:
     - zh: 把 1F 平面导出成 PNG，宽度 2000 像素
       en: Export the 1F plan as a PNG, 2000 pixels wide
   revit_export_element_ids:
-    source: 'c091f63079d0'
+    source: '16707b90a783'
     group: export
     origin: fork
     since: 0.8.0
@@ -574,7 +574,7 @@ tools:
     - zh: 在 1F 从 (0,0) 到 (6000,0) 建一道 200mm 墙
       en: Draw a 200 mm wall on 1F from 0,0 to 6000,0
   revit_create_floor:
-    source: '05d38c39dfbb'
+    source: '1ebbbeb6f73c'
     group: edit
     origin: fork
     since: 0.2.0
@@ -598,7 +598,7 @@ tools:
       zh: 2020 走 Document.Create.NewFloor，2022+ 走 Floor.Create
       en: On 2020 it uses Document.Create.NewFloor, from 2022 Floor.Create
   revit_create_grid:
-    source: '493f845c18cc'
+    source: '71ebd42e7a16'
     group: edit
     origin: fork
     since: 0.10.0
@@ -610,7 +610,7 @@ tools:
       en: Create a straight grid from two points, or a three-point arc through a mid point
     years:
       '2020':
-        state: built
+        state: validated
       '2026':
         state: built
       other:
@@ -622,7 +622,7 @@ tools:
       zh: 同名轴网被拒绝；曲线固定在水平面上，共线三点建不了弧
       en: A grid with the same name is refused; the curve stays on the horizontal plane and three collinear points cannot form an arc
   revit_create_column:
-    source: '094397ba54f0'
+    source: '61e13c56ab97'
     group: edit
     origin: fork
     since: 0.10.0
@@ -634,7 +634,7 @@ tools:
       en: Place a structural column on a level at a point, with its top on a level or at a height
     years:
       '2020':
-        state: built
+        state: validated
       '2026':
         state: built
       other:
@@ -647,8 +647,60 @@ tools:
     note:
       zh: 顶底标高与偏移由工具自己写（set_parameter 拒绝 ElementId 参数）；不做附着，柱顶只能给标高或高度
       en: The tool writes both levels and both offsets itself, because set_parameter refuses ElementId parameters; nothing is attached, so the top is a level or a height
+  revit_create_beam:
+    source: '40d73113b69c'
+    group: edit
+    origin: fork
+    since: 1.1.0
+    title:
+      zh: 创建梁
+      en: Create beam
+    summary:
+      zh: 沿给定轴线在标高上放一根结构梁，可写结构用途与竖向偏移（mm）
+      en: Place a structural beam on a level along a given axis, with an optional structural usage and vertical offset
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 在 2F 从 (0,0) 到 (6000,0) 放一根 300x600 的混凝土梁，梁顶降 150
+      en: Put a 300x600 concrete beam on 2F from 0,0 to 6000,0, dropped 150
+    - zh: 在 1F 从 (0,0) 到 (6000,0) 放一根钢梁，结构用途设成 Girder
+      en: Put a steel beam on 1F from 0,0 to 6000,0 and set its structural usage to Girder
+    note:
+      zh: 走曲线+标高的重载，端点不吸附；竖向偏移写族的标高参数，只有包围盒真的抬升才算写进去，否则改为移动实例，两条路都不成立就报错而不是放在标高上
+      en: The curve-and-level overload is used and the axis is not snapped; the offset goes through the family's elevation parameters, counts only when the bounding box rises, moves the instance otherwise, and fails rather than leaving the beam on its level
+  revit_place_hosted_family:
+    source: '52c858741125'
+    group: edit
+    origin: fork
+    since: 0.10.0
+    title:
+      zh: 放置宿主族
+      en: Place hosted family
+    summary:
+      zh: 在墙上放门窗：宿主可点名也可就近找墙，回报挂在哪面墙上（mm）
+      en: Place a door or window on a wall, named or found nearby, and report which wall it hangs on
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 在 1F 的 (3000,0) 挂一扇门，就近找墙
+      en: Hang a door at 3000,0 on 1F, taking the nearest wall
+    - zh: 把这扇窗挂到 105 号墙上，窗台高 900
+      en: Put this window on wall 105 with a 900 mm sill
+    note:
+      zh: 就近找墙只在放置标高这一层里找；宿主不是墙、定位点超出 host_search_radius_mm 或最近距离并列时被拒绝并列出候选；非单层宿主族用 revit_place_family；rotation_deg 只能是 0，翻面用 flip_facing；不做附着
+      en: The nearby search only looks at walls of the placement level; a host that is not a wall, a point outside host_search_radius_mm or two equally near walls are refused with the candidates; level-based families belong to revit_place_family; rotation_deg is only 0, flip_facing turns the family around; nothing is attached
   revit_load_family_file:
-    source: '304cdd7d9fd1'
+    source: 'b24a398ee5a3'
     group: families
     origin: fork
     since: 0.10.0
@@ -660,7 +712,7 @@ tools:
       en: 'Load one family file from the workstation: the whole family, or one named type'
     years:
       '2020':
-        state: built
+        state: validated
       '2026':
         state: built
       other:
@@ -674,7 +726,7 @@ tools:
       zh: 总是带族载入选项，不会弹出 Revit 自己的对话框；已有族复用，参数值默认不覆盖；路径不存在时报最近匹配。底座另有批量的 `revit_load_family`（收 `paths` 列表），本工具是单文件、可只取一个类型
       en: The load always carries the family load options, so Revit's own dialog never appears; an existing family is reused with its parameter values kept, and a missing path reports the closest filenames. The base also ships the batch `revit_load_family`, which takes a `paths` list; this tool is one file with an optional single type
   revit_create_level:
-    source: '68d2a6d6c941'
+    source: '30d1067fc459'
     group: edit
     origin: fork
     since: 0.10.0
@@ -698,7 +750,7 @@ tools:
       zh: 同名标高会被拒绝，避免后续工具解析到有歧义的标高
       en: An existing level with the same name is refused, so a later tool never resolves an ambiguous level
   revit_set_phase:
-    source: 'e6065da74fe8'
+    source: '3616a9296d1f'
     group: phases
     origin: fork
     since: 0.3.0
@@ -722,7 +774,7 @@ tools:
       zh: 阶段顺序检查的 API 只在 2022+ ，2020 走兜底
       en: The phase order API exists from 2022; 2020 uses a fallback. Phase names are Revit UI strings, so in the example demolished_phase="现有" the value is the Chinese label of the Existing phase.
   revit_merge_phases:
-    source: '814d4b6f194d'
+    source: '6cdf9998462e'
     group: phases
     origin: fork
     since: 0.3.0
@@ -792,7 +844,7 @@ tools:
       zh: 支持 dry_run
       en: Supports dry_run
   revit_reset_element_ids:
-    source: '43f1cb6a7669'
+    source: 'b061ec24c7f2'
     group: ids
     origin: fork
     since: 0.8.0
@@ -816,7 +868,7 @@ tools:
       zh: 先运行 dry_run；有宿主、有依赖、成组或属于 MEP 系统的构件会被拒绝
       en: Run dry_run first; hosted, dependent, grouped and MEP-system elements are refused
   revit_rebuild_model_ids:
-    source: '65e009899f59'
+    source: 'd84d25c2fcb2'
     group: ids
     origin: fork
     since: 0.8.0
@@ -842,7 +894,7 @@ tools:
       zh: 源模型不变；仅复制三维视图可选构件及必要基准，不是完整项目克隆；逐份检查数量与 ID 映射
       en: The source stays unchanged; only selectable 3D-view elements and required datums are copied, not the full project; check every count and ID mapping
   revit_set_view_lighting:
-    source: '9ac518c62db6'
+    source: 'd99a2061ba37'
     group: views
     origin: fork
     since: 0.10.0
@@ -1946,7 +1998,7 @@ year_notes:
     - Phases use the API that appears from 2022, with no order-check fallback
 param_notes:
   revit_rebuild_model_ids:
-    source: '65e009899f59'
+    source: 'd84d25c2fcb2'
     destination_path:
       zh: 新模型路径（.rvt）；含 {n} 时按份编号
       en: new model path (.rvt); {n} numbers the copies
@@ -2040,7 +2092,7 @@ param_notes:
       zh: 多个运行实例中选定的目标 Revit 进程
       en: Revit process ID; takes precedence over document.
   revit_export_element_ids:
-    source: 'c091f63079d0'
+    source: '16707b90a783'
     fields:
       zh: 要写进表格的列；缺省为 类别/族/类型/标高/构件ID/名称/工作集
       en: columns to write; the defaults are category, family, type, level, component id, name and workset
@@ -2051,7 +2103,7 @@ param_notes:
       zh: 导出构件 ID 的文件路径
       en: path of the exported element id file
   revit_reset_element_ids:
-    source: '43f1cb6a7669'
+    source: 'b061ec24c7f2'
     element_ids:
       zh: 要换 ID 的构件；有宿主、有依赖、成组或属于 MEP 系统的会被拒绝
       en: elements to replace; hosted, dependent, grouped or MEP system members are refused
@@ -2126,7 +2178,7 @@ param_notes:
       zh: 墙高（mm，默认 3000）
       en: wall height in millimetres (3000 by default)
   revit_create_level:
-    source: '68d2a6d6c941'
+    source: '30d1067fc459'
     name:
       zh: 标高名称
       en: level name
@@ -2137,7 +2189,7 @@ param_notes:
       zh: 同时创建对应的楼层平面视图
       en: also create the matching floor plan view
   revit_load_family_file:
-    source: '304cdd7d9fd1'
+    source: 'b24a398ee5a3'
     path:
       zh: 工作站上族文件的绝对路径（.rfa）
       en: absolute path of the family file on the workstation (a .rfa)
@@ -2148,7 +2200,7 @@ param_notes:
       zh: 用族里的值覆盖项目已有类型的参数值，默认不覆盖
       en: overwrite the project's parameter values with the family's; off by default
   revit_create_grid:
-    source: '493f845c18cc'
+    source: '71ebd42e7a16'
     label:
       zh: 轴号，写入 Grid.Name；重名会被拒绝
       en: grid label written to Grid.Name; a duplicate name is refused
@@ -2162,7 +2214,7 @@ param_notes:
       zh: 可选弧中点 [x, y]；给出即三点定弧，不得与起终点共线
       en: optional mid point [x, y]; supplying it makes a three-point arc and it must not be collinear with the endpoints
   revit_create_column:
-    source: '094397ba54f0'
+    source: '61e13c56ab97'
     family:
       zh: 柱族名，必须已在项目里（先用 revit_load_family_file 载入）
       en: column family name, already in the project (load it with revit_load_family_file first)
@@ -2193,8 +2245,40 @@ param_notes:
     rotation_deg:
       zh: 绕竖轴旋转角度（度），默认 0
       en: rotation about the vertical axis in degrees; 0 by default
+  revit_place_hosted_family:
+    source: '52c858741125'
+    family:
+      zh: 门、窗等单层宿主族名，必须已在项目里（先用 revit_load_family_file 载入）
+      en: door, window or other one-level hosted family name, already in the project (load it with revit_load_family_file first)
+    type_name:
+      zh: 族类型名；留空用族的第一个类型
+      en: family type name; empty takes the family's first type
+    x_mm:
+      zh: 放置点 X 坐标（mm，模型坐标）
+      en: placement X in millimetres in model coordinates
+    y_mm:
+      zh: 放置点 Y 坐标（mm，模型坐标）
+      en: placement Y in millimetres in model coordinates
+    host_element_id:
+      zh: 宿主墙的构件 ID；留空则按定位点就近找墙
+      en: element id of the host wall; empty finds the nearest wall instead
+    host_search_radius_mm:
+      zh: 就近找墙时定位点到墙定位线的最大水平距离（mm），默认 2000
+      en: largest horizontal distance from the point to a wall location line when the host is found nearby, in millimetres; 2000 by default
+    level:
+      zh: 放置标高名；留空取高程离定位点最近的标高（定位点按标高 0 计）
+      en: placement level name; empty takes the level whose elevation is closest to the placement point, which counts as elevation 0
+    rotation_deg:
+      zh: 只接受 0：宿主族的方向由宿主墙决定，要翻面用 flip_facing
+      en: 0 only; the host wall decides the orientation, so use flip_facing to turn the family
+    sill_height_mm:
+      zh: 窗台高度（mm），写入族自己的 INSTANCE_SILL_HEIGHT_PARAM
+      en: sill height in millimetres, written to the family's own INSTANCE_SILL_HEIGHT_PARAM
+    flip_facing:
+      zh: true 时调用 flipFacing() 翻转朝向；留空不动
+      en: call flipFacing() to reverse the facing when true; empty leaves it alone
   revit_set_phase:
-    source: 'e6065da74fe8'
+    source: '3616a9296d1f'
     element_ids:
       zh: 要改阶段的构件 ID
       en: element ids whose phase changes
@@ -2205,7 +2289,7 @@ param_notes:
       zh: 拆除阶段名；空串清除该标记、null 不变
       en: demolished phase name; an empty string clears it, null leaves it unchanged
   revit_merge_phases:
-    source: '814d4b6f194d'
+    source: '6cdf9998462e'
     source_phase:
       zh: 被合并掉的阶段名（合并后删除）
       en: the phase that is merged away and then deleted
@@ -2213,7 +2297,7 @@ param_notes:
       zh: 接收引用的阶段名
       en: the phase that receives the references
   revit_set_view_lighting:
-    source: '9ac518c62db6'
+    source: 'd99a2061ba37'
     view:
       zh: 视图名称（与 revit_list_views 一致）或十进制视图 ID；非样板视图
       en: view name as revit_list_views reports it, or its decimal view ID; a non-template view
@@ -3228,3 +3312,15 @@ param_defaults:
   points_mm:
     zh: 至少 3 个模型 XY 顶点，每个顶点为 [x,y]（mm）；自动闭合轮廓
     en: At least three model XY vertices, each [x,y] in millimetres; the boundary closes automatically
+  start_mm:
+    zh: 轴起点，[x,y]（mm）；按给定坐标放，不做吸附
+    en: axis start as [x, y] in millimetres; placed exactly as given, without snapping
+  end_mm:
+    zh: 轴终点，[x,y]（mm）；与起点重合会被拒绝
+    en: axis end as [x, y] in millimetres; a point equal to the start is refused
+  structural_usage:
+    zh: 结构用途（Girder / Joist / Purlin / Bearing / Other 等）；缺省沿用族自己的设定
+    en: structural usage such as Girder, Joist, Purlin, Bearing or Other; the family's own setting stands when omitted
+  z_offset_mm:
+    zh: 相对参考标高的竖向偏移（mm）；落在哪个参数以实例读回为准
+    en: vertical offset relative to the reference level in millimetres; the read-back names where it landed

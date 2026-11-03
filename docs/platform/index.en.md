@@ -4,7 +4,7 @@ description: "Complete tool list of the integration branch (the upstream 1.0 bas
 
 # Platform tool catalog
 
-This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and 10 fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.
+This section records the tool surface of the integration branch, kept apart from the released catalog under Features. The branch is unreleased and 12 fork tools are still missing from it, so the catalog is a migration scoreboard, not a delivery list.
 
 80 tools: 79 base and 1 fork; 34 read and 46 action.
 
@@ -16,7 +16,7 @@ Each catalog records one version: the current release is published and the integ
 | --- | --- | --- |
 | Status | Released 1.0.0 | Unreleased (integration branch) |
 | Branch | main | `integration/upstream-1.0` |
-| Tools | 90 | 80 |
+| Tools | 92 | 80 |
 | Catalog | [Feature overview](../features/index.md) | index.md |
 
 ## Two catalogs {#catalogs}
@@ -25,9 +25,9 @@ The current release is 1.0.0. The integration branch is the new line built on th
 
 | | Current release | Integration branch |
 | --- | --- | --- |
-| Tools | 90 | 80 |
+| Tools | 92 | 80 |
 | Read | 35 | 34 |
-| Action | 55 | 46 |
+| Action | 57 | 46 |
 | Released | Released | Unreleased |
 | Branch | main | `integration/upstream-1.0` |
 

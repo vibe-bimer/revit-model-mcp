@@ -131,7 +131,12 @@ internal static class QueryFilterBuilder
     {
         var displayValue = ParseDouble(filter.Value!, descriptor.Name);
         var internalValue = displayValue;
-        if (descriptor.DataType is not null && UnitUtils.IsMeasurableSpec(descriptor.DataType))
+#if !REVIT2020_BUILD
+        var measurable = descriptor.DataType is not null && UnitUtils.IsMeasurableSpec(descriptor.DataType);
+#else
+        var measurable = descriptor.DataType is not null && ForkUnitTypes.IsMeasurableSpec(descriptor.DataType);
+#endif
+        if (measurable)
         {
             var unit = descriptor.DataType == SpecTypeId.Length
                 ? UnitTypeId.Millimeters
@@ -139,7 +144,7 @@ internal static class QueryFilterBuilder
                     ? UnitTypeId.SquareMeters
                     : descriptor.DataType == SpecTypeId.Volume
                         ? UnitTypeId.CubicMeters
-                        : document.GetUnits().GetFormatOptions(descriptor.DataType).GetUnitTypeId();
+                        : document.GetUnits().GetFormatOptions(descriptor.DataType!).GetUnitTypeId();
             internalValue = UnitUtils.ConvertToInternalUnits(displayValue, unit);
         }
 

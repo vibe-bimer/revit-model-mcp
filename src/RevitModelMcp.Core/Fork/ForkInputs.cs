@@ -53,6 +53,20 @@ public static class ForkInputs
                 ["baseOffsetMm"] = (action, value) => action.Options.BaseOffsetMm = Number("baseOffsetMm", value),
                 ["topOffsetMm"] = (action, value) => action.Options.TopOffsetMm = Number("topOffsetMm", value)
             },
+            ["create-beam"] = new(StringComparer.Ordinal)
+            {
+                ["startMm"] = (action, value) => action.Options.StartMm = Numbers("startMm", value),
+                ["endMm"] = (action, value) => action.Options.EndMm = Numbers("endMm", value),
+                ["structuralUsage"] = (action, value) => action.Options.StructuralUsage = Text("structuralUsage", value),
+                ["zOffsetMm"] = (action, value) => action.Options.ZOffsetMm = Number("zOffsetMm", value)
+            },
+            ["place-hosted-family"] = new(StringComparer.Ordinal)
+            {
+                ["hostElementId"] = (action, value) => action.Options.HostElementId = Identifier("hostElementId", value),
+                ["hostSearchRadiusMm"] = (action, value) => action.Options.HostSearchRadiusMm = Number("hostSearchRadiusMm", value),
+                ["sillHeightMm"] = (action, value) => action.Options.SillHeightMm = Number("sillHeightMm", value),
+                ["flipFacing"] = (action, value) => action.Options.FlipFacing = Flag("flipFacing", value)
+            },
             ["load-family-file"] = new(StringComparer.Ordinal)
             {
                 ["path"] = (action, value) => action.Options.FamilyPath = Text("path", value),
@@ -135,6 +149,18 @@ public static class ForkInputs
         double number => number,
         string text when double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed) => parsed,
         _ => throw Invalid(key, "a number")
+    };
+
+    /// <summary>An element id arrives as a whole number and stays one: it is never rounded or scaled.</summary>
+    private static long? Identifier(string key, object? value) => value switch
+    {
+        null => null,
+        int number => number,
+        long number => number,
+        decimal number when number == Math.Floor(number) => (long)number,
+        double number when number == Math.Floor(number) => (long)number,
+        string text when long.TryParse(text.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) => parsed,
+        _ => throw Invalid(key, "an element id")
     };
 
     private static string? Text(string key, object? value) => value switch

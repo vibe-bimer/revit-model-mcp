@@ -35,6 +35,18 @@ public sealed class ForkFacts
     [DataMember(Name = "targetPhase", EmitDefaultValue = false)]
     public string? TargetPhase { get; set; }
 
+    /// <summary>Structural usage the action wrote on the instance, such as "Girder".</summary>
+    [DataMember(Name = "structuralUsage", EmitDefaultValue = false)]
+    public string? StructuralUsage { get; set; }
+
+    /// <summary>Vertical offset above the reference level, in millimetres, as read back from the instance.</summary>
+    [DataMember(Name = "zOffsetMm", EmitDefaultValue = false)]
+    public double? ZOffsetMm { get; set; }
+
+    /// <summary>Name of the parameter that holds the vertical offset, as read back from the instance.</summary>
+    [DataMember(Name = "zOffsetParam", EmitDefaultValue = false)]
+    public string? ZOffsetParam { get; set; }
+
     /// <summary>Elements whose creation phase a merge reassigned.</summary>
     [DataMember(Name = "reassignedCreated", EmitDefaultValue = false)]
     public int? ReassignedCreated { get; set; }

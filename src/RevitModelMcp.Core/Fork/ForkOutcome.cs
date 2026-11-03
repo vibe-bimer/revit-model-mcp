@@ -132,6 +132,24 @@ public sealed class ForkOutcome
     /// <summary>The filenames a missing path most likely meant, closest first.</summary>
     [DataMember(Name = "closestPaths", EmitDefaultValue = false)]
     public List<string>? ClosestPaths { get; set; }
+
+    /// <summary>The wall a hosted placement resolved to, so a dry run also says where it would hang.</summary>
+    [DataMember(Name = "hostResolution", EmitDefaultValue = false)]
+    public ForkHostResolution? HostResolution { get; set; }
+}
+
+/// <summary>How a hosted placement found the wall it hangs on.</summary>
+[DataContract]
+public sealed class ForkHostResolution
+{
+    /// <summary><c>explicit</c> when the caller named the wall, <c>nearest</c> when the search found it.</summary>
+    [DataMember(Name = "mode")] public string Mode { get; set; } = string.Empty;
+
+    /// <summary>The wall the family will hang on.</summary>
+    [DataMember(Name = "hostId")] public long HostId { get; set; }
+
+    /// <summary>Horizontal distance from the placement point to that wall's location line, in millimetres.</summary>
+    [DataMember(Name = "distanceMm", EmitDefaultValue = false)] public double? DistanceMm { get; set; }
 }
 
 /// <summary>One type of a loaded family: the id to place with and the name to ask for.</summary>

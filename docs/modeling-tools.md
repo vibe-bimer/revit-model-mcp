@@ -83,16 +83,18 @@
 | `host_element_id` | 否 | `null` | `integer` | 显式宿主（墙）ID |
 | `host_search_radius_mm` | 否 | `2000` | `number` | 未给宿主时的就近搜索半径 |
 | `level` | 否 | `null` | `string / null` | 放置标高；为空时取最近标高 |
-| `rotation_deg` | 否 | `0` | `number` | 绕 Z 轴旋转 |
+| `rotation_deg` | 否 | `0` | `number` | 必须为 `0`：宿主族的方向由宿主墙决定，要翻面用 `flip_facing` |
 | `sill_height_mm` | 否 | `null` | `number` | 窗台高（`INSTANCE_SILL_HEIGHT_PARAM`） |
 | `flip_facing` | 否 | `null` | `boolean` | 需要时调用 `flipFacing()` |
 
 宿主解析有两条路：
 
 1. **显式 `host_element_id`**：校验构件存在、是 `Wall`，且符号的 `Family.FamilyPlacementType == OneLevelBasedHosted`。Revit 自己不校验宿主，失败也没有文档化的异常类型，这一层必须由工具做。
-2. **就近找墙**：把定位点投影到候选墙的定位线上，取水平距离最小者；要求距离不超过 `host_search_radius_mm`，且投影参数落在 0..1（点确实落在这段墙上）。**找不到、超出半径、或最近距离并列**，一律拒绝并列出候选 `{ id, distanceMm }`，让调用者显式指定。
+2. **就近找墙**：候选只有**放置标高这一层**的墙——标高由 `level` 给出，为空时取定位点高程最近者；墙的层高区间按 `WALL_BASE_CONSTRAINT` 与 `WALL_HEIGHT_TYPE`（未连接高度时用自身高度）判定。每层各画一遍墙的模型里，上下层墙在平面上完全重合，不先按层筛掉就永远并列，所以标高先于宿主解析。把定位点投影到候选墙的定位线上，取水平距离最小者；要求距离不超过 `host_search_radius_mm`，且投影参数落在 0..1（点确实落在这段墙上）。**找不到、超出半径、或同层最近距离并列**，一律拒绝并列出候选 `{ id, distanceMm }`，让调用者显式指定；半径先判、并列后判，因为一次落在半径外的搜索不该报并列。
 
 响应回报 `hostResolution: { mode: "explicit" | "nearest", hostId, distanceMm }`，因此试运行也能看清它会挂到哪面墙上。
+
+宿主族的方向、手向都由宿主墙决定，`rotation_deg` 因此只接受 `0`——转一个宿主实例在 API 里要么被忽略、要么变成沿着墙移动，所以非零角度会被拒绝并说明改用 `flip_facing`。
 
 现有的 `revit_place_family`（非宿主、基于标高）**保留原名不动**，两者并存。
 
@@ -128,7 +130,9 @@
 - 走「曲线 + 标高」路线：`NewFamilyInstance(Curve, FamilySymbol, Level, StructuralType.Beam)`，两个年份都在，直接给轴线与参照标高。
 - **不用工作平面路线**：`NewFamilyInstance(Reference, Line, FamilySymbol)` 需要一个面引用，MCP 调用者拿不到。
 - **端点不做吸附**：Revit 没有程序化吸附 API，`StructuralFramingUtils.SetEndReference` 只对已经连接的端有效。坐标由调用者给。
-- `z_offset_mm` 具体落到哪个参数，实现时以真机读回为准——语料里只有 `STRUCTURAL_BEAM_END0_ELEVATION` / `END1_ELEVATION` / `INSTANCE_ELEVATION_PARAM` 这些标识符条目，没有对应的 API 说明，不要凭猜写死。
+- `z_offset_mm` 落在 **`STRUCTURAL_BEAM_END0_ELEVATION` / `END1_ELEVATION`（起点/终点标高偏移）**：2026 真机上把两者写成同一个值，梁的包围盒从 `z=-600..0` 抬到 `0..600`，读回报出 `zOffsetParam:"起点标高偏移"`。
+- **`INSTANCE_ELEVATION_PARAM`（显示名「相对标高的偏移」）在这个族上是空壳**：写入成功、读回一致，包围盒与轴线都不动，参数表里也看不到这个值。
+- 因此判「写进去了」只看包围盒是否按偏移抬升（容差 1e-6 英尺），不看参数读回；参数不抬升就还原原值、换下一组，两组都不抬升时 `ElementTransformUtils.MoveElement` 移动构件，移动也不抬升就抛错——`z_offset_mm` 没落上的梁不允许当成放置在标高上。
 
 <a id="copy-elements"></a>
 ### `revit_copy_elements`

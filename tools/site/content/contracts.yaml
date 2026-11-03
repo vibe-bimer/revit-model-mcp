@@ -226,7 +226,7 @@ tools:
       如果有多个 Revit 实例正在运行，必须提供 `document`；否则任意实例都可能响应。
 
       '
-    source: c091f63079d079d4170c5ec19e8f93f968f0839189a3c6e8f6a45c7ce7972d90
+    source: 16707b90a783cc338b76a4332ae5e3e0d8c63a790878e43ad05d2eb96b009233
   revit_view_elements:
     zh: '读取指定视图中的一页构件数据。
 
@@ -381,6 +381,26 @@ tools:
 
       '
     source: d7d1e53536ca2c85a7f6be9bb869918679ff9e15f90da139c624b410d0346580
+  revit_place_hosted_family:
+    zh: '把 `family` 的一个门、窗或其他单层宿主族实例放到 `x_mm`、`y_mm` 上。
+
+
+      宿主要么是 `host_element_id` 点名的墙，要么是定位线落在定位点 `host_search_radius_mm` 之内的最近一面墙；找不到宿主、距离超出半径，或两面墙一样近，都会被拒绝并列出候选，让调用方点名一面。
+
+      响应在 `fork.hostResolution` 回报 `{mode, hostId, distanceMm}`，所以试运行也能看出这扇门窗会挂在哪面墙上。
+
+      `sill_height_mm` 写入族自己的 INSTANCE_SILL_HEIGHT_PARAM，`flip_facing` 调用 flipFacing()。`rotation_deg` 只接受 0：宿主实例的方向由宿主墙决定，要翻面用 `flip_facing`。
+
+      不是单层宿主的族会被拒绝：那种族用 revit_place_family 放置，旋转也在那边做。
+
+      不做附着，因为门窗没有可附着的目标。
+
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+      '
+    source: 52c858741125f6b16f22910587c2a1e0a275d7e811e125256e973e66f4d5ddc1
   revit_create_wall:
     zh: '在指定标高上创建直墙，用于布局；模型 XY 端点坐标和高度的单位为毫米；`wall_type` 为 `null` 时选择第一个基本墙类型。
 
@@ -400,7 +420,7 @@ tools:
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
 
       '
-    source: 05d38c39dfbb26c424e07f27d4fa1ab496ec533abf505f3d0b87a7ff7629e703
+    source: 1ebbbeb6f73c89f6835a7baa3e1f14c90243a4993d84bec27148816f170643a6
   revit_load_family_file:
     zh: '从工作站载入一个族文件：整族，或只载入 `type_name` 指定的那一个类型。
 
@@ -413,7 +433,20 @@ tools:
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
 
       '
-    source: 304cdd7d9fd11bd2be74fc1bdbceec0a51d1ac8dd14e192f83783ee267394733
+    source: b24a398ee5a34cb43710c4ddef95549616e0b3a6325182d47bd999100e193dea
+  revit_create_beam:
+    zh: '沿 `start_mm` 到 `end_mm` 的轴线，在 `level` 上放一根 `family`（可指定 `type_name`）的结构梁。
+
+      两个端点都是模型 XY 坐标系中的 `[x, y]`，单位为毫米；坐标按给定值放，端点不做吸附——Revit 没有程序化吸附接口，`SetEndReference` 只对模型里已经连接的端有效。放置走曲线与标高的重载，因此标高与轴线都由调用者给定，不需要面引用。
+
+      `structural_usage` 写入 FamilyInstance.StructuralUsage，取值是结构用途枚举的名称。`z_offset_mm` 是相对参考标高的竖向偏移：先写族的起点与终点标高偏移，再试实例的标高参数，只有包围盒真的按偏移抬升才算写进去——族可以接受值却把梁留在标高上；参数都不抬升时改为移动实例，移动也不抬升就报错，不把没落的偏移当成已放置。偏移最终落在哪个参数由创建后的读回给出。梁族必须已经在项目里，`type_name` 不存在时会列出该族现有的类型。
+
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+      '
+    source: 40d73113b69c2a2f83888e81cb029a37ef7ce3cd89ad0af963ca7ddc8205d720
   revit_create_column:
     zh: '在 `level` 上的点 `x_mm`、`y_mm` 处放一根 `family`（可指定 `type_name`）的结构柱。
 
@@ -426,7 +459,7 @@ tools:
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
 
       '
-    source: 094397ba54f047e87060b505d4e94b3d222a550731d436f375d52692708df70b
+    source: 61e13c56ab9788bab45ea4768fb6091ffd455b5e3f5f29c84be0391158faf41c
   revit_create_grid:
     zh: '创建一条轴网，用于布局：`start_mm` 到 `end_mm` 的直线，或给出 `mid_mm` 时的三点圆弧。
 
@@ -437,7 +470,7 @@ tools:
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
 
       '
-    source: 493f845c18cc51115f0a79af1ea825d5ca08e001e6d30173fcdec9dad075a06c
+    source: 71ebd42e7a16286a92ba717721f366262e3b5a78aa3c7df6ac33f16311aac92f
   revit_create_level:
     zh: '在指定高程新建标高，用于布局。
 
@@ -450,7 +483,7 @@ tools:
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
 
       '
-    source: 68d2a6d6c9415f35b5d469f02f5818b802728250933f3a7cb181abc277b8d899
+    source: 30d1067fc459d947c7608fc945b6f31f0de128ec68fa5437f6f2d536ea96234f
   revit_set_phase:
     zh: '按准确的阶段名称，指定构件的创建阶段或拆除阶段。
 
@@ -466,7 +499,7 @@ tools:
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
 
       '
-    source: e6065da74fe8dcd85c40450e65aa18a63c050369a496081cac309baaf0977756
+    source: 3616a9296d1f5aa74db431706585233a79e7673a862f8524922ebfbddbd1a0f2
   revit_merge_phases:
     zh: '将一个项目阶段合并到另一个阶段，迁移所有构件的阶段引用。
 
@@ -482,7 +515,7 @@ tools:
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
 
       '
-    source: 814d4b6f194d7c8d9f2e090a5caf0c3466ef123a8a9a5f3ea3946dbd688d9b5e
+    source: 6cdf9998462ea39bf5860df9b37c208a40bc3a74584015fcaa0df5f8fc6d29d7
   revit_set_parameter:
     zh: '设置指定名称的实例参数；找不到时回退到该实例共用的类型上的参数。用于编辑时，长度单位为 mm，面积单位为 m2，其他双精度数值使用内部单位。
 
@@ -516,7 +549,7 @@ tools:
       本工具绝不会就地修改构件 ID，也绝不会将旧 ID 写入参数。
 
       '
-    source: 43f1cb6a7669f69047a9b060719ff61cf2eb939756501ad6a2d52e5ff7379185
+    source: b061ec24c7f23deb423bb114779659601fe6398347d59cb6fbe228d539f246fa
   revit_rebuild_model_ids:
     zh: '将三维视图中可选择的构件复制到新模型，为每个构件生成新 ID，因为 Revit 不允许指定构件 ID。
 
@@ -542,7 +575,7 @@ tools:
       `dry_run` 会执行复制并报告映射，但不保存文件。
 
       '
-    source: 65e009899f5970312086263aaea679ef9aa93d41a460c96ece88c863bbe66f59
+    source: d84d25c2fcb233c9a3f3b26fd5b33075ed8a9345ac269930de1ab8de06d9dd35
   revit_set_view_lighting:
     zh: '设置一个视图的光照：阴影、太阳位置、地面平面、背景以及渲染光源方案。
 
@@ -572,7 +605,7 @@ tools:
       同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
 
       '
-    source: 9ac518c62db620a6ed2f5926b3070ae2b26c6149c666df2b0bf7f9c1e7fcf63c
+    source: d99a2061ba37aaae34600e00d5312aedf6f305c977af3794c3b1b9bad179abe1
   revit_jobs:
     zh: '列出最近的作业，或等待最多 `wait_seconds`（0 到 50，默认 40）以获取某个操作 `jobId` 的结果。
 

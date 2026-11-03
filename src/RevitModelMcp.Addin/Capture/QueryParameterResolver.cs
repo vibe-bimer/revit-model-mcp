@@ -203,7 +203,12 @@ internal static class QueryParameterResolver
     private static QueryParameterDescriptor Create(string name, ElementId id, ForgeTypeId dataType)
     {
         var typeId = dataType.TypeId ?? string.Empty;
-        var kind = UnitUtils.IsMeasurableSpec(dataType)
+#if !REVIT2020_BUILD
+        var measurable = UnitUtils.IsMeasurableSpec(dataType);
+#else
+        var measurable = ForkUnitTypes.IsMeasurableSpec(dataType);
+#endif
+        var kind = measurable
             ? QueryParameterKind.Double
             : typeId.Contains("spec:string", StringComparison.OrdinalIgnoreCase)
                 ? QueryParameterKind.String

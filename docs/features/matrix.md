@@ -46,7 +46,7 @@ description: "读取工具与动作工具在 Revit 2020、2026 及 2022–2027 �
 | [生成快照报告](revit_build_report.md)<br>`revit_build_report` | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 | [问题登记表](revit_issue_register.md)<br>`revit_issue_register` | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 
-## 动作工具 (55) {#action-tools}
+## 动作工具 (57) {#action-tools}
 
 | 工具 | 2020 | 2026 | 2022–2025 / 2027 |
 | --- | :--: | :--: | :--: |
@@ -98,9 +98,11 @@ description: "读取工具与动作工具在 Revit 2020、2026 及 2022–2027 �
 | <span class="state part">自研</span> [设置视图光照](revit_set_view_lighting.md)<br>`revit_set_view_lighting` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 | <span class="state part">自研</span> [创建标高](revit_create_level.md)<br>`revit_create_level` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
 | <span class="state part">自研</span> [创建楼板](revit_create_floor.md)<br>`revit_create_floor` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [创建轴网](revit_create_grid.md)<br>`revit_create_grid` | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [载入族文件](revit_load_family_file.md)<br>`revit_load_family_file` | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
-| <span class="state part">自研</span> [创建柱](revit_create_column.md)<br>`revit_create_column` | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
+| <span class="state part">自研</span> [创建轴网](revit_create_grid.md)<br>`revit_create_grid` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
+| <span class="state part">自研</span> [载入族文件](revit_load_family_file.md)<br>`revit_load_family_file` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
+| <span class="state part">自研</span> [放置宿主族](revit_place_hosted_family.md)<br>`revit_place_hosted_family` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
+| <span class="state part">自研</span> [创建柱](revit_create_column.md)<br>`revit_create_column` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
+| <span class="state part">自研</span> [创建梁](revit_create_beam.md)<br>`revit_create_beam` | <span class="state ok">已实测</span> | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> |
 | <span class="state part">自研</span> [设置构件阶段](revit_set_phase.md)<br>`revit_set_phase` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 | <span class="state part">自研</span> [合并项目阶段](revit_merge_phases.md)<br>`revit_merge_phases` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |
 | <span class="state part">自研</span> [同文档替换 ID](revit_reset_element_ids.md)<br>`revit_reset_element_ids` | <span class="state ok">已实测</span> | <span class="state part">仅构建，未实测</span> | <span class="state part">仅构建，未实测</span> |

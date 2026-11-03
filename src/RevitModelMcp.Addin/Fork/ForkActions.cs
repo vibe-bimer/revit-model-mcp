@@ -39,6 +39,12 @@ internal static class ForkActions
             case "create-column":
                 result = ForkColumns.Apply(document, action);
                 return true;
+            case "create-beam":
+                result = ForkBeams.Apply(document, action);
+                return true;
+            case "place-hosted-family":
+                result = ForkHostedFamilies.Apply(document, action);
+                return true;
             case "load-family-file":
                 result = ForkFamilies.Apply(document, action);
                 return true;
@@ -104,6 +110,14 @@ internal static class ForkActions
             case "create-column":
                 ForkColumns.Validate(action);
                 return null;
+            case "create-beam":
+                ForkBeams.Validate(action);
+                return null;
+            case "place-hosted-family":
+                // Resolving the host needs the document, and a host that cannot carry the family must
+                // fail here, before the transaction has anything to roll back.
+                ForkHostedFamilies.Check(document, action);
+                return null;
             case "load-family-file":
                 ForkFamilies.Validate(action);
                 return null;
@@ -162,6 +176,20 @@ internal static class ForkActions
                 {
                     if (result.Id is not { } id) return false;
                     verification.After = ForkColumns.Read(document, ForkLookup.CreateId(id));
+                    verification.WouldCreate = action.DryRun ? true : null;
+                    return true;
+                }
+            case "create-beam":
+                {
+                    if (result.Id is not { } id) return false;
+                    verification.After = ForkBeams.Read(document, ForkLookup.CreateId(id));
+                    verification.WouldCreate = action.DryRun ? true : null;
+                    return true;
+                }
+            case "place-hosted-family":
+                {
+                    if (result.Id is not { } id) return false;
+                    verification.After = ForkHostedFamilies.Read(document, ForkLookup.CreateId(id));
                     verification.WouldCreate = action.DryRun ? true : null;
                     return true;
                 }

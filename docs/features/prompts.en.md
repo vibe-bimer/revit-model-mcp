@@ -4,7 +4,7 @@ description: "Copyable prompt library with a sample prompt and purpose summary f
 
 # Prompt library
 
-35 read + 55 action tools, 90 in total
+35 read + 57 action tools, 92 in total
 
 Actions are allowed unless one of three switches is on: the machine policy `ReadOnly`, the workstation `read-only` file, or `REVIT_MCP_READ_ONLY=1`. A fresh install ships with the machine policy read-only. The action connection must address one Revit instance; use `document` when it has multiple open documents. Selection, navigation and isolation also require the target document to be active.
 
@@ -496,6 +496,18 @@ Create a floor on 2F from these four points
 Create a grid named A from 0,0 to 30000,0
 ```
 
+### <span class="state part">Fork</span> [Place hosted family](revit_place_hosted_family.md)
+
+`revit_place_hosted_family` — Place a door or window on a wall, named or found nearby, and report which wall it hangs on
+
+```text
+Hang a door at 3000,0 on 1F, taking the nearest wall
+```
+
+```text
+Put this window on wall 105 with a 900 mm sill
+```
+
 ### <span class="state part">Fork</span> [Create column](revit_create_column.md)
 
 `revit_create_column` — Place a structural column on a level at a point, with its top on a level or at a height
@@ -506,6 +518,18 @@ Put a 600x600 concrete column at 3000,4500 on 1F, topping out at 3F
 
 ```text
 Put a column at the origin of 1F, 4200 high
+```
+
+### <span class="state part">Fork</span> [Create beam](revit_create_beam.md)
+
+`revit_create_beam` — Place a structural beam on a level along a given axis, with an optional structural usage and vertical offset
+
+```text
+Put a 300x600 concrete beam on 2F from 0,0 to 6000,0, dropped 150
+```
+
+```text
+Put a steel beam on 1F from 0,0 to 6000,0 and set its structural usage to Girder
 ```
 
 ## Phases {#group-phases}

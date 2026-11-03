@@ -199,11 +199,14 @@ internal static class ForkPhases
             return;
         }
 
+#if !REVIT2020_BUILD
         if (phaseId != ElementId.InvalidElementId && !element.IsDemolishedPhaseOrderValid(phaseId))
         {
             throw new ArgumentException(
                 $"The demolition phase is out of order for element {id}; demolition must follow the creation phase.");
         }
+#endif
+        // Revit 2020 has no demolition-order question; Revit itself refuses an out-of-order phase here.
 
         element.DemolishedPhaseId = phaseId;
     }

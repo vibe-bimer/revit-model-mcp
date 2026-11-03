@@ -54,7 +54,14 @@ internal static class ForkFloors
             .Select((point, index) => (Curve)Line.CreateBound(point, points[(index + 1) % points.Count]))
             .ToList();
         var loop = CurveLoop.Create(boundary);
+#if !REVIT2020_BUILD
         var floor = Floor.Create(document, [loop], floorType.Id, level.Id);
+#else
+        // Revit 2020 creates a floor from a CurveArray and a FloorType, not from a curve loop and a type id.
+        var profile = new CurveArray();
+        foreach (var curve in boundary) profile.Append(curve);
+        var floor = document.Create.NewFloor(profile, floorType, level, false);
+#endif
         return new ActionResultData
         {
             Id = RevitValueReader.GetId(floor.Id),

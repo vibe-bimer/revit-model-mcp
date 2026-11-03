@@ -63,12 +63,12 @@ The managed bundle is named `revit-model-mcp-<version>-managed.bundle.zip`. Buil
 `build/validate_bundle.py` checks the archive without Windows or Revit:
 
 ```sh
-python build/validate_bundle.py output/RevitModelMcp.bundle.zip --years 2022-2027
-python build/validate_bundle.py output/revit-model-mcp-<version>-managed.bundle.zip --years 2022-2027 --managed-version <version>
+python build/validate_bundle.py output/RevitModelMcp.bundle.zip --years 2020,2022,2023,2024,2025,2026,2027
+python build/validate_bundle.py output/revit-model-mcp-<version>-managed.bundle.zip --years 2020,2022,2023,2024,2025,2026,2027 --managed-version <version>
 ```
 
 With `--managed-version`, the check also requires a `README.txt` that starts the server from this fork's `v<version>` release, either its wheel or its tag archive. A `README.txt` that names the bare package would install upstream's server from PyPI, so the check rejects it.
 
 It checks the `PackageContents.xml` attributes (numeric `AppVersion`, braced `ProductCode` and `UpgradeCode`, company details), one `Components` entry per year with `SeriesMin` and `SeriesMax` set to `R<year>`, that every `ModuleName` and every `.addin` assembly path exists in the archive, and that no Revit API assemblies are packed.
-CI builds the bundle after all six Revit years compile, validates it and uploads it as the `revit-model-mcp-bundle` artifact.
+CI builds the bundle after all seven Revit years compile, validates it and uploads it as the `revit-model-mcp-bundle` artifact.
 `ProductCode` is derived from the upgrade code and the version, so rebuilding the same version gives the same code.

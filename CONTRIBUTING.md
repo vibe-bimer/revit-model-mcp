@@ -246,9 +246,9 @@ The module installs WiX 7, accepts its EULA, installs the matching UI extension,
 Single-user installation uses `%APPDATA%\Autodesk\Revit\Addins\<year>`.
 Multi-user installation uses `%ProgramData%\Autodesk\Revit\Addins\<year>` through 2026 and `%ProgramFiles%\Autodesk\Revit\Addins\2027` for 2027.
 
-`dotnet run --project build -- bundle` builds the Revit `.bundle` zip from the same `Release.R*/publish` output, and `python build/validate_bundle.py output/RevitModelMcp.bundle.zip --years 2022-2027` checks its `PackageContents.xml` and file layout on any platform.
-CI runs both after the six Revit builds and uploads the zip as the `revit-model-mcp-bundle` artifact.
-CI and the release workflow also rebuild the six years with `-p:ManagedInstall=true`, run the bundle step with `Bundle__Managed=true` and validate `revit-model-mcp-<version>-managed.bundle.zip` with `--managed-version`. The release attaches that zip.
+`dotnet run --project build -- bundle` builds the Revit `.bundle` zip from the same `Release.R*/publish` output, and `python build/validate_bundle.py output/RevitModelMcp.bundle.zip --years 2020,2022,2023,2024,2025,2026,2027` checks its `PackageContents.xml` and file layout on any platform.
+CI runs both after the seven Revit builds and uploads the zip as the `revit-model-mcp-bundle` artifact.
+CI and the release workflow also rebuild the seven years with `-p:ManagedInstall=true`, run the bundle step with `Bundle__Managed=true` and validate `revit-model-mcp-<version>-managed.bundle.zip` with `--managed-version`. The release attaches that zip.
 
 The release attaches the wheel and the source distribution to the GitHub Release and publishes nothing else; `uvx --from <wheel> revit-model-mcp` installs that wheel, while a bare `uvx` of that name resolves upstream's PyPI project instead.
 

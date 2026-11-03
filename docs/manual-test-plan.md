@@ -1,13 +1,13 @@
 # Revit Model MCP — 人工端到端测试计划
 
-完整的人工验证清单。目标：在每个受支持的 Revit 版本上，从全新安装开始，经过真机模型读取及受门禁保护的动作，覆盖**每一个工具**和**每一种安装／传输路径**。
+人工端到端测试计划。目标是在每个受支持的 Revit 版本上，从全新安装开始，验证真机模型读取、受门禁保护的动作及安装／传输路径。第 3、4 节列出部分工具的具体用例；完整工具清单见功能总览，未列出的工具需补充用例后才能宣称完整覆盖。
 
 按计划安排执行。逐项勾选 `[ ]`。每个已勾选项目都记录：**结果**（通过／失败）、**证据**（journal 行、截图、工具 JSON、耗时）和**备注**。每个失败项都应附复现步骤并创建 GitHub Issue。
 
 > 抽查参考模型：**Snowdon Towers Sample Architectural.rvt**（随 Revit 提供）。下文引用的值采集于 2026-09-15、Revit 2024.3，仅供历史对比，不保证其他模型或发布版本相同。先用 `revit_list_catalog` 发现名称，再通过 `revit_document_info` + `revit_aggregate_elements` 采集当前模型的基线。
 
 !!! note "计划覆盖，不是验证证据"
-    本清单覆盖当前 **35 个工具：19 个读取 + 16 个需显式启用的动作**，支持 **Revit 2020 和 2022–2027**，不支持 Revit 2021。将被测发布版本的 `tools/list` 与[读取契约](tools.md)、[动作契约](actions.md)及[功能总览](features/index.md)核对。本次文档更新没有执行任何真机 Revit 调用、勾选检查项或新增工作站证据；已记录的运行见[验证证据](validation.md)。下文 2026-09-15 的客户端问题均为历史复测项，不代表当前兼容性保证。
+    当前功能目录收录 **92 个工具：35 个读取 + 57 个动作**；本清单只为其中部分工具列出具体用例，支持 **Revit 2020 和 2022–2027**，不支持 Revit 2021。将被测发布版本的 `tools/list` 与[读取契约](tools.md)、[动作契约](actions.md)及[功能总览](features/index.md)核对。本次文档更新没有执行任何真机 Revit 调用、勾选检查项或新增工作站证据；已记录的运行见[验证证据](validation.md)。下文 2026-09-15 的客户端问题均为历史复测项，不代表当前兼容性保证。
 
 ---
 
@@ -58,7 +58,7 @@
 
 - [ ] `uvx --from "$SERVER" revit-model-mcp` 首次运行时能从本 fork 的发布 wheel 安装包（记录包数量 + 耗时）。`$SERVER` 见 README 的安装段；不要用裸 `uvx revit-model-mcp`，那会装上上游服务器。
 - [ ] 服务器启动，并在 `initialize` 中报告 `serverInfo: { name: "Revit Model Reader", version: "<ver>" }`。
-- [ ] 禁用动作时，`tools/list` 恰好返回 **19 个读取工具**（第 3 节）；以 `REVIT_MCP_ALLOW_WRITE=1` 重启服务器后返回 **35 个工具：19 个读取 + 16 个动作**（第 4 节）。动作虽已列出，是否可执行仍由工作站门禁决定。
+- [ ] 分别记录禁用和启用服务器动作标志时的 `tools/list`，并核对被测版本及工具集配置。当前功能目录收录 **92 个工具：35 个读取 + 57 个动作**；第 3、4 节只列出部分工具的用例。动作是否可执行仍由工作站门禁决定。
 
 <a id="22-claude-code-registration-claude-mcp-add"></a>
 ### 2.2 注册到 Claude Code（`claude mcp add`）
@@ -91,7 +91,7 @@
 
 <a id="3-read-tools-full-coverage-18"></a>
 <a id="3-read-tools-full-coverage-19"></a>
-## 3. 读取工具 — 完整覆盖（19）
+## 3. 读取工具 — 已列出的 19 项用例
 
 在工作站上打开模型。通用模型查询应**先调用 `revit_list_catalog`，再调用 `revit_aggregate_elements`，只有需要逐条数据时才调用 `revit_query_elements`**。先用 `revit_list_instances` 发现进程，再选取唯一的 `document` 子串。记录每个 JSON 结果并抽查值。读取响应通常包含 `success: true`；`revit_list_instances` 则直接返回进程记录列表，没有匹配项时为 `[]`。两个导出工具会写文件，但不修改模型。
 
@@ -127,7 +127,7 @@
 
 <a id="4-action-tools-gated-writes-9"></a>
 <a id="4-action-tools-gated-actions-14"></a>
-## 4. 动作工具 — 受门禁保护的动作（16）
+## 4. 动作工具 — 已列出的受门禁保护的动作
 
 动作需要**同时满足两道门禁**：`REVIT_MCP_ALLOW_WRITE=1` **以及**工作站上的 allow-write 文件。直接 HTTP 调用者还需要 Bearer 令牌。本节只描述另行授权的人工测试，不是文档维护时执行的动作。使用一次性模型副本和独立输出路径，先备份、记录基线；真实修改前获得所有者许可。
 
@@ -138,7 +138,7 @@
 !!! warning "报错不等于回滚"
     `verification.error` 可能在 **COMMIT（提交）后**发生：编辑已经完成，但提交后的重读失败。传输或拾取超时不会取消待执行任务，任务可能稍后执行。重试前检查目标模型、ID 及输出文件，不能宣称每个失败响应都保证模型不变。
 
-- [ ] **4.0 枚举**：启用服务器动作标志后，`tools/list` 恰好包含下列 **16 个具名动作**和 19 个读取（共 35 个）。保存 schema；不存在独立的“按名称打开视图”或 undo 工具。
+- [ ] **4.0 枚举**：启用服务器动作标志后，保存 `tools/list` 与 schema，并与被测版本的[功能总览](features/index.md)核对。当前目录包含 **92 个工具：35 个读取 + 57 个动作**；下表仅列出部分动作的具体用例，其他动作需按工具契约补充验收。
 
 | # | 动作工具 | 测试及验证 | 清理／安全 | [ ] |
 | --- | --- | --- | --- | --- |
@@ -153,6 +153,8 @@
 | 8a | `revit_create_grid` | 先 dry run，再按 `label` 与两点（mm）建直线轴网；核对 `verification.after` 的 ID、类别与 `fork.name`（轴网是基准面，模型里没有包围盒）；同名轴号被拒绝；`mid_mm` 三点建弧，共线三点或与端点重合被拒绝并说明原因；确认写入后模型文件大小与 mtime 不变 | 删除测试轴网或丢弃副本；先确认没有同名轴号；`label`、`start_mm`、`end_mm` 必填，空白轴号被拒绝 | [ ] |
 | 8b | `revit_load_family_file` | 先 dry run，再用工作站上一个 `.rfa` 的绝对路径载入整族；核对 `fork` 块的 `state`、`familyName` 与 `familyTypes`；重复载入同一文件报 `state: existing` 且参数值不被覆盖；给 `type_name` 时只载入该类型，类型不在族里时被拒绝并列出可用类型；路径不存在时被拒绝并给出最接近的文件名；确认写入后模型文件大小与 mtime 不变 | 丢弃副本或删除载入的族；`path` 必填且必须是 `.rfa`；2026 工作站族库不全，用 2020 库的族文件或模型里已载入的族验收 | [ ] |
 | 8c | `revit_create_column` | 先 dry run，再只给底标高与 `height_mm` 放一根柱；核对 `verification.after` 的 ID、类别、族、类型、底部标高与包围盒；再给 `top_level` 放第二根，核对柱顶落在该标高上；`type_name` 不存在时被拒绝并列出该族现有类型；确认写入后模型文件大小与 mtime 不变 | 删除测试柱或丢弃副本；柱族必须已载入（可先用 `revit_load_family_file`）；`family`、`level`、`x_mm`、`y_mm` 必填，`top_level` 与 `height_mm` 至少给一个 | [ ] |
+| 8d | `revit_place_hosted_family` | 先 dry run，用 `host_element_id` 指定一面墙放一扇门；核对 `fork.hostResolution` 的 `mode` 是 `explicit`、`hostId` 与 `distanceMm`，以及 `verification.after` 的 ID、类别、族、类型与包围盒；再不给宿主只给定位点，核对 `mode` 是 `nearest` 且宿主确实是**该标高**里最近的那面墙（换一个 `level` 应换到那一层的墙，而不是同平面的上层墙）；把定位点挪到所有墙都超出 `host_search_radius_mm` 的地方，核对被拒绝并列出候选 `{ id, distanceMm }`，且报的是半径而不是并列；把定位点放到同层两面墙等距处，核对并列拒绝；把 `host_element_id` 指向非墙构件（如标高），核对被拒绝并说明它是哪类构件；给一个非单层宿主族（如结构柱族），核对被拒绝并提示用 `revit_place_family`；给一个非零 `rotation_deg`，核对被拒绝并提示方向由宿主墙决定、改用 `flip_facing`；`flip_facing=true` 应让包围盒贴到墙的另一侧；确认写入后模型文件大小与 mtime 不变 | 删除测试门窗或丢弃副本；门族必须已载入（可先用 `revit_load_family_file`）；`family`、`x_mm`、`y_mm` 必填，`host_search_radius_mm` 必须为正数 | [ ] |
+| 8e | `revit_create_beam` | 先 dry run，在**已载入的梁族**与一个标高上用两点放一根梁；核对 `verification.after` 的 ID、类别、族、类型、参照标高与包围盒，并记下 `fork` 块里报告的偏移参数名；给 `z_offset_mm` 一个非零值再放一根，核对读回的参数名与 `verification.after` 的包围盒一起抬高（几何自己带偏移时读回不带该字段，要如实记哪一种）；`type_name` 不存在时被拒绝并列出该族现有类型；`start_mm` 与 `end_mm` 相同时被拒绝并说明原因；确认写入后模型文件大小与 mtime 不变 | 删除测试梁或丢弃副本；梁族必须已载入（可先用 `revit_load_family_file`）；`family`、`level`、`start_mm`、`end_mm` 必填，`structural_usage` 只接受 FamilyInstance 认的枚举名 | [ ] |
 | 9 | `revit_set_phase` | 先 dry run，再用目录阶段名；测试创建／拆除赋值、`""` 清除及 null 保持不变；检查阶段引用 | 恢复原赋值或丢弃副本；不创建／重命名阶段；两个参数均 null 被拒绝 | [ ] |
 | 10 | `revit_merge_phases` | 先 dry run，再将源阶段创建／拆除引用转到目标；核对数量、`sourceDeleted`；仍被引用的阶段可能保留且 `sourceDeleted=false` | 专用一次性副本；源／目标必须不同；不能加入批处理 | [ ] |
 | 11 | `revit_set_parameter` | 先 dry run，再改可写参数；核对前后值及实例／类型归属；长度 mm、面积 m²、其他 double 内部单位 | 恢复值或丢弃副本；共享类型修改影响全部实例；只读／ElementId 参数被拒绝 | [ ] |
@@ -170,6 +172,16 @@
 - [ ] **4.6 批处理边界**：测试 1、50 步，拒绝 0／51 步、未知动作／键及无效后续参数；覆盖单步 `dry_run`、首个失败回滚、单一撤销项和即时单步验证（后续步骤可能再次改变结果）。
 - [ ] **4.7 验证与超时恢复**：使用可控测试副本或模拟故障检查提交后 `verification.error` 的处理及待执行任务超时警告。重试前记录实际模型／文件状态；不得从失败响应推断回滚或取消。
 - [ ] **4.8 清理路径**：验证清空选择／重置隔离／删除等支持操作，适用时经授权使用 Revit UI 撤销。不虚构 MCP undo 工具，也不以撤销作为换 ID 的恢复路径。
+
+### 4.9 Computer Use 与 Revit MCP 复合验收
+
+用 MCP 核对模型数据，用 Computer Use 记录同一时刻的 Revit 界面。使用一次性模型副本；记录 Revit 版本、模型、活动视图、操作时间及测试构件 ID。测试前确认目标窗口、动作门禁和第 4 节的前置条件。截图可能包含模型或路径等敏感信息，保存和分享证据时遵循项目的数据处理要求。
+
+1. **读取基线**：调用 `revit_ui_state`，记录活动文档、视图和 `activeDocument.isModified`；在工作站记录模型文件大小及修改时间（mtime）。要验证干净模型的 dry run，先确认 `isModified=false`。
+2. **执行动作并保存返回值**：先执行适用的 `dry_run=true`，记录 `rolledBack`、临时 ID 和 `verification`，再按测试计划执行真实动作，记录成功状态、构件 ID、`verification.after`、警告及对话框相关返回值。新建构件的 dry run 回滚后，用 `revit_element_details` 确认临时 ID 已不存在，并再次读取 `isModified`。载族等准备动作也可能使文档变脏，应分别记录。
+3. **定位并截图**：真实动作完成后，对返回的构件 ID 调用 `revit_show`，必要时用 `revit_isolate` 临时隔离；选择确实能显示该构件的视图。用 Computer Use 确认目标 Revit 窗口，取得包含完整 Revit 窗口的全屏快照，并保存截图和采集时间。检查截图中构件是否可见、是否有对话框遮挡，以及 MCP activity 面板是否显示相应操作；若面板未显示或文字不可辨，记录为未确认。截图只证明采集时刻的画面，不能单凭它断言操作期间从未出现对话框。
+4. **交叉核对**：将截图中的类别、类型、标高及可见几何与 MCP 的 `verification.after`、`revit_element_details` 对照；保存原始响应、截图和结论。activity 面板是同一插件的界面记录，结合模型读回与画面判断；有差异或画面不清时记录未确认并继续检查，不把返回成功当作视觉验收通过。
+5. **复核状态并清理**：再次调用 `revit_ui_state`，记录 `isModified`；将模型文件大小和 mtime 与基线比较。真实写入后文档可能显示已修改，文件大小和 mtime 不变只说明磁盘文件尚未改变。重置临时隔离、恢复选择和视图；按测试计划丢弃副本中的未保存改动，最终再次记录文件大小与 mtime。遇到超时或提交后验证错误时，先按第 4.7 项核实实际状态，再决定后续操作。
 
 ---
 

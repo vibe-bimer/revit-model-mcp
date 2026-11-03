@@ -65,7 +65,10 @@ internal static class LinksStatusReader
                 item.Name = type.Name;
                 item.Instances = images[type.Id].Count();
                 item.Path = type.Path;
+#if !REVIT2020_BUILD
                 item.Status = type.Status.ToString();
+#endif
+                // Revit 2020 carries no image load status, so the item keeps the Other reading above.
             }
             catch (Exception exception) { item.Status = "Other"; item.Error = exception.Message; PluginLog.Skipped($"image type {item.TypeId}", exception); }
             result.Summary.Images++;

@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from mcp.server.mcpserver.exceptions import ToolError
+from support_paths import canonical
 
 from revit_model_mcp import batch
 from revit_model_mcp.artifact_download import save_batch_artifact
@@ -323,7 +324,7 @@ async def test_fetch_copies_json_and_rejects_incomplete_or_collision(boundary, t
     host.runs[run_id]["status"] = 2
     host.artifacts[(run_id, "snapshot_0001.json")] = b'{"schemaVersion":1}'
     copied = await tools["revit_batch_fetch"](run_id, str(tmp_path))
-    assert copied["localPaths"] == [str(tmp_path / "snapshot_0001.json")]
+    assert copied["localPaths"] == [canonical(tmp_path / "snapshot_0001.json")]
     assert json.loads(Path(copied["localPaths"][0]).read_text()) == {"schemaVersion": 1}
     with pytest.raises(ToolError, match="already exists"):
         await tools["revit_batch_fetch"](run_id, str(tmp_path))
@@ -379,7 +380,7 @@ async def test_fetch_cancelled_run_reports_all_models(boundary, tmp_path):
     host.runs[run_id]["models"][1].update(status=4, error="Cancelled by user.")
     host.artifacts[(run_id, "snapshot_0001.json")] = b'{"schemaVersion":1}'
     result = await tools["revit_batch_fetch"](run_id, str(tmp_path))
-    assert result["localPaths"] == [str(tmp_path / "snapshot_0001.json")]
+    assert result["localPaths"] == [canonical(tmp_path / "snapshot_0001.json")]
     assert result["models"] == [
         {"path": r"C:\A.rvt", "status": "completed", "localPath": result["localPaths"][0]},
         {
@@ -435,7 +436,7 @@ def test_batch_artifact_falls_back_when_hard_links_unsupported(tmp_path, monkeyp
         "artifact": base64.b64encode(b'{"schemaVersion":1}').decode(),
     }
     target = tmp_path / "snapshot_0001.json"
-    assert save_batch_artifact(artifact, str(tmp_path)) == str(target)
+    assert save_batch_artifact(artifact, str(tmp_path)) == canonical(target)
     assert json.loads(target.read_text()) == {"schemaVersion": 1}
     with pytest.raises(ValueError, match="already exists"):
         save_batch_artifact(artifact, str(tmp_path))

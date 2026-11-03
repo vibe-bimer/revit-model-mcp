@@ -16,7 +16,7 @@ hide:
       <p class="rmc-hero__lede">Bring Autodesk Revit models to your AI assistant: inspect parameters and geometry, count elements, check models, export registers, edit elements, and copy models with new IDs. Read-only by default; actions need both gates.</p>
       <p class="rmc-hero__actions">
         <a class="rmc-btn rmc-btn--primary" href="server/">Install and connect</a>
-        <a class="rmc-btn" href="features/">Browse 90 features</a>
+        <a class="rmc-btn" href="features/">Browse 92 features</a>
       </p>
     </div>
     <div class="rmc-hero__art"><svg class="rmc-frame" xmlns="http://www.w3.org/2000/svg" viewBox="8 52 620 400" role="img" aria-labelledby="rmc-frame-title">
@@ -84,7 +84,7 @@ hide:
     </div>
     <div class="rmc-spec__cell">
       <dt>Action tools</dt>
-      <dd>55</dd>
+      <dd>57</dd>
       <p>Both gates required</p>
     </div>
     <div class="rmc-spec__cell">
@@ -104,7 +104,7 @@ hide:
   <header class="rmc-section__head">
     <span class="rmc-section__num" aria-hidden="true">↗</span>
     <h2 class="rmc-section__title">New platform and migration progress</h2>
-    <p class="rmc-section__lede">The 90 tools on this site describe the current release. The new platform is being integrated on a separate branch and is not yet released.</p>
+    <p class="rmc-section__lede">The 92 tools on this site describe the current release. The new platform is being integrated on a separate branch and is not yet released.</p>
     <a class="rmc-section__link" href="platform/">Browse the 80 tools by origin</a>
     <a class="rmc-section__link" href="https://github.com/vibe-bimer/revit-model-mcp/issues/27">View the integration specification and progress</a>
   </header>
@@ -179,7 +179,7 @@ hide:
   <header class="rmc-section__head">
     <span class="rmc-section__num" aria-hidden="true">02</span>
     <h2 class="rmc-section__title">What it covers</h2>
-    <p class="rmc-section__lede">Grouped into 13 task areas, 90 tools in total. Every tool page carries its purpose, parameters, returned data and limits.</p>
+    <p class="rmc-section__lede">Grouped into 13 task areas, 92 tools in total. Every tool page carries its purpose, parameters, returned data and limits.</p>
     <a class="rmc-section__link" href="features/">Feature overview</a>
   </header>
   <div class="rmc-caps">
@@ -229,7 +229,7 @@ hide:
           <span class="rmc-cap__name">Editing</span>
           <span class="rmc-cap__desc">Compile and run C# on the Revit thread; auto mode owns one transaction and undo entry</span>
         </span>
-        <span class="rmc-cap__count">19</span>
+        <span class="rmc-cap__count">21</span>
       </a>
       <a class="rmc-cap" href="features/#group-phases">
         <span class="rmc-cap__num" aria-hidden="true">07</span>

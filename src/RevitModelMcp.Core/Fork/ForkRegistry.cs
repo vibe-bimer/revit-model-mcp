@@ -28,6 +28,10 @@ public static class ForkRegistry
             $"{(context.DryRun ? "Would load" : "Loaded")} a family file in {Subject(context)}.");
         Register("create-column", "Created column", "Creating column", "column", "columns", context =>
             $"{(context.DryRun ? "Would create" : "Created")} a column in {Subject(context)}.");
+        Register("create-beam", "Created beam", "Creating beam", "beam", "beams", context =>
+            $"{(context.DryRun ? "Would create" : "Created")} a beam in {Subject(context)}.");
+        Register("place-hosted-family", "Placed hosted family", "Placing hosted family", "family", "families",
+            context => $"{(context.DryRun ? "Would place" : "Placed")} a hosted family in {Subject(context)}.");
         Register("set-phase", "Set element phase", "Setting element phase", "element", "elements", context =>
             $"{(context.DryRun ? "Would set" : "Set")} the phase of {Plural(context.Count, "element")} in {Subject(context)}.");
         Register("merge-phases", "Merged phases", "Merging phases", null, null, context =>

@@ -95,6 +95,18 @@ fork_tools:
     en: Create column
     zh_note: 已按 fork 注册表实现（顶底标高与偏移由工具写、柱顶给标高或高度、不做附着、类型不存在列出可用类型），Python 与 Core 测试通过；随首批工具一起翻 grafted。
     en_note: Implemented on the fork registry (the tool writes both levels and both offsets, the top is a level or a height, nothing is attached, a missing type lists the ones that exist) with Python and Core tests passing; flips to grafted with the first batch.
+  revit_create_beam:
+    status: pending
+    zh: 创建梁
+    en: Create beam
+    zh_note: 已按 fork 注册表实现（曲线+标高重载、端点不吸附、结构用途按枚举写入、竖向偏移先写族的标高参数再退到移动实例、类型不存在列出可用类型），Python 与 Core 测试通过；随首批工具一起翻 grafted。
+    en_note: Implemented on the fork registry (the curve-and-level overload, an axis that is never snapped, structural usage written from the enum, the vertical offset through the family's elevation parameter with a move as the fallback, a missing type listing the ones that exist) with Python and Core tests passing; flips to grafted with the first batch.
+  revit_place_hosted_family:
+    status: pending
+    zh: 放置宿主族
+    en: Place hosted family
+    zh_note: 已按 fork 注册表实现（点名宿主或就近找墙、并列与超半径拒绝并列出候选、回报 hostResolution、窗台与翻转、非零角度按宿主墙方向拒绝、非单层宿主族拒绝、不做附着），Python 与 Core 测试通过；随首批工具一起翻 grafted。
+    en_note: Implemented on the fork registry (a named host or the nearest wall, ties and out-of-radius points refused with the candidates, hostResolution reported, sill and flip supported, a non-zero angle refused because the host wall sets the orientation, non-hosted families refused, nothing attached) with Python and Core tests passing; flips to grafted with the first batch.
   revit_set_phase:
     status: pending
     zh: 设置阶段

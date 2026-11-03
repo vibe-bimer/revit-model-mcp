@@ -933,6 +933,84 @@
     ],
     "type": "object"
   },
+  "revit_create_beam": {
+    "properties": {
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "end_mm": {
+        "items": {
+          "type": "number"
+        },
+        "maxItems": 2,
+        "minItems": 2,
+        "type": "array"
+      },
+      "family": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "level": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "start_mm": {
+        "items": {
+          "type": "number"
+        },
+        "maxItems": 2,
+        "minItems": 2,
+        "type": "array"
+      },
+      "structural_usage": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "type_name": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "z_offset_mm": {
+        "default": 0,
+        "type": "number"
+      }
+    },
+    "required": [
+      "end_mm",
+      "family",
+      "level",
+      "start_mm"
+    ],
+    "type": "object"
+  },
   "revit_create_column": {
     "properties": {
       "base_offset_mm": {
@@ -4320,6 +4398,108 @@
     ],
     "type": "object"
   },
+  "revit_place_hosted_family": {
+    "properties": {
+      "document": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dry_run": {
+        "default": false,
+        "type": "boolean"
+      },
+      "family": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "flip_facing": {
+        "anyOf": [
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "host_element_id": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "maximum": 9223372036854775807,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "host_search_radius_mm": {
+        "default": 2000,
+        "type": "number"
+      },
+      "level": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "rotation_deg": {
+        "default": 0,
+        "type": "number"
+      },
+      "sill_height_mm": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "type_name": {
+        "anyOf": [
+          {
+            "minLength": 1,
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "x_mm": {
+        "type": "number"
+      },
+      "y_mm": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "family",
+      "x_mm",
+      "y_mm"
+    ],
+    "type": "object"
+  },
   "revit_place_views_on_sheet": {
     "$defs": {
       "SheetPlacement": {
@@ -4425,7 +4605,9 @@
               "create_floor",
               "create_grid",
               "create_column",
+              "create_beam",
               "load_family_file",
+              "place_hosted_family",
               "set_phase",
               "merge_phases",
               "reset_element_ids",
@@ -5228,7 +5410,9 @@
               "create_floor",
               "create_grid",
               "create_column",
+              "create_beam",
               "load_family_file",
+              "place_hosted_family",
               "set_phase",
               "merge_phases",
               "reset_element_ids",

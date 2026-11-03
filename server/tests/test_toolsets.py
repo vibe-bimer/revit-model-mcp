@@ -15,10 +15,11 @@ from revit_model_mcp.toolsets import (
     select_tools,
 )
 
-# Upstream set 105,000 bytes for its own 79 tools. The fork ships eleven tools upstream does not
-# (adr/0005), and their input schemas cost about 12,500 bytes, so the guard carries an explicit fork
-# allowance instead of being applied to a surface it never measured.
-TOOLS_LIST_BUDGET_BYTES = 105_000 + 9_000
+# Upstream set 105,000 bytes for its own 79 tools. The fork ships twelve tools upstream does not
+# (adr/0005), and their input schemas and docstrings cost about 12,400 bytes on top of that surface,
+# so the guard carries an explicit fork allowance instead of being applied to a surface it never
+# measured. The surface measured 117,389 bytes when revit_create_beam landed.
+TOOLS_LIST_BUDGET_BYTES = 105_000 + 13_500
 
 
 def _registered() -> set[str]:

@@ -6205,7 +6205,9 @@
                 "create_floor",
                 "create_grid",
                 "create_column",
+                "create_beam",
                 "load_family_file",
+                "place_hosted_family",
                 "set_phase",
                 "merge_phases",
                 "reset_element_ids",
@@ -6302,7 +6304,9 @@
                 "create_floor",
                 "create_grid",
                 "create_column",
+                "create_beam",
                 "load_family_file",
+                "place_hosted_family",
                 "set_phase",
                 "merge_phases",
                 "reset_element_ids",
@@ -6910,7 +6914,7 @@
       "readOnlyHint": false,
       "title": "Set View Lighting"
     },
-    "description": "Set a view's lighting: shadows, sun position, ground plane, background and lighting scheme.\n\n        View-specific sun and shadow settings; a view that shares them passes the change on.\n        Sun angles come as a pair, and gradient colors need the gradient background.\n        dry_run returns the same verification block without changing the model.",
+    "description": "Set a view's lighting: shadows, sun position, ground plane, background and lighting scheme.\n\nView-specific sun and shadow settings; a view that shares them passes the change on.\nSun angles come as a pair, and gradient colors need the gradient background.\ndry_run returns the same verification block without changing the model.",
     "inputSchema": {
       "properties": {
         "background": {
@@ -7106,7 +7110,7 @@
       "readOnlyHint": false,
       "title": "Create Level"
     },
-    "description": "Create a level at an elevation, optionally with its floor plan.\n\n        A level whose name already exists is refused. dry_run returns the same verification block\n        without changing the model.",
+    "description": "Create a level at an elevation, optionally with its floor plan.\n\nA level whose name already exists is refused. dry_run returns the same verification block\nwithout changing the model.",
     "inputSchema": {
       "properties": {
         "create_view": {
@@ -7156,7 +7160,7 @@
       "readOnlyHint": false,
       "title": "Create Floor"
     },
-    "description": "Create a floor from a closed boundary on a level.\n\n        `points_mm` is the polygon, three vertices or more, each [x, y] in millimetres; consecutive\n        duplicates are refused. dry_run returns the same verification block without changing the model.",
+    "description": "Create a floor from a closed boundary on a level.\n\n`points_mm` is the polygon, three vertices or more, each [x, y] in millimetres; consecutive\nduplicates are refused. dry_run returns the same verification block without changing the model.",
     "inputSchema": {
       "properties": {
         "document": {
@@ -7223,7 +7227,7 @@
       "readOnlyHint": false,
       "title": "Create Grid"
     },
-    "description": "Create a grid line: straight from `start_mm` to `end_mm`, or a three-point arc through `mid_mm`.\n\n        `label` names the grid (Grid.Name); a grid whose name already exists is refused.\n        Points are [x, y] in millimetres on the horizontal plane. dry_run returns the same\n        verification block without changing the model.",
+    "description": "Create a grid line: straight from `start_mm` to `end_mm`, or a three-point arc through `mid_mm`.\n\n`label` names the grid (Grid.Name); a grid whose name already exists is refused.\nPoints are [x, y] in millimetres on the horizontal plane. dry_run returns the same\nverification block without changing the model.",
     "inputSchema": {
       "properties": {
         "document": {
@@ -7299,7 +7303,7 @@
       "readOnlyHint": false,
       "title": "Load Family File"
     },
-    "description": "Load one family file from the workstation: the whole family, or the single type `type_name`.\n\n        The load always carries the family load options, so it never waits on Revit's own dialog.\n        An existing family is reused, and its parameter values are left alone unless\n        `overwrite_parameters` is true. The response reports `state` (\"new\" or \"existing\") and every\n        type the family now offers. A path that does not exist is refused with the closest filenames\n        beside it. dry_run returns the same verification block without changing the model.",
+    "description": "Load one family file from the workstation: the whole family, or the single type `type_name`.\n\nThe load always carries the family load options, so it never waits on Revit's own dialog.\nAn existing family is reused, and its parameter values are left alone unless\n`overwrite_parameters` is true. The response reports `state` (\"new\" or \"existing\") and every\ntype the family now offers. A path that does not exist is refused with the closest filenames\nbeside it. dry_run returns the same verification block without changing the model.",
     "inputSchema": {
       "properties": {
         "document": {
@@ -7355,9 +7359,126 @@
       "destructiveHint": true,
       "idempotentHint": false,
       "readOnlyHint": false,
+      "title": "Place Hosted Family"
+    },
+    "description": "Place one door, window or other one-level hosted family of `family` at `x_mm`, `y_mm`.\n\nThe host is either the wall named by `host_element_id`, or the nearest wall of the placement\nlevel whose location line passes within `host_search_radius_mm` of the point; `level` defaults\nto the level whose elevation is closest to the point. A missing host, a distance over the\nradius or two equally near walls are refused with the candidates, so the caller can name one.\nThe response reports `fork.hostResolution` ({mode, hostId, distanceMm}), which is why a dry\nrun already shows the wall the family would hang on. `sill_height_mm` writes the family's own\nINSTANCE_SILL_HEIGHT_PARAM and `flip_facing` calls flipFacing(). `rotation_deg` must be 0: a\nhosted instance takes its orientation from its host wall, so use `flip_facing` to turn it\naround. Families that are not one-level hosted are refused: revit_place_family places those,\nand it is the one that rotates. Nothing is attached to the host, because a door or a window\nhas no attachment target. dry_run returns the same verification block without changing the\nmodel.",
+    "inputSchema": {
+      "properties": {
+        "document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dry_run": {
+          "default": false,
+          "type": "boolean"
+        },
+        "family": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "flip_facing": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "host_element_id": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 9223372036854775807,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "host_search_radius_mm": {
+          "default": 2000,
+          "type": "number"
+        },
+        "level": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rotation_deg": {
+          "default": 0,
+          "type": "number"
+        },
+        "sill_height_mm": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "x_mm": {
+          "type": "number"
+        },
+        "y_mm": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "family",
+        "x_mm",
+        "y_mm"
+      ],
+      "type": "object"
+    },
+    "name": "revit_place_hosted_family",
+    "outputSchema": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "title": "Place Hosted Family"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "readOnlyHint": false,
       "title": "Create Column"
     },
-    "description": "Place one structural column of `family` (optionally `type_name`) at `x_mm`, `y_mm` on `level`.\n\n        The top is either `top_level` or `height_mm` above the base (3000 mm when neither is given).\n        Base and top levels and both offsets are written by the tool itself, because they are\n        ElementId-valued parameters that revit_set_parameter refuses on purpose. The column is not\n        attached to anything: no attachment is attempted. dry_run returns the same verification\n        block without changing the model.",
+    "description": "Place one structural column of `family` (optionally `type_name`) at `x_mm`, `y_mm` on `level`.\n\nThe top is either `top_level` or `height_mm` above the base (3000 mm when neither is given).\nBase and top levels and both offsets are written by the tool itself, because they are\nElementId-valued parameters that revit_set_parameter refuses on purpose. The column is not\nattached to anything: no attachment is attempted. dry_run returns the same verification\nblock without changing the model.",
     "inputSchema": {
       "properties": {
         "base_offset_mm": {
@@ -7455,11 +7576,104 @@
   {
     "annotations": {
       "destructiveHint": true,
+      "idempotentHint": false,
+      "readOnlyHint": false,
+      "title": "Create Beam"
+    },
+    "description": "Place one structural beam of `family` (optionally `type_name`) along the axis `start_mm`-`end_mm`.\n\n`level` is the reference level of the framing, and the two axis points are [x, y] in\nmillimetres. The placement uses the curve-and-level overload, so the level and the axis are\nboth given explicitly; the axis is not snapped, because Revit has no snapping API and\nSetEndReference only acts on an end the model already joined. `structural_usage` writes\nFamilyInstance.StructuralUsage. `z_offset_mm` is the vertical offset above the reference\nlevel: the tool writes it through the elevation parameters that carry it, and only a write that\nlifts the bounding box counts, because a family can take the value and keep the beam on its\nlevel; the instance moves instead when no parameter lifts it, and the call fails when neither\nroute works, so a refused offset never passes as a beam placed on the level. The read-back names\nthe parameter holding the offset or leaves it out when the geometry carries the shift. dry_run\nreturns the same verification block without changing the model.",
+    "inputSchema": {
+      "properties": {
+        "document": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "dry_run": {
+          "default": false,
+          "type": "boolean"
+        },
+        "end_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "family": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "level": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "start_mm": {
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "structural_usage": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "type_name": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "z_offset_mm": {
+          "default": 0,
+          "type": "number"
+        }
+      },
+      "required": [
+        "family",
+        "level",
+        "start_mm",
+        "end_mm"
+      ],
+      "type": "object"
+    },
+    "name": "revit_create_beam",
+    "outputSchema": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "title": "Create Beam"
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
       "idempotentHint": true,
       "readOnlyHint": false,
       "title": "Set Phase"
     },
-    "description": "Set the creation and demolition phase of elements.\n\n        An empty string clears a phase and null leaves it alone; at least one must be given.\n        dry_run returns the same verification block without changing the model.",
+    "description": "Set the creation and demolition phase of elements.\n\nAn empty string clears a phase and null leaves it alone; at least one must be given.\ndry_run returns the same verification block without changing the model.",
     "inputSchema": {
       "properties": {
         "created_phase": {
@@ -7528,7 +7742,7 @@
       "readOnlyHint": false,
       "title": "Merge Phases"
     },
-    "description": "Merge one phase into another and delete the emptied phase.\n\n        Reports how many elements moved each way and how many references remain to the source.\n        dry_run returns the same verification block without changing the model.",
+    "description": "Merge one phase into another and delete the emptied phase.\n\nReports how many elements moved each way and how many references remain to the source.\ndry_run returns the same verification block without changing the model.",
     "inputSchema": {
       "properties": {
         "document": {
@@ -7575,7 +7789,7 @@
       "readOnlyHint": false,
       "title": "Reset Element Ids"
     },
-    "description": "Give elements new element IDs by copying each one over its original.\n\n        The API cannot assign an element ID, so every element is copied, checked and then replaces\n        its original. Elements that cannot be replaced are refused by name, and a real run is\n        refused when any element in the selection is. dry_run returns the same block without keeping\n        the changes.",
+    "description": "Give elements new element IDs by copying each one over its original.\n\nThe API cannot assign an element ID, so every element is copied, checked and then replaces\nits original. Elements that cannot be replaced are refused by name, and a real run is\nrefused when any element in the selection is. dry_run returns the same block without keeping\nthe changes.",
     "inputSchema": {
       "properties": {
         "document": {
@@ -7622,7 +7836,7 @@
       "readOnlyHint": false,
       "title": "Rebuild Model Ids"
     },
-    "description": "Rebuild the model into a new document so every element gets a new element ID.\n\n        `destination_path` is the new model, with {n} replaced by the copy number when `copies`\n        exceeds one. Reports the old to new pairing, the per-file results and the category counts.\n        dry_run reports the plan without writing files.",
+    "description": "Rebuild the model into a new document so every element gets a new element ID.\n\n`destination_path` is the new model, with {n} replaced by the copy number when `copies`\nexceeds one. Reports the old to new pairing, the per-file results and the category counts.\ndry_run reports the plan without writing files.",
     "inputSchema": {
       "properties": {
         "copies": {
@@ -7709,7 +7923,7 @@
       "readOnlyHint": true,
       "title": "Export Element Ids"
     },
-    "description": "Write the element identifier register of the drawn components to a workbook, read-only.\n\n        `fields` picks the columns and `path` names the file, which must not already exist; without\n        one the workbook goes to Documents/RevitModelMcp/Exports with a timestamp. Non-component\n        categories are reported under skippedCategories and the list is capped at 50,000 rows.\n        The workbook is written on the Revit workstation; nothing is downloaded.",
+    "description": "Write the element identifier register of the drawn components to a workbook, read-only.\n\n`fields` picks the columns and `path` names the file, which must not already exist; without\none the workbook goes to Documents/RevitModelMcp/Exports with a timestamp. Non-component\ncategories are reported under skippedCategories and the list is capped at 50,000 rows.\nThe workbook is written on the Revit workstation; nothing is downloaded.",
     "inputSchema": {
       "properties": {
         "document": {

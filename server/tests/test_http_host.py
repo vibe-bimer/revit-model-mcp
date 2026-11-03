@@ -12,6 +12,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlsplit
 
 import pytest
+from support_paths import canonical
 
 from revit_model_mcp import package_version
 from revit_model_mcp.http_host import HttpHost
@@ -302,7 +303,7 @@ def test_image_download_round_trips_non_ascii_mixed_scripts_and_preserves_metada
     result = asyncio.run(RevitChannel(host).execute(job))
     assert target.read_bytes() == PNG
     assert result["data"]["width"] == 1600
-    assert result["data"]["localPath"] == str(target)
+    assert result["data"]["localPath"] == canonical(target)
     assert len(state["requests"]) == 4
     with pytest.raises(RevitChannelError, match="already exists"):
         asyncio.run(RevitChannel(host).execute(job))

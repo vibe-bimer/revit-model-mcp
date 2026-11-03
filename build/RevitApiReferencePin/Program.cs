@@ -28,6 +28,7 @@ try
         }))
         {
             var references = assembly.MainModule.AssemblyReferences;
+            var rewriteNeeded = false;
             foreach (var name in referenceNames)
             {
                 var matches = references.Where(reference => reference.Name == name).ToArray();
@@ -38,6 +39,7 @@ try
 
                 if (args[0] == "rewrite")
                 {
+                    rewriteNeeded |= matches[0].Version != expectedVersion;
                     matches[0].Version = expectedVersion;
                 }
                 else if (matches[0].Version != expectedVersion)
@@ -46,13 +48,15 @@ try
                 }
             }
 
-            if (args[0] == "rewrite")
+            // A build whose merged references already carry the minimum version is left untouched: the write
+            // rewrites metadata the pack already settled, and the net47 metadata is not one Cecil can re-read.
+            if (args[0] == "rewrite" && rewriteNeeded)
             {
                 assembly.Write(temporaryPath, new WriterParameters { WriteSymbols = hasSymbols });
             }
         }
 
-        if (args[0] == "rewrite")
+        if (args[0] == "rewrite" && File.Exists(temporaryPath))
         {
             File.Move(temporaryPath, assemblyPath, true);
             if (hasSymbols)
