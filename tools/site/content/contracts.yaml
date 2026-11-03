@@ -434,6 +434,19 @@ tools:
 
       '
     source: b24a398ee5a34cb43710c4ddef95549616e0b3a6325182d47bd999100e193dea
+  revit_create_beam:
+    zh: '沿 `start_mm` 到 `end_mm` 的轴线，在 `level` 上放一根 `family`（可指定 `type_name`）的结构梁。
+
+      两个端点都是模型 XY 坐标系中的 `[x, y]`，单位为毫米；坐标按给定值放，端点不做吸附——Revit 没有程序化吸附接口，`SetEndReference` 只对模型里已经连接的端有效。放置走曲线与标高的重载，因此标高与轴线都由调用者给定，不需要面引用。
+
+      `structural_usage` 写入 FamilyInstance.StructuralUsage，取值是结构用途枚举的名称。`z_offset_mm` 是相对参考标高的竖向偏移：先写族的起点与终点标高偏移，再试实例的标高参数，只有包围盒真的按偏移抬升才算写进去——族可以接受值却把梁留在标高上；参数都不抬升时改为移动实例，移动也不抬升就报错，不把没落的偏移当成已放置。偏移最终落在哪个参数由创建后的读回给出。梁族必须已经在项目里，`type_name` 不存在时会列出该族现有的类型。
+
+      `dry_run` 会执行操作后回滚，在不改变模型的情况下返回相同的验证数据块。
+
+      同时打开多个模型时，传入 `document` 以指定目标模型；未知或有歧义的引用会被拒绝。
+
+      '
+    source: 40d73113b69c2a2f83888e81cb029a37ef7ce3cd89ad0af963ca7ddc8205d720
   revit_create_column:
     zh: '在 `level` 上的点 `x_mm`、`y_mm` 处放一根 `family`（可指定 `type_name`）的结构柱。
 

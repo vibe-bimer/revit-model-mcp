@@ -647,6 +647,32 @@ tools:
     note:
       zh: 顶底标高与偏移由工具自己写（set_parameter 拒绝 ElementId 参数）；不做附着，柱顶只能给标高或高度
       en: The tool writes both levels and both offsets itself, because set_parameter refuses ElementId parameters; nothing is attached, so the top is a level or a height
+  revit_create_beam:
+    source: '40d73113b69c'
+    group: edit
+    origin: fork
+    since: 1.1.0
+    title:
+      zh: 创建梁
+      en: Create beam
+    summary:
+      zh: 沿给定轴线在标高上放一根结构梁，可写结构用途与竖向偏移（mm）
+      en: Place a structural beam on a level along a given axis, with an optional structural usage and vertical offset
+    years:
+      '2020':
+        state: validated
+      '2026':
+        state: validated
+      other:
+        state: built
+    prompts:
+    - zh: 在 2F 从 (0,0) 到 (6000,0) 放一根 300x600 的混凝土梁，梁顶降 150
+      en: Put a 300x600 concrete beam on 2F from 0,0 to 6000,0, dropped 150
+    - zh: 在 1F 从 (0,0) 到 (6000,0) 放一根钢梁，结构用途设成 Girder
+      en: Put a steel beam on 1F from 0,0 to 6000,0 and set its structural usage to Girder
+    note:
+      zh: 走曲线+标高的重载，端点不吸附；竖向偏移写族的标高参数，只有包围盒真的抬升才算写进去，否则改为移动实例，两条路都不成立就报错而不是放在标高上
+      en: The curve-and-level overload is used and the axis is not snapped; the offset goes through the family's elevation parameters, counts only when the bounding box rises, moves the instance otherwise, and fails rather than leaving the beam on its level
   revit_place_hosted_family:
     source: '52c858741125'
     group: edit
@@ -3286,3 +3312,15 @@ param_defaults:
   points_mm:
     zh: 至少 3 个模型 XY 顶点，每个顶点为 [x,y]（mm）；自动闭合轮廓
     en: At least three model XY vertices, each [x,y] in millimetres; the boundary closes automatically
+  start_mm:
+    zh: 轴起点，[x,y]（mm）；按给定坐标放，不做吸附
+    en: axis start as [x, y] in millimetres; placed exactly as given, without snapping
+  end_mm:
+    zh: 轴终点，[x,y]（mm）；与起点重合会被拒绝
+    en: axis end as [x, y] in millimetres; a point equal to the start is refused
+  structural_usage:
+    zh: 结构用途（Girder / Joist / Purlin / Bearing / Other 等）；缺省沿用族自己的设定
+    en: structural usage such as Girder, Joist, Purlin, Bearing or Other; the family's own setting stands when omitted
+  z_offset_mm:
+    zh: 相对参考标高的竖向偏移（mm）；落在哪个参数以实例读回为准
+    en: vertical offset relative to the reference level in millimetres; the read-back names where it landed
