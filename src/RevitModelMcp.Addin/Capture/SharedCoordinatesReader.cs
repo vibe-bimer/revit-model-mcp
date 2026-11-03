@@ -11,8 +11,7 @@ internal static class SharedCoordinatesReader
         if (document.IsFamilyDocument) throw new ArgumentException("Shared coordinates are available only in project documents.");
         const int listLimit = 100;
         var location = document.ActiveProjectLocation;
-        var basePoint = BasePoint.GetProjectBasePoint(document);
-        var surveyPoint = BasePoint.GetSurveyPoint(document);
+        var (basePoint, surveyPoint) = FindBasePoints(document);
         var locations = document.ProjectLocations.Cast<ProjectLocation>().Select(site => site.Name)
             .OrderBy(name => name, StringComparer.Ordinal).ToList();
         using var links = new FilteredElementCollector(document).OfClass(typeof(RevitLinkInstance));
@@ -43,6 +42,25 @@ internal static class SharedCoordinatesReader
         };
     }
 
+    private static (BasePoint Project, BasePoint Survey) FindBasePoints(Document document)
+    {
+#if REVIT2020_BUILD
+        // Revit 2020.0 has no BasePoint.GetProjectBasePoint/GetSurveyPoint, so the two points come from
+        // the collector and are told apart by IsShared: the survey point is shared, the project base point is not.
+        var points = new FilteredElementCollector(document).OfClass(typeof(BasePoint)).Cast<BasePoint>().ToList();
+        var project = points.FirstOrDefault(point => !point.IsShared);
+        var survey = points.FirstOrDefault(point => point.IsShared);
+        if (project is null || survey is null)
+        {
+            throw new InvalidOperationException(
+                $"The document has {points.Count} base point(s) and needs one project base point and one survey point.");
+        }
+        return (project, survey);
+#else
+        return (BasePoint.GetProjectBasePoint(document), BasePoint.GetSurveyPoint(document));
+#endif
+    }
+
     private static CoordinatePoint ReadPoint(BasePoint point, bool project)
     {
         return new CoordinatePoint
@@ -58,12 +76,17 @@ internal static class SharedCoordinatesReader
 
     private static bool? ReadClipped(BasePoint point)
     {
+#if !REVIT2020_BUILD
         try { return point.Clipped; }
         catch (Exception exception)
         {
             PluginLog.Skipped($"base point {RevitValueReader.GetId(point.Id)} clipped state", exception);
             return null;
         }
+#else
+        // Revit 2020 has no clipped flag on a base point, so the answer stays unknown instead of guessed.
+        return null;
+#endif
     }
 
     private static CoordinateOffset Offset(XYZ point) => new()

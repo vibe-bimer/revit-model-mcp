@@ -143,7 +143,11 @@ internal static class FamilyAuditReader
     {
         try
         {
+#if !REVIT2020_BUILD
             return LabelUtils.GetLabelForGroup(parameter.Definition.GetGroupTypeId());
+#else
+            return LabelUtils.GetLabelFor(parameter.Definition.ParameterGroup);
+#endif
         }
         catch (Exception)
         {

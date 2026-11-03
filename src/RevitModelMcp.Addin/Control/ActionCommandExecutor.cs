@@ -715,6 +715,10 @@ internal static class ActionCommandExecutor
         var stopwatch = Stopwatch.StartNew();
         if (request.Format == "pdf")
         {
+#if REVIT2020_BUILD
+            throw new InvalidOperationException(
+                "PDF export needs Revit 2021 or later; this workstation runs Revit 2020. Use the dwg or ifc format.");
+#else
             foreach (var group in (options.Combine ?? true) ? new[] { selected } : selected.Select(view => new List<View> { view }))
             {
                 var name = planned[(options.Combine ?? true) ? 0 : selected.IndexOf(group[0])];
@@ -736,6 +740,7 @@ internal static class ActionCommandExecutor
                 if (!document.Export(folder, group.Select(view => view.Id).ToList(), pdf))
                     throw new InvalidOperationException($"PDF export failed for '{name}'.");
             }
+#endif
         }
         else if (request.Format == "dwg")
         {
@@ -1178,12 +1183,21 @@ internal static class ActionCommandExecutor
     private static bool OpenViewForElements(UIDocument uiDocument, List<ElementId> ids)
     {
         var document = uiDocument.Document;
+#if !REVIT2020_BUILD
         using var idFilter = new ElementIdSetFilter(ids);
+#endif
         foreach (var uiView in uiDocument.GetOpenUIViews())
         {
             if (!FilteredElementCollector.IsViewValidForElementIteration(document, uiView.ViewId)) continue;
+#if !REVIT2020_BUILD
             using var visible = document.CollectElements(uiView.ViewId).WherePasses(idFilter);
             if (visible.Any()) return false;
+#else
+            // Revit 2020 has no ElementIdSetFilter, so the visible set is tested against the ids directly.
+            var wanted = new HashSet<long>(ids.Select(RevitValueReader.GetId));
+            using var visible = document.CollectElements(uiView.ViewId);
+            if (visible.Any(element => wanted.Contains(RevitValueReader.GetId(element.Id)))) return false;
+#endif
         }
 
         View? target = null;

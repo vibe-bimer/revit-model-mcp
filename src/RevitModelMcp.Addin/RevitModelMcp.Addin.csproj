@@ -15,8 +15,8 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <Authors>Dinar Sharafutdinov</Authors>
     <Company>Dinar Sharafutdinov</Company>
-    <Configurations>Debug.R22;Debug.R23;Debug.R24;Debug.R25;Debug.R26;Debug.R27</Configurations>
-    <Configurations>$(Configurations);Release.R22;Release.R23;Release.R24;Release.R25;Release.R26;Release.R27</Configurations>
+    <Configurations>Debug.R20;Debug.R22;Debug.R23;Debug.R24;Debug.R25;Debug.R26;Debug.R27</Configurations>
+    <Configurations>$(Configurations);Release.R20;Release.R22;Release.R23;Release.R24;Release.R25;Release.R26;Release.R27</Configurations>
   </PropertyGroup>
 
   <!-- Builds without an explicit Version use the repository version, never the SDK default 1.0.0. -->
@@ -25,6 +25,13 @@
     <VersionPrefix Condition="'$(RepositoryVersion)' != ''">$(RepositoryVersion)</VersionPrefix>
   </PropertyGroup>
 
+  <!-- The WPF temp project does not receive the SDK's target-time REVIT* constants, so the 2020-only
+       shims key off an evaluation-time constant that both projects see. -->
+  <PropertyGroup Condition="'$(RevitVersion)' == '2020'">
+    <MinimumRevitApiPackageVersion>2020.2.90</MinimumRevitApiPackageVersion>
+    <MinimumRevitApiAssemblyVersion>20.0.0.0</MinimumRevitApiAssemblyVersion>
+    <DefineConstants>$(DefineConstants);REVIT2020_BUILD</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(RevitVersion)' == '2022'">
     <MinimumRevitApiPackageVersion>2022.1.1</MinimumRevitApiPackageVersion>
     <MinimumRevitApiAssemblyVersion>22.0.0.0</MinimumRevitApiAssemblyVersion>
@@ -59,12 +66,12 @@
     <PackageReference Include="JetBrains.Annotations" Version="2026.2.0" PrivateAssets="all"/>
     <PackageReference Include="Polyfill" Version="11.4.5" PrivateAssets="all"/>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0"/>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48'"/>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' Or '$(TargetFramework)' == 'net47'"/>
   </ItemGroup>
 
-  <!-- The fork's xlsx writer uses System.IO.Compression.ZipArchive; a net48 project gets
-       that assembly only from an explicit reference. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+  <!-- The fork's xlsx writer uses System.IO.Compression.ZipArchive; a .NET Framework project
+       gets that assembly only from an explicit reference. Revit 2020 builds against net47. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48' Or '$(TargetFramework)' == 'net47'">
     <Reference Include="System.IO.Compression"/>
   </ItemGroup>
 

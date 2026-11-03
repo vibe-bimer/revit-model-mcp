@@ -33,7 +33,7 @@
     "src/RevitModelMcp.Core/Control/ActionVerificationModels.cs",
     "src/RevitModelMcp.Core/Control/ControlJobParser.cs"
   ],
-  "hookBudgetLines": 80,
+  "hookBudgetLines": 94,
   "reads": {
     ".github/ISSUE_TEMPLATE/config.yml": "the fork's own issue links",
     ".github/workflows/ci.yml": "the bundle launcher check",
@@ -109,6 +109,7 @@
     "tests/RevitModelMcp.Core.Tests/Connect/TomlConfigEditorTests.cs": "the launch arguments the config editors write",
     "tests/RevitModelMcp.Core.Tests/Fork/ForkInputTests.cs": "the fork's own tests",
     "tests/RevitModelMcp.Core.Tests/Fork/HostSearchTests.cs": "the fork's own tests",
+    "tests/RevitModelMcp.Core.Tests/Fork/UnitSpecNamesTests.cs": "the fork's own tests",
     "tests/RevitModelMcp.Core.Tests/Help/HelpLinksTests.cs": "the help site the add-in opens",
     "tests/RevitModelMcp.Core.Tests/Installer/InstallerScriptsTests.cs": "the installer diagnostics carry the product name",
     "tests/RevitModelMcp.Core.Tests/Updates/UpdatePolicyTests.cs": "the release page the policy tests assert",
@@ -118,12 +119,20 @@
     "server/tests/test_updates.py": "asserts the update check never resolves the package name",
     "src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj": "the net48 System.IO.Compression reference the fork xlsx writer needs",
     "src/RevitModelMcp.Addin/packages.Release.R20.lock.json": "the Revit 2020 locked restore the fork's release build needs",
+    "src/RevitModelMcp.Core/RevitModelMcp.Core.csproj": "the net47 target the Revit 2020 build needs",
+    "src/RevitModelMcp.Addin/Capture/QueryParameterResolver.cs": "the Revit 2020 measurable-spec branch the fork unit shim answers",
+    "src/RevitModelMcp.Addin/Capture/QueryFilterBuilder.cs": "the Revit 2020 measurable-spec branch the fork unit shim answers",
+    "src/RevitModelMcp.Addin/Capture/FamilyAuditReader.cs": "the Revit 2020 group-label branch the fork unit shim answers",
+    "src/RevitModelMcp.Addin/Capture/LinksStatusReader.cs": "the Revit 2020 image status the API cannot read",
+    "src/RevitModelMcp.Addin/Capture/SharedCoordinatesReader.cs": "the Revit 2020 base point lookup and clipped flag the API does not carry",
     "build/RevitApiReferencePin/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
+    "build/RevitApiReferencePin/Program.cs": "the 2020 build skips a rewrite its references already satisfy",
     "build/install/Installer.csproj": "pre-commit end-of-file normalization of build metadata",
     "build/install/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
     "build/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
     "global.json": "pre-commit end-of-file normalization of build metadata",
-    "tests/RevitModelMcp.Core.Tests/packages.lock.json": "pre-commit end-of-file normalization of build metadata"
+    "tests/RevitModelMcp.Core.Tests/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
+    "src/RevitModelMcp.Core/packages.lock.json": "pre-commit end-of-file normalization of build metadata"
   },
   "removed": {
     ".github/workflows/winget.yml": "removed: it published to upstream's WinGet package",
