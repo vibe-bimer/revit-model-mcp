@@ -116,6 +116,7 @@
     "server/revit_model_mcp/updates.py": "the update check reads this fork's release tag",
     "server/tests/test_updates.py": "asserts the update check never resolves the package name",
     "src/RevitModelMcp.Addin/RevitModelMcp.Addin.csproj": "the net48 System.IO.Compression reference the fork xlsx writer needs",
+    "src/RevitModelMcp.Addin/packages.Release.R20.lock.json": "the Revit 2020 locked restore the fork's release build needs",
     "build/RevitApiReferencePin/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
     "build/install/Installer.csproj": "pre-commit end-of-file normalization of build metadata",
     "build/install/packages.lock.json": "pre-commit end-of-file normalization of build metadata",
