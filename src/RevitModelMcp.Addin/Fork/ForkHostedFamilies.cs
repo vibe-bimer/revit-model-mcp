@@ -14,25 +14,14 @@ namespace RevitModelMcp.Control.Fork;
 /// checked here, before anything is created, and the resolution is reported back through
 /// <c>fork.hostResolution</c> so a dry run also shows which wall the family would hang on.
 /// The nearest-wall search only looks at walls of the placement's own storey, because a wall drawn
-/// once per level is otherwise tied with its own neighbours above and below.
+/// once per level is otherwise tied with its own neighbours above and below; the rules that decide
+/// among those walls live in <see cref="HostSearch"/>, where they are tested without Revit.
 /// Nothing is attached: "attach to host" means a slab, roof, ceiling, beam or brace target, which has
 /// no bearing on a door or a window. Runs inside the caller's transaction, so a dry run is rolled
 /// back by the executor.
 /// </summary>
 internal static class ForkHostedFamilies
 {
-    private const double DefaultSearchRadiusMm = 2000;
-
-    /// <summary>
-    /// A wall is "equally far" from the point when the two distances differ by less than this. A tenth
-    /// of a millimetre is the precision a model is drawn at, so a smaller difference is a modelling
-    /// accident and not a reason to pick one wall over the other.
-    /// </summary>
-    private const double TieToleranceMm = 0.1;
-
-    /// <summary>How many near walls a refusal lists.</summary>
-    private const int CandidateCount = 5;
-
     /// <summary>Checks the placement inputs that need no document.</summary>
     internal static void Validate(ActionJobContract action)
     {
@@ -154,13 +143,13 @@ internal static class ForkHostedFamilies
             mode = "explicit";
             var host = WallById(document, hostId);
             distanceMm = WallDistance(host, point) is { } distance
-                ? ForkLookup.MillimetersFromInternal(distance)
+                ? Math.Round(distance, 1)
                 : null;
             return host;
         }
 
         mode = "nearest";
-        var radiusMm = action.Options.HostSearchRadiusMm ?? DefaultSearchRadiusMm;
+        var radiusMm = action.Options.HostSearchRadiusMm ?? HostSearch.DefaultRadiusMm;
         var wall = NearestWall(document, point, level, radiusMm, out distanceMm);
         return wall;
     }
@@ -181,10 +170,10 @@ internal static class ForkHostedFamilies
     }
 
     /// <summary>
-    /// The wall of the placement's own storey whose location line runs closest to the point, refused
-    /// when that is not a single best answer. Walls of other storeys are not candidates: a door on the
-    /// first floor cannot hang on the wall above it, and a building whose walls are drawn once per
-    /// storey would otherwise report every one of them as equally far.
+    /// The wall of the placement's own storey whose location line runs closest to the point. Walls of
+    /// other storeys are not candidates: a door on the first floor cannot hang on the wall above it, and
+    /// a building whose walls are drawn once per storey would otherwise report every one of them as
+    /// equally far. Which of those walls wins - range, tie, order - is <see cref="HostSearch"/>'s call.
     /// </summary>
     private static Wall NearestWall(
         Document document,
@@ -193,65 +182,44 @@ internal static class ForkHostedFamilies
         double radiusMm,
         out double? distanceMm)
     {
-        var radius = ForkLookup.Millimeters(radiusMm);
-        var elevation = level.ProjectElevation;
+        var levelMm = RevitValueReader.ToMillimeters(level.ProjectElevation);
+        var wallsById = new Dictionary<long, Wall>();
+        var candidates = new List<HostSearch.Candidate>();
         using var walls = document.CollectElements().OfClass<Wall>();
-        var measured = new List<(Wall Wall, double Distance)>();
         foreach (var wall in walls.Cast<Wall>())
         {
             if (wall.WallType?.Kind == WallKind.Curtain) continue;
             if (WallSpan(document, wall) is not { } span) continue;
-            if (elevation < span.Base - ForkLookup.Millimeters(TieToleranceMm)) continue;
-            if (elevation >= span.Top - ForkLookup.Millimeters(TieToleranceMm)) continue;
-            if (WallDistance(wall, point) is not { } distance) continue;
-            measured.Add((wall, distance));
+            if (!HostSearch.SpansStorey(span.BaseMm, span.TopMm, levelMm)) continue;
+            if (WallDistance(wall, point) is not { } distanceFromLine) continue;
+            var id = RevitValueReader.GetId(wall.Id);
+            wallsById[id] = wall;
+            candidates.Add(new HostSearch.Candidate(id, distanceFromLine));
         }
 
         distanceMm = null;
-        if (measured.Count == 0)
+        if (candidates.Count == 0)
             throw new ArgumentException(
                 $"The document has no wall on level '{level.Name}' to host the family.");
 
-        measured.Sort((left, right) =>
-        {
-            var byDistance = left.Distance.CompareTo(right.Distance);
-            return byDistance != 0
-                ? byDistance
-                : RevitValueReader.GetId(left.Wall.Id).CompareTo(RevitValueReader.GetId(right.Wall.Id));
-        });
-        var nearest = measured[0];
-        var nearestMm = ForkLookup.MillimetersFromInternal(nearest.Distance);
-
-        // Range first: a search that found nothing inside its radius owed no tie verdict.
-        if (nearest.Distance > radius)
-            throw new ArgumentException(
-                $"No wall within hostSearchRadiusMm {ForkLookup.Number(radiusMm)}. Nearest: {Candidates(measured)}.");
-
-        // A tie is the caller's decision, not the tool's: two walls equally far means the intent is unknown.
-        // The comparison stays on the measured distances; the rounded millimetres are only for the report.
-        var equallyNear = measured
-            .TakeWhile(candidate => candidate.Distance - nearest.Distance <= ForkLookup.Millimeters(TieToleranceMm))
-            .ToList();
-        if (equallyNear.Count > 1)
-            throw new ArgumentException(
-                $"Walls {Candidates(equallyNear)} are equally far from the placement point. "
-                + "Name one with hostElementId.");
-
-        distanceMm = nearestMm;
-        return nearest.Wall;
+        var chosen = HostSearch.Nearest(candidates, radiusMm);
+        distanceMm = Math.Round(chosen.DistanceMm, 1);
+        return wallsById[chosen.Id];
     }
 
-    /// <summary>The near walls as <c>id at distance mm</c>, closest first, for a refusal to name.</summary>
-    private static string Candidates(List<(Wall Wall, double Distance)> walls) =>
-        string.Join(", ", walls.Take(CandidateCount).Select(candidate =>
-            $"{RevitValueReader.GetId(candidate.Wall.Id)} at {ForkLookup.Number(ForkLookup.MillimetersFromInternal(candidate.Distance))} mm"));
-
     /// <summary>
-    /// Distance from the point to the wall's location line, measured on the level plane and only when
-    /// the foot of the perpendicular lands on the wall itself (the projection sits inside the curve).
-    /// The projection uses the real curve, so a wall drawn as an arc is measured against the arc and
-    /// not against the chords the curve is tessellated into.
+    /// Distance in millimetres from the point to the wall's location line, measured on the level plane
+    /// and only when the foot of the perpendicular lands on the wall itself (the projection sits inside
+    /// the curve). The projection uses the real curve, so a wall drawn as an arc is measured against the
+    /// arc and not against the chords the curve is tessellated into.
     /// </summary>
+    /// <remarks>
+    /// The offsets stay in Revit's feet and unrounded: the right-angle test is a product of the offsets,
+    /// and a display rounding on the way in would turn a true perpendicular beside a diagonal wall into
+    /// a rejection. The millimetres this returns are unrounded for the same reason - the search compares
+    /// them against its radius and its tie tolerance - so rounding happens only where the answer is
+    /// shown, never where it is decided.
+    /// </remarks>
     private static double? WallDistance(Wall wall, XYZ point)
     {
         if (wall.Location is not LocationCurve location || location.Curve is not { } curve) return null;
@@ -263,25 +231,21 @@ internal static class ForkHostedFamilies
         var dx = point.X - foot.X;
         var dy = point.Y - foot.Y;
 
-        // A projection that ran to the end of the wall is not the foot of a perpendicular: the point
-        // stands beside the wall, not in front of it, so this wall does not host it. Measuring the
-        // angle keeps that rule whatever clamping the projection itself does.
         var tangent = curve.ComputeDerivatives(projection.Parameter, false).BasisX;
-        if (!MeetsAtRightAngles(tangent, dx, dy)) return null;
+        if (!HostSearch.MeetsAtRightAngles(tangent.X, tangent.Y, dx, dy)) return null;
 
-        return Math.Sqrt((dx * dx) + (dy * dy));
+        return FeetToMillimeters(Math.Sqrt((dx * dx) + (dy * dy)));
     }
 
-    /// <summary>Whether the offset from the foot to the point crosses the wall's run at a right angle.</summary>
-    private static bool MeetsAtRightAngles(XYZ tangent, double dx, double dy)
-    {
-        var run = Math.Sqrt((tangent.X * tangent.X) + (tangent.Y * tangent.Y));
-        var offset = Math.Sqrt((dx * dx) + (dy * dy));
-        if (run <= 1e-9) return true;
-        if (offset <= 1e-9) return true;
-        var along = Math.Abs((dx * tangent.X) + (dy * tangent.Y));
-        return along <= 1e-6 * offset * run;
-    }
+    /// <summary>Revit's feet per millimetre, so the search works in unrounded millimetres.</summary>
+    /// <remarks>
+    /// <see cref="RevitValueReader.ToMillimeters"/> rounds to three decimals for display; the host
+    /// search needs the full value. The factor mirrors <c>UnitConverter</c>'s private one, which the
+    /// fork layer cannot reach.
+    /// </remarks>
+    private const double MillimetersPerFoot = 304.8;
+
+    private static double FeetToMillimeters(double feet) => feet * MillimetersPerFoot;
 
     /// <summary>The named level, or the level whose elevation sits closest to the placement point.</summary>
     private static Level ResolveLevel(Document document, string? name, XYZ point)
@@ -300,24 +264,24 @@ internal static class ForkHostedFamilies
     }
 
     /// <summary>
-    /// The elevations a wall spans. A height-constrained wall runs from its base level to the level it
-    /// is drawn up to; an unconnected wall runs from its base level through its own height.
+    /// The elevations in millimetres a wall spans. A height-constrained wall runs from its base level to
+    /// the level it is drawn up to; an unconnected wall runs from its base level through its own height.
     /// </summary>
-    private static (double Base, double Top)? WallSpan(Document document, Wall wall)
+    private static (double BaseMm, double TopMm)? WallSpan(Document document, Wall wall)
     {
         var baseLevel = wall.get_Parameter(BuiltInParameter.WALL_BASE_CONSTRAINT)?.AsElementId() is { } baseId
             ? baseId.ToElement(document) as Level
             : null;
         if (baseLevel is null) return null;
-        var baseElevation = baseLevel.ProjectElevation;
+        var baseMm = RevitValueReader.ToMillimeters(baseLevel.ProjectElevation);
 
         var topLevel = wall.get_Parameter(BuiltInParameter.WALL_HEIGHT_TYPE)?.AsElementId() is { } topId
             ? topId.ToElement(document) as Level
             : null;
-        if (topLevel is not null) return (baseElevation, topLevel.ProjectElevation);
+        if (topLevel is not null) return (baseMm, RevitValueReader.ToMillimeters(topLevel.ProjectElevation));
 
         var height = wall.get_Parameter(BuiltInParameter.WALL_USER_HEIGHT_PARAM)?.AsDouble() ?? 0;
-        return (baseElevation, baseElevation + height);
+        return (baseMm, baseMm + RevitValueReader.ToMillimeters(height));
     }
 
     /// <summary>The family symbol, refused unless the family is a one-level hosted family.</summary>

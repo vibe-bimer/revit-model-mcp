@@ -108,6 +108,7 @@
     "tests/RevitModelMcp.Core.Tests/Connect/McpServerSpecTests.cs": "the install folder and server source the tests assert",
     "tests/RevitModelMcp.Core.Tests/Connect/TomlConfigEditorTests.cs": "the launch arguments the config editors write",
     "tests/RevitModelMcp.Core.Tests/Fork/ForkInputTests.cs": "the fork's own tests",
+    "tests/RevitModelMcp.Core.Tests/Fork/HostSearchTests.cs": "the fork's own tests",
     "tests/RevitModelMcp.Core.Tests/Help/HelpLinksTests.cs": "the help site the add-in opens",
     "tests/RevitModelMcp.Core.Tests/Installer/InstallerScriptsTests.cs": "the installer diagnostics carry the product name",
     "tests/RevitModelMcp.Core.Tests/Updates/UpdatePolicyTests.cs": "the release page the policy tests assert",
