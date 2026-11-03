@@ -41,6 +41,10 @@ public sealed class ForkOptions
     public double? BaseOffsetMm { get; set; }
     public double? TopOffsetMm { get; set; }
 
+    // create-beam (the axis reuses startMm/endMm above, as create-grid does)
+    public string? StructuralUsage { get; set; }
+    public double? ZOffsetMm { get; set; }
+
     // place-hosted-family
     public long? HostElementId { get; set; }
     public double? HostSearchRadiusMm { get; set; }
@@ -94,6 +98,8 @@ public sealed class ForkOptions
         HeightMm = HeightMm,
         BaseOffsetMm = BaseOffsetMm,
         TopOffsetMm = TopOffsetMm,
+        StructuralUsage = StructuralUsage,
+        ZOffsetMm = ZOffsetMm,
         HostElementId = HostElementId,
         HostSearchRadiusMm = HostSearchRadiusMm,
         SillHeightMm = SillHeightMm,

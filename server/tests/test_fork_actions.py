@@ -39,6 +39,7 @@ def test_every_fork_tool_is_registered():
         "revit_create_floor",
         "revit_create_grid",
         "revit_create_column",
+        "revit_create_beam",
         "revit_load_family_file",
         "revit_place_hosted_family",
         "revit_set_phase",
@@ -332,6 +333,64 @@ async def test_place_hosted_family_refuses_a_search_radius_that_is_not_positive(
 
 
 @pytest.mark.anyio
+async def test_create_beam_sends_its_axis_in_the_fork_bag():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen["command"] = command
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_create_beam"][0]
+    await function(
+        family="M_Concrete-Rectangular Beam",
+        level="2F",
+        start_mm=[0, 0],
+        end_mm=[6000, 0],
+        structural_usage="Girder",
+        z_offset_mm=-150,
+    )
+
+    assert seen["command"] == "create-beam"
+    assert seen["family"] == "M_Concrete-Rectangular Beam"
+    assert seen["level"] == "2F"
+    assert seen["fork"] == {
+        "startMm": [0, 0],
+        "endMm": [6000, 0],
+        "structuralUsage": "Girder",
+        "zOffsetMm": -150,
+    }
+
+
+@pytest.mark.anyio
+async def test_create_beam_zeroes_the_offset_and_leaves_the_usage_out_when_absent():
+    seen: dict = {}
+
+    async def send(command: str, **payload):
+        seen.update(payload)
+        return {"ok": True}
+
+    mcp = FakeMcp()
+    register_fork_actions(mcp, send)
+    function = mcp.tools["revit_create_beam"][0]
+    await function(
+        family="M_Concrete-Rectangular Beam", level="2F", start_mm=[0, 0], end_mm=[6000, 0]
+    )
+
+    assert seen["fork"] == {"startMm": [0, 0], "endMm": [6000, 0], "zOffsetMm": 0}
+
+
+@pytest.mark.anyio
+async def test_create_beam_refuses_an_axis_that_is_a_single_point():
+    with pytest.raises(ToolError, match="start_mm and end_mm must not be the same point"):
+        await tool("revit_create_beam")(
+            family="M_Concrete-Rectangular Beam", level="2F", start_mm=[0, 0], end_mm=[0, 0]
+        )
+
+
+@pytest.mark.anyio
 async def test_load_family_file_sends_its_path_in_the_fork_bag():
     seen: dict = {}
 
@@ -520,6 +579,7 @@ def test_fork_tools_are_listed_by_the_server():
         "revit_create_floor",
         "revit_create_grid",
         "revit_create_column",
+        "revit_create_beam",
         "revit_load_family_file",
         "revit_place_hosted_family",
         "revit_set_phase",
@@ -573,6 +633,17 @@ def test_fork_tools_are_listed_by_the_server():
         "base_offset_mm",
         "top_offset_mm",
         "rotation_deg",
+        "dry_run",
+        "document",
+    }
+    assert set(tools["revit_create_beam"].input_schema["properties"]) == {
+        "family",
+        "level",
+        "start_mm",
+        "end_mm",
+        "type_name",
+        "structural_usage",
+        "z_offset_mm",
         "dry_run",
         "document",
     }
@@ -646,6 +717,28 @@ def test_a_grid_step_names_the_grid_at_the_top_level():
         "name": "A",
         "dryRun": False,
         "fork": {"startMm": [0, 0], "endMm": [30000, 0], "midMm": [15000, 4000]},
+    }
+
+
+def test_a_beam_step_keeps_its_axis_in_the_fork_bag():
+    from revit_model_mcp.actions import ActionStep
+
+    step = ActionStep(
+        action="create_beam",
+        args={
+            "family": "M_Concrete-Rectangular Beam",
+            "level": "2F",
+            "start_mm": [0, 0],
+            "end_mm": [6000, 0],
+        },
+    )
+    assert step.payload() == {
+        "command": "create-beam",
+        "family": "M_Concrete-Rectangular Beam",
+        "typeName": None,
+        "level": "2F",
+        "dryRun": False,
+        "fork": {"startMm": [0, 0], "endMm": [6000, 0], "zOffsetMm": 0},
     }
 
 

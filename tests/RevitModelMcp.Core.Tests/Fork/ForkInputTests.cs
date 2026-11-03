@@ -228,6 +228,46 @@ public sealed class ForkInputTests
         await Assert.That(parsed.Action!.Family).IsEqualTo("Single-Flush");
     }
 
+    // The beam's axis is the whole input: two points in the fork bag, the level and the family at the
+    // top level, and the two optional settings riding with the axis.
+    [Test]
+    public async Task CreateBeam_CarriesItsAxisAndItsOffset()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-beam","family":"M_Concrete-Rectangular Beam","typeName":"300 x 600","level":"2F","fork":{"startMm":[0,0],"endMm":[6000,0],"structuralUsage":"Girder","zOffsetMm":-150}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        var action = parsed.Action!;
+        await Assert.That(action.Family).IsEqualTo("M_Concrete-Rectangular Beam");
+        await Assert.That(action.TypeName).IsEqualTo("300 x 600");
+        await Assert.That(action.Level).IsEqualTo("2F");
+        await Assert.That(action.Options.StartMm).IsEquivalentTo([0d, 0d]);
+        await Assert.That(action.Options.EndMm).IsEquivalentTo([6000d, 0d]);
+        await Assert.That(action.Options.StructuralUsage).IsEqualTo("Girder");
+        await Assert.That(action.Options.ZOffsetMm).IsEqualTo(-150d);
+    }
+
+    // The offset and the usage are optional, so an absent bag leaves both unset rather than zeroing the
+    // offset the family would otherwise decide.
+    [Test]
+    public async Task CreateBeam_LeavesTheOffsetAndTheUsageUnsetWhenTheyAreAbsent()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-beam","family":"M_Concrete-Rectangular Beam","level":"2F","fork":{"startMm":[0,0],"endMm":[6000,0]}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Action);
+        await Assert.That(parsed.Action!.Options.ZOffsetMm).IsNull();
+        await Assert.That(parsed.Action!.Options.StructuralUsage).IsNull();
+    }
+
+    // An axis point is a pair, so a single number is a typo worth refusing before the model is touched.
+    [Test]
+    public async Task CreateBeam_RefusesAnAxisOfTheWrongShape()
+    {
+        var parsed = ControlJobParser.Parse(
+            """{"command":"create-beam","family":"M_Concrete-Rectangular Beam","level":"2F","fork":{"startMm":[0,0],"endMm":6000}}""");
+        await Assert.That(parsed.Kind).IsEqualTo(ControlJobKind.Invalid);
+        await Assert.That(parsed.Error).IsEqualTo("fork.endMm must be a list of two or three numbers.");
+    }
+
     [Test]
     public async Task CreateGrid_RefusesAPointOfTheWrongShape()
     {
@@ -329,7 +369,7 @@ public sealed class ForkInputTests
         await Assert.That(Core.Fork.ForkRegistry.Commands).IsEquivalentTo(
         [
             "set-view-lighting", "create-level", "create-floor", "create-grid", "create-column",
-            "load-family-file", "place-hosted-family",
+            "create-beam", "load-family-file", "place-hosted-family",
             "set-phase", "merge-phases", "reset-element-ids", "rebuild-model-ids"
         ]);
         // The add-in advertises both lists in its handshake, so the register's command has to be in one of

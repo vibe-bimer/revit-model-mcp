@@ -53,6 +53,13 @@ public static class ForkInputs
                 ["baseOffsetMm"] = (action, value) => action.Options.BaseOffsetMm = Number("baseOffsetMm", value),
                 ["topOffsetMm"] = (action, value) => action.Options.TopOffsetMm = Number("topOffsetMm", value)
             },
+            ["create-beam"] = new(StringComparer.Ordinal)
+            {
+                ["startMm"] = (action, value) => action.Options.StartMm = Numbers("startMm", value),
+                ["endMm"] = (action, value) => action.Options.EndMm = Numbers("endMm", value),
+                ["structuralUsage"] = (action, value) => action.Options.StructuralUsage = Text("structuralUsage", value),
+                ["zOffsetMm"] = (action, value) => action.Options.ZOffsetMm = Number("zOffsetMm", value)
+            },
             ["place-hosted-family"] = new(StringComparer.Ordinal)
             {
                 ["hostElementId"] = (action, value) => action.Options.HostElementId = Identifier("hostElementId", value),
