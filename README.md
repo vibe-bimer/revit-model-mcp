@@ -11,7 +11,7 @@ Every change is one named undo entry in Revit, and a fresh install is read-only 
 
 [![CI](https://img.shields.io/github/actions/workflow/status/vibe-bimer/revit-model-mcp/ci.yml?style=flat-square)](https://github.com/vibe-bimer/revit-model-mcp/actions/workflows/ci.yml)
 [![Latest release](https://img.shields.io/github/v/release/vibe-bimer/revit-model-mcp?style=flat-square)](https://github.com/vibe-bimer/revit-model-mcp/releases/latest)
-![Revit 2022-2027](https://img.shields.io/badge/Revit-2022--2027-368EF5?style=flat-square)
+![Revit 2020 and 2022-2027](https://img.shields.io/badge/Revit-2020%20%26%202022--2027-368EF5?style=flat-square)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/vibe-bimer/revit-model-mcp/badge)](https://scorecard.dev/viewer/?uri=github.com/vibe-bimer/revit-model-mcp)
 [![MIT](https://img.shields.io/badge/license-MIT-5C6F88?style=flat-square)](LICENSE)
 

@@ -39,6 +39,7 @@
     ".github/workflows/ci.yml": "the bundle launcher check",
     ".github/workflows/pr-checks.yml": "the documentation gate",
     ".github/workflows/release.yml": "the fork's release: wheel-only, no PyPI and no registry",
+    ".github/PULL_REQUEST_TEMPLATE.md": "the supported Revit years the checklist states",
     ".gitignore": "the documentation build output ignores",
     "AGENTS.md": "the read-only default",
     "CONTRIBUTING.md": "lists the fork gates under local checks",
