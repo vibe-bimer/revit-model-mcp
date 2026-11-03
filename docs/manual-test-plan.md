@@ -7,7 +7,7 @@
 > 抽查参考模型：**Snowdon Towers Sample Architectural.rvt**（随 Revit 提供）。下文引用的值采集于 2026-09-15、Revit 2024.3，仅供历史对比，不保证其他模型或发布版本相同。先用 `revit_list_catalog` 发现名称，再通过 `revit_document_info` + `revit_aggregate_elements` 采集当前模型的基线。
 
 !!! note "计划覆盖，不是验证证据"
-    当前功能目录收录 **91 个工具：35 个读取 + 56 个动作**；本清单只为其中部分工具列出具体用例，支持 **Revit 2020 和 2022–2027**，不支持 Revit 2021。将被测发布版本的 `tools/list` 与[读取契约](tools.md)、[动作契约](actions.md)及[功能总览](features/index.md)核对。本次文档更新没有执行任何真机 Revit 调用、勾选检查项或新增工作站证据；已记录的运行见[验证证据](validation.md)。下文 2026-09-15 的客户端问题均为历史复测项，不代表当前兼容性保证。
+    当前功能目录收录 **92 个工具：35 个读取 + 57 个动作**；本清单只为其中部分工具列出具体用例，支持 **Revit 2020 和 2022–2027**，不支持 Revit 2021。将被测发布版本的 `tools/list` 与[读取契约](tools.md)、[动作契约](actions.md)及[功能总览](features/index.md)核对。本次文档更新没有执行任何真机 Revit 调用、勾选检查项或新增工作站证据；已记录的运行见[验证证据](validation.md)。下文 2026-09-15 的客户端问题均为历史复测项，不代表当前兼容性保证。
 
 ---
 
@@ -58,7 +58,7 @@
 
 - [ ] `uvx --from "$SERVER" revit-model-mcp` 首次运行时能从本 fork 的发布 wheel 安装包（记录包数量 + 耗时）。`$SERVER` 见 README 的安装段；不要用裸 `uvx revit-model-mcp`，那会装上上游服务器。
 - [ ] 服务器启动，并在 `initialize` 中报告 `serverInfo: { name: "Revit Model Reader", version: "<ver>" }`。
-- [ ] 分别记录禁用和启用服务器动作标志时的 `tools/list`，并核对被测版本及工具集配置。当前功能目录收录 **91 个工具：35 个读取 + 56 个动作**；第 3、4 节只列出部分工具的用例。动作是否可执行仍由工作站门禁决定。
+- [ ] 分别记录禁用和启用服务器动作标志时的 `tools/list`，并核对被测版本及工具集配置。当前功能目录收录 **92 个工具：35 个读取 + 57 个动作**；第 3、4 节只列出部分工具的用例。动作是否可执行仍由工作站门禁决定。
 
 <a id="22-claude-code-registration-claude-mcp-add"></a>
 ### 2.2 注册到 Claude Code（`claude mcp add`）
@@ -138,7 +138,7 @@
 !!! warning "报错不等于回滚"
     `verification.error` 可能在 **COMMIT（提交）后**发生：编辑已经完成，但提交后的重读失败。传输或拾取超时不会取消待执行任务，任务可能稍后执行。重试前检查目标模型、ID 及输出文件，不能宣称每个失败响应都保证模型不变。
 
-- [ ] **4.0 枚举**：启用服务器动作标志后，保存 `tools/list` 与 schema，并与被测版本的[功能总览](features/index.md)核对。当前目录包含 **91 个工具：35 个读取 + 56 个动作**；下表仅列出部分动作的具体用例，其他动作需按工具契约补充验收。
+- [ ] **4.0 枚举**：启用服务器动作标志后，保存 `tools/list` 与 schema，并与被测版本的[功能总览](features/index.md)核对。当前目录包含 **92 个工具：35 个读取 + 57 个动作**；下表仅列出部分动作的具体用例，其他动作需按工具契约补充验收。
 
 | # | 动作工具 | 测试及验证 | 清理／安全 | [ ] |
 | --- | --- | --- | --- | --- |
@@ -154,6 +154,7 @@
 | 8b | `revit_load_family_file` | 先 dry run，再用工作站上一个 `.rfa` 的绝对路径载入整族；核对 `fork` 块的 `state`、`familyName` 与 `familyTypes`；重复载入同一文件报 `state: existing` 且参数值不被覆盖；给 `type_name` 时只载入该类型，类型不在族里时被拒绝并列出可用类型；路径不存在时被拒绝并给出最接近的文件名；确认写入后模型文件大小与 mtime 不变 | 丢弃副本或删除载入的族；`path` 必填且必须是 `.rfa`；2026 工作站族库不全，用 2020 库的族文件或模型里已载入的族验收 | [ ] |
 | 8c | `revit_create_column` | 先 dry run，再只给底标高与 `height_mm` 放一根柱；核对 `verification.after` 的 ID、类别、族、类型、底部标高与包围盒；再给 `top_level` 放第二根，核对柱顶落在该标高上；`type_name` 不存在时被拒绝并列出该族现有类型；确认写入后模型文件大小与 mtime 不变 | 删除测试柱或丢弃副本；柱族必须已载入（可先用 `revit_load_family_file`）；`family`、`level`、`x_mm`、`y_mm` 必填，`top_level` 与 `height_mm` 至少给一个 | [ ] |
 | 8d | `revit_place_hosted_family` | 先 dry run，用 `host_element_id` 指定一面墙放一扇门；核对 `fork.hostResolution` 的 `mode` 是 `explicit`、`hostId` 与 `distanceMm`，以及 `verification.after` 的 ID、类别、族、类型与包围盒；再不给宿主只给定位点，核对 `mode` 是 `nearest` 且宿主确实是**该标高**里最近的那面墙（换一个 `level` 应换到那一层的墙，而不是同平面的上层墙）；把定位点挪到所有墙都超出 `host_search_radius_mm` 的地方，核对被拒绝并列出候选 `{ id, distanceMm }`，且报的是半径而不是并列；把定位点放到同层两面墙等距处，核对并列拒绝；把 `host_element_id` 指向非墙构件（如标高），核对被拒绝并说明它是哪类构件；给一个非单层宿主族（如结构柱族），核对被拒绝并提示用 `revit_place_family`；给一个非零 `rotation_deg`，核对被拒绝并提示方向由宿主墙决定、改用 `flip_facing`；`flip_facing=true` 应让包围盒贴到墙的另一侧；确认写入后模型文件大小与 mtime 不变 | 删除测试门窗或丢弃副本；门族必须已载入（可先用 `revit_load_family_file`）；`family`、`x_mm`、`y_mm` 必填，`host_search_radius_mm` 必须为正数 | [ ] |
+| 8e | `revit_create_beam` | 先 dry run，在**已载入的梁族**与一个标高上用两点放一根梁；核对 `verification.after` 的 ID、类别、族、类型、参照标高与包围盒，并记下 `fork` 块里报告的偏移参数名；给 `z_offset_mm` 一个非零值再放一根，核对读回的参数名与 `verification.after` 的包围盒一起抬高（几何自己带偏移时读回不带该字段，要如实记哪一种）；`type_name` 不存在时被拒绝并列出该族现有类型；`start_mm` 与 `end_mm` 相同时被拒绝并说明原因；确认写入后模型文件大小与 mtime 不变 | 删除测试梁或丢弃副本；梁族必须已载入（可先用 `revit_load_family_file`）；`family`、`level`、`start_mm`、`end_mm` 必填，`structural_usage` 只接受 FamilyInstance 认的枚举名 | [ ] |
 | 9 | `revit_set_phase` | 先 dry run，再用目录阶段名；测试创建／拆除赋值、`""` 清除及 null 保持不变；检查阶段引用 | 恢复原赋值或丢弃副本；不创建／重命名阶段；两个参数均 null 被拒绝 | [ ] |
 | 10 | `revit_merge_phases` | 先 dry run，再将源阶段创建／拆除引用转到目标；核对数量、`sourceDeleted`；仍被引用的阶段可能保留且 `sourceDeleted=false` | 专用一次性副本；源／目标必须不同；不能加入批处理 | [ ] |
 | 11 | `revit_set_parameter` | 先 dry run，再改可写参数；核对前后值及实例／类型归属；长度 mm、面积 m²、其他 double 内部单位 | 恢复值或丢弃副本；共享类型修改影响全部实例；只读／ElementId 参数被拒绝 | [ ] |

@@ -130,7 +130,9 @@ The existing `revit_place_family` (unhosted, level-based) **keeps its name uncha
 - It takes the "curve + level" route: `NewFamilyInstance(Curve, FamilySymbol, Level, StructuralType.Beam)`, present in both years, with the axis line and the reference level given directly.
 - **The work plane route is not used**: `NewFamilyInstance(Reference, Line, FamilySymbol)` needs a face reference, which an MCP caller cannot obtain.
 - **No snapping at the ends**: Revit has no programmatic snap API, and `StructuralFramingUtils.SetEndReference` only works on an end that is already connected. The caller supplies the coordinates.
-- Which parameter `z_offset_mm` actually lands on must be settled by a live read-back at implementation time — the corpus has only identifier entries for `STRUCTURAL_BEAM_END0_ELEVATION` / `END1_ELEVATION` / `INSTANCE_ELEVATION_PARAM` and no matching API documentation, so do not pin it down by guessing.
+- `z_offset_mm` lands on **`STRUCTURAL_BEAM_END0_ELEVATION` / `END1_ELEVATION`** (start and end level offset): writing both to the same value on Revit 2026 raised the beam box from `z=-600..0` to `0..600`, and the read-back named `zOffsetParam:"起点标高偏移"`.
+- **`INSTANCE_ELEVATION_PARAM` is inert on this family**: it accepts the value and reads it back, while the box and the axis stay put and the parameter does not appear in the element's parameter list.
+- A write therefore counts only when the bounding box rises by the offset (tolerance 1e-6 ft), never on the read-back alone; a parameter group that does not lift the geometry is restored and the next one is tried, then `ElementTransformUtils.MoveElement` moves the instance, and a move that does not lift it raises an error — a beam whose offset did not land is never reported as placed on the level.
 
 <a id="copy-elements"></a>
 ### `revit_copy_elements`

@@ -130,7 +130,9 @@
 - 走「曲线 + 标高」路线：`NewFamilyInstance(Curve, FamilySymbol, Level, StructuralType.Beam)`，两个年份都在，直接给轴线与参照标高。
 - **不用工作平面路线**：`NewFamilyInstance(Reference, Line, FamilySymbol)` 需要一个面引用，MCP 调用者拿不到。
 - **端点不做吸附**：Revit 没有程序化吸附 API，`StructuralFramingUtils.SetEndReference` 只对已经连接的端有效。坐标由调用者给。
-- `z_offset_mm` 具体落到哪个参数，实现时以真机读回为准——语料里只有 `STRUCTURAL_BEAM_END0_ELEVATION` / `END1_ELEVATION` / `INSTANCE_ELEVATION_PARAM` 这些标识符条目，没有对应的 API 说明，不要凭猜写死。
+- `z_offset_mm` 落在 **`STRUCTURAL_BEAM_END0_ELEVATION` / `END1_ELEVATION`（起点/终点标高偏移）**：2026 真机上把两者写成同一个值，梁的包围盒从 `z=-600..0` 抬到 `0..600`，读回报出 `zOffsetParam:"起点标高偏移"`。
+- **`INSTANCE_ELEVATION_PARAM`（显示名「相对标高的偏移」）在这个族上是空壳**：写入成功、读回一致，包围盒与轴线都不动，参数表里也看不到这个值。
+- 因此判「写进去了」只看包围盒是否按偏移抬升（容差 1e-6 英尺），不看参数读回；参数不抬升就还原原值、换下一组，两组都不抬升时 `ElementTransformUtils.MoveElement` 移动构件，移动也不抬升就抛错——`z_offset_mm` 没落上的梁不允许当成放置在标高上。
 
 <a id="copy-elements"></a>
 ### `revit_copy_elements`
